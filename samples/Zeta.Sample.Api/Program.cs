@@ -4,8 +4,9 @@ using Zeta.Schemas;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
-// Register context factory
-builder.Services.AddScoped<IValidationContextFactory<User, UserContext>, UserContextFactory>();
+// Register Zeta and scan for factories
+builder.Services.AddZeta(typeof(Program).Assembly);
+
 // Register fake repo
 builder.Services.AddScoped<IUserRepository, FakeUserRepository>();
 
