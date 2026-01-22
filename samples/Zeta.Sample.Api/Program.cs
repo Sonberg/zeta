@@ -5,7 +5,15 @@ using Zeta.Schemas;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 // Register Zeta and scan for factories
-builder.Services.AddZeta(typeof(Program).Assembly);
+builder.Services.AddZeta(typeof(Program).Assembly)
+                .AddZetaControllers();
+
+builder.Services.AddControllers();
+
+// Register Schema for Implicit Validation (Controllers)
+builder.Services.AddSingleton<ISchema<User>>(Zeta.Zeta.Object<User>()
+    .Field(u => u.Name, Zeta.Zeta.String().MinLength(3))
+    .Field(u => u.Email, Zeta.Zeta.String().Email()));
 
 // Register fake repo
 builder.Services.AddScoped<IUserRepository, FakeUserRepository>();
@@ -41,6 +49,8 @@ app.MapPost("/sync/users", (User user) => Results.Ok(new
         User = user
     }))
     .WithValidation(userSyncSchema);
+    
+app.MapControllers();
 
 app.Run();
 

@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Zeta;
 
@@ -35,4 +36,17 @@ public static class DependencyInjectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Adds Zeta validation support to MVC Controllers.
+    /// </summary>
+    public static IServiceCollection AddZetaControllers(this IServiceCollection services)
+    {
+        services.Configure<MvcOptions>(options =>
+        {
+            options.Filters.Add<ZetaValidationActionFilter>();
+        });
+        return services;
+    }
 }
+

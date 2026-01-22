@@ -79,6 +79,24 @@ public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
         var context = new ValidationContext<object?>(null, execution);
         return ValidateAsync(value, context);
     }
+
+    public new ObjectSchema<T> Field<TProperty>(Expression<Func<T, TProperty>> propertySelector, ISchema<TProperty, object?> schema)
+    {
+        base.Field(propertySelector, schema);
+        return this;
+    }
+
+    public new ObjectSchema<T> Field<TProperty>(Expression<Func<T, TProperty>> propertySelector, ISchema<TProperty> schema)
+    {
+        base.Field(propertySelector, schema);
+        return this;
+    }
+
+    public new ObjectSchema<T> Refine(Func<T, object?, bool> predicate, string message, string code = "custom_error")
+    {
+        base.Refine(predicate, message, code);
+        return this;
+    }
 }
 
 internal interface IFieldValidator<T, TContext>

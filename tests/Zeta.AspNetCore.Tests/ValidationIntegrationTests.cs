@@ -82,6 +82,20 @@ public class ValidationIntegrationTests : IClassFixture<WebApplicationFactory<Pr
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Controller_ImplicitValidation_InvalidRequest_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+        var user = new User("J", "controller@example.com"); // Name too short (min 3)
+
+        var response = await client.PostAsJsonAsync("/api/users", user);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problems = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        Assert.NotNull(problems);
+        Assert.Contains("name", problems.Errors.Keys);
+    }
+
     record User(string Name, string Email);
     record UserResponse(string Message, User User);
     record ValidationProblemDetails(string Type, string Title, int Status, Dictionary<string, string[]> Errors);
