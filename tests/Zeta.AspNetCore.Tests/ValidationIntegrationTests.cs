@@ -1,0 +1,88 @@
+using System.Net;
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
+
+namespace Zeta.AspNetCore.Tests;
+
+public class ValidationIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly WebApplicationFactory<Program> _factory;
+
+    public ValidationIntegrationTests(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory;
+    }
+
+    [Fact]
+    public async Task AsyncValidation_ValidRequest_ReturnsOk()
+    {
+        var client = _factory.CreateClient();
+        var user = new User("JohnDoe", "valid@example.com");
+
+        var response = await client.PostAsJsonAsync("/async/users", user);
+
+        response.EnsureSuccessStatusCode();
+        var content = await response.Content.ReadFromJsonAsync<UserResponse>();
+        Assert.Equal("User created", content?.Message);
+        Assert.Equal("JohnDoe", content?.User?.Name);
+    }
+
+    [Fact]
+    public async Task AsyncValidation_InvalidEmail_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+        var user = new User("JohnDoe", "invalid-email");
+
+        var response = await client.PostAsJsonAsync("/async/users", user);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problems = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        
+        Assert.NotNull(problems);
+        Assert.Contains("email", problems.Errors.Keys);
+        Assert.Contains("Invalid email format", problems.Errors["email"]);
+    }
+
+    [Fact]
+    public async Task AsyncValidation_TakenEmail_ReturnsBadRequest_FromContext()
+    {
+        var client = _factory.CreateClient();
+        var user = new User("JohnDoe", "taken@example.com");
+
+        var response = await client.PostAsJsonAsync("/async/users", user);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problems = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+
+        Assert.NotNull(problems);
+        Assert.Contains("email", problems.Errors.Keys);
+        Assert.Contains("Email already exists", problems.Errors["email"]);
+    }
+
+    [Fact]
+    public async Task SyncValidation_ValidRequest_ReturnsOk()
+    {
+        var client = _factory.CreateClient();
+        var user = new User("John", "sync@example.com");
+
+        var response = await client.PostAsJsonAsync("/sync/users", user);
+
+        response.EnsureSuccessStatusCode();
+    }
+    
+    [Fact]
+    public async Task SyncValidation_InvalidRequest_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+        var user = new User("J", "sync@example.com"); // Name too short
+
+        var response = await client.PostAsJsonAsync("/sync/users", user);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    record User(string Name, string Email);
+    record UserResponse(string Message, User User);
+    record ValidationProblemDetails(string Type, string Title, int Status, Dictionary<string, string[]> Errors);
+}
