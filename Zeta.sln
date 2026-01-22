@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1B6781DD-E086-4C73-A471-496C26464F31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta", "src\Zeta\Zeta.csproj", "{783F4AE1-2B97-4E86-BBF5-2943379CE955}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.AspNetCore", "src\Zeta.AspNetCore\Zeta.AspNetCore.csproj", "{AA062A40-264E-407C-9B53-8B39AF2ECA54}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D6B88B91-6163-409E-9D1D-2C87DBE93B9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.Tests", "tests\Zeta.Tests\Zeta.Tests.csproj", "{E13F840D-50D0-48F2-825E-618AD96947FE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{3969A022-23F6-4749-8469-1DB6BE51B3A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.Sample.Api", "samples\Zeta.Sample.Api\Zeta.Sample.Api.csproj", "{A49BC746-4A1A-4BD7-B9FE-0E0443889EB8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{783F4AE1-2B97-4E86-BBF5-2943379CE955}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{783F4AE1-2B97-4E86-BBF5-2943379CE955}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{783F4AE1-2B97-4E86-BBF5-2943379CE955}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{783F4AE1-2B97-4E86-BBF5-2943379CE955}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA062A40-264E-407C-9B53-8B39AF2ECA54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA062A40-264E-407C-9B53-8B39AF2ECA54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA062A40-264E-407C-9B53-8B39AF2ECA54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA062A40-264E-407C-9B53-8B39AF2ECA54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E13F840D-50D0-48F2-825E-618AD96947FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E13F840D-50D0-48F2-825E-618AD96947FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E13F840D-50D0-48F2-825E-618AD96947FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E13F840D-50D0-48F2-825E-618AD96947FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A49BC746-4A1A-4BD7-B9FE-0E0443889EB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A49BC746-4A1A-4BD7-B9FE-0E0443889EB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A49BC746-4A1A-4BD7-B9FE-0E0443889EB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A49BC746-4A1A-4BD7-B9FE-0E0443889EB8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{783F4AE1-2B97-4E86-BBF5-2943379CE955} = {1B6781DD-E086-4C73-A471-496C26464F31}
+		{AA062A40-264E-407C-9B53-8B39AF2ECA54} = {1B6781DD-E086-4C73-A471-496C26464F31}
+		{E13F840D-50D0-48F2-825E-618AD96947FE} = {D6B88B91-6163-409E-9D1D-2C87DBE93B9E}
+		{A49BC746-4A1A-4BD7-B9FE-0E0443889EB8} = {3969A022-23F6-4749-8469-1DB6BE51B3A0}
+	EndGlobalSection
+EndGlobal

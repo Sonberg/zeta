@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Q51A2quDWms=",
+  "success": true,
+  "projectFilePath": "/Users/personberg/Code/zeta/samples/Zeta.Sample.Api/Zeta.Sample.Api.csproj",
+  "expectedPackageFiles": [
+    "/Users/personberg/.nuget/packages/microsoft.aspnetcore.openapi/9.0.0/microsoft.aspnetcore.openapi.9.0.0.nupkg.sha512",
+    "/Users/personberg/.nuget/packages/microsoft.openapi/1.6.17/microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
