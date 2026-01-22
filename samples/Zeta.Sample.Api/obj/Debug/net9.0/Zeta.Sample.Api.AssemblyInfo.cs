@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Zeta.Sample.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+da6a9a48c366423f61b6928510bef66bef1c030b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+13f1de5782f4e844397528620ef52e46cb31956b")]
 [assembly: System.Reflection.AssemblyProductAttribute("Zeta.Sample.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Zeta.Sample.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

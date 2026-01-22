@@ -14,7 +14,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 // Define Schema using Context
-var userSchema = Zeta.Zeta.Object<User, UserContext>()
+var userAsyncSchema = Zeta.Zeta.Object<User, UserContext>()
     .Field(u => u.Email, Zeta.Zeta.String<UserContext>()
         .Email()
         .Refine((email, ctx) => !ctx.EmailExists, "Email already exists"))
@@ -22,11 +22,24 @@ var userSchema = Zeta.Zeta.Object<User, UserContext>()
         .MinLength(3)
         .Refine((name, ctx) => !ctx.IsMaintenanceMode, "Cannot register during maintenance"));
 
-app.MapPost("/users", (User user) => 
-{
-    return Results.Ok(new { Message = "User created", User = user });
-})
-.WithValidation(userSchema);
+
+var userSyncSchema = Zeta.Zeta.Object<User>()
+    .Field(u => u.Email, Zeta.Zeta.String().Email())
+    .Field(u => u.Name, Zeta.Zeta.String().MinLength(3));
+
+app.MapPost("/async/users", (User user) => Results.Ok(new
+    {
+        Message = "User created",
+        User = user
+    }))
+    .WithValidation(userAsyncSchema);
+
+app.MapPost("/sync/users", (User user) => Results.Ok(new
+    {
+        Message = "User created",
+        User = user
+    }))
+    .WithValidation(userSyncSchema);
 
 app.Run();
 
