@@ -1,0 +1,51 @@
+namespace Zeta;
+
+/// <summary>
+/// Provides context for the current validation operation, including the current path, services, and cancellation token.
+/// </summary>
+public sealed class ValidationContext
+{
+    private readonly IServiceProvider? _services;
+
+    /// <summary>
+    /// The dot-notation path to the current value being validated (e.g., "user.address.street").
+    /// </summary>
+    public string Path { get; }
+
+    /// <summary>
+    /// The service provider for dependency injection.
+    /// </summary>
+    public IServiceProvider Services => _services ?? throw new InvalidOperationException("Services are not available in this validation context.");
+
+    /// <summary>
+    /// The cancellation token for async operations.
+    /// </summary>
+    public CancellationToken CancellationToken { get; }
+
+    /// <summary>
+    /// Creates a new validation context.
+    /// </summary>
+    public ValidationContext(
+        string path = "",
+        IServiceProvider? services = null,
+        CancellationToken cancellationToken = default)
+    {
+        Path = path;
+        _services = services;
+        CancellationToken = cancellationToken;
+    }
+
+    /// <summary>
+    /// Creates a new context with the given path segment appended.
+    /// </summary>
+    public ValidationContext Push(string segment)
+    {
+        var newPath = string.IsNullOrEmpty(Path) ? segment : $"{Path}.{segment}";
+        return new ValidationContext(newPath, _services, CancellationToken);
+    }
+
+    /// <summary>
+    /// Gets default empty context.
+    /// </summary>
+    public static ValidationContext Empty => new();
+}

@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "eonVcj8ai52cqyAxbHtbSsNh6em7jH8gFyLPPJuDAcM=",
+  "Source": "Zeta.Sample.Api",
+  "BasePath": "_content/Zeta.Sample.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

@@ -411,6 +411,16 @@
         "build": {
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
+      },
+      "Zeta/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/Zeta.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Zeta.dll": {}
+        }
       }
     }
   },
@@ -932,11 +942,17 @@
         "xunit.runner.visualstudio.2.8.2.nupkg.sha512",
         "xunit.runner.visualstudio.nuspec"
       ]
+    },
+    "Zeta/1.0.0": {
+      "type": "project",
+      "path": "../../src/Zeta/Zeta.csproj",
+      "msbuildProject": "../../src/Zeta/Zeta.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net9.0": [
       "Microsoft.NET.Test.Sdk >= 17.11.1",
+      "Zeta >= 1.0.0",
       "coverlet.collector >= 6.0.2",
       "xunit >= 2.9.2",
       "xunit.runner.visualstudio >= 2.8.2"
@@ -968,7 +984,11 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/Users/personberg/Code/zeta/src/Zeta/Zeta.csproj": {
+              "projectPath": "/Users/personberg/Code/zeta/src/Zeta/Zeta.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

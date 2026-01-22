@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net9.0": {}
+    "net9.0": {
+      "Zeta/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/Zeta.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Zeta.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Zeta/1.0.0": {
+      "type": "project",
+      "path": "../Zeta/Zeta.csproj",
+      "msbuildProject": "../Zeta/Zeta.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net9.0": []
+    "net9.0": [
+      "Zeta >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "/Users/personberg/.nuget/packages/": {}
@@ -33,7 +52,11 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/Users/personberg/Code/zeta/src/Zeta/Zeta.csproj": {
+              "projectPath": "/Users/personberg/Code/zeta/src/Zeta/Zeta.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
@@ -63,6 +86,9 @@
         "assetTargetFallback": true,
         "warn": true,
         "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }

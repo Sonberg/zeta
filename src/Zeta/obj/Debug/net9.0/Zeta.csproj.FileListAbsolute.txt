@@ -1,0 +1,11 @@
+/Users/personberg/Code/zeta/src/Zeta/bin/Debug/net9.0/Zeta.deps.json
+/Users/personberg/Code/zeta/src/Zeta/bin/Debug/net9.0/Zeta.dll
+/Users/personberg/Code/zeta/src/Zeta/bin/Debug/net9.0/Zeta.pdb
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.GeneratedMSBuildEditorConfig.editorconfig
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.AssemblyInfoInputs.cache
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.AssemblyInfo.cs
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.csproj.CoreCompileInputs.cache
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.dll
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/refint/Zeta.dll
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.pdb
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/ref/Zeta.dll

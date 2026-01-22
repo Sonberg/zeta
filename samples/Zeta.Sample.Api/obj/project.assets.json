@@ -33,6 +33,32 @@
             "related": ".pdb;.xml"
           }
         }
+      },
+      "Zeta/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/Zeta.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Zeta.dll": {}
+        }
+      },
+      "Zeta.AspNetCore/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "Zeta": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Zeta.AspNetCore.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Zeta.AspNetCore.dll": {}
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
       }
     }
   },
@@ -67,11 +93,23 @@
         "microsoft.openapi.1.6.17.nupkg.sha512",
         "microsoft.openapi.nuspec"
       ]
+    },
+    "Zeta/1.0.0": {
+      "type": "project",
+      "path": "../../src/Zeta/Zeta.csproj",
+      "msbuildProject": "../../src/Zeta/Zeta.csproj"
+    },
+    "Zeta.AspNetCore/1.0.0": {
+      "type": "project",
+      "path": "../../src/Zeta.AspNetCore/Zeta.AspNetCore.csproj",
+      "msbuildProject": "../../src/Zeta.AspNetCore/Zeta.AspNetCore.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net9.0": [
-      "Microsoft.AspNetCore.OpenApi >= 9.0.0"
+      "Microsoft.AspNetCore.OpenApi >= 9.0.0",
+      "Zeta >= 1.0.0",
+      "Zeta.AspNetCore >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -100,7 +138,14 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/Users/personberg/Code/zeta/src/Zeta.AspNetCore/Zeta.AspNetCore.csproj": {
+              "projectPath": "/Users/personberg/Code/zeta/src/Zeta.AspNetCore/Zeta.AspNetCore.csproj"
+            },
+            "/Users/personberg/Code/zeta/src/Zeta/Zeta.csproj": {
+              "projectPath": "/Users/personberg/Code/zeta/src/Zeta/Zeta.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
