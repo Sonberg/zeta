@@ -1,25 +1,19 @@
 namespace Zeta.Schemas;
 
 /// <summary>
-/// A schema for validating integer values.
+/// A schema for validating integer values with a specific context.
 /// </summary>
-public sealed class IntSchema : ISchema<int>
+public class IntSchema<TContext> : ISchema<int, TContext>
 {
-    private readonly List<IRule<int>> _rules = new();
+    private readonly List<IRule<int, TContext>> _rules = new();
 
-    /// <inheritdoc />
-    public async Task<Result<int>> ValidateAsync(int value, ValidationContext? context = null)
+    public async Task<Result<int>> ValidateAsync(int value, ValidationContext<TContext> context)
     {
-        context ??= ValidationContext.Empty;
         var errors = new List<ValidationError>();
-
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors.Add(error);
-            }
+            if (error != null) errors.Add(error);
         }
 
         return errors.Count == 0
@@ -27,60 +21,51 @@ public sealed class IntSchema : ISchema<int>
             : Result<int>.Failure(errors);
     }
 
-    /// <summary>
-    /// Adds a custom rule to the schema.
-    /// </summary>
-    public IntSchema Use(IRule<int> rule)
+    public IntSchema<TContext> Use(IRule<int, TContext> rule)
     {
         _rules.Add(rule);
         return this;
     }
 
-    /// <summary>
-    /// Adds a rule that requires the integer to be at least a minimum value.
-    /// </summary>
-    public IntSchema Min(int min, string? message = null)
+    public IntSchema<TContext> Min(int min, string? message = null)
     {
-        return Use(new DelegateRule<int>((val, ctx) =>
+        return Use(new DelegateRule<int, TContext>((val, ctx) =>
         {
             if (val >= min) return ValueTask.FromResult<ValidationError?>(null);
-
             return ValueTask.FromResult<ValidationError?>(new ValidationError(
-                ctx.Path,
-                "min_value",
-                message ?? $"Must be at least {min}"));
+                ctx.Execution.Path, "min_value", message ?? $"Must be at least {min}"));
         }));
     }
 
-    /// <summary>
-    /// Adds a rule that requires the integer to be at most a maximum value.
-    /// </summary>
-    public IntSchema Max(int max, string? message = null)
+    public IntSchema<TContext> Max(int max, string? message = null)
     {
-        return Use(new DelegateRule<int>((val, ctx) =>
+        return Use(new DelegateRule<int, TContext>((val, ctx) =>
         {
             if (val <= max) return ValueTask.FromResult<ValidationError?>(null);
-
             return ValueTask.FromResult<ValidationError?>(new ValidationError(
-                ctx.Path,
-                "max_value",
-                message ?? $"Must be at most {max}"));
+                ctx.Execution.Path, "max_value", message ?? $"Must be at most {max}"));
         }));
     }
-
-    /// <summary>
-    /// Adds a rule that requires the integer to be positive (> 0).
-    /// </summary>
-    public IntSchema Positive(string? message = null)
+    
+    public IntSchema<TContext> Refine(Func<int, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Min(1, message ?? "Must be positive");
+        return Use(new DelegateRule<int, TContext>((val, ctx) =>
+        {
+            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+        }));
     }
+}
 
-    /// <summary>
-    /// Adds a rule that requires the integer to be negative (< 0).
-    /// </summary>
-    public IntSchema Negative(string? message = null)
+/// <summary>
+/// A schema for validating integer values with default context.
+/// </summary>
+public sealed class IntSchema : IntSchema<object?>, ISchema<int>
+{
+     public Task<Result<int>> ValidateAsync(int value, ValidationExecutionContext? execution = null)
     {
-        return Max(-1, message ?? "Must be negative");
+        execution ??= ValidationExecutionContext.Empty;
+        var context = new ValidationContext<object?>(null, execution);
+        return ValidateAsync(value, context);
     }
 }

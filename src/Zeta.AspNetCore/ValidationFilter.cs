@@ -4,16 +4,17 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Zeta.AspNetCore;
 
 /// <summary>
-/// A minimal API endpoint filter that validates the request using a Zeta schema.
+/// A minimal API endpoint filter that validates the request using a Zeta schema and optional context factory.
 /// </summary>
-/// <typeparam name="T">The type of the parameter to validate.</typeparam>
-public class ValidationFilter<T> : IEndpointFilter
+public class ValidationFilter<T, TContext> : IEndpointFilter
 {
-    private readonly ISchema<T> _schema;
+    private readonly ISchema<T, TContext> _schema;
+    private readonly IValidationContextFactory<T, TContext>? _factory;
 
-    public ValidationFilter(ISchema<T> schema)
+    public ValidationFilter(ISchema<T, TContext> schema, IValidationContextFactory<T, TContext>? factory = null)
     {
         _schema = schema;
+        _factory = factory;
     }
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
@@ -22,18 +23,40 @@ public class ValidationFilter<T> : IEndpointFilter
         
         if (argument is null)
         {
-            // If body is optional or compatible type not found, we might skip or fail.
-            // For now, let's assume if the filter is applied, the type T is expected.
-            // But T could be a service or something else? 
-            // Usually WithValidation<T> implies we want to validate the T body/parameter.
              return await next(context);
         }
 
-        var validationContext = new ValidationContext(
+        var executionContext = new ValidationExecutionContext(
             path: "", 
             services: context.HttpContext.RequestServices, 
             cancellationToken: context.HttpContext.RequestAborted);
 
+        TContext contextData;
+        if (_factory != null)
+        {
+            contextData = await _factory.CreateAsync(argument, executionContext.Services, executionContext.CancellationToken);
+        }
+        else if (typeof(TContext) == typeof(object))
+        {
+             contextData = (TContext)(object)null!;
+        }
+        else
+        {
+            // If TContext is not object/void but no factory provided, try resolving from DI? 
+            // Or assume default? 
+            // For now, let's try resolving Factory from DI if available.
+             var factory = context.HttpContext.RequestServices.GetService<IValidationContextFactory<T, TContext>>();
+             if (factory != null)
+             {
+                 contextData = await factory.CreateAsync(argument, executionContext.Services, executionContext.CancellationToken);
+             }
+             else
+             {
+                 contextData = default!;
+             }
+        }
+
+        var validationContext = new ValidationContext<TContext>(contextData, executionContext);
         var result = await _schema.ValidateAsync(argument, validationContext);
 
         if (result.IsFailure)

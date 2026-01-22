@@ -1,51 +1,32 @@
 namespace Zeta;
 
 /// <summary>
-/// Provides context for the current validation operation, including the current path, services, and cancellation token.
+/// Provides a strongly-typed context for validation, including shared async data and execution details.
 /// </summary>
-public sealed class ValidationContext
+/// <typeparam name="TData">The type of the shared data context.</typeparam>
+public readonly struct ValidationContext<TData>
 {
-    private readonly IServiceProvider? _services;
+    /// <summary>
+    /// The shared data context (e.g., loaded from database).
+    /// </summary>
+    public TData Data { get; }
 
     /// <summary>
-    /// The dot-notation path to the current value being validated (e.g., "user.address.street").
+    /// The execution context (path, services, cancellation token).
     /// </summary>
-    public string Path { get; }
+    public ValidationExecutionContext Execution { get; }
 
-    /// <summary>
-    /// The service provider for dependency injection.
-    /// </summary>
-    public IServiceProvider Services => _services ?? throw new InvalidOperationException("Services are not available in this validation context.");
-
-    /// <summary>
-    /// The cancellation token for async operations.
-    /// </summary>
-    public CancellationToken CancellationToken { get; }
-
-    /// <summary>
-    /// Creates a new validation context.
-    /// </summary>
-    public ValidationContext(
-        string path = "",
-        IServiceProvider? services = null,
-        CancellationToken cancellationToken = default)
+    public ValidationContext(TData data, ValidationExecutionContext execution)
     {
-        Path = path;
-        _services = services;
-        CancellationToken = cancellationToken;
+        Data = data;
+        Execution = execution;
     }
 
     /// <summary>
     /// Creates a new context with the given path segment appended.
     /// </summary>
-    public ValidationContext Push(string segment)
+    public ValidationContext<TData> Push(string segment)
     {
-        var newPath = string.IsNullOrEmpty(Path) ? segment : $"{Path}.{segment}";
-        return new ValidationContext(newPath, _services, CancellationToken);
+        return new ValidationContext<TData>(Data, Execution.Push(segment));
     }
-
-    /// <summary>
-    /// Gets default empty context.
-    /// </summary>
-    public static ValidationContext Empty => new();
 }

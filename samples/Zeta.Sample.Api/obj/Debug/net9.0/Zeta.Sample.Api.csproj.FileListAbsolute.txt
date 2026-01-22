@@ -35,3 +35,4 @@
 /Users/personberg/Code/zeta/samples/Zeta.Sample.Api/obj/Debug/net9.0/Zeta.Sample.Api.pdb
 /Users/personberg/Code/zeta/samples/Zeta.Sample.Api/obj/Debug/net9.0/Zeta.Sample.Api.genruntimeconfig.cache
 /Users/personberg/Code/zeta/samples/Zeta.Sample.Api/obj/Debug/net9.0/ref/Zeta.Sample.Api.dll
+/Users/personberg/Code/zeta/samples/Zeta.Sample.Api/obj/Debug/net9.0/Zeta.Sample.Api.sourcelink.json

@@ -13,3 +13,4 @@
 /Users/personberg/Code/zeta/src/Zeta.AspNetCore/obj/Debug/net9.0/refint/Zeta.AspNetCore.dll
 /Users/personberg/Code/zeta/src/Zeta.AspNetCore/obj/Debug/net9.0/Zeta.AspNetCore.pdb
 /Users/personberg/Code/zeta/src/Zeta.AspNetCore/obj/Debug/net9.0/ref/Zeta.AspNetCore.dll
+/Users/personberg/Code/zeta/src/Zeta.AspNetCore/obj/Debug/net9.0/Zeta.AspNetCore.sourcelink.json

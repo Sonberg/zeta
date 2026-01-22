@@ -9,3 +9,4 @@
 /Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/refint/Zeta.dll
 /Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.pdb
 /Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/ref/Zeta.dll
+/Users/personberg/Code/zeta/src/Zeta/obj/Debug/net9.0/Zeta.sourcelink.json

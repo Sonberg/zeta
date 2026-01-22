@@ -2,36 +2,25 @@ using System.Linq.Expressions;
 
 namespace Zeta.Schemas;
 
-/// <summary>
-/// A schema for validating complex objects.
-/// </summary>
-/// <typeparam name="T">The type of object to validate.</typeparam>
-public sealed class ObjectSchema<T> : ISchema<T>
+public class ObjectSchema<T, TContext> : ISchema<T, TContext>
 {
-    private readonly List<IFieldValidator<T>> _fields = new();
-    private readonly List<IRule<T>> _rules = new();
+    private readonly List<IFieldValidator<T, TContext>> _fields = new();
+    private readonly List<IRule<T, TContext>> _rules = new();
 
-    /// <inheritdoc />
-    public async Task<Result<T>> ValidateAsync(T value, ValidationContext? context = null)
+    public async Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
     {
-        context ??= ValidationContext.Empty;
         var errors = new List<ValidationError>();
 
-        // Validate fields
         foreach (var field in _fields)
         {
             var fieldErrors = await field.ValidateAsync(value, context);
             errors.AddRange(fieldErrors);
         }
 
-        // Validate object-level rules
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors.Add(error);
-            }
+            if (error != null) errors.Add(error);
         }
 
         return errors.Count == 0
@@ -39,42 +28,32 @@ public sealed class ObjectSchema<T> : ISchema<T>
             : Result<T>.Failure(errors);
     }
 
-    /// <summary>
-    /// Defines a validation rule for a specific property.
-    /// </summary>
-    public ObjectSchema<T> Field<TProperty>(
-        Expression<Func<T, TProperty>> propertySelector, 
-        ISchema<TProperty> schema)
+    public ObjectSchema<T, TContext> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty, TContext> schema)
     {
         var propertyName = GetPropertyName(propertySelector);
         var getter = propertySelector.Compile();
-
-        _fields.Add(new FieldValidator<T, TProperty>(propertyName, getter, schema));
+        _fields.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
-
-    /// <summary>
-    /// Adds an object-level refinement rule.
-    /// </summary>
-    public ObjectSchema<T> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
+    
+    // Support simple schemas that don't need context (auto-adapt)
+    public ObjectSchema<T, TContext> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty> schema)
     {
-        _rules.Add(new DelegateRule<T>((val, ctx) =>
-        {
-            if (predicate(val)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Path, code, message));
-        }));
-        return this;
+        // Adapt ISchema<TProperty> to ISchema<TProperty, TContext>
+        // We need a wrapper that ignores the context.
+        return Field(propertySelector, new SchemaContextAdapter<TProperty, TContext>(schema));
     }
 
-    /// <summary>
-    /// Adds an async object-level refinement rule.
-    /// </summary>
-    public ObjectSchema<T> RefineAsync(Func<T, ValidationContext, Task<bool>> predicate, string message, string code = "custom_error")
+    public ObjectSchema<T, TContext> Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
     {
-         _rules.Add(new DelegateRule<T>(async (val, ctx) =>
+        _rules.Add(new DelegateRule<T, TContext>((val, ctx) =>
         {
-            if (await predicate(val, ctx)) return null;
-            return new ValidationError(ctx.Path, code, message);
+            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
         }));
         return this;
     }
@@ -85,44 +64,65 @@ public sealed class ObjectSchema<T> : ISchema<T>
         {
             return member.Member.Name;
         }
-        
         throw new ArgumentException("Expression must be a simple property access", nameof(propertySelector));
     }
 }
 
-internal interface IFieldValidator<T>
+/// <summary>
+/// Default object schema with no context.
+/// </summary>
+public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
 {
-    Task<IEnumerable<ValidationError>> ValidateAsync(T instance, ValidationContext context);
+    public Task<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
+    {
+        execution ??= ValidationExecutionContext.Empty;
+        var context = new ValidationContext<object?>(null, execution);
+        return ValidateAsync(value, context);
+    }
 }
 
-internal sealed class FieldValidator<TInstance, TProperty> : IFieldValidator<TInstance>
+internal interface IFieldValidator<T, TContext>
+{
+    Task<IEnumerable<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
+}
+
+internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldValidator<TInstance, TContext>
 {
     private readonly string _name;
     private readonly Func<TInstance, TProperty> _getter;
-    private readonly ISchema<TProperty> _schema;
+    private readonly ISchema<TProperty, TContext> _schema;
 
-    public FieldValidator(string name, Func<TInstance, TProperty> getter, ISchema<TProperty> schema)
+    public FieldValidator(string name, Func<TInstance, TProperty> getter, ISchema<TProperty, TContext> schema)
     {
-        _name = name; // Capitalized property name usually
-        
-        // Convert to camelCase for path if desired, but for now keeping 1:1 with property
-        // Often APIs want camelCase. Let's start with simple logic: first char lowercase
+        _name = name;
         if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
         {
              _name = char.ToLower(_name[0]) + _name.Substring(1);
         }
-
         _getter = getter;
         _schema = schema;
     }
 
-    public async Task<IEnumerable<ValidationError>> ValidateAsync(TInstance instance, ValidationContext context)
+    public async Task<IEnumerable<ValidationError>> ValidateAsync(TInstance instance, ValidationContext<TContext> context)
     {
         var value = _getter(instance);
         var fieldContext = context.Push(_name);
-        
         var result = await _schema.ValidateAsync(value, fieldContext);
-        
         return result.Errors;
+    }
+}
+
+internal sealed class SchemaContextAdapter<T, TContext> : ISchema<T, TContext>
+{
+    private readonly ISchema<T> _inner;
+
+    public SchemaContextAdapter(ISchema<T> inner)
+    {
+        _inner = inner;
+    }
+
+    public Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
+    {
+        return _inner.ValidateAsync(value, context.Execution);
     }
 }

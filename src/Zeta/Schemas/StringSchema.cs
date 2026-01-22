@@ -3,16 +3,14 @@ using System.Text.RegularExpressions;
 namespace Zeta.Schemas;
 
 /// <summary>
-/// A schema for validating string values.
+/// A schema for validating string values with a specific context.
 /// </summary>
-public sealed class StringSchema : ISchema<string>
+public class StringSchema<TContext> : ISchema<string, TContext>
 {
-    private readonly List<IRule<string>> _rules = new();
+    private readonly List<IRule<string, TContext>> _rules = new();
 
-    /// <inheritdoc />
-    public async Task<Result<string>> ValidateAsync(string value, ValidationContext? context = null)
+    public async Task<Result<string>> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        context ??= ValidationContext.Empty;
         var errors = new List<ValidationError>();
 
         foreach (var rule in _rules)
@@ -29,127 +27,101 @@ public sealed class StringSchema : ISchema<string>
             : Result<string>.Failure(errors);
     }
 
-    /// <summary>
-    /// Adds a custom rule to the schema.
-    /// </summary>
-    public StringSchema Use(IRule<string> rule)
+    public StringSchema<TContext> Use(IRule<string, TContext> rule)
     {
         _rules.Add(rule);
         return this;
     }
 
-    /// <summary>
-    /// Adds a rule that requires the string to have a minimum length.
-    /// </summary>
-    public StringSchema MinLength(int min, string? message = null)
+    public StringSchema<TContext> MinLength(int min, string? message = null)
     {
-        return Use(new DelegateRule<string>((val, ctx) =>
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
         {
             if (val.Length >= min) return ValueTask.FromResult<ValidationError?>(null);
-            
             return ValueTask.FromResult<ValidationError?>(new ValidationError(
-                ctx.Path, 
-                "min_length", 
-                message ?? $"Must be at least {min} characters long"));
+                ctx.Execution.Path, "min_length", message ?? $"Must be at least {min} characters long"));
         }));
     }
 
-    /// <summary>
-    /// Adds a rule that requires the string to have a maximum length.
-    /// </summary>
-    public StringSchema MaxLength(int max, string? message = null)
+    public StringSchema<TContext> MaxLength(int max, string? message = null)
     {
-         return Use(new DelegateRule<string>((val, ctx) =>
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
         {
             if (val.Length <= max) return ValueTask.FromResult<ValidationError?>(null);
-            
             return ValueTask.FromResult<ValidationError?>(new ValidationError(
-                ctx.Path, 
-                "max_length", 
-                message ?? $"Must be at most {max} characters long"));
+                ctx.Execution.Path, "max_length", message ?? $"Must be at most {max} characters long"));
         }));
     }
 
-    /// <summary>
-    /// Adds a rule that requires the string to be a valid email address.
-    /// </summary>
-    public StringSchema Email(string? message = null)
+    public StringSchema<TContext> Email(string? message = null)
     {
-        // Simple regex for email validation
         return Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", message ?? "Invalid email format", "email");
     }
 
-    /// <summary>
-    /// Adds a rule that requires the string to match a regular expression.
-    /// </summary>
-    public StringSchema Regex(string pattern, string? message = null, string code = "regex")
+    public StringSchema<TContext> Regex(string pattern, string? message = null, string code = "regex")
     {
-        return Use(new DelegateRule<string>((val, ctx) =>
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
         {
              if (System.Text.RegularExpressions.Regex.IsMatch(val, pattern)) 
                  return ValueTask.FromResult<ValidationError?>(null);
 
              return ValueTask.FromResult<ValidationError?>(new ValidationError(
-                ctx.Path, 
-                code, 
-                message ?? $"Must match pattern {pattern}"));
+                ctx.Execution.Path, code, message ?? $"Must match pattern {pattern}"));
         }));
     }
 
-    /// <summary>
-    /// Adds a rule that requires the string to be not empty or whitespace.
-    /// </summary>
-    public StringSchema NotEmpty(string? message = null)
+    public StringSchema<TContext> NotEmpty(string? message = null)
     {
-        return Use(new DelegateRule<string>((val, ctx) =>
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
         {
             if (!string.IsNullOrWhiteSpace(val)) return ValueTask.FromResult<ValidationError?>(null);
-
             return ValueTask.FromResult<ValidationError?>(new ValidationError(
-                ctx.Path,
-                "required",
-                message ?? "Value cannot be empty"));
-        }));
-    }
-
-     /// <summary>
-    /// Refines the validation with a custom synchronous predicate.
-    /// </summary>
-    public StringSchema Refine(Func<string, bool> predicate, string message, string code = "custom_error")
-    {
-        return Use(new DelegateRule<string>((val, ctx) =>
-        {
-            if (predicate(val)) return ValueTask.FromResult<ValidationError?>(null);
-
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Path, code, message));
+                ctx.Execution.Path, "required", message ?? "Value cannot be empty"));
         }));
     }
 
     /// <summary>
-    /// Refines the validation with a custom asynchronous predicate.
+    /// Refines validation using context.
     /// </summary>
-    public StringSchema RefineAsync(Func<string, ValidationContext, Task<bool>> predicate, string message, string code = "custom_error")
+    public StringSchema<TContext> Refine(Func<string, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Use(new DelegateRule<string>(async (val, ctx) =>
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
         {
-            if (await predicate(val, ctx)) return null;
-
-            return new ValidationError(ctx.Path, code, message);
+            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
         }));
+    }
+    
+    // Kept for backward compatibility logic or simple checks
+    public StringSchema<TContext> Refine(Func<string, bool> predicate, string message, string code = "custom_error")
+    {
+         return Refine((val, _) => predicate(val), message, code);
     }
 }
 
-// Simple delegate rule helper
-internal sealed class DelegateRule<T> : IRule<T>
+/// <summary>
+/// A schema for validating string values with default context.
+/// </summary>
+public sealed class StringSchema : StringSchema<object?>, ISchema<string>
 {
-    private readonly Func<T, ValidationContext, ValueTask<ValidationError?>> _validate;
+    public Task<Result<string>> ValidateAsync(string value, ValidationExecutionContext? execution = null)
+    {
+        execution ??= ValidationExecutionContext.Empty;
+        var context = new ValidationContext<object?>(null, execution);
+        return ValidateAsync(value, context);
+    }
+}
 
-    public DelegateRule(Func<T, ValidationContext, ValueTask<ValidationError?>> validate)
+internal sealed class DelegateRule<T, TContext> : IRule<T, TContext>
+{
+    private readonly Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> _validate;
+
+    public DelegateRule(Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> validate)
     {
         _validate = validate;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         return _validate(value, context);
     }

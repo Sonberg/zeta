@@ -1,16 +1,20 @@
 namespace Zeta;
 
 /// <summary>
-/// Defines a schema that can validate a value of type <typeparamref name="T"/>.
+/// Defines a schema that can validate a value of type <typeparamref name="T"/> with context <typeparamref name="TContext"/>.
 /// </summary>
-/// <typeparam name="T">The type of value to validate.</typeparam>
-public interface ISchema<T>
+public interface ISchema<T, TContext>
 {
     /// <summary>
     /// Validates the given value asynchronously.
     /// </summary>
-    /// <param name="value">The value to validate.</param>
-    /// <param name="context">The validation context (optional).</param>
-    /// <returns>A result containing the value or validation errors.</returns>
-    Task<Result<T>> ValidateAsync(T value, ValidationContext? context = null);
+    Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context);
+}
+
+/// <summary>
+/// Alias for schemas with no special context.
+/// </summary>
+public interface ISchema<T> : ISchema<T, object?>
+{
+     Task<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null);
 }
