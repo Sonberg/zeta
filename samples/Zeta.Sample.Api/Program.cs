@@ -1,19 +1,13 @@
 using Zeta;
 using Zeta.AspNetCore;
-using Zeta.Schemas;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
-// Register Zeta and scan for factories
-builder.Services.AddZeta(typeof(Program).Assembly)
-                .AddZetaControllers();
+
+// Register Zeta services (includes IZetaValidator) and scan for context factories
+builder.Services.AddZeta(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
-
-// Register Schema for Implicit Validation (Controllers)
-builder.Services.AddSingleton<ISchema<User>>(Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(3))
-    .Field(u => u.Email, Z.String().Email()));
 
 // Register fake repo
 builder.Services.AddScoped<IUserRepository, FakeUserRepository>();
@@ -49,43 +43,11 @@ app.MapPost("/sync/users", (User user) => Results.Ok(new
         User = user
     }))
     .WithValidation(userSyncSchema);
-    
-app.MapControllers();
 
+app.MapControllers();
 app.Run();
 
-// Domain Objects
-public record User(string Name, string Email);
 
-// Validation Context
-public record UserContext(bool EmailExists, bool IsMaintenanceMode);
-
-// Factory
-public class UserContextFactory : IValidationContextFactory<User, UserContext>
+public partial class Program
 {
-    private readonly IUserRepository _repo;
-    public UserContextFactory(IUserRepository repo) => _repo = repo;
-
-    public async Task<UserContext> CreateAsync(User input, IServiceProvider services, CancellationToken ct)
-    {
-        return new UserContext(
-            EmailExists: await _repo.EmailExistsAsync(input.Email),
-            IsMaintenanceMode: await _repo.IsMaintenanceModeAsync()
-        );
-    }
 }
-
-// Fake Services
-public interface IUserRepository
-{
-    Task<bool> EmailExistsAsync(string email);
-    Task<bool> IsMaintenanceModeAsync();
-}
-
-public class FakeUserRepository : IUserRepository
-{
-    public Task<bool> EmailExistsAsync(string email) => Task.FromResult(email == "taken@example.com");
-    public Task<bool> IsMaintenanceModeAsync() => Task.FromResult(false);
-}
-
-public partial class Program { }

@@ -9,23 +9,42 @@ namespace Zeta.Sample.Api;
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    [HttpPost]
-    public IActionResult Create(User user)
+    private readonly IZetaValidator _validator;
+
+    // Define schemas as static fields for reuse
+    private static readonly ISchema<User> DefaultSchema = Z.Object<User>()
+        .Field(u => u.Name, Z.String().MinLength(3))
+        .Field(u => u.Email, Z.String().Email());
+
+    private static readonly ISchema<User> StrictSchema = Z.Object<User>()
+        .Field(u => u.Name, Z.String().MinLength(5)) // Stricter: 5 instead of 3
+        .Field(u => u.Email, Z.String().Email());
+
+    public UsersController(IZetaValidator validator)
     {
-        return Ok(new
+        _validator = validator;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(User user)
+    {
+        var result = await _validator.ValidateAsync(user, DefaultSchema);
+
+        return result.ToActionResult(valid => Ok(new
         {
             Message = "User created",
-            User = user
-        });
+            User = valid
+        }));
     }
 
     /// <summary>
-    /// Endpoint where validation is skipped using [ZetaIgnore].
-    /// Even invalid data should pass through.
+    /// Endpoint where validation is skipped.
+    /// Even invalid data passes through.
     /// </summary>
     [HttpPost("ignored")]
-    public IActionResult CreateIgnored([ZetaIgnore] User user)
+    public IActionResult CreateIgnored(User user)
     {
+        // No validation - just process the data
         return Ok(new
         {
             Message = "User created (validation ignored)",
@@ -34,33 +53,18 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Endpoint using a specific schema via [ZetaValidate].
-    /// StrictUserSchema requires name length >= 5 (stricter than default).
+    /// Endpoint using stricter validation.
+    /// StrictSchema requires name length >= 5 (stricter than default).
     /// </summary>
     [HttpPost("strict")]
-    public IActionResult CreateStrict([ZetaValidate(typeof(StrictUserSchema))] User user)
+    public async Task<IActionResult> CreateStrict(User user)
     {
-        return Ok(new
+        var result = await _validator.ValidateAsync(user, StrictSchema);
+
+        return result.ToActionResult(valid => Ok(new
         {
             Message = "User created (strict validation)",
-            User = user
-        });
+            User = valid
+        }));
     }
-}
-
-/// <summary>
-/// A stricter schema for User - requires name >= 5 characters.
-/// Implements ISchema&lt;User&gt; by delegating to an internal ObjectSchema.
-/// </summary>
-public class StrictUserSchema : ISchema<User>
-{
-    private readonly ISchema<User> _inner = Z.Object<User>()
-        .Field(u => u.Name, Z.String().MinLength(5)) // Stricter: 5 instead of 3
-        .Field(u => u.Email, Z.String().Email());
-
-    public Task<Result<User>> ValidateAsync(User value, ValidationExecutionContext? execution = null)
-        => _inner.ValidateAsync(value, execution);
-
-    public Task<Result<User>> ValidateAsync(User value, ValidationContext<object?> context)
-        => _inner.ValidateAsync(value, context);
 }

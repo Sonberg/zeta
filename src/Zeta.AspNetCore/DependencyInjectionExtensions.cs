@@ -8,12 +8,16 @@ namespace Zeta.AspNetCore;
 public static class DependencyInjectionExtensions
 {
     /// <summary>
-    /// Registers Zeta validation services and scans for context factories in the specified assemblies.
+    /// Registers Zeta validation services including IZetaValidator.
+    /// Optionally scans for context factories in the specified assemblies.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="assemblies">The assemblies to scan for factories.</param>
+    /// <param name="assemblies">Optional assemblies to scan for context factories.</param>
     public static IServiceCollection AddZeta(this IServiceCollection services, params Assembly[] assemblies)
     {
+        // Register the validator service
+        services.AddScoped<IZetaValidator, ZetaValidator>();
+
         if (assemblies.Length == 0)
         {
             return services;
@@ -34,18 +38,6 @@ public static class DependencyInjectionExtensions
             services.AddScoped(factory.Interface, factory.Implementation);
         }
 
-        return services;
-    }
-
-    /// <summary>
-    /// Adds Zeta validation support to MVC Controllers.
-    /// </summary>
-    public static IServiceCollection AddZetaControllers(this IServiceCollection services)
-    {
-        services.Configure<MvcOptions>(options =>
-        {
-            options.Filters.Add<ZetaValidationActionFilter>();
-        });
         return services;
     }
 }
