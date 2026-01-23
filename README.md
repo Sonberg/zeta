@@ -335,6 +335,39 @@ public record ValidationError(
 | `finite` | Must be finite number |
 | `custom_error` | Custom refinement failed |
 
+## Benchmarks
+
+Comparing Zeta against FluentValidation and DataAnnotations on .NET 9 (Apple M2 Pro).
+
+### Valid Input
+
+| Method | Mean | Allocated |
+|--------|-----:|----------:|
+| FluentValidation | 152 ns | 600 B |
+| FluentValidation (Async) | 275 ns | 672 B |
+| **Zeta** | **341 ns** | **848 B** |
+| DataAnnotations | 686 ns | 1,880 B |
+
+### Invalid Input (with errors)
+
+| Method | Mean | Allocated |
+|--------|-----:|----------:|
+| **Zeta** | **432 ns** | **1,352 B** |
+| DataAnnotations | 1,111 ns | 2,704 B |
+| FluentValidation | 2,264 ns | 7,920 B |
+| FluentValidation (Async) | 2,446 ns | 7,992 B |
+
+**Key findings:**
+- Zeta is **5x faster** than FluentValidation when validation fails
+- Zeta uses **6x less memory** than FluentValidation for invalid input
+- Zeta is **2x faster** than DataAnnotations in all scenarios
+- For valid input, FluentValidation sync is fastest, but Zeta is competitive
+
+Run benchmarks yourself:
+```bash
+dotnet run --project benchmarks/Zeta.Benchmarks -c Release
+```
+
 ## Comparison
 
 | Feature | FluentValidation | DataAnnotations | Zeta |

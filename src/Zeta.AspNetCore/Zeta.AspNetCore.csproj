@@ -11,8 +11,8 @@
     <Description>ASP.NET Core integration for Zeta validation framework. Includes Minimal API filters, IZetaValidator service, and Result extensions.</Description>
     <Authors>Zeta Contributors</Authors>
     <PackageTags>validation;schema;async;aspnetcore;minimal-api;webapi</PackageTags>
-    <PackageProjectUrl>https://github.com/yourusername/zeta</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/yourusername/zeta</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/sonberg/zeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sonberg/zeta</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

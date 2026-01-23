@@ -11,8 +11,8 @@
     <Description>A composable, type-safe, async-first validation framework for .NET inspired by Zod.</Description>
     <Authors>Zeta Contributors</Authors>
     <PackageTags>validation;schema;async;zod;fluent;result-pattern</PackageTags>
-    <PackageProjectUrl>https://github.com/yourusername/zeta</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/yourusername/zeta</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/sonberg/zeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sonberg/zeta</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
