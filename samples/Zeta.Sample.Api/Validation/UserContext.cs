@@ -1,4 +1,7 @@
-using Zeta;
+using Zeta.Sample.Api.Models;
+using Zeta.Sample.Api.Repository;
+
+namespace Zeta.Sample.Api.Validation;
 
 public record UserContext(bool EmailExists, bool IsMaintenanceMode);
 

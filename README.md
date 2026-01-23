@@ -395,4 +395,6 @@ MIT
 - Support for other .NET platforms (e.g., Xamarin, MAUI)
 - ThrowOnFailure option for exceptions instead of Result pattern
 - Tests for all methods and edge cases
-- Use Linq to validate rules
+- Use Linq to validate rules (If more perforamnt)
+- Optional rules depending on state of input. E.g., if field A is true, field B is required
+- Nullable support and better handling of optional fields
