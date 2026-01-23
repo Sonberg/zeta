@@ -2,7 +2,10 @@ using Zeta.Schemas;
 
 namespace Zeta;
 
-public static class Zeta
+/// <summary>
+/// Entry point for creating Zeta schemas.
+/// </summary>
+public static class Z
 {
     public static StringSchema String() => new();
     public static StringSchema<TContext> String<TContext>() => new();

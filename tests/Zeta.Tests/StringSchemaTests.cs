@@ -7,7 +7,7 @@ public class StringSchemaTests
     [Fact]
     public async Task MinLength_Valid_ReturnsSuccess()
     {
-        var schema = Zeta.String().MinLength(3);
+        var schema = Z.String().MinLength(3);
         var result = await schema.ValidateAsync("abc");
         Assert.True(result.IsSuccess);
     }
@@ -15,7 +15,7 @@ public class StringSchemaTests
     [Fact]
     public async Task MinLength_Invalid_ReturnsFailure()
     {
-        var schema = Zeta.String().MinLength(3);
+        var schema = Z.String().MinLength(3);
         var result = await schema.ValidateAsync("ab");
         
         Assert.False(result.IsSuccess);
@@ -25,7 +25,7 @@ public class StringSchemaTests
     [Fact]
     public async Task Email_Valid_ReturnsSuccess()
     {
-        var schema = Zeta.String().Email();
+        var schema = Z.String().Email();
         var result = await schema.ValidateAsync("test@example.com");
         Assert.True(result.IsSuccess);
     }
@@ -33,7 +33,7 @@ public class StringSchemaTests
     [Fact]
     public async Task Email_Invalid_ReturnsFailure()
     {
-        var schema = Zeta.String().Email();
+        var schema = Z.String().Email();
         var result = await schema.ValidateAsync("invalid-email");
         
         Assert.False(result.IsSuccess);
@@ -44,7 +44,7 @@ public class StringSchemaTests
     public async Task ContextRefine_UsesContextData()
     {
         // Setup schema that requires a "MagicWord" from context
-        var schema = Zeta.String<TestContext>()
+        var schema = Z.String<TestContext>()
             .Refine((val, ctx) => val == ctx.MagicWord, "Wrong magic word");
 
         var context = new ValidationContext<TestContext>(

@@ -10,8 +10,8 @@ public class ObjectSchemaTests
     [Fact]
     public async Task Field_PropagatesValidation()
     {
-        var schema = Zeta.Object<User>()
-            .Field(u => u.Name, Zeta.String().MinLength(3));
+        var schema = Z.Object<User>()
+            .Field(u => u.Name, Z.String().MinLength(3));
 
         var valid = await schema.ValidateAsync(new User("Joe", 20, new Address("City", "12345")));
         Assert.True(valid.IsSuccess);
@@ -24,10 +24,10 @@ public class ObjectSchemaTests
     [Fact]
     public async Task NestedField_PropagatesPath()
     {
-        var addressSchema = Zeta.Object<Address>()
-            .Field(a => a.Zip, Zeta.String().MinLength(5));
+        var addressSchema = Z.Object<Address>()
+            .Field(a => a.Zip, Z.String().MinLength(5));
 
-        var userSchema = Zeta.Object<User>()
+        var userSchema = Z.Object<User>()
             .Field(u => u.Address, addressSchema);
 
         var user = new User("Joe", 20, new Address("City", "123")); // Invalid Zip
@@ -44,8 +44,8 @@ public class ObjectSchemaTests
     [Fact]
     public async Task Context_PropagatesToFields()
     {
-        var schema = Zeta.Object<User, BanContext>()
-            .Field(u => u.Name, Zeta.String<BanContext>()
+        var schema = Z.Object<User, BanContext>()
+            .Field(u => u.Name, Z.String<BanContext>()
                 .Refine((val, ctx) => val != ctx.BannedName, "Name is banned"));
 
         var context = new ValidationContext<BanContext>(

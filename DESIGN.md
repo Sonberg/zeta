@@ -7,9 +7,9 @@ A composable, type-safe, async-first validation framework for .NET inspired by Z
 **Schema-first validation** that feels as natural as Zod in TypeScript, but built for modern .NET with async/await and the Result pattern at its core.
 
 ```csharp
-var UserSchema = Zeta.Object<User>()
-    .Field(u => u.Email, Zeta.String().Email())
-    .Field(u => u.Age, Zeta.Int().Min(18));
+var UserSchema = Z.Object<User>()
+    .Field(u => u.Email, Z.String().Email())
+    .Field(u => u.Age, Z.Int().Min(18));
 
 var result = await UserSchema.ValidateAsync(user);
 ```
@@ -21,7 +21,18 @@ var result = await UserSchema.ValidateAsync(user);
 3. **No exceptions for control flow** — Validation failures return Results, never throw
 4. **Composable** — Schemas are values that can be reused and combined
 5. **Path-aware errors** — Errors know their location (`user.address.street`)
-6. **Minimal API native** — First-class integration, not an afterthought
+6. **Required by default** — Values must be present unless explicitly marked optional/nullable
+7. **Minimal API & MVC native** — First-class integration for both
+
+---
+
+## Final Decisions
+
+| Question | Decision |
+|----------|----------|
+| Entry point naming | `Z.String()`, `Z.Int()`, `Z.Object<T>()` |
+| Nullability | Required by default (Zod-style) |
+| Transforms | Included in MVP |
 
 ---
 
@@ -56,44 +67,74 @@ public readonly struct Result<T>
     public Task<Result<U>> Then<U>(Func<T, Task<Result<U>>> bind);
     public T GetOrThrow();
     public T GetOrDefault(T fallback);
+    public TResult Match<TResult>(Func<T, TResult> success, Func<IReadOnlyList<ValidationError>, TResult> failure);
 }
 ```
 
-### 3. ISchema<T>
+### 3. ISchema<T> and ISchema<T, TContext>
 
-The core abstraction — a schema knows how to validate `T`.
+The core abstraction — a schema knows how to validate `T`, optionally with shared context data.
 
 ```csharp
-public interface ISchema<T>
+// Schema with typed context (for async-loaded data)
+public interface ISchema<T, TContext>
 {
-    Task<Result<T>> ValidateAsync(T value, ValidationContext? context = null);
+    Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context);
+}
+
+// Schema with no context (most common)
+public interface ISchema<T> : ISchema<T, object?>
+{
+    Task<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null);
 }
 ```
 
-### 4. ValidationContext
+### 4. ValidationContext System
 
-Carries metadata through the validation tree.
+Two-layer context system for flexibility:
 
 ```csharp
-public sealed class ValidationContext
+// Execution context: path, services, cancellation
+public sealed class ValidationExecutionContext
 {
     public string Path { get; }
-    public IServiceProvider? Services { get; }
+    public IServiceProvider Services { get; }
     public CancellationToken CancellationToken { get; }
+    public ValidationExecutionContext Push(string segment);
+}
 
-    public ValidationContext Push(string segment);  // Returns new context with extended path
+// Full context: execution + typed data
+public readonly struct ValidationContext<TData>
+{
+    public TData Data { get; }
+    public ValidationExecutionContext Execution { get; }
+    public ValidationContext<TData> Push(string segment);
 }
 ```
 
-### 5. IRule<T>
+### 5. IValidationContextFactory<TInput, TContext>
+
+Factory for async context creation (e.g., load data from DB before validation).
+
+```csharp
+public interface IValidationContextFactory<in TInput, TContext>
+{
+    Task<TContext> CreateAsync(TInput input, IServiceProvider services, CancellationToken ct);
+}
+```
+
+### 6. IRule<T, TContext>
 
 Individual validation rule.
 
 ```csharp
-public interface IRule<T>
+public interface IRule<in T, TContext>
 {
-    ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext context);
+    ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context);
 }
+
+// Shorthand for no context
+public interface IRule<in T> : IRule<T, object?> { }
 ```
 
 ---
@@ -104,7 +145,7 @@ public interface IRule<T>
 
 ```csharp
 // String
-Zeta.String()
+Z.String()
     .MinLength(3)
     .MaxLength(100)
     .Email()
@@ -112,53 +153,26 @@ Zeta.String()
     .NotEmpty()
 
 // Numeric
-Zeta.Int().Min(0).Max(100)
-Zeta.Long().Positive()
-Zeta.Decimal().Precision(2)
+Z.Int().Min(0).Max(100)
 
-// Other primitives
-Zeta.Bool()
-Zeta.DateTime().Past().After(minDate)
-Zeta.Guid().NotEmpty()
+// With context
+Z.String<MyContext>()
+    .Refine((val, ctx) => val != ctx.ForbiddenValue, "Value not allowed")
 ```
 
 ### Object Schema
 
 ```csharp
-Zeta.Object<User>()
-    .Field(x => x.Email, Zeta.String().Email())
-    .Field(x => x.Age, Zeta.Int().Min(18))
+Z.Object<User>()
+    .Field(x => x.Email, Z.String().Email())
+    .Field(x => x.Age, Z.Int().Min(18))
     .Field(x => x.Address, AddressSchema)  // Nested schema
-    .Refine(u => u.Password != u.Email, "Password cannot be email", "password_equals_email");
-```
+    .Refine((u, _) => u.Password != u.Email, "Password cannot be email");
 
-### Collection Schemas
-
-```csharp
-Zeta.Array(Zeta.String().Email())    // string[]
-    .MinLength(1)
-    .MaxLength(10)
-
-Zeta.List(UserSchema)                 // List<User>
-```
-
-### Nullable & Optional
-
-```csharp
-Zeta.String().Nullable()              // null is valid
-Zeta.String().Optional()              // undefined/missing is valid (for object fields)
-```
-
-### Composition
-
-```csharp
-// Reuse
-var EmailSchema = Zeta.String().Email().MaxLength(255);
-var UserSchema = Zeta.Object<User>()
-    .Field(x => x.Email, EmailSchema);
-
-// Union (future)
-Zeta.Union(Zeta.String(), Zeta.Int())
+// With context
+Z.Object<User, UserContext>()
+    .Field(u => u.Email, Z.String<UserContext>()
+        .Refine((email, ctx) => !ctx.EmailExists, "Email taken"));
 ```
 
 ---
@@ -168,7 +182,7 @@ Zeta.Union(Zeta.String(), Zeta.Int())
 ### Sync Refinement
 
 ```csharp
-Zeta.String()
+Z.String()
     .Refine(
         value => value.StartsWith("A"),
         message: "Must start with A",
@@ -176,17 +190,15 @@ Zeta.String()
     );
 ```
 
-### Async Refinement (with DI)
+### Context-Aware Refinement
 
 ```csharp
-Zeta.String()
-    .RefineAsync(async (value, ctx) =>
-    {
-        var repo = ctx.Services.GetRequiredService<IUserRepository>();
-        return !await repo.EmailExistsAsync(value, ctx.CancellationToken);
-    },
-    message: "Email already taken",
-    code: "email_taken");
+Z.String<UserContext>()
+    .Refine(
+        (value, ctx) => !ctx.BannedEmails.Contains(value),
+        message: "Email is banned",
+        code: "email_banned"
+    );
 ```
 
 ### Custom Rule Class
@@ -194,33 +206,83 @@ Zeta.String()
 ```csharp
 public sealed class UniqueEmailRule : IRule<string>
 {
-    public async ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext ctx)
+    public async ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<object?> ctx)
     {
-        var repo = ctx.Services.GetRequiredService<IUserRepository>();
-        var exists = await repo.EmailExistsAsync(value, ctx.CancellationToken);
+        var repo = ctx.Execution.Services.GetRequiredService<IUserRepository>();
+        var exists = await repo.EmailExistsAsync(value, ctx.Execution.CancellationToken);
 
         return exists
-            ? new ValidationError(ctx.Path, "email_taken", "Email already taken")
+            ? new ValidationError(ctx.Execution.Path, "email_taken", "Email already taken")
             : null;
     }
 }
 
 // Usage
-Zeta.String().Use(new UniqueEmailRule())
+Z.String().Use(new UniqueEmailRule())
 ```
 
 ---
 
-## Minimal API Integration
+## ASP.NET Core Integration
 
-### Endpoint Filter
+### Minimal API
 
 ```csharp
+// Simple validation
 app.MapPost("/users", (User user) => Results.Ok(user))
    .WithValidation(UserSchema);
+
+// With context factory (async data loading)
+app.MapPost("/users", (User user) => Results.Ok(user))
+   .WithValidation(UserAsyncSchema);  // Factory resolved from DI
 ```
 
-### Automatic Error Response
+### MVC Controllers
+
+```csharp
+// Register globally
+builder.Services.AddZetaControllers();
+
+// Register schema in DI
+builder.Services.AddSingleton<ISchema<User>>(Z.Object<User>()
+    .Field(u => u.Name, Z.String().MinLength(3)));
+
+// Controller - validation runs automatically
+[ApiController]
+public class UsersController : ControllerBase
+{
+    [HttpPost]
+    public IActionResult Create(User user) => Ok(user);
+}
+```
+
+### Controller Attributes
+
+```csharp
+// Skip validation for a parameter
+[HttpPost("import")]
+public IActionResult Import([ZetaIgnore] RawData data) => Ok();
+
+// Use a specific schema type
+[HttpPost("strict")]
+public IActionResult CreateStrict([ZetaValidate(typeof(StrictUserSchema))] User user) => Ok();
+```
+
+**Attribute Definitions:**
+
+```csharp
+[AttributeUsage(AttributeTargets.Parameter)]
+public sealed class ZetaIgnoreAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Parameter)]
+public sealed class ZetaValidateAttribute : Attribute
+{
+    public Type SchemaType { get; }
+    public ZetaValidateAttribute(Type schemaType) => SchemaType = schemaType;
+}
+```
+
+### Error Response
 
 Returns `400 Bad Request` with `ValidationProblemDetails`:
 
@@ -231,20 +293,24 @@ Returns `400 Bad Request` with `ValidationProblemDetails`:
   "status": 400,
   "errors": {
     "email": ["Invalid email format"],
-    "age": ["Must be at least 18"]
+    "name": ["Must be at least 3 characters"]
   }
 }
 ```
 
-### Result Extensions
+---
+
+## Dependency Injection
 
 ```csharp
-app.MapPost("/users", async (User user) =>
-{
-    return await UserSchema.ValidateAsync(user)
-        .Then(u => userService.CreateAsync(u))
-        .ToMinimalApiResult();  // Maps Result<T> to IResult
-});
+// Register Zeta with context factory scanning
+builder.Services.AddZeta(typeof(Program).Assembly);
+
+// Register MVC filter
+builder.Services.AddZetaControllers();
+
+// Register schemas
+builder.Services.AddSingleton<ISchema<User>>(UserSchema);
 ```
 
 ---
@@ -264,7 +330,7 @@ public sealed record ValidationError(
 ### Path Building
 
 - Root level: `""`
-- Object field: `"email"`
+- Object field: `"email"` (auto-camelCased)
 - Nested: `"address.street"`
 - Array: `"items[0].name"`
 
@@ -276,35 +342,10 @@ public sealed record ValidationError(
 | `min_length` | Below minimum length |
 | `max_length` | Above maximum length |
 | `email` | Invalid email format |
-| `min` | Below minimum value |
-| `max` | Above maximum value |
+| `min_value` | Below minimum value |
+| `max_value` | Above maximum value |
 | `regex` | Pattern mismatch |
-| `refine` | Custom refinement failed |
-
----
-
-## MVP Scope
-
-### In Scope (v0.1)
-
-- [x] `Result<T>` type with monadic operations
-- [x] `ValidationError` and `ValidationContext`
-- [x] `ISchema<T>` and `IRule<T>` abstractions
-- [x] `StringSchema` with: MinLength, MaxLength, Email, NotEmpty, Regex, Refine, RefineAsync
-- [x] `IntSchema` with: Min, Max, Positive, Negative
-- [x] `ObjectSchema<T>` with: Field, Refine, RefineAsync
-- [x] Minimal API filter: `WithValidation<T>(schema)`
-- [x] Error aggregation (all errors, no short-circuit)
-
-### Out of Scope (v0.1)
-
-- Union types
-- Transforms / coercion
-- Localization
-- OpenAPI generation
-- Source generators
-- Collections beyond basic array
-- Dependent field validation (`when`)
+| `custom_error` | Custom refinement failed |
 
 ---
 
@@ -313,24 +354,29 @@ public sealed record ValidationError(
 ```
 Zeta/
 ├── src/
-│   ├── Zeta/                      # Core library
+│   ├── Zeta/                          # Core library
 │   │   ├── Core/
 │   │   │   ├── Result.cs
 │   │   │   ├── ValidationError.cs
 │   │   │   ├── ValidationContext.cs
-│   │   │   └── ISchema.cs
+│   │   │   ├── ValidationExecutionContext.cs
+│   │   │   ├── ISchema.cs
+│   │   │   ├── IValidationContextFactory.cs
+│   │   │   └── SchemaExtensions.cs
 │   │   ├── Rules/
-│   │   │   ├── IRule.cs
-│   │   │   └── Built-in rules...
+│   │   │   └── IRule.cs
 │   │   ├── Schemas/
 │   │   │   ├── StringSchema.cs
 │   │   │   ├── IntSchema.cs
 │   │   │   └── ObjectSchema.cs
-│   │   └── Zeta.cs                # Static entry point
+│   │   └── Zeta.cs                    # Z static entry point
 │   │
-│   └── Zeta.AspNetCore/           # Minimal API integration
-│       ├── ValidationFilter.cs
-│       └── Extensions.cs
+│   └── Zeta.AspNetCore/               # ASP.NET Core integration
+│       ├── Attributes.cs              # [ZetaIgnore], [ZetaValidate]
+│       ├── ValidationFilter.cs        # Minimal API filter
+│       ├── ZetaValidationActionFilter.cs  # MVC filter
+│       ├── Extensions.cs              # WithValidation()
+│       └── DependencyInjectionExtensions.cs
 │
 ├── tests/
 │   ├── Zeta.Tests/
@@ -346,32 +392,49 @@ Zeta/
 
 | Feature | FluentValidation | DataAnnotations | Zeta |
 |---------|------------------|-----------------|------|
-| Async-first | Partial | No | Yes |
-| Schema-based | No | No | Yes |
-| Composable | Limited | No | Yes |
-| Result pattern | No | No | Yes |
-| Minimal API native | Adapter | Adapter | Native |
-| Path-aware errors | Partial | No | Yes |
-| No exceptions | No | No | Yes |
+| Async-first | Partial | No | **Yes** |
+| Schema-based | No | No | **Yes** |
+| Composable | Limited | No | **Yes** |
+| Result pattern | No | No | **Yes** |
+| Typed context | No | No | **Yes** |
+| Minimal API native | Adapter | Adapter | **Native** |
+| MVC native | Adapter | Built-in | **Native** |
+| Path-aware errors | Partial | No | **Yes** |
+| No exceptions | No | No | **Yes** |
 
 ---
 
-## Open Questions
+## Implemented (v0.1)
 
-1. **Naming**: `Zeta.String()` vs `Schema.String()` vs `Z.String()`?
-2. **Nullability**: How to handle `T?` vs required by default?
-3. **Transforms**: Should MVP include `.Transform()`?
-4. **DI registration**: Auto-discover schemas via assembly scanning?
-5. **Error messages**: Built-in vs user-provided vs resource keys?
+- [x] `Result<T>` type with monadic operations
+- [x] `ValidationError` and `ValidationContext`
+- [x] `ISchema<T>` and `ISchema<T, TContext>` abstractions
+- [x] `IRule<T>` and `IRule<T, TContext>` abstractions
+- [x] `IValidationContextFactory<TInput, TContext>` for async context
+- [x] `StringSchema` with: MinLength, MaxLength, Email, NotEmpty, Regex, Refine
+- [x] `IntSchema` with: Min, Max, Refine
+- [x] `ObjectSchema<T>` with: Field, Refine (supports nested schemas)
+- [x] Minimal API filter: `WithValidation<T>(schema)`
+- [x] MVC Controller filter: `AddZetaControllers()`
+- [x] Controller attributes: `[ZetaIgnore]`, `[ZetaValidate(typeof(...))]`
+- [x] Error aggregation (all errors, no short-circuit)
+- [x] 22 passing tests
 
 ---
 
-## Next Steps
+## Future Roadmap
 
-1. Create solution and project structure
-2. Implement `Result<T>` and core types
-3. Implement `StringSchema` with basic rules
-4. Implement `ObjectSchema<T>`
-5. Add Minimal API filter
-6. Write tests
-7. Create sample API
+### v0.2
+- [ ] Transforms: `.Transform(s => s.Trim())`
+- [ ] Collection schemas: `Z.Array()`, `Z.List()`
+- [ ] Nullable/Optional modifiers
+
+### v0.3
+- [ ] Union types
+- [ ] Dependent field validation (`.When()`)
+- [ ] OpenAPI integration
+
+### v1.0
+- [ ] Localization support
+- [ ] Source generators for performance
+- [ ] Full documentation
