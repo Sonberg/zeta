@@ -3,18 +3,21 @@ using Zeta.Sample.Api.Repository;
 
 namespace Zeta.Sample.Api.Validation;
 
-public record UserContext(bool EmailExists, bool IsMaintenanceMode);
+// Context for user registration - loaded async before validation
+public record RegisterUserContext(bool EmailExists);
 
-public class UserContextFactory : IValidationContextFactory<User, UserContext>
+public class RegisterUserContextFactory : IValidationContextFactory<RegisterUserRequest, RegisterUserContext>
 {
     private readonly IUserRepository _repo;
-    public UserContextFactory(IUserRepository repo) => _repo = repo;
 
-    public async Task<UserContext> CreateAsync(User input, IServiceProvider services, CancellationToken ct)
+    public RegisterUserContextFactory(IUserRepository repo) => _repo = repo;
+
+    public async Task<RegisterUserContext> CreateAsync(
+        RegisterUserRequest input,
+        IServiceProvider services,
+        CancellationToken ct)
     {
-        return new UserContext(
-            EmailExists: await _repo.EmailExistsAsync(input.Email),
-            IsMaintenanceMode: await _repo.IsMaintenanceModeAsync()
-        );
+        var emailExists = await _repo.EmailExistsAsync(input.Email, ct);
+        return new RegisterUserContext(emailExists);
     }
 }

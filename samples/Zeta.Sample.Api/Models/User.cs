@@ -1,7 +1,29 @@
 namespace Zeta.Sample.Api.Models;
 
-public record User(string Name, string Email);
+// Basic user registration
+public record RegisterUserRequest(
+    string Email,
+    string Password,
+    string ConfirmPassword,
+    string? Name,
+    int Age);
 
-public record UserWithAddress(string Name, string Email, bool ValidateAddress, Address? Address);
+// User with optional address (conditional validation)
+public record CreateUserRequest(
+    string Email,
+    string Name,
+    bool HasAddress,
+    AddressDto? Address);
 
-public record Address(string Street, string City, string ZipCode);
+public record AddressDto(
+    string Street,
+    string City,
+    string State,
+    string ZipCode,
+    string? Country);
+
+// User profile update
+public record UpdateProfileRequest(
+    string? Name,
+    string? PhoneNumber,
+    DateOnly? DateOfBirth);

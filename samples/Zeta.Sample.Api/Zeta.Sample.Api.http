@@ -1,6 +1,486 @@
-@Zeta.Sample.Api_HostAddress = http://localhost:5230
+@baseUrl = http://localhost:5230
 
-GET {{Zeta.Sample.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+###############################################################################
+# USERS - Registration & Profile
+###############################################################################
 
-###
+### Register User (Simple) - Valid
+POST {{baseUrl}}/api/users/register/simple
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "Password123",
+  "confirmPassword": "Password123",
+  "name": "John Doe",
+  "age": 25
+}
+
+### Register User (Simple) - Invalid: Passwords don't match
+POST {{baseUrl}}/api/users/register/simple
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "Password123",
+  "confirmPassword": "DifferentPassword",
+  "name": "John Doe",
+  "age": 25
+}
+
+### Register User (Simple) - Invalid: Weak password
+POST {{baseUrl}}/api/users/register/simple
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "weak",
+  "confirmPassword": "weak",
+  "name": "John Doe",
+  "age": 25
+}
+
+### Register User (Async) - Valid with unique email
+POST {{baseUrl}}/api/users/register
+Content-Type: application/json
+
+{
+  "email": "unique@example.com",
+  "password": "Password123",
+  "confirmPassword": "Password123",
+  "name": "Jane Doe",
+  "age": 30
+}
+
+### Register User (Async) - Invalid: Email already taken
+POST {{baseUrl}}/api/users/register
+Content-Type: application/json
+
+{
+  "email": "taken@example.com",
+  "password": "Password123",
+  "confirmPassword": "Password123",
+  "name": "Jane Doe",
+  "age": 30
+}
+
+### Create User with Address - Valid
+POST {{baseUrl}}/api/users/create
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "name": "Bob Smith",
+  "hasAddress": true,
+  "address": {
+    "street": "123 Main Street",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "USA"
+  }
+}
+
+### Create User without Address - Valid (address not validated)
+POST {{baseUrl}}/api/users/create
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "name": "Bob Smith",
+  "hasAddress": false,
+  "address": null
+}
+
+### Create User - Invalid: hasAddress=true but invalid address
+POST {{baseUrl}}/api/users/create
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "name": "Bob Smith",
+  "hasAddress": true,
+  "address": {
+    "street": "123",
+    "city": "X",
+    "state": "NEW YORK",
+    "zipCode": "invalid",
+    "country": null
+  }
+}
+
+### Update Profile - Valid
+PATCH {{baseUrl}}/api/users/profile
+Content-Type: application/json
+
+{
+  "name": "Robert Smith",
+  "phoneNumber": "+15551234567",
+  "dateOfBirth": "1990-05-15"
+}
+
+### Update Profile - Invalid phone number
+PATCH {{baseUrl}}/api/users/profile
+Content-Type: application/json
+
+{
+  "name": "Robert Smith",
+  "phoneNumber": "not-a-phone",
+  "dateOfBirth": "1990-05-15"
+}
+
+###############################################################################
+# PRODUCTS - CRUD Operations
+###############################################################################
+
+### Create Product (Simple) - Valid
+POST {{baseUrl}}/api/products/simple
+Content-Type: application/json
+
+{
+  "name": "Wireless Mouse",
+  "description": "Ergonomic wireless mouse with USB receiver",
+  "sku": "MOUSE-001",
+  "price": 29.99,
+  "stockQuantity": 100,
+  "tags": ["electronics", "peripherals", "wireless"]
+}
+
+### Create Product (Async) - Valid with unique SKU
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Mechanical Keyboard",
+  "description": "RGB mechanical keyboard with Cherry MX switches",
+  "sku": "KB-MECH-001",
+  "price": 149.99,
+  "stockQuantity": 50,
+  "tags": ["electronics", "peripherals", "gaming"]
+}
+
+### Create Product (Async) - Invalid: SKU already exists
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Another Product",
+  "description": "This SKU is already taken",
+  "sku": "SKU-001",
+  "price": 49.99,
+  "stockQuantity": 10,
+  "tags": ["duplicate"]
+}
+
+### Create Product - Invalid: Multiple errors
+POST {{baseUrl}}/api/products/simple
+Content-Type: application/json
+
+{
+  "name": "X",
+  "description": null,
+  "sku": "invalid sku!",
+  "price": -10,
+  "stockQuantity": -5,
+  "tags": []
+}
+
+### Update Price - Valid
+PATCH {{baseUrl}}/api/products/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/price
+Content-Type: application/json
+
+{
+  "price": 24.99,
+  "compareAtPrice": 29.99
+}
+
+### Update Price - Invalid: Compare price lower than sale price
+PATCH {{baseUrl}}/api/products/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/price
+Content-Type: application/json
+
+{
+  "price": 29.99,
+  "compareAtPrice": 24.99
+}
+
+### Search Products - Valid
+GET {{baseUrl}}/api/products/search?query=mouse&minPrice=10&maxPrice=100&page=1&pageSize=20
+
+### Search Products - Invalid: Page size too large
+GET {{baseUrl}}/api/products/search?query=keyboard&page=1&pageSize=500
+
+### Search Products - Invalid: Min > Max price
+GET {{baseUrl}}/api/products/search?minPrice=100&maxPrice=50&page=1&pageSize=10
+
+###############################################################################
+# ORDERS - Complex Nested Validation
+###############################################################################
+
+### Create Order - Valid
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "11111111-1111-1111-1111-111111111111",
+  "items": [
+    {
+      "productId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "quantity": 2,
+      "notes": "Gift wrap please"
+    },
+    {
+      "productId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "quantity": 1,
+      "notes": null
+    }
+  ],
+  "shippingAddress": {
+    "street": "456 Oak Avenue",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zipCode": "90001",
+    "country": "USA"
+  },
+  "billingAddress": null,
+  "couponCode": "SAVE10",
+  "paymentMethod": "credit_card"
+}
+
+### Create Order - Invalid: Customer not found
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "99999999-9999-9999-9999-999999999999",
+  "items": [
+    {
+      "productId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "quantity": 1,
+      "notes": null
+    }
+  ],
+  "shippingAddress": {
+    "street": "456 Oak Avenue",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zipCode": "90001",
+    "country": null
+  },
+  "billingAddress": null,
+  "couponCode": null,
+  "paymentMethod": "credit_card"
+}
+
+### Create Order - Invalid: Product not found
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "11111111-1111-1111-1111-111111111111",
+  "items": [
+    {
+      "productId": "99999999-9999-9999-9999-999999999999",
+      "quantity": 1,
+      "notes": null
+    }
+  ],
+  "shippingAddress": {
+    "street": "456 Oak Avenue",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zipCode": "90001",
+    "country": null
+  },
+  "billingAddress": null,
+  "couponCode": null,
+  "paymentMethod": "credit_card"
+}
+
+### Create Order - Invalid: Invalid coupon
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "11111111-1111-1111-1111-111111111111",
+  "items": [
+    {
+      "productId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "quantity": 1,
+      "notes": null
+    }
+  ],
+  "shippingAddress": {
+    "street": "456 Oak Avenue",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zipCode": "90001",
+    "country": null
+  },
+  "billingAddress": null,
+  "couponCode": "INVALID-COUPON",
+  "paymentMethod": "credit_card"
+}
+
+### Create Order - Invalid: Multiple nested errors
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "99999999-9999-9999-9999-999999999999",
+  "items": [
+    {
+      "productId": "99999999-9999-9999-9999-999999999999",
+      "quantity": 0,
+      "notes": null
+    }
+  ],
+  "shippingAddress": {
+    "street": "123",
+    "city": "X",
+    "state": "CALIFORNIA",
+    "zipCode": "invalid",
+    "country": null
+  },
+  "billingAddress": null,
+  "couponCode": "FAKE",
+  "paymentMethod": "bitcoin"
+}
+
+### Schedule Delivery - Valid
+POST {{baseUrl}}/api/orders/delivery
+Content-Type: application/json
+
+{
+  "orderId": "11111111-0000-0000-0000-000000000001",
+  "deliveryDate": "2026-02-01",
+  "preferredTimeStart": "09:00:00",
+  "preferredTimeEnd": "17:00:00"
+}
+
+### Schedule Delivery - Invalid: Past date
+POST {{baseUrl}}/api/orders/delivery
+Content-Type: application/json
+
+{
+  "orderId": "11111111-0000-0000-0000-000000000001",
+  "deliveryDate": "2020-01-01",
+  "preferredTimeStart": null,
+  "preferredTimeEnd": null
+}
+
+### Schedule Delivery - Invalid: End time before start time
+POST {{baseUrl}}/api/orders/delivery
+Content-Type: application/json
+
+{
+  "orderId": "11111111-0000-0000-0000-000000000001",
+  "deliveryDate": "2026-02-01",
+  "preferredTimeStart": "17:00:00",
+  "preferredTimeEnd": "09:00:00"
+}
+
+###############################################################################
+# MINIMAL API ENDPOINTS
+###############################################################################
+
+### Minimal: Register User (Simple)
+POST {{baseUrl}}/api/minimal/users/register
+Content-Type: application/json
+
+{
+  "email": "minimal@example.com",
+  "password": "Password123",
+  "confirmPassword": "Password123",
+  "name": "Minimal User",
+  "age": 28
+}
+
+### Minimal: Register User (Async) - Email taken
+POST {{baseUrl}}/api/minimal/users/register/async
+Content-Type: application/json
+
+{
+  "email": "taken@example.com",
+  "password": "Password123",
+  "confirmPassword": "Password123",
+  "name": "Minimal User",
+  "age": 28
+}
+
+### Minimal: Create User with conditional address
+POST {{baseUrl}}/api/minimal/users
+Content-Type: application/json
+
+{
+  "email": "minimal-user@example.com",
+  "name": "Minimal User",
+  "hasAddress": true,
+  "address": {
+    "street": "789 Minimal Lane",
+    "city": "Seattle",
+    "state": "WA",
+    "zipCode": "98101",
+    "country": null
+  }
+}
+
+### Minimal: Create Product
+POST {{baseUrl}}/api/minimal/products
+Content-Type: application/json
+
+{
+  "name": "Minimal Product",
+  "description": "Created via minimal API",
+  "sku": "MIN-001",
+  "price": 19.99,
+  "stockQuantity": 25,
+  "tags": ["minimal", "api"]
+}
+
+### Minimal: Update Price
+PATCH {{baseUrl}}/api/minimal/products/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/price
+Content-Type: application/json
+
+{
+  "price": 14.99,
+  "compareAtPrice": 19.99
+}
+
+### Minimal: Search Products
+GET {{baseUrl}}/api/minimal/products/search?query=test&page=1&pageSize=10
+
+### Minimal: Create Order
+POST {{baseUrl}}/api/minimal/orders
+Content-Type: application/json
+
+{
+  "customerId": "22222222-2222-2222-2222-222222222222",
+  "items": [
+    {
+      "productId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+      "quantity": 3,
+      "notes": "Via minimal API"
+    }
+  ],
+  "shippingAddress": {
+    "street": "321 Minimal Way",
+    "city": "Portland",
+    "state": "OR",
+    "zipCode": "97201",
+    "country": "USA"
+  },
+  "billingAddress": null,
+  "couponCode": "WELCOME20",
+  "paymentMethod": "paypal"
+}
+
+### Minimal: Schedule Delivery
+POST {{baseUrl}}/api/minimal/orders/delivery
+Content-Type: application/json
+
+{
+  "orderId": "11111111-0000-0000-0000-000000000002",
+  "deliveryDate": "2026-03-15",
+  "preferredTimeStart": "10:00:00",
+  "preferredTimeEnd": "14:00:00"
+}
