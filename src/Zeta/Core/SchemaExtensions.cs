@@ -11,4 +11,9 @@ public static class SchemaExtensions
         var context = new ValidationContext<object?>(null, execution);
         return schema.ValidateAsync(value, context);
     }
+
+    public static async Task<Result<T>> ValidateAsync<T, TContext>(this ISchema<T, TContext> schema, T value, TContext data)
+    {
+        return await schema.ValidateAsync(value, new ValidationContext<TContext>(data, ValidationExecutionContext.Empty));
+    }
 }
