@@ -4,6 +4,24 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Zeta.AspNetCore</PackageId>
+    <Title>Zeta.AspNetCore</Title>
+    <Description>ASP.NET Core integration for Zeta validation framework. Includes Minimal API filters, IZetaValidator service, and Result extensions.</Description>
+    <Authors>Zeta Contributors</Authors>
+    <PackageTags>validation;schema;async;aspnetcore;minimal-api;webapi</PackageTags>
+    <PackageProjectUrl>https://github.com/yourusername/zeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/yourusername/zeta</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>Copyright (c) 2025 Zeta Contributors</Copyright>
+
+    <!-- Build Settings -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +30,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Zeta\Zeta.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>

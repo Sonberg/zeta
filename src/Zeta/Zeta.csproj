@@ -1,9 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Zeta</PackageId>
+    <Title>Zeta</Title>
+    <Description>A composable, type-safe, async-first validation framework for .NET inspired by Zod.</Description>
+    <Authors>Zeta Contributors</Authors>
+    <PackageTags>validation;schema;async;zod;fluent;result-pattern</PackageTags>
+    <PackageProjectUrl>https://github.com/yourusername/zeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/yourusername/zeta</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>Copyright (c) 2025 Zeta Contributors</Copyright>
+
+    <!-- Build Settings -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
 </Project>
