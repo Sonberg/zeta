@@ -10,27 +10,27 @@ public interface IZetaValidator
     /// <summary>
     /// Validates a value using a schema resolved from DI.
     /// </summary>
-    Task<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default);
 
     /// <summary>
     /// Validates a value using the provided schema.
     /// </summary>
-    Task<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default);
 
     /// <summary>
     /// Validates a value with context using a schema resolved from DI.
     /// </summary>
-    Task<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default);
 
     /// <summary>
     /// Validates a value with context using the provided schema.
     /// </summary>
-    Task<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default);
 
     /// <summary>
     /// Validates a value with context using the provided schema and factory.
     /// </summary>
-    public Task<Result<T>> ValidateAsync<T, TContext>(
+    public ValueTask<Result<T>> ValidateAsync<T, TContext>(
         T value,
         ISchema<T, TContext> schema,
         IValidationContextFactory<T, TContext> factory,
@@ -49,7 +49,7 @@ public sealed class ZetaValidator : IZetaValidator
         _services = services;
     }
 
-    public Task<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default)
+    public ValueTask<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default)
     {
         var schema = _services.GetService(typeof(ISchema<T>)) as ISchema<T>
                      ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}> registered in DI.");
@@ -57,13 +57,13 @@ public sealed class ZetaValidator : IZetaValidator
         return ValidateAsync(value, schema, ct);
     }
 
-    public Task<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default)
+    public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default)
     {
         var context = new ValidationExecutionContext("", _services, ct);
         return schema.ValidateAsync(value, context);
     }
 
-    public async Task<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
+    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
     {
         var schema = _services.GetService(typeof(ISchema<T, TContext>)) as ISchema<T, TContext>
                      ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI.");
@@ -71,7 +71,7 @@ public sealed class ZetaValidator : IZetaValidator
         return await ValidateAsync(value, schema, ct);
     }
 
-    public async Task<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default)
+    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default)
     {
         if (_services.GetService(typeof(IValidationContextFactory<T, TContext>)) is IValidationContextFactory<T, TContext> factory)
         {
@@ -90,7 +90,7 @@ public sealed class ZetaValidator : IZetaValidator
         return await schema.ValidateAsync(value, new ValidationContext<TContext>(default!, executionContext));
     }
 
-    public async Task<Result<T>> ValidateAsync<T, TContext>(
+    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(
         T value,
         ISchema<T, TContext> schema,
         IValidationContextFactory<T, TContext> factory,

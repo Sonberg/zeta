@@ -9,7 +9,7 @@ public class IntSchema<TContext> : ISchema<int, TContext>
 {
     private readonly List<IRule<int, TContext>> _rules = new();
 
-    public async Task<Result<int>> ValidateAsync(int value, ValidationContext<TContext> context)
+    public async ValueTask<Result<int>> ValidateAsync(int value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
@@ -68,7 +68,7 @@ public class IntSchema<TContext> : ISchema<int, TContext>
 /// </summary>
 public sealed class IntSchema : IntSchema<object?>, ISchema<int>
 {
-     public Task<Result<int>> ValidateAsync(int value, ValidationExecutionContext? execution = null)
+     public ValueTask<Result<int>> ValidateAsync(int value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);

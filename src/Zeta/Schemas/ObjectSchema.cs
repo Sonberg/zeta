@@ -8,7 +8,7 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
     private readonly List<IFieldValidator<T, TContext>> _fields = new();
     private readonly List<IRule<T, TContext>> _rules = new();
 
-    public async Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
@@ -82,7 +82,7 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
 /// </summary>
 public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
 {
-    public Task<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
+    public ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
@@ -110,7 +110,7 @@ public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
 
 internal interface IFieldValidator<T, TContext>
 {
-    Task<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
 }
 
 internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldValidator<TInstance, TContext>
@@ -130,7 +130,7 @@ internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldVal
         _schema = schema;
     }
 
-    public async Task<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext<TContext> context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext<TContext> context)
     {
         var value = _getter(instance);
         var fieldContext = context.Push(_name);
@@ -148,7 +148,7 @@ internal sealed class SchemaContextAdapter<T, TContext> : ISchema<T, TContext>
         _inner = inner;
     }
 
-    public Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public ValueTask<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         return _inner.ValidateAsync(value, context.Execution);
     }

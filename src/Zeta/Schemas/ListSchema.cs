@@ -15,7 +15,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
         _elementSchema = elementSchema;
     }
 
-    public async Task<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
+    public async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
@@ -123,14 +123,14 @@ public sealed class ListSchema<TElement> : ISchema<List<TElement>>
         _inner = new ListSchema<TElement, object?>(elementSchema);
     }
 
-    public Task<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
+    public ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
         return _inner.ValidateAsync(value, context);
     }
 
-    public Task<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<object?> context)
+    public ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<object?> context)
     {
         return _inner.ValidateAsync(value, context);
     }

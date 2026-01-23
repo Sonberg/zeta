@@ -10,7 +10,7 @@ public interface ISchema<T, TContext>
     /// <summary>
     /// Validates the given value asynchronously.
     /// </summary>
-    Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context);
+    ValueTask<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context);
 }
 
 /// <summary>
@@ -18,5 +18,5 @@ public interface ISchema<T, TContext>
 /// </summary>
 public interface ISchema<T> : ISchema<T, object?>
 {
-     Task<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null);
+     ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null);
 }

@@ -9,7 +9,7 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
 {
     private readonly List<IRule<decimal, TContext>> _rules = [];
 
-    public async Task<Result<decimal>> ValidateAsync(decimal value, ValidationContext<TContext> context)
+    public async ValueTask<Result<decimal>> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
@@ -134,7 +134,7 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
 /// </summary>
 public sealed class DecimalSchema : DecimalSchema<object?>, ISchema<decimal>
 {
-    public Task<Result<decimal>> ValidateAsync(decimal value, ValidationExecutionContext? execution = null)
+    public ValueTask<Result<decimal>> ValidateAsync(decimal value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);

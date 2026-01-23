@@ -9,7 +9,7 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
 {
     private readonly List<IRule<double, TContext>> _rules = [];
 
-    public async Task<Result<double>> ValidateAsync(double value, ValidationContext<TContext> context)
+    public async ValueTask<Result<double>> ValidateAsync(double value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
@@ -103,7 +103,7 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
 /// </summary>
 public sealed class DoubleSchema : DoubleSchema<object?>, ISchema<double>
 {
-    public Task<Result<double>> ValidateAsync(double value, ValidationExecutionContext? execution = null)
+    public ValueTask<Result<double>> ValidateAsync(double value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);

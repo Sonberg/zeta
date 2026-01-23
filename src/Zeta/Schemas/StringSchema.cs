@@ -10,7 +10,7 @@ public class StringSchema<TContext> : ISchema<string, TContext>
 {
     private readonly List<IRule<string, TContext>> _rules = new();
 
-    public async Task<Result<string>> ValidateAsync(string value, ValidationContext<TContext> context)
+    public async ValueTask<Result<string>> ValidateAsync(string value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
@@ -106,7 +106,7 @@ public class StringSchema<TContext> : ISchema<string, TContext>
 /// </summary>
 public sealed class StringSchema : StringSchema<object?>, ISchema<string>
 {
-    public Task<Result<string>> ValidateAsync(string value, ValidationExecutionContext? execution = null)
+    public ValueTask<Result<string>> ValidateAsync(string value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
