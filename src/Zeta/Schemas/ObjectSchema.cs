@@ -9,21 +9,29 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
 
     public async Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
     {
-        var errors = new List<ValidationError>();
+        List<ValidationError>? errors = null;
 
         foreach (var field in _fields)
         {
             var fieldErrors = await field.ValidateAsync(value, context);
-            errors.AddRange(fieldErrors);
+            if (fieldErrors.Count > 0)
+            {
+                errors ??= new List<ValidationError>();
+                errors.AddRange(fieldErrors);
+            }
         }
 
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null) errors.Add(error);
+            if (error != null)
+            {
+                errors ??= new List<ValidationError>();
+                errors.Add(error);
+            }
         }
 
-        return errors.Count == 0
+        return errors == null
             ? Result<T>.Success(value)
             : Result<T>.Failure(errors);
     }
@@ -101,7 +109,7 @@ public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
 
 internal interface IFieldValidator<T, TContext>
 {
-    Task<IEnumerable<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
+    Task<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
 }
 
 internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldValidator<TInstance, TContext>
@@ -121,7 +129,7 @@ internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldVal
         _schema = schema;
     }
 
-    public async Task<IEnumerable<ValidationError>> ValidateAsync(TInstance instance, ValidationContext<TContext> context)
+    public async Task<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext<TContext> context)
     {
         var value = _getter(instance);
         var fieldContext = context.Push(_name);

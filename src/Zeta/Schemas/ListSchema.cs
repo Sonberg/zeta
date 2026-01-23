@@ -15,13 +15,17 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public async Task<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
     {
-        var errors = new List<ValidationError>();
+        List<ValidationError>? errors = null;
 
         // Validate list-level rules
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null) errors.Add(error);
+            if (error != null)
+            {
+                errors ??= new List<ValidationError>();
+                errors.Add(error);
+            }
         }
 
         // Validate each element
@@ -34,11 +38,12 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
             var result = await _elementSchema.ValidateAsync(value[i], elementContext);
             if (result.IsFailure)
             {
+                errors ??= new List<ValidationError>();
                 errors.AddRange(result.Errors);
             }
         }
 
-        return errors.Count == 0
+        return errors == null
             ? Result<List<TElement>>.Success(value)
             : Result<List<TElement>>.Failure(errors);
     }

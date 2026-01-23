@@ -54,7 +54,7 @@ public sealed class ValidationExecutionContext
     }
 
     /// <summary>
-    /// Gets default empty context.
+    /// Gets default empty context (cached instance).
     /// </summary>
-    public static ValidationExecutionContext Empty => new();
+    public static ValidationExecutionContext Empty { get; } = new();
 }

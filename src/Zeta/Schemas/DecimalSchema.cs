@@ -9,14 +9,18 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
 
     public async Task<Result<decimal>> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
-        var errors = new List<ValidationError>();
+        List<ValidationError>? errors = null;
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null) errors.Add(error);
+            if (error != null)
+            {
+                errors ??= new List<ValidationError>();
+                errors.Add(error);
+            }
         }
 
-        return errors.Count == 0
+        return errors == null
             ? Result<decimal>.Success(value)
             : Result<decimal>.Failure(errors);
     }

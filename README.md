@@ -382,3 +382,15 @@ dotnet run --project benchmarks/Zeta.Benchmarks -c Release
 ## License
 
 MIT
+
+
+## Wishlist
+- Use ValueTask where possible for better performance
+- More built-in rules (e.g., UUID, URL, DateTime)
+- Better IDE support for schema definitions (source generators?)
+- More ASP.NET Core integration features (filters, model binders)
+- Precompiled schema definitions for common types
+- Localization support for error messages
+- Integration with OpenAPI/Swagger for schema generation
+- Support for other .NET platforms (e.g., Xamarin, MAUI)
+- ThrowOnFailure option for exceptions instead of Result pattern

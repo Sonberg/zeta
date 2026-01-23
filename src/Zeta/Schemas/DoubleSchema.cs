@@ -9,14 +9,18 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
 
     public async Task<Result<double>> ValidateAsync(double value, ValidationContext<TContext> context)
     {
-        var errors = new List<ValidationError>();
+        List<ValidationError>? errors = null;
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null) errors.Add(error);
+            if (error != null)
+            {
+                errors ??= new List<ValidationError>();
+                errors.Add(error);
+            }
         }
 
-        return errors.Count == 0
+        return errors == null
             ? Result<double>.Success(value)
             : Result<double>.Failure(errors);
     }
