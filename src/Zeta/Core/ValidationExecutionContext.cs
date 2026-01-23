@@ -45,6 +45,15 @@ public sealed class ValidationExecutionContext
     }
 
     /// <summary>
+    /// Creates a new context with an array index appended to the path.
+    /// </summary>
+    public ValidationExecutionContext PushIndex(int index)
+    {
+        var newPath = string.IsNullOrEmpty(Path) ? $"[{index}]" : $"{Path}[{index}]";
+        return new ValidationExecutionContext(newPath, _services, CancellationToken);
+    }
+
+    /// <summary>
     /// Gets default empty context.
     /// </summary>
     public static ValidationExecutionContext Empty => new();

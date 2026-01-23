@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Zeta.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dae6582b97c9efa379ba584ada5254379d7f64bf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d036899105945bf8a0cf1a2e95ccf5d48da0ba83")]
 [assembly: System.Reflection.AssemblyProductAttribute("Zeta.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Zeta.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
