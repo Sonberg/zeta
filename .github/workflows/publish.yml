@@ -68,9 +68,22 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      - name: Get NuGet API key via OIDC
+        id: nuget-auth
+        run: |
+          $idTokenResponse = Invoke-RestMethod -Uri "$env:ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" -Headers @{ Authorization = "Bearer $env:ACTIONS_ID_TOKEN_REQUEST_TOKEN" }
+          $idToken = $idTokenResponse.value
+
+          $body = @{ token = $idToken } | ConvertTo-Json
+          $response = Invoke-RestMethod -Uri "https://api.nuget.org/v3/trusted-signing/token" -Method Post -ContentType "application/json" -Body $body
+
+          echo "::add-mask::$($response.token)"
+          echo "NUGET_TOKEN=$($response.token)" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
       - name: Publish to NuGet (Trusted Publishing)
         run: |
           foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-              dotnet nuget push $file --source https://api.nuget.org/v3/index.json --skip-duplicate
+              dotnet nuget push $file --api-key ${{ steps.nuget-auth.outputs.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
         shell: pwsh
