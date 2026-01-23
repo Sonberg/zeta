@@ -394,3 +394,5 @@ MIT
 - Integration with OpenAPI/Swagger for schema generation
 - Support for other .NET platforms (e.g., Xamarin, MAUI)
 - ThrowOnFailure option for exceptions instead of Result pattern
+- Tests for all methods and edge cases
+- Use Linq to validate rules
