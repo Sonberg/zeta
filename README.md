@@ -147,7 +147,7 @@ Z.TimeOnly()
 ```csharp
 Z.Guid()
     .NotEmpty()         // Not Guid.Empty
-    .Version(4)         // Specific UUID version
+    .Version(4)         // Specific UUID version (1-5)
 ```
 
 ### Bool
@@ -156,6 +156,22 @@ Z.Guid()
 Z.Bool()
     .IsTrue()           // Must be true (e.g., terms accepted)
     .IsFalse()          // Must be false
+```
+
+### Nullable (Optional Fields)
+
+All schemas are required by default. Use `.Nullable()` to make fields optional:
+
+```csharp
+Z.String().Nullable()           // Allows null strings
+Z.Int().Nullable()              // Allows null ints (int?)
+Z.DateTime().Nullable()         // Allows null DateTime (DateTime?)
+Z.Object<Address>().Nullable()  // Allows null objects
+
+// In object schemas
+Z.Object<User>()
+    .Field(u => u.MiddleName, Z.String().Nullable())  // Optional field
+    .Field(u => u.Age, Z.Int().Min(0).Nullable())     // Optional with validation
 ```
 
 ### Object
@@ -186,6 +202,34 @@ Z.List(Z.Int().Min(0))
     .MinLength(1)
     .MaxLength(100)
     .NotEmpty()
+```
+
+### Conditional Validation
+
+Use `.When()` for dependent field validation:
+
+```csharp
+Z.Object<Order>()
+    .Field(o => o.PaymentMethod, Z.String())
+    .Field(o => o.CardNumber, Z.String().Nullable())
+    .Field(o => o.BankAccount, Z.String().Nullable())
+    .When(
+        o => o.PaymentMethod == "card",
+        then: c => c.Require(o => o.CardNumber),    // CardNumber required when paying by card
+        @else: c => c.Require(o => o.BankAccount)  // BankAccount required otherwise
+    );
+
+// Multiple conditions
+Z.Object<User>()
+    .Field(u => u.IsCompany, Z.Bool())
+    .Field(u => u.CompanyName, Z.String().Nullable())
+    .Field(u => u.VatNumber, Z.String().Nullable())
+    .When(
+        u => u.IsCompany,
+        then: c => c
+            .Require(u => u.CompanyName)
+            .Require(u => u.VatNumber)
+    );
 ```
 
 ## Result Pattern
@@ -411,12 +455,14 @@ public record ValidationError(
 | `contains` | Missing required substring |
 | `regex` | Pattern mismatch |
 | `precision` | Too many decimal places |
+| `multiple_of` | Not a multiple of step value |
 | `positive` | Must be positive |
 | `negative` | Must be negative |
 | `finite` | Must be finite number |
 | `past` | Must be in the past |
 | `future` | Must be in the future |
 | `between` | Outside allowed range |
+| `within_days` | Outside allowed day range |
 | `weekday` | Must be a weekday |
 | `weekend` | Must be a weekend |
 | `min_age` | Below minimum age |
@@ -426,6 +472,7 @@ public record ValidationError(
 | `afternoon` | Not in afternoon hours |
 | `evening` | Not in evening hours |
 | `not_empty` | GUID is empty |
+| `version` | Invalid UUID version |
 | `is_true` | Must be true |
 | `is_false` | Must be false |
 | `custom_error` | Custom refinement failed |
@@ -487,4 +534,3 @@ MIT
 - Localization support for error messages
 - Integration with OpenAPI/Swagger for schema generation
 - Support for other .NET platforms (e.g., Xamarin, MAUI)
-- Optional rules depending on state of input. E.g., if field A is true, field B is required
