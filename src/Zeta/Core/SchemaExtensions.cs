@@ -145,4 +145,94 @@ public static class SchemaExtensions
     {
         return new NullableSchema<List<TElement>>(schema);
     }
+
+    // ==================== DateTime Schema ====================
+
+    /// <summary>
+    /// Creates a nullable version of this DateTime schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<DateTime, TContext> Nullable<TContext>(this DateTimeSchema<TContext> schema)
+    {
+        return new NullableValueSchema<DateTime, TContext>(schema);
+    }
+
+    /// <summary>
+    /// Creates a nullable version of this DateTime schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<DateTime> Nullable(this DateTimeSchema schema)
+    {
+        return new NullableValueSchema<DateTime>(schema);
+    }
+
+    // ==================== DateOnly Schema ====================
+
+    /// <summary>
+    /// Creates a nullable version of this DateOnly schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<DateOnly, TContext> Nullable<TContext>(this DateOnlySchema<TContext> schema)
+    {
+        return new NullableValueSchema<DateOnly, TContext>(schema);
+    }
+
+    /// <summary>
+    /// Creates a nullable version of this DateOnly schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<DateOnly> Nullable(this DateOnlySchema schema)
+    {
+        return new NullableValueSchema<DateOnly>(schema);
+    }
+
+    // ==================== TimeOnly Schema ====================
+
+    /// <summary>
+    /// Creates a nullable version of this TimeOnly schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<TimeOnly, TContext> Nullable<TContext>(this TimeOnlySchema<TContext> schema)
+    {
+        return new NullableValueSchema<TimeOnly, TContext>(schema);
+    }
+
+    /// <summary>
+    /// Creates a nullable version of this TimeOnly schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<TimeOnly> Nullable(this TimeOnlySchema schema)
+    {
+        return new NullableValueSchema<TimeOnly>(schema);
+    }
+
+    // ==================== Guid Schema ====================
+
+    /// <summary>
+    /// Creates a nullable version of this Guid schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<Guid, TContext> Nullable<TContext>(this GuidSchema<TContext> schema)
+    {
+        return new NullableValueSchema<Guid, TContext>(schema);
+    }
+
+    /// <summary>
+    /// Creates a nullable version of this Guid schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<Guid> Nullable(this GuidSchema schema)
+    {
+        return new NullableValueSchema<Guid>(schema);
+    }
+
+    // ==================== Bool Schema ====================
+
+    /// <summary>
+    /// Creates a nullable version of this bool schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<bool, TContext> Nullable<TContext>(this BoolSchema<TContext> schema)
+    {
+        return new NullableValueSchema<bool, TContext>(schema);
+    }
+
+    /// <summary>
+    /// Creates a nullable version of this bool schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<bool> Nullable(this BoolSchema schema)
+    {
+        return new NullableValueSchema<bool>(schema);
+    }
 }

@@ -60,6 +60,112 @@ public class StringSchema<TContext> : ISchema<string, TContext>
         return Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", message ?? "Invalid email format", "email");
     }
 
+    /// <summary>
+    /// Validates that the string is a valid UUID/GUID.
+    /// </summary>
+    public StringSchema<TContext> Uuid(string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (Guid.TryParse(val, out _)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "uuid", message ?? "Invalid UUID format"));
+        }));
+    }
+
+    /// <summary>
+    /// Validates that the string is a valid absolute URL (http or https).
+    /// </summary>
+    public StringSchema<TContext> Url(string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (System.Uri.TryCreate(val, UriKind.Absolute, out var uri) &&
+                (uri.Scheme == System.Uri.UriSchemeHttp || uri.Scheme == System.Uri.UriSchemeHttps))
+                return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "url", message ?? "Invalid URL format"));
+        }));
+    }
+
+    /// <summary>
+    /// Validates that the string is a valid URI with any scheme.
+    /// </summary>
+    public StringSchema<TContext> Uri(UriKind kind = UriKind.Absolute, string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (System.Uri.TryCreate(val, kind, out _)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "uri", message ?? "Invalid URI format"));
+        }));
+    }
+
+    /// <summary>
+    /// Validates that the string contains only alphanumeric characters.
+    /// </summary>
+    public StringSchema<TContext> Alphanumeric(string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (val.All(char.IsLetterOrDigit)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "alphanumeric", message ?? "Must contain only letters and numbers"));
+        }));
+    }
+
+    /// <summary>
+    /// Validates that the string starts with the specified prefix.
+    /// </summary>
+    public StringSchema<TContext> StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (val.StartsWith(prefix, comparison)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "starts_with", message ?? $"Must start with '{prefix}'"));
+        }));
+    }
+
+    /// <summary>
+    /// Validates that the string ends with the specified suffix.
+    /// </summary>
+    public StringSchema<TContext> EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (val.EndsWith(suffix, comparison)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "ends_with", message ?? $"Must end with '{suffix}'"));
+        }));
+    }
+
+    /// <summary>
+    /// Validates that the string contains the specified substring.
+    /// </summary>
+    public StringSchema<TContext> Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (val.Contains(substring, comparison)) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "contains", message ?? $"Must contain '{substring}'"));
+        }));
+    }
+
+    /// <summary>
+    /// Validates that the string has an exact length.
+    /// </summary>
+    public StringSchema<TContext> Length(int exact, string? message = null)
+    {
+        return Use(new DelegateRule<string, TContext>((val, ctx) =>
+        {
+            if (val.Length == exact) return ValueTask.FromResult<ValidationError?>(null);
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                ctx.Execution.Path, "length", message ?? $"Must be exactly {exact} characters long"));
+        }));
+    }
+
     public StringSchema<TContext> Regex(string pattern, string? message = null, string code = "regex")
     {
         return Use(new DelegateRule<string, TContext>((val, ctx) =>

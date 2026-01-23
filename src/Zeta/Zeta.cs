@@ -34,4 +34,24 @@ public static class Z
     // List
     public static ListSchema<TElement> List<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);
     public static ListSchema<TElement, TContext> List<TElement, TContext>(ISchema<TElement, TContext> elementSchema) => new(elementSchema);
+
+    // DateTime
+    public static DateTimeSchema DateTime() => new();
+    public static DateTimeSchema<TContext> DateTime<TContext>() => new();
+
+    // DateOnly
+    public static DateOnlySchema DateOnly() => new();
+    public static DateOnlySchema<TContext> DateOnly<TContext>() => new();
+
+    // TimeOnly
+    public static TimeOnlySchema TimeOnly() => new();
+    public static TimeOnlySchema<TContext> TimeOnly<TContext>() => new();
+
+    // Guid
+    public static GuidSchema Guid() => new();
+    public static GuidSchema<TContext> Guid<TContext>() => new();
+
+    // Bool
+    public static BoolSchema Bool() => new();
+    public static BoolSchema<TContext> Bool<TContext>() => new();
 }

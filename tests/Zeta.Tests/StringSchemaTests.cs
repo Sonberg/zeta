@@ -49,7 +49,7 @@ public class StringSchemaTests
             .Refine((val, ctx) => val == ctx.MagicWord, "Wrong magic word");
 
         var context = new ValidationContext<TestContext>(
-            new TestContext("Abracadabra"), 
+            new TestContext("Abracadabra"),
             ValidationExecutionContext.Empty);
 
         var valid = await schema.ValidateAsync("Abracadabra", context);
@@ -58,6 +58,154 @@ public class StringSchemaTests
         var invalid = await schema.ValidateAsync("HocusPocus", context);
         Assert.False(invalid.IsSuccess);
         Assert.Contains(invalid.Errors, e => e.Message == "Wrong magic word");
+    }
+
+    [Fact]
+    public async Task Uuid_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().Uuid();
+        var result = await schema.ValidateAsync("550e8400-e29b-41d4-a716-446655440000");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Uuid_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().Uuid();
+        var result = await schema.ValidateAsync("not-a-uuid");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "uuid");
+    }
+
+    [Fact]
+    public async Task Url_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().Url();
+
+        Assert.True((await schema.ValidateAsync("https://example.com")).IsSuccess);
+        Assert.True((await schema.ValidateAsync("http://example.com/path?query=1")).IsSuccess);
+    }
+
+    [Fact]
+    public async Task Url_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().Url();
+
+        Assert.False((await schema.ValidateAsync("not-a-url")).IsSuccess);
+        Assert.False((await schema.ValidateAsync("ftp://example.com")).IsSuccess); // Only http/https allowed
+        Assert.False((await schema.ValidateAsync("example.com")).IsSuccess); // Missing scheme
+    }
+
+    [Fact]
+    public async Task Uri_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().Uri();
+
+        Assert.True((await schema.ValidateAsync("https://example.com")).IsSuccess);
+        Assert.True((await schema.ValidateAsync("ftp://example.com")).IsSuccess);
+        Assert.True((await schema.ValidateAsync("file:///path/to/file")).IsSuccess);
+    }
+
+    [Fact]
+    public async Task Uri_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().Uri();
+        var result = await schema.ValidateAsync("not a valid uri");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "uri");
+    }
+
+    [Fact]
+    public async Task Alphanumeric_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().Alphanumeric();
+
+        Assert.True((await schema.ValidateAsync("abc123")).IsSuccess);
+        Assert.True((await schema.ValidateAsync("ABC")).IsSuccess);
+        Assert.True((await schema.ValidateAsync("123")).IsSuccess);
+    }
+
+    [Fact]
+    public async Task Alphanumeric_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().Alphanumeric();
+
+        Assert.False((await schema.ValidateAsync("abc-123")).IsSuccess);
+        Assert.False((await schema.ValidateAsync("hello world")).IsSuccess);
+        Assert.False((await schema.ValidateAsync("test@email")).IsSuccess);
+    }
+
+    [Fact]
+    public async Task StartsWith_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().StartsWith("Hello");
+        var result = await schema.ValidateAsync("Hello, World!");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task StartsWith_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().StartsWith("Hello");
+        var result = await schema.ValidateAsync("Hi, World!");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "starts_with");
+    }
+
+    [Fact]
+    public async Task EndsWith_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().EndsWith(".txt");
+        var result = await schema.ValidateAsync("document.txt");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task EndsWith_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().EndsWith(".txt");
+        var result = await schema.ValidateAsync("document.pdf");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "ends_with");
+    }
+
+    [Fact]
+    public async Task Contains_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().Contains("world");
+        var result = await schema.ValidateAsync("Hello, world!");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Contains_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().Contains("world");
+        var result = await schema.ValidateAsync("Hello, everyone!");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "contains");
+    }
+
+    [Fact]
+    public async Task Length_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().Length(5);
+        var result = await schema.ValidateAsync("hello");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Length_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().Length(5);
+
+        Assert.False((await schema.ValidateAsync("hi")).IsSuccess);
+        Assert.False((await schema.ValidateAsync("hello world")).IsSuccess);
     }
 
     public record TestContext(string MagicWord);
