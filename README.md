@@ -487,6 +487,4 @@ MIT
 - Localization support for error messages
 - Integration with OpenAPI/Swagger for schema generation
 - Support for other .NET platforms (e.g., Xamarin, MAUI)
-- ThrowOnFailure option for exceptions instead of Result pattern
-- Use Linq to validate rules (if more performant)
 - Optional rules depending on state of input. E.g., if field A is true, field B is required

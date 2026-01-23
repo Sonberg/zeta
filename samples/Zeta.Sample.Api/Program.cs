@@ -38,10 +38,19 @@ var addressSchema = Z.Object<Address>()
     .Field(a => a.City, Z.String().MinLength(2))
     .Field(a => a.ZipCode, Z.String().Regex(@"^\d{5}(-\d{4})?$"));
 
+var usersSchema = Z.Array(Z.Object<UserWithAddress>()
+    .Field(x => x.Email, Z.String().Email())
+    .When(
+        u => u.ValidateAddress,
+        then => then.Field(u => u.Address, addressSchema))
+);
+
 var userWithAddressSchema = Z.Object<UserWithAddress>()
     .Field(u => u.Email, Z.String().Email())
     .Field(u => u.Name, Z.String().MinLength(3))
-    .Field(u => u.Address, addressSchema);
+    .When(
+        u => u.ValidateAddress,
+        then => then.Field(u => u.Address, addressSchema));
 
 app.MapPost("/async/users", (User user) => Results.Ok(new
     {

@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Zeta;
 using Zeta.AspNetCore;
 using Zeta.Sample.Api.Models;
-using Zeta.Schemas;
 
-namespace Zeta.Sample.Api;
+namespace Zeta.Sample.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
