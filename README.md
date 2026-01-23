@@ -52,7 +52,15 @@ else
 Z.String()
     .MinLength(3)
     .MaxLength(100)
+    .Length(10)           // Exact length
     .Email()
+    .Uuid()               // UUID/GUID format
+    .Url()                // HTTP/HTTPS URLs
+    .Uri()                // Any valid URI
+    .Alphanumeric()       // Letters and numbers only
+    .StartsWith("prefix")
+    .EndsWith("suffix")
+    .Contains("substring")
     .Regex(@"^[A-Z]")
     .NotEmpty()
     .Refine(s => s.StartsWith("A"), "Must start with A")
@@ -87,6 +95,67 @@ Z.Decimal()
     .Positive()
     .Precision(2)       // Max 2 decimal places
     .MultipleOf(0.25m)  // Must be multiple of step
+```
+
+### DateTime
+
+```csharp
+Z.DateTime()
+    .Min(minDate)
+    .Max(maxDate)
+    .Past()             // Must be in the past
+    .Future()           // Must be in the future
+    .Between(min, max)
+    .Weekday()          // Monday-Friday only
+    .Weekend()          // Saturday-Sunday only
+    .WithinDays(7)      // Within N days from now
+    .MinAge(18)         // For birthdate validation
+    .MaxAge(65)
+```
+
+### DateOnly
+
+```csharp
+Z.DateOnly()
+    .Min(minDate)
+    .Max(maxDate)
+    .Past()
+    .Future()
+    .Between(min, max)
+    .Weekday()
+    .Weekend()
+    .MinAge(18)
+    .MaxAge(65)
+```
+
+### TimeOnly
+
+```csharp
+Z.TimeOnly()
+    .Min(minTime)
+    .Max(maxTime)
+    .Between(min, max)
+    .BusinessHours()              // 9 AM - 5 PM (default)
+    .BusinessHours(start, end)    // Custom hours
+    .Morning()                    // Before noon
+    .Afternoon()                  // Noon to 6 PM
+    .Evening()                    // After 6 PM
+```
+
+### Guid
+
+```csharp
+Z.Guid()
+    .NotEmpty()         // Not Guid.Empty
+    .Version(4)         // Specific UUID version
+```
+
+### Bool
+
+```csharp
+Z.Bool()
+    .IsTrue()           // Must be true (e.g., terms accepted)
+    .IsFalse()          // Must be false
 ```
 
 ### Object
@@ -325,14 +394,40 @@ public record ValidationError(
 | `required` | Value is null/missing |
 | `min_length` | Below minimum length |
 | `max_length` | Above maximum length |
+| `length` | Not exact length |
 | `min_value` | Below minimum value |
 | `max_value` | Above maximum value |
+| `min_date` | Before minimum date |
+| `max_date` | After maximum date |
+| `min_time` | Before minimum time |
+| `max_time` | After maximum time |
 | `email` | Invalid email format |
+| `uuid` | Invalid UUID format |
+| `url` | Invalid URL format |
+| `uri` | Invalid URI format |
+| `alphanumeric` | Contains non-alphanumeric chars |
+| `starts_with` | Missing required prefix |
+| `ends_with` | Missing required suffix |
+| `contains` | Missing required substring |
 | `regex` | Pattern mismatch |
 | `precision` | Too many decimal places |
 | `positive` | Must be positive |
 | `negative` | Must be negative |
 | `finite` | Must be finite number |
+| `past` | Must be in the past |
+| `future` | Must be in the future |
+| `between` | Outside allowed range |
+| `weekday` | Must be a weekday |
+| `weekend` | Must be a weekend |
+| `min_age` | Below minimum age |
+| `max_age` | Above maximum age |
+| `business_hours` | Outside business hours |
+| `morning` | Not in morning hours |
+| `afternoon` | Not in afternoon hours |
+| `evening` | Not in evening hours |
+| `not_empty` | GUID is empty |
+| `is_true` | Must be true |
+| `is_false` | Must be false |
 | `custom_error` | Custom refinement failed |
 
 ## Benchmarks
@@ -343,25 +438,26 @@ Comparing Zeta against FluentValidation and DataAnnotations on .NET 9 (Apple M2 
 
 | Method | Mean | Allocated |
 |--------|-----:|----------:|
-| FluentValidation | 152 ns | 600 B |
-| FluentValidation (Async) | 275 ns | 672 B |
-| **Zeta** | **341 ns** | **848 B** |
-| DataAnnotations | 686 ns | 1,880 B |
+| FluentValidation | 151 ns | 600 B |
+| FluentValidation (Async) | 270 ns | 672 B |
+| **Zeta** | **308 ns** | **120 B** |
+| DataAnnotations | 674 ns | 1,880 B |
 
 ### Invalid Input (with errors)
 
 | Method | Mean | Allocated |
 |--------|-----:|----------:|
-| **Zeta** | **432 ns** | **1,352 B** |
-| DataAnnotations | 1,111 ns | 2,704 B |
-| FluentValidation | 2,264 ns | 7,920 B |
-| FluentValidation (Async) | 2,446 ns | 7,992 B |
+| **Zeta** | **461 ns** | **752 B** |
+| DataAnnotations | 1,114 ns | 2,704 B |
+| FluentValidation | 2,240 ns | 7,920 B |
+| FluentValidation (Async) | 2,434 ns | 7,992 B |
 
 **Key findings:**
+- Zeta uses **5x less memory** than FluentValidation for valid input (120 B vs 600 B)
 - Zeta is **5x faster** than FluentValidation when validation fails
-- Zeta uses **6x less memory** than FluentValidation for invalid input
+- Zeta uses **10x less memory** than FluentValidation for invalid input (752 B vs 7,920 B)
 - Zeta is **2x faster** than DataAnnotations in all scenarios
-- For valid input, FluentValidation sync is fastest, but Zeta is competitive
+- For valid input, FluentValidation sync is fastest, but Zeta has minimal allocations
 
 Run benchmarks yourself:
 ```bash
@@ -385,8 +481,6 @@ MIT
 
 
 ## Wishlist
-- Use ValueTask where possible for better performance
-- More built-in rules (e.g., UUID, URL, DateTime)
 - Better IDE support for schema definitions (source generators?)
 - More ASP.NET Core integration features (filters, model binders)
 - Precompiled schema definitions for common types
@@ -394,7 +488,5 @@ MIT
 - Integration with OpenAPI/Swagger for schema generation
 - Support for other .NET platforms (e.g., Xamarin, MAUI)
 - ThrowOnFailure option for exceptions instead of Result pattern
-- Tests for all methods and edge cases
-- Use Linq to validate rules (If more perforamnt)
+- Use Linq to validate rules (if more performant)
 - Optional rules depending on state of input. E.g., if field A is true, field B is required
-- Nullable support and better handling of optional fields
