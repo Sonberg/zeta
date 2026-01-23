@@ -1,4 +1,3 @@
-using Zeta.AspNetCore;
 using Zeta.Sample.Api.Models;
 using Zeta.Sample.Api.Repository;
 

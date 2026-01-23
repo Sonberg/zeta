@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using FluentValidation;
-using Zeta;
 
 namespace Zeta.Benchmarks;
 

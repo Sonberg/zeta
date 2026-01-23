@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Zeta.AspNetCore;
 using Zeta.Sample.Api.Models;
-using Zeta.Sample.Api.Validation;
-
 using ValidationSchemas = Zeta.Sample.Api.Validation.Schemas;
 
 namespace Zeta.Sample.Api.Controllers;

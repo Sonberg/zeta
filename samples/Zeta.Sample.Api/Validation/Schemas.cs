@@ -1,4 +1,3 @@
-using Zeta;
 using Zeta.Sample.Api.Models;
 
 namespace Zeta.Sample.Api.Validation;
