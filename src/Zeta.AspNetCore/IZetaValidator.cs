@@ -78,7 +78,16 @@ public sealed class ZetaValidator : IZetaValidator
             return await ValidateAsync(value, schema, factory, ct);
         }
 
-        throw new Exception($"No IValidationContextFactory<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI.");
+        // No factory registered - only allow if TContext is object? (no context needed)
+        if (typeof(TContext) != typeof(object))
+        {
+            throw new InvalidOperationException(
+                $"No IValidationContextFactory<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI. " +
+                $"Register a factory or use a schema without context.");
+        }
+
+        var executionContext = new ValidationExecutionContext("", _services, ct);
+        return await schema.ValidateAsync(value, new ValidationContext<TContext>(default!, executionContext));
     }
 
     public async Task<Result<T>> ValidateAsync<T, TContext>(
