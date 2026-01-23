@@ -1,3 +1,5 @@
+using Zeta.Core;
+
 namespace Zeta.Schemas;
 
 /// <summary>

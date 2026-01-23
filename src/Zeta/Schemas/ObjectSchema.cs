@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Zeta.Core;
 
 namespace Zeta.Schemas;
 

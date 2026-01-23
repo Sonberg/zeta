@@ -1,4 +1,4 @@
-namespace Zeta;
+namespace Zeta.Core;
 
 /// <summary>
 /// Provides execution context for the current validation operation, including the current path, services, and cancellation token.

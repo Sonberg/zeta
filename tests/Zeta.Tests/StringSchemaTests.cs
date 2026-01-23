@@ -1,3 +1,4 @@
+using Zeta.Core;
 using Zeta.Schemas;
 
 namespace Zeta.Tests;

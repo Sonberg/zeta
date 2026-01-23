@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Zeta.AspNetCore;
 
@@ -45,7 +44,7 @@ public static class ZetaExtensions
             success: onSuccess,
             failure: errors => new BadRequestObjectResult(new ValidationProblemDetails(
                 errors.GroupBy(e => e.Path)
-                      .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
+                    .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
             ))
         );
     }
@@ -69,7 +68,7 @@ public static class ZetaExtensions
             success: onSuccess,
             failure: errors => Results.ValidationProblem(
                 errors.GroupBy(e => e.Path)
-                      .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
+                    .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
             )
         );
     }

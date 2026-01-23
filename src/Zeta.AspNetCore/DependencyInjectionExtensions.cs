@@ -1,7 +1,5 @@
 using System.Reflection;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Zeta;
 
 namespace Zeta.AspNetCore;
 

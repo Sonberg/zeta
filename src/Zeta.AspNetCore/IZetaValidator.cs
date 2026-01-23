@@ -1,3 +1,5 @@
+using Zeta.Core;
+
 namespace Zeta.AspNetCore;
 
 /// <summary>
@@ -24,6 +26,15 @@ public interface IZetaValidator
     /// Validates a value with context using the provided schema.
     /// </summary>
     Task<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default);
+
+    /// <summary>
+    /// Validates a value with context using the provided schema and factory.
+    /// </summary>
+    public Task<Result<T>> ValidateAsync<T, TContext>(
+        T value,
+        ISchema<T, TContext> schema,
+        IValidationContextFactory<T, TContext> factory,
+        CancellationToken ct = default);
 }
 
 /// <summary>
@@ -41,7 +52,7 @@ public sealed class ZetaValidator : IZetaValidator
     public Task<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default)
     {
         var schema = _services.GetService(typeof(ISchema<T>)) as ISchema<T>
-            ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}> registered in DI.");
+                     ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}> registered in DI.");
 
         return ValidateAsync(value, schema, ct);
     }
@@ -55,29 +66,30 @@ public sealed class ZetaValidator : IZetaValidator
     public async Task<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
     {
         var schema = _services.GetService(typeof(ISchema<T, TContext>)) as ISchema<T, TContext>
-            ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI.");
+                     ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI.");
 
         return await ValidateAsync(value, schema, ct);
     }
 
     public async Task<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default)
     {
+        if (_services.GetService(typeof(IValidationContextFactory<T, TContext>)) is IValidationContextFactory<T, TContext> factory)
+        {
+            return await ValidateAsync(value, schema, factory, ct);
+        }
+
+        throw new Exception($"No IValidationContextFactory<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI.");
+    }
+
+    public async Task<Result<T>> ValidateAsync<T, TContext>(
+        T value,
+        ISchema<T, TContext> schema,
+        IValidationContextFactory<T, TContext> factory,
+        CancellationToken ct = default)
+    {
         var executionContext = new ValidationExecutionContext("", _services, ct);
+        var contextData = await factory.CreateAsync(value, _services, ct);
 
-        // Try to resolve context factory
-        var factory = _services.GetService(typeof(IValidationContextFactory<T, TContext>)) as IValidationContextFactory<T, TContext>;
-
-        TContext contextData;
-        if (factory != null)
-        {
-            contextData = await factory.CreateAsync(value, _services, ct);
-        }
-        else
-        {
-            contextData = default!;
-        }
-
-        var context = new ValidationContext<TContext>(contextData, executionContext);
-        return await schema.ValidateAsync(value, context);
+        return await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, executionContext));
     }
 }

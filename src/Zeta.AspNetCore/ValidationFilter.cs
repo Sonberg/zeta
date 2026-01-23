@@ -11,6 +11,11 @@ public class ValidationFilter<T, TContext> : IEndpointFilter
     private readonly ISchema<T, TContext> _schema;
     private readonly IValidationContextFactory<T, TContext>? _factory;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="schema"></param>
+    /// <param name="factory"></param>
     public ValidationFilter(ISchema<T, TContext> schema, IValidationContextFactory<T, TContext>? factory = null)
     {
         _schema = schema;
@@ -20,57 +25,26 @@ public class ValidationFilter<T, TContext> : IEndpointFilter
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var argument = context.Arguments.OfType<T>().FirstOrDefault();
-        
+
         if (argument is null)
         {
-             return await next(context);
+            return await next(context);
         }
 
-        var executionContext = new ValidationExecutionContext(
-            path: "", 
-            services: context.HttpContext.RequestServices, 
-            cancellationToken: context.HttpContext.RequestAborted);
+        var validator = context.HttpContext.RequestServices.GetRequiredService<IZetaValidator>();
+        var result = _factory is not null 
+            ? await validator.ValidateAsync(argument, _schema, _factory, context.HttpContext.RequestAborted) 
+            : await validator.ValidateAsync(argument, _schema, context.HttpContext.RequestAborted);
 
-        TContext contextData;
-        if (_factory != null)
-        {
-            contextData = await _factory.CreateAsync(argument, executionContext.Services, executionContext.CancellationToken);
-        }
-        else if (typeof(TContext) == typeof(object))
-        {
-             contextData = (TContext)(object)null!;
-        }
-        else
-        {
-            // If TContext is not object/void but no factory provided, try resolving from DI? 
-            // Or assume default? 
-            // For now, let's try resolving Factory from DI if available.
-             var factory = context.HttpContext.RequestServices.GetService<IValidationContextFactory<T, TContext>>();
-             if (factory != null)
-             {
-                 contextData = await factory.CreateAsync(argument, executionContext.Services, executionContext.CancellationToken);
-             }
-             else
-             {
-                 contextData = default!;
-             }
-        }
+        if (!result.IsFailure) return await next(context);
 
-        var validationContext = new ValidationContext<TContext>(contextData, executionContext);
-        var result = await _schema.ValidateAsync(argument, validationContext);
+        var errors = result.Errors
+            .GroupBy(e => e.Path)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.Message).ToArray()
+            );
 
-        if (result.IsFailure)
-        {
-            var errors = result.Errors
-                .GroupBy(e => e.Path)
-                .ToDictionary(
-                    g => g.Key, 
-                    g => g.Select(e => e.Message).ToArray()
-                );
-
-            return Results.ValidationProblem(errors);
-        }
-
-        return await next(context);
+        return Results.ValidationProblem(errors);
     }
 }
