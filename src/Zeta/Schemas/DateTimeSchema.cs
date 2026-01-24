@@ -60,26 +60,26 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     }
 
     /// <summary>
-    /// Validates that the date is in the past (before DateTime.UtcNow).
+    /// Validates that the date is in the past (before current UTC time).
     /// </summary>
     public DateTimeSchema<TContext> Past(string? message = null)
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (val < DateTime.UtcNow) return ValueTaskHelper.NullError();
+            if (val < ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime) return ValueTaskHelper.NullError();
             return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "past", message ?? "Must be in the past"));
         }));
     }
 
     /// <summary>
-    /// Validates that the date is in the future (after DateTime.UtcNow).
+    /// Validates that the date is in the future (after current UTC time).
     /// </summary>
     public DateTimeSchema<TContext> Future(string? message = null)
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (val > DateTime.UtcNow) return ValueTaskHelper.NullError();
+            if (val > ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime) return ValueTaskHelper.NullError();
             return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "future", message ?? "Must be in the future"));
         }));
@@ -133,7 +133,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            var diff = Math.Abs((val - DateTime.UtcNow).TotalDays);
+            var now = ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime;
+            var diff = Math.Abs((val - now).TotalDays);
             if (diff <= days) return ValueTaskHelper.NullError();
             return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "within_days", message ?? $"Must be within {days} days from now"));
@@ -147,7 +148,7 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            var today = DateTime.UtcNow.Date;
+            var today = ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
             if (val.Date > today.AddYears(-age)) age--;
 
@@ -164,7 +165,7 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            var today = DateTime.UtcNow.Date;
+            var today = ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
             if (val.Date > today.AddYears(-age)) age--;
 

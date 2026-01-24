@@ -67,7 +67,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (val < DateOnly.FromDateTime(DateTime.UtcNow)) return ValueTaskHelper.NullError();
+            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
+            if (val < today) return ValueTaskHelper.NullError();
             return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "past", message ?? "Must be in the past"));
         }));
@@ -80,7 +81,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (val > DateOnly.FromDateTime(DateTime.UtcNow)) return ValueTaskHelper.NullError();
+            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
+            if (val > today) return ValueTaskHelper.NullError();
             return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "future", message ?? "Must be in the future"));
         }));
@@ -134,7 +136,7 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
             if (val > today.AddYears(-age)) age--;
 
@@ -151,7 +153,7 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
             if (val > today.AddYears(-age)) age--;
 
