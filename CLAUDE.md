@@ -82,3 +82,22 @@ Z.Object<User>()
 3. **Required by default** - Use `.Nullable()` extension to make optional
 4. **Path-aware errors** - Errors include full path: `"items[0].name"`, `"address.street"`
 5. **Error aggregation** - Collects all errors, no short-circuiting
+
+## Known Behaviors
+
+### Nullable vs Optional
+- `.Nullable()` and `.Optional()` are functionally equivalent
+- `.Nullable()` = "null is a valid value"
+- `.Optional()` = "field may be omitted" (clearer intent for PATCH)
+- Both skip inner validation when value is null
+
+### Validation Order
+ObjectSchema validates in order: Fields → Conditionals (`.When()`) → Rules (`.Refine()`)
+
+### Context Factory Failures
+Factory exceptions propagate as HTTP 500, not validation errors. Handle soft failures by returning a context that causes validation to fail.
+
+### Required Semantics
+- Fields are required (non-null) by default
+- `.Require()` in conditionals = not null check
+- `.NotEmpty()` on strings = not whitespace

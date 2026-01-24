@@ -45,13 +45,15 @@ public readonly struct Result<T>
 
     /// <summary>
     /// Creates a failed result with the given errors.
+    /// Duplicate errors are automatically removed.
     /// </summary>
-    public static Result<T> Failure(params ValidationError[] errors) => new(errors);
+    public static Result<T> Failure(params ValidationError[] errors) => new(errors.Distinct().ToList());
 
     /// <summary>
     /// Creates a failed result with the given errors.
+    /// Duplicate errors are automatically removed.
     /// </summary>
-    public static Result<T> Failure(IReadOnlyList<ValidationError> errors) => new(errors);
+    public static Result<T> Failure(IReadOnlyList<ValidationError> errors) => new(errors.Distinct().ToList());
 
     /// <summary>
     /// Maps the value if successful, preserving errors if failed.

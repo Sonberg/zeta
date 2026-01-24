@@ -167,12 +167,17 @@ public class StringSchema<TContext> : ISchema<string, TContext>
 
     public StringSchema<TContext> Regex(string pattern, string? message = null, string code = "regex")
     {
+        var compiledRegex = new System.Text.RegularExpressions.Regex(
+            pattern,
+            System.Text.RegularExpressions.RegexOptions.Compiled,
+            TimeSpan.FromSeconds(1));
+
         return Use(new DelegateRule<string, TContext>((val, ctx) =>
         {
-             if (System.Text.RegularExpressions.Regex.IsMatch(val, pattern)) 
-                 return ValueTask.FromResult<ValidationError?>(null);
+            if (compiledRegex.IsMatch(val))
+                return ValueTask.FromResult<ValidationError?>(null);
 
-             return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            return ValueTask.FromResult<ValidationError?>(new ValidationError(
                 ctx.Execution.Path, code, message ?? $"Must match pattern {pattern}"));
         }));
     }

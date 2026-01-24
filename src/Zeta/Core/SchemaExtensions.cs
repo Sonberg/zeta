@@ -38,6 +38,20 @@ public static class SchemaExtensions
         return new NullableSchema<string>(schema);
     }
 
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<string, TContext> Optional<TContext>(this StringSchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<string> Optional(this StringSchema schema)
+        => schema.Nullable();
+
     // ==================== Int Schema ====================
 
     /// <summary>
@@ -55,6 +69,20 @@ public static class SchemaExtensions
     {
         return new NullableValueSchema<int>(schema);
     }
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<int, TContext> Optional<TContext>(this IntSchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<int> Optional(this IntSchema schema)
+        => schema.Nullable();
 
     // ==================== Double Schema ====================
 
@@ -74,6 +102,20 @@ public static class SchemaExtensions
         return new NullableValueSchema<double>(schema);
     }
 
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<double, TContext> Optional<TContext>(this DoubleSchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<double> Optional(this DoubleSchema schema)
+        => schema.Nullable();
+
     // ==================== Decimal Schema ====================
 
     /// <summary>
@@ -91,6 +133,20 @@ public static class SchemaExtensions
     {
         return new NullableValueSchema<decimal>(schema);
     }
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<decimal, TContext> Optional<TContext>(this DecimalSchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<decimal> Optional(this DecimalSchema schema)
+        => schema.Nullable();
 
     // ==================== Object Schema ====================
 
@@ -110,6 +166,20 @@ public static class SchemaExtensions
         return new NullableSchema<T>(schema);
     }
 
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<T, TContext> Optional<T, TContext>(this ObjectSchema<T, TContext> schema) where T : class
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<T> Optional<T>(this ObjectSchema<T> schema) where T : class
+        => schema.Nullable();
+
     // ==================== Array Schema ====================
 
     /// <summary>
@@ -127,6 +197,20 @@ public static class SchemaExtensions
     {
         return new NullableSchema<TElement[]>(schema);
     }
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<TElement[], TContext> Optional<TElement, TContext>(this ArraySchema<TElement, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<TElement[]> Optional<TElement>(this ArraySchema<TElement> schema)
+        => schema.Nullable();
 
     // ==================== List Schema ====================
 
@@ -146,6 +230,20 @@ public static class SchemaExtensions
         return new NullableSchema<List<TElement>>(schema);
     }
 
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<List<TElement>, TContext> Optional<TElement, TContext>(this ListSchema<TElement, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableSchema<List<TElement>> Optional<TElement>(this ListSchema<TElement> schema)
+        => schema.Nullable();
+
     // ==================== DateTime Schema ====================
 
     /// <summary>
@@ -163,6 +261,20 @@ public static class SchemaExtensions
     {
         return new NullableValueSchema<DateTime>(schema);
     }
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<DateTime, TContext> Optional<TContext>(this DateTimeSchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<DateTime> Optional(this DateTimeSchema schema)
+        => schema.Nullable();
 
     // ==================== DateOnly Schema ====================
 
@@ -182,6 +294,20 @@ public static class SchemaExtensions
         return new NullableValueSchema<DateOnly>(schema);
     }
 
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<DateOnly, TContext> Optional<TContext>(this DateOnlySchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<DateOnly> Optional(this DateOnlySchema schema)
+        => schema.Nullable();
+
     // ==================== TimeOnly Schema ====================
 
     /// <summary>
@@ -199,6 +325,20 @@ public static class SchemaExtensions
     {
         return new NullableValueSchema<TimeOnly>(schema);
     }
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<TimeOnly, TContext> Optional<TContext>(this TimeOnlySchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<TimeOnly> Optional(this TimeOnlySchema schema)
+        => schema.Nullable();
 
     // ==================== Guid Schema ====================
 
@@ -218,6 +358,20 @@ public static class SchemaExtensions
         return new NullableValueSchema<Guid>(schema);
     }
 
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<Guid, TContext> Optional<TContext>(this GuidSchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<Guid> Optional(this GuidSchema schema)
+        => schema.Nullable();
+
     // ==================== Bool Schema ====================
 
     /// <summary>
@@ -235,4 +389,18 @@ public static class SchemaExtensions
     {
         return new NullableValueSchema<bool>(schema);
     }
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<bool, TContext> Optional<TContext>(this BoolSchema<TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates an optional version of this schema that skips validation when null.
+    /// Use for fields that may be omitted in input (e.g., PATCH requests).
+    /// </summary>
+    public static NullableValueSchema<bool> Optional(this BoolSchema schema)
+        => schema.Nullable();
 }
