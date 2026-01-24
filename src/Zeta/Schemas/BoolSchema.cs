@@ -1,49 +1,23 @@
 using Zeta.Core;
+using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A schema for validating boolean values with a specific context.
 /// </summary>
-public class BoolSchema<TContext> : ISchema<bool, TContext>
+public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 {
-    private readonly List<IRule<bool, TContext>> _rules = [];
-
-    public async ValueTask<Result<bool>> ValidateAsync(bool value, ValidationContext<TContext> context)
-    {
-        List<ValidationError>? errors = null;
-        foreach (var rule in _rules)
-        {
-            var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
-        }
-
-        return errors == null
-            ? Result<bool>.Success(value)
-            : Result<bool>.Failure(errors);
-    }
-
-    public BoolSchema<TContext> Use(IRule<bool, TContext> rule)
-    {
-        _rules.Add(rule);
-        return this;
-    }
-
     /// <summary>
     /// Validates that the value is true.
     /// </summary>
     public BoolSchema<TContext> IsTrue(string? message = null)
     {
-        return Use(new DelegateRule<bool, TContext>((val, ctx) =>
-        {
-            if (val) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "is_true", message ?? "Must be true"));
-        }));
+        Use(new DelegateSyncRule<bool, TContext>((val, ctx) =>
+            val
+                ? null
+                : new ValidationError(ctx.Execution.Path, "is_true", message ?? "Must be true")));
+        return this;
     }
 
     /// <summary>
@@ -51,21 +25,20 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
     /// </summary>
     public BoolSchema<TContext> IsFalse(string? message = null)
     {
-        return Use(new DelegateRule<bool, TContext>((val, ctx) =>
-        {
-            if (!val) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "is_false", message ?? "Must be false"));
-        }));
+        Use(new DelegateSyncRule<bool, TContext>((val, ctx) =>
+            !val
+                ? null
+                : new ValidationError(ctx.Execution.Path, "is_false", message ?? "Must be false")));
+        return this;
     }
 
     public BoolSchema<TContext> Refine(Func<bool, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Use(new DelegateRule<bool, TContext>((val, ctx) =>
-        {
-            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
-        }));
+        Use(new DelegateSyncRule<bool, TContext>((val, ctx) =>
+            predicate(val, ctx.Data)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
+        return this;
     }
 
     public BoolSchema<TContext> Refine(Func<bool, bool> predicate, string message, string code = "custom_error")
@@ -79,10 +52,14 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
 /// </summary>
 public sealed class BoolSchema : BoolSchema<object?>, ISchema<bool>
 {
-    public ValueTask<Result<bool>> ValidateAsync(bool value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<bool>> ValidateAsync(bool value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<bool>.Success(value)
+            : Result<bool>.Failure(result.Errors);
     }
 }

@@ -262,7 +262,6 @@ public class NullableSchemaTests
         var result = await schema.ValidateAsync(null, context);
 
         Assert.True(result.IsSuccess);
-        Assert.Null(result.Value);
     }
 
     [Fact]
@@ -279,7 +278,6 @@ public class NullableSchemaTests
         var result = await schema.ValidateAsync(50, context);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(50, result.Value);
     }
 
     [Fact]

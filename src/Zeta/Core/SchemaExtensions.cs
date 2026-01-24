@@ -8,16 +8,24 @@ public static class SchemaExtensions
     /// <summary>
     /// Validates a value using a schema that expects no specific context (object?).
     /// </summary>
-    public static ValueTask<Result<T>> ValidateAsync<T>(this ISchema<T, object?> schema, T value, ValidationExecutionContext? execution = null)
+    public static async ValueTask<Result<T>> ValidateAsync<T>(this ISchema<T, object?> schema, T value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return schema.ValidateAsync(value, context);
+        var result = await schema.ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(result.Errors);
     }
 
-    public static ValueTask<Result<T>> ValidateAsync<T, TContext>(this ISchema<T, TContext> schema, T value, TContext data)
+    public static async ValueTask<Result<T>> ValidateAsync<T, TContext>(this ISchema<T, TContext> schema, T value, TContext data)
     {
-        return schema.ValidateAsync(value, new ValidationContext<TContext>(data, ValidationExecutionContext.Empty));
+        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(data, ValidationExecutionContext.Empty));
+
+        return result.IsSuccess
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(result.Errors);
     }
 
     // ==================== String Schema ====================

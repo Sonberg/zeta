@@ -1,4 +1,5 @@
 using Zeta.Core;
+using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
@@ -8,26 +9,24 @@ namespace Zeta.Schemas;
 public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
-    private readonly List<IRule<List<TElement>, TContext>> _rules = [];
+    private readonly List<ISyncRule<List<TElement>, TContext>> _rules = [];
 
     public ListSchema(ISchema<TElement, TContext> elementSchema)
     {
         _elementSchema = elementSchema;
     }
 
-    public async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
         // Validate list-level rules
         foreach (var rule in _rules)
         {
-            var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            var error = rule.Validate(value, context);
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         // Validate each element
@@ -40,17 +39,17 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
             var result = await _elementSchema.ValidateAsync(value[i], elementContext);
             if (result.IsFailure)
             {
-                errors ??= new List<ValidationError>();
+                errors ??= [];
                 errors.AddRange(result.Errors);
             }
         }
 
         return errors == null
-            ? Result<List<TElement>>.Success(value)
-            : Result<List<TElement>>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
-    public ListSchema<TElement, TContext> Use(IRule<List<TElement>, TContext> rule)
+    public ListSchema<TElement, TContext> Use(ISyncRule<List<TElement>, TContext> rule)
     {
         _rules.Add(rule);
         return this;
@@ -58,32 +57,29 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        return Use(new DelegateRule<List<TElement>, TContext>((val, ctx) =>
-        {
-            if (val.Count >= min) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items"));
-        }));
+        Use(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+            val.Count >= min
+                ? null
+                : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
+        return this;
     }
 
     public ListSchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        return Use(new DelegateRule<List<TElement>, TContext>((val, ctx) =>
-        {
-            if (val.Count <= max) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items"));
-        }));
+        Use(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+            val.Count <= max
+                ? null
+                : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
+        return this;
     }
 
     public ListSchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        return Use(new DelegateRule<List<TElement>, TContext>((val, ctx) =>
-        {
-            if (val.Count == exact) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items"));
-        }));
+        Use(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+            val.Count == exact
+                ? null
+                : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
+        return this;
     }
 
     public ListSchema<TElement, TContext> NotEmpty(string? message = null)
@@ -93,11 +89,11 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> Refine(Func<List<TElement>, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Use(new DelegateRule<List<TElement>, TContext>((val, ctx) =>
-        {
-            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
-        }));
+        Use(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+            predicate(val, ctx.Data)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
+        return this;
     }
 
     public ListSchema<TElement, TContext> Refine(Func<List<TElement>, bool> predicate, string message, string code = "custom_error")
@@ -123,16 +119,24 @@ public sealed class ListSchema<TElement> : ISchema<List<TElement>>
         _inner = new ListSchema<TElement, object?>(elementSchema);
     }
 
-    public ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return _inner.ValidateAsync(value, context);
+        var result = await _inner.ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<List<TElement>>.Success(value)
+            : Result<List<TElement>>.Failure(result.Errors);
     }
 
-    public ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<object?> context)
+    public async ValueTask<Result> ValidateAsync(List<TElement> value, ValidationContext<object?> context)
     {
-        return _inner.ValidateAsync(value, context);
+        var result = await _inner.ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result.Success()
+            : Result.Failure(result.Errors);
     }
 
     public ListSchema<TElement> MinLength(int min, string? message = null)

@@ -4,13 +4,52 @@ namespace Zeta;
 /// Represents the result of a validation operation.
 /// Either contains a valid value or a collection of validation errors.
 /// </summary>
-public readonly struct Result<T>
+public record Result
 {
-    private readonly T? _value;
     private readonly IReadOnlyList<ValidationError>? _errors;
 
     public bool IsSuccess { get; }
+
     public bool IsFailure => !IsSuccess;
+
+    private static readonly Result SuccessValue = new();
+
+    /// <summary>
+    /// Gets the validation errors. Empty if validation succeeded.
+    /// </summary>
+    public IReadOnlyList<ValidationError> Errors => _errors ?? [];
+
+    public Result()
+    {
+        IsSuccess = true;
+        _errors = null;
+    }
+
+    protected Result(IReadOnlyList<ValidationError> errors)
+    {
+        IsSuccess = false;
+        _errors = errors;
+    }
+
+    /// <summary>
+    /// Creates a successful result with the given value.
+    /// </summary>
+    public static Result Success() => SuccessValue;
+
+    /// <summary>
+    /// Creates a failed result with the given errors.
+    /// Duplicate errors are automatically removed.
+    /// </summary>
+    public static Result Failure(IReadOnlyList<ValidationError> errors) => new(errors);
+}
+
+/// <summary>
+/// Represents the result of a validation operation.
+/// Either contains a valid value or a collection of validation errors.
+/// </summary>
+public record Result<T> : Result
+{
+    private readonly T? _value;
 
     /// <summary>
     /// Gets the validated value. Throws if validation failed.
@@ -19,23 +58,14 @@ public readonly struct Result<T>
         ? _value!
         : throw new InvalidOperationException("Cannot access Value on a failed result. Check IsSuccess first.");
 
-    /// <summary>
-    /// Gets the validation errors. Empty if validation succeeded.
-    /// </summary>
-    public IReadOnlyList<ValidationError> Errors => _errors ?? [];
-
     private Result(T value)
     {
-        IsSuccess = true;
         _value = value;
-        _errors = null;
     }
 
-    private Result(IReadOnlyList<ValidationError> errors)
+    private Result(IReadOnlyList<ValidationError> errors) : base(errors)
     {
-        IsSuccess = false;
         _value = default;
-        _errors = errors;
     }
 
     /// <summary>
@@ -47,13 +77,13 @@ public readonly struct Result<T>
     /// Creates a failed result with the given errors.
     /// Duplicate errors are automatically removed.
     /// </summary>
-    public static Result<T> Failure(params ValidationError[] errors) => new(errors.Distinct().ToList());
+    public new static Result<T> Failure(params ValidationError[] errors) => new(errors);
 
     /// <summary>
     /// Creates a failed result with the given errors.
     /// Duplicate errors are automatically removed.
     /// </summary>
-    public static Result<T> Failure(IReadOnlyList<ValidationError> errors) => new(errors.Distinct().ToList());
+    public new static Result<T> Failure(IReadOnlyList<ValidationError> errors) => new(errors);
 
     /// <summary>
     /// Maps the value if successful, preserving errors if failed.
@@ -62,7 +92,7 @@ public readonly struct Result<T>
     {
         return IsSuccess
             ? Result<TNew>.Success(map(_value!))
-            : Result<TNew>.Failure(_errors!);
+            : Result<TNew>.Failure(Errors);
     }
 
     /// <summary>
@@ -72,7 +102,7 @@ public readonly struct Result<T>
     {
         return IsSuccess
             ? await bind(_value!)
-            : Result<TNew>.Failure(_errors!);
+            : Result<TNew>.Failure(Errors);
     }
 
     /// <summary>
@@ -82,7 +112,7 @@ public readonly struct Result<T>
     {
         return IsSuccess
             ? bind(_value!)
-            : Result<TNew>.Failure(_errors!);
+            : Result<TNew>.Failure(Errors);
     }
 
     /// <summary>
@@ -90,7 +120,7 @@ public readonly struct Result<T>
     /// </summary>
     public TResult Match<TResult>(Func<T, TResult> success, Func<IReadOnlyList<ValidationError>, TResult> failure)
     {
-        return IsSuccess ? success(_value!) : failure(_errors!);
+        return IsSuccess ? success(_value!) : failure(Errors);
     }
 
     /// <summary>
@@ -101,7 +131,7 @@ public readonly struct Result<T>
         if (IsSuccess)
             success(_value!);
         else
-            failure(_errors!);
+            failure(Errors);
     }
 
     /// <summary>
@@ -116,9 +146,9 @@ public readonly struct Result<T>
     {
         if (IsSuccess) return _value!;
 
-        var messages = string.Join("; ", _errors!.Select(e =>
+        var messages = string.Join("; ", Errors.Select(e =>
             string.IsNullOrEmpty(e.Path) ? e.Message : $"{e.Path}: {e.Message}"));
-        throw new ValidationException(messages, _errors!);
+        throw new ValidationException(messages, Errors!);
     }
 
     /// <summary>

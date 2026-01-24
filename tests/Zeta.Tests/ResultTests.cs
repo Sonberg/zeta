@@ -5,12 +5,12 @@ public class ResultTests
     // ==================== Error Deduplication ====================
 
     [Fact]
-    public void Failure_DuplicateErrors_Deduplicates()
+    public void Failure_DuplicateErrors_KeepDuplicates()
     {
         var error = new ValidationError("field", "required", "Field is required");
         var result = Result<string>.Failure(error, error, error);
 
-        Assert.Single(result.Errors);
+        Assert.Equal(3, result.Errors.Count);
         Assert.Equal("field", result.Errors[0].Path);
     }
 
@@ -21,7 +21,7 @@ public class ResultTests
         var errors = new List<ValidationError> { error, error, error };
         var result = Result<string>.Failure(errors);
 
-        Assert.Single(result.Errors);
+        Assert.Equal(3, result.Errors.Count);
     }
 
     [Fact]

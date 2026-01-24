@@ -1,4 +1,5 @@
 using Zeta.Core;
+using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
@@ -8,24 +9,24 @@ namespace Zeta.Schemas;
 public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
-    private readonly List<IRule<TElement[], TContext>> _rules = [];
+    private readonly List<ISyncRule<TElement[], TContext>> _rules = [];
 
     public ArraySchema(ISchema<TElement, TContext> elementSchema)
     {
         _elementSchema = elementSchema;
     }
 
-    public async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
         // Validate array-level rules
         foreach (var rule in _rules)
         {
-            var error = await rule.ValidateAsync(value, context);
+            var error = rule.Validate(value, context);
             if (error != null)
             {
-                errors ??= new List<ValidationError>();
+                errors ??= [];
                 errors.Add(error);
             }
         }
@@ -40,17 +41,17 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
             var result = await _elementSchema.ValidateAsync(value[i], elementContext);
             if (result.IsFailure)
             {
-                errors ??= new List<ValidationError>();
+                errors ??= [];
                 errors.AddRange(result.Errors);
             }
         }
 
         return errors == null
-            ? Result<TElement[]>.Success(value)
-            : Result<TElement[]>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
-    public ArraySchema<TElement, TContext> Use(IRule<TElement[], TContext> rule)
+    public ArraySchema<TElement, TContext> Use(ISyncRule<TElement[], TContext> rule)
     {
         _rules.Add(rule);
         return this;
@@ -58,32 +59,29 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
-        {
-            if (val.Length >= min) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items"));
-        }));
+        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+            val.Length >= min
+                ? null
+                : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
+        return this;
     }
 
     public ArraySchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
-        {
-            if (val.Length <= max) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items"));
-        }));
+        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+            val.Length <= max
+                ? null
+                : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
+        return this;
     }
 
     public ArraySchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
-        {
-            if (val.Length == exact) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items"));
-        }));
+        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+            val.Length == exact
+                ? null
+                : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
+        return this;
     }
 
     public ArraySchema<TElement, TContext> NotEmpty(string? message = null)
@@ -93,11 +91,11 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> Refine(Func<TElement[], TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
-        {
-            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
-        }));
+        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+            predicate(val, ctx.Data)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
+        return this;
     }
 
     public ArraySchema<TElement, TContext> Refine(Func<TElement[], bool> predicate, string message, string code = "custom_error")
@@ -123,14 +121,18 @@ public sealed class ArraySchema<TElement> : ISchema<TElement[]>
         _inner = new ArraySchema<TElement, object?>(elementSchema);
     }
 
-    public ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return _inner.ValidateAsync(value, context);
+        var result = await _inner.ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<TElement[]>.Success(value)
+            : Result<TElement[]>.Failure(result.Errors);
     }
 
-    public ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationContext<object?> context)
+    public ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<object?> context)
     {
         return _inner.ValidateAsync(value, context);
     }

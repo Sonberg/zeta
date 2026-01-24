@@ -1,50 +1,24 @@
 #if !NETSTANDARD2_0
 using Zeta.Core;
+using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A schema for validating TimeOnly values with a specific context.
 /// </summary>
-public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
+public class TimeOnlySchema<TContext> : BaseSchema<TimeOnly, TContext>
 {
-    private readonly List<IRule<TimeOnly, TContext>> _rules = [];
-
-    public async ValueTask<Result<TimeOnly>> ValidateAsync(TimeOnly value, ValidationContext<TContext> context)
-    {
-        List<ValidationError>? errors = null;
-        foreach (var rule in _rules)
-        {
-            var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
-        }
-
-        return errors == null
-            ? Result<TimeOnly>.Success(value)
-            : Result<TimeOnly>.Failure(errors);
-    }
-
-    public TimeOnlySchema<TContext> Use(IRule<TimeOnly, TContext> rule)
-    {
-        _rules.Add(rule);
-        return this;
-    }
-
     /// <summary>
     /// Validates that the time is at or after the specified minimum.
     /// </summary>
     public TimeOnlySchema<TContext> Min(TimeOnly min, string? message = null)
     {
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (val >= min) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "min_time", message ?? $"Must be at or after {min:t}"));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            val >= min
+                ? null
+                : new ValidationError(ctx.Execution.Path, "min_time", message ?? $"Must be at or after {min:t}")));
+        return this;
     }
 
     /// <summary>
@@ -52,12 +26,11 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     /// </summary>
     public TimeOnlySchema<TContext> Max(TimeOnly max, string? message = null)
     {
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (val <= max) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "max_time", message ?? $"Must be at or before {max:t}"));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            val <= max
+                ? null
+                : new ValidationError(ctx.Execution.Path, "max_time", message ?? $"Must be at or before {max:t}")));
+        return this;
     }
 
     /// <summary>
@@ -65,12 +38,11 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     /// </summary>
     public TimeOnlySchema<TContext> Between(TimeOnly min, TimeOnly max, string? message = null)
     {
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (val >= min && val <= max) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "between", message ?? $"Must be between {min:t} and {max:t}"));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            val >= min && val <= max
+                ? null
+                : new ValidationError(ctx.Execution.Path, "between", message ?? $"Must be between {min:t} and {max:t}")));
+        return this;
     }
 
     /// <summary>
@@ -80,12 +52,11 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         var businessStart = start ?? new TimeOnly(9, 0);
         var businessEnd = end ?? new TimeOnly(17, 0);
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (val >= businessStart && val <= businessEnd) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})"));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            val >= businessStart && val <= businessEnd
+                ? null
+                : new ValidationError(ctx.Execution.Path, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})")));
+        return this;
     }
 
     /// <summary>
@@ -93,12 +64,11 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     /// </summary>
     public TimeOnlySchema<TContext> Morning(string? message = null)
     {
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (val.Hour < 12) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "morning", message ?? "Must be in the morning (before 12:00)"));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            val.Hour < 12
+                ? null
+                : new ValidationError(ctx.Execution.Path, "morning", message ?? "Must be in the morning (before 12:00)")));
+        return this;
     }
 
     /// <summary>
@@ -106,12 +76,11 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     /// </summary>
     public TimeOnlySchema<TContext> Afternoon(string? message = null)
     {
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (val.Hour >= 12 && val.Hour < 18) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)"));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            val.Hour >= 12 && val.Hour < 18
+                ? null
+                : new ValidationError(ctx.Execution.Path, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)")));
+        return this;
     }
 
     /// <summary>
@@ -119,21 +88,20 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     /// </summary>
     public TimeOnlySchema<TContext> Evening(string? message = null)
     {
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (val.Hour >= 18) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "evening", message ?? "Must be in the evening (after 18:00)"));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            val.Hour >= 18
+                ? null
+                : new ValidationError(ctx.Execution.Path, "evening", message ?? "Must be in the evening (after 18:00)")));
+        return this;
     }
 
     public TimeOnlySchema<TContext> Refine(Func<TimeOnly, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
-        {
-            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
-        }));
+        Use(new DelegateSyncRule<TimeOnly, TContext>((val, ctx) =>
+            predicate(val, ctx.Data)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
+        return this;
     }
 
     public TimeOnlySchema<TContext> Refine(Func<TimeOnly, bool> predicate, string message, string code = "custom_error")
@@ -147,11 +115,15 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
 /// </summary>
 public sealed class TimeOnlySchema : TimeOnlySchema<object?>, ISchema<TimeOnly>
 {
-    public ValueTask<Result<TimeOnly>> ValidateAsync(TimeOnly value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<TimeOnly>> ValidateAsync(TimeOnly value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<TimeOnly>.Success(value)
+            : Result<TimeOnly>.Failure(result.Errors);
     }
 }
 #endif
