@@ -1,3 +1,4 @@
+#if !NETSTANDARD2_0
 using Zeta.Core;
 
 namespace Zeta.Schemas;
@@ -40,8 +41,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (val >= min) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_date", message ?? $"Must be at or after {min:O}"));
         }));
     }
@@ -53,8 +54,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_date", message ?? $"Must be at or before {max:O}"));
         }));
     }
@@ -66,8 +67,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (val < DateOnly.FromDateTime(DateTime.UtcNow)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val < DateOnly.FromDateTime(DateTime.UtcNow)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "past", message ?? "Must be in the past"));
         }));
     }
@@ -79,8 +80,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (val > DateOnly.FromDateTime(DateTime.UtcNow)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val > DateOnly.FromDateTime(DateTime.UtcNow)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "future", message ?? "Must be in the future"));
         }));
     }
@@ -92,8 +93,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (val >= min && val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min && val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "between", message ?? $"Must be between {min:O} and {max:O}"));
         }));
     }
@@ -106,8 +107,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
             if (val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday)
-                return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "weekday", message ?? "Must be a weekday"));
         }));
     }
@@ -120,8 +121,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
             if (val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday)
-                return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "weekend", message ?? "Must be a weekend"));
         }));
     }
@@ -137,8 +138,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
             var age = today.Year - val.Year;
             if (val > today.AddYears(-age)) age--;
 
-            if (age >= years) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (age >= years) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_age", message ?? $"Must be at least {years} years old"));
         }));
     }
@@ -154,8 +155,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
             var age = today.Year - val.Year;
             if (val > today.AddYears(-age)) age--;
 
-            if (age <= years) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (age <= years) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_age", message ?? $"Must be at most {years} years old"));
         }));
     }
@@ -164,8 +165,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
     {
         return Use(new DelegateRule<DateOnly, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 
@@ -187,3 +188,4 @@ public sealed class DateOnlySchema : DateOnlySchema<object?>, ISchema<DateOnly>
         return ValidateAsync(value, context);
     }
 }
+#endif

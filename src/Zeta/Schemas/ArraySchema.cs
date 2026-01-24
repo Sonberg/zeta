@@ -60,8 +60,8 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
     {
         return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
         {
-            if (val.Length >= min) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val.Length >= min) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items"));
         }));
     }
@@ -70,8 +70,8 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
     {
         return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
         {
-            if (val.Length <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val.Length <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items"));
         }));
     }
@@ -80,8 +80,8 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
     {
         return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
         {
-            if (val.Length == exact) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val.Length == exact) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items"));
         }));
     }
@@ -95,8 +95,8 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
     {
         return Use(new DelegateRule<TElement[], TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 

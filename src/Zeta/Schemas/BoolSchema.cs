@@ -40,8 +40,8 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
     {
         return Use(new DelegateRule<bool, TContext>((val, ctx) =>
         {
-            if (val) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "is_true", message ?? "Must be true"));
         }));
     }
@@ -53,8 +53,8 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
     {
         return Use(new DelegateRule<bool, TContext>((val, ctx) =>
         {
-            if (!val) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (!val) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "is_false", message ?? "Must be false"));
         }));
     }
@@ -63,8 +63,8 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
     {
         return Use(new DelegateRule<bool, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 

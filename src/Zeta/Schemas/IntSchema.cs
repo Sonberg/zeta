@@ -37,8 +37,8 @@ public class IntSchema<TContext> : ISchema<int, TContext>
     {
         return Use(new DelegateRule<int, TContext>((val, ctx) =>
         {
-            if (val >= min) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_value", message ?? $"Must be at least {min}"));
         }));
     }
@@ -47,8 +47,8 @@ public class IntSchema<TContext> : ISchema<int, TContext>
     {
         return Use(new DelegateRule<int, TContext>((val, ctx) =>
         {
-            if (val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_value", message ?? $"Must be at most {max}"));
         }));
     }
@@ -57,8 +57,8 @@ public class IntSchema<TContext> : ISchema<int, TContext>
     {
         return Use(new DelegateRule<int, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 }

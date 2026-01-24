@@ -276,6 +276,7 @@ public static class SchemaExtensions
     public static NullableValueSchema<DateTime> Optional(this DateTimeSchema schema)
         => schema.Nullable();
 
+#if !NETSTANDARD2_0
     // ==================== DateOnly Schema ====================
 
     /// <summary>
@@ -339,6 +340,7 @@ public static class SchemaExtensions
     /// </summary>
     public static NullableValueSchema<TimeOnly> Optional(this TimeOnlySchema schema)
         => schema.Nullable();
+#endif
 
     // ==================== Guid Schema ====================
 

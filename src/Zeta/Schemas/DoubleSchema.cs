@@ -37,8 +37,8 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
     {
         return Use(new DelegateRule<double, TContext>((val, ctx) =>
         {
-            if (val >= min) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_value", message ?? $"Must be at least {min}"));
         }));
     }
@@ -47,8 +47,8 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
     {
         return Use(new DelegateRule<double, TContext>((val, ctx) =>
         {
-            if (val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_value", message ?? $"Must be at most {max}"));
         }));
     }
@@ -57,8 +57,8 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
     {
         return Use(new DelegateRule<double, TContext>((val, ctx) =>
         {
-            if (val > 0) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val > 0) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "positive", message ?? "Must be positive"));
         }));
     }
@@ -67,8 +67,8 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
     {
         return Use(new DelegateRule<double, TContext>((val, ctx) =>
         {
-            if (val < 0) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val < 0) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "negative", message ?? "Must be negative"));
         }));
     }
@@ -77,8 +77,8 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
     {
         return Use(new DelegateRule<double, TContext>((val, ctx) =>
         {
-            if (double.IsFinite(val)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (!double.IsNaN(val) && !double.IsInfinity(val)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "finite", message ?? "Must be a finite number"));
         }));
     }
@@ -87,8 +87,8 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
     {
         return Use(new DelegateRule<double, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 

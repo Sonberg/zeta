@@ -39,6 +39,7 @@ public static class Z
     public static DateTimeSchema DateTime() => new();
     public static DateTimeSchema<TContext> DateTime<TContext>() => new();
 
+#if !NETSTANDARD2_0
     // DateOnly
     public static DateOnlySchema DateOnly() => new();
     public static DateOnlySchema<TContext> DateOnly<TContext>() => new();
@@ -46,6 +47,7 @@ public static class Z
     // TimeOnly
     public static TimeOnlySchema TimeOnly() => new();
     public static TimeOnlySchema<TContext> TimeOnly<TContext>() => new();
+#endif
 
     // Guid
     public static GuidSchema Guid() => new();

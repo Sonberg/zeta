@@ -37,8 +37,8 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     {
         return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
         {
-            if (val >= min) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_value", message ?? $"Must be at least {min}"));
         }));
     }
@@ -47,8 +47,8 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     {
         return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
         {
-            if (val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_value", message ?? $"Must be at most {max}"));
         }));
     }
@@ -57,8 +57,8 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     {
         return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
         {
-            if (val > 0) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val > 0) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "positive", message ?? "Must be positive"));
         }));
     }
@@ -67,8 +67,8 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     {
         return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
         {
-            if (val < 0) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val < 0) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "negative", message ?? "Must be negative"));
         }));
     }
@@ -81,8 +81,8 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
         return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
         {
             var decimalPlaces = GetDecimalPlaces(val);
-            if (decimalPlaces <= maxDecimalPlaces) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (decimalPlaces <= maxDecimalPlaces) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places"));
         }));
     }
@@ -94,8 +94,8 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     {
         return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
         {
-            if (val % step == 0) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val % step == 0) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "multiple_of", message ?? $"Must be a multiple of {step}"));
         }));
     }
@@ -104,8 +104,8 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     {
         return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 

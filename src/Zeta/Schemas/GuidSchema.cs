@@ -40,8 +40,8 @@ public class GuidSchema<TContext> : ISchema<Guid, TContext>
     {
         return Use(new DelegateRule<Guid, TContext>((val, ctx) =>
         {
-            if (val != Guid.Empty) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val != Guid.Empty) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "not_empty", message ?? "GUID cannot be empty"));
         }));
     }
@@ -55,8 +55,8 @@ public class GuidSchema<TContext> : ISchema<Guid, TContext>
         {
             var bytes = val.ToByteArray();
             var guidVersion = (bytes[7] >> 4) & 0x0F;
-            if (guidVersion == version) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (guidVersion == version) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "version", message ?? $"GUID must be version {version}"));
         }));
     }
@@ -65,8 +65,8 @@ public class GuidSchema<TContext> : ISchema<Guid, TContext>
     {
         return Use(new DelegateRule<Guid, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 

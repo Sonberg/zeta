@@ -40,8 +40,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (val >= min) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_date", message ?? $"Must be at or after {min:O}"));
         }));
     }
@@ -53,8 +53,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_date", message ?? $"Must be at or before {max:O}"));
         }));
     }
@@ -66,8 +66,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (val < DateTime.UtcNow) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val < DateTime.UtcNow) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "past", message ?? "Must be in the past"));
         }));
     }
@@ -79,8 +79,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (val > DateTime.UtcNow) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val > DateTime.UtcNow) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "future", message ?? "Must be in the future"));
         }));
     }
@@ -92,8 +92,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (val >= min && val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min && val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "between", message ?? $"Must be between {min:O} and {max:O}"));
         }));
     }
@@ -106,8 +106,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
             if (val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday)
-                return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "weekday", message ?? "Must be a weekday"));
         }));
     }
@@ -120,8 +120,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
             if (val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday)
-                return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+                return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "weekend", message ?? "Must be a weekend"));
         }));
     }
@@ -134,8 +134,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
             var diff = Math.Abs((val - DateTime.UtcNow).TotalDays);
-            if (diff <= days) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (diff <= days) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "within_days", message ?? $"Must be within {days} days from now"));
         }));
     }
@@ -151,8 +151,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
             var age = today.Year - val.Year;
             if (val.Date > today.AddYears(-age)) age--;
 
-            if (age >= years) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (age >= years) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_age", message ?? $"Must be at least {years} years old"));
         }));
     }
@@ -168,8 +168,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
             var age = today.Year - val.Year;
             if (val.Date > today.AddYears(-age)) age--;
 
-            if (age <= years) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (age <= years) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_age", message ?? $"Must be at most {years} years old"));
         }));
     }
@@ -178,8 +178,8 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
     {
         return Use(new DelegateRule<DateTime, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 

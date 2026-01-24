@@ -92,8 +92,8 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
     {
         _rules.Add(new DelegateRule<T, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
         return this;
     }
@@ -296,11 +296,11 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
             var path = string.IsNullOrEmpty(context.Execution.Path)
                 ? _name
                 : $"{context.Execution.Path}.{_name}";
-            return ValueTask.FromResult<IReadOnlyList<ValidationError>>(
+            return new ValueTask<IReadOnlyList<ValidationError>>(
                 new[] { new ValidationError(path, "required", _message) });
         }
 
-        return ValueTask.FromResult(EmptyErrors);
+        return new ValueTask<IReadOnlyList<ValidationError>>(EmptyErrors);
     }
 }
 

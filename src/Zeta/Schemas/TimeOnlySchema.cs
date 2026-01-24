@@ -1,3 +1,4 @@
+#if !NETSTANDARD2_0
 using Zeta.Core;
 
 namespace Zeta.Schemas;
@@ -40,8 +41,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (val >= min) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "min_time", message ?? $"Must be at or after {min:t}"));
         }));
     }
@@ -53,8 +54,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "max_time", message ?? $"Must be at or before {max:t}"));
         }));
     }
@@ -66,8 +67,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (val >= min && val <= max) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= min && val <= max) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "between", message ?? $"Must be between {min:t} and {max:t}"));
         }));
     }
@@ -81,8 +82,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
         var businessEnd = end ?? new TimeOnly(17, 0);
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (val >= businessStart && val <= businessEnd) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val >= businessStart && val <= businessEnd) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})"));
         }));
     }
@@ -94,8 +95,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (val.Hour < 12) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val.Hour < 12) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "morning", message ?? "Must be in the morning (before 12:00)"));
         }));
     }
@@ -107,8 +108,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (val.Hour >= 12 && val.Hour < 18) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val.Hour >= 12 && val.Hour < 18) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)"));
         }));
     }
@@ -120,8 +121,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (val.Hour >= 18) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(
+            if (val.Hour >= 18) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(
                 ctx.Execution.Path, "evening", message ?? "Must be in the evening (after 18:00)"));
         }));
     }
@@ -130,8 +131,8 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
     {
         return Use(new DelegateRule<TimeOnly, TContext>((val, ctx) =>
         {
-            if (predicate(val, ctx.Data)) return ValueTask.FromResult<ValidationError?>(null);
-            return ValueTask.FromResult<ValidationError?>(new ValidationError(ctx.Execution.Path, code, message));
+            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
+            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
 
@@ -153,3 +154,4 @@ public sealed class TimeOnlySchema : TimeOnlySchema<object?>, ISchema<TimeOnly>
         return ValidateAsync(value, context);
     }
 }
+#endif
