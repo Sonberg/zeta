@@ -1,17 +1,19 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using Zeta.Core;
+using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
-public class ObjectSchema<T, TContext> : ISchema<T, TContext>
+public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
 {
-    private readonly List<IFieldValidator<T, TContext>> _fields = new();
-    private readonly List<IRule<T, TContext>> _rules = new();
-    private readonly List<IConditionalBranch<T, TContext>> _conditionals = new();
+    private readonly List<IFieldValidator<T, TContext>> _fields = [];
+    private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
 
-    public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
-        List<ValidationError>? errors = null;
+        var result = await base.ValidateAsync(value, context);
+        var errors = result.Errors.Count > 0 ? result.Errors.ToList() : null;
 
         foreach (var field in _fields)
         {
@@ -29,19 +31,9 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
             errors.AddRange(conditionalErrors);
         }
 
-        foreach (var rule in _rules)
-        {
-            var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
-        }
-
         return errors == null
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public ObjectSchema<T, TContext> Field<TProperty>(
@@ -49,7 +41,7 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
         ISchema<TProperty, TContext> schema)
     {
         var propertyName = GetPropertyName(propertySelector);
-        var getter = propertySelector.Compile();
+        var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
@@ -86,22 +78,32 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
 
     public ObjectSchema<T, TContext> Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateRule<T, TContext>((val, ctx) =>
-        {
-            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
-        }));
+        Use(new DelegateSyncRule<T, TContext>((val, ctx) =>
+            predicate(val, ctx.Data)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
         return this;
     }
 
-    internal static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> propertySelector)
+    public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
     {
-        if (propertySelector.Body is MemberExpression member)
-        {
-            return member.Member.Name;
-        }
+        var body = expr.Body;
 
-        throw new ArgumentException("Expression must be a simple property access", nameof(propertySelector));
+        if (body is UnaryExpression { NodeType: ExpressionType.Convert } u)
+            body = u.Operand;
+
+        if (body is MemberExpression m)
+            return m.Member.Name;
+
+        throw new ArgumentException("Expression must be a property access");
+    }
+
+    public static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
+    {
+        var member = (MemberExpression)expr.Body;
+        var prop = (PropertyInfo)member.Member;
+
+        return (T instance) => (TProperty)prop.GetValue(instance)!;
     }
 }
 
@@ -154,7 +156,7 @@ public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
 /// </summary>
 public sealed class ConditionalBuilder<T, TContext>
 {
-    internal List<IFieldValidator<T, TContext>> Validators { get; } = new();
+    internal List<IFieldValidator<T, TContext>> Validators { get; } = [];
 
     /// <summary>
     /// Marks a field as required (not null).
@@ -164,7 +166,7 @@ public sealed class ConditionalBuilder<T, TContext>
         string? message = null)
     {
         var propertyName = ObjectSchema<T, TContext>.GetPropertyName(propertySelector);
-        var getter = propertySelector.Compile();
+        var getter = ObjectSchema<T, TContext>.CreateGetter(propertySelector);
         Validators.Add(new RequiredFieldValidator<T, TProperty, TContext>(propertyName, getter, message));
         return this;
     }
@@ -177,7 +179,7 @@ public sealed class ConditionalBuilder<T, TContext>
         ISchema<TProperty, TContext> schema)
     {
         var propertyName = ObjectSchema<T, TContext>.GetPropertyName(propertySelector);
-        var getter = propertySelector.Compile();
+        var getter = ObjectSchema<T, TContext>.CreateGetter(propertySelector);
         Validators.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
@@ -230,7 +232,7 @@ internal sealed class ConditionalBranch<T, TContext> : IConditionalBranch<T, TCo
             var fieldErrors = await validator.ValidateAsync(instance, context);
             if (fieldErrors.Count > 0)
             {
-                errors ??= new List<ValidationError>();
+                errors ??= [];
                 errors.AddRange(fieldErrors);
             }
         }
@@ -267,7 +269,7 @@ internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldVal
         var value = _getter(instance);
         var fieldContext = context.Push(_name);
         var result = await _schema.ValidateAsync(value, fieldContext);
-        return result.Errors;
+        return result.Errors.ToList();
     }
 }
 
@@ -300,10 +302,9 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
                 ? _name
                 : $"{context.Execution.Path}.{_name}";
             return new ValueTask<IReadOnlyList<ValidationError>>(
-                new[]
-                {
-                    new ValidationError(path, "required", _message)
-                });
+            [
+                new ValidationError(path, "required", _message)
+            ]);
         }
 
         return new ValueTask<IReadOnlyList<ValidationError>>(EmptyErrors);

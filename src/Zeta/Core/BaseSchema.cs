@@ -7,7 +7,7 @@ public abstract class BaseSchema<T, TContext> : ISchema<T, TContext>
     private readonly ICollection<ISyncRule<T, TContext>> _syncRules = [];
     private readonly ICollection<IAsyncRule<T, TContext>> _asyncRules = [];
 
-    public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
+    public virtual async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
@@ -35,15 +35,13 @@ public abstract class BaseSchema<T, TContext> : ISchema<T, TContext>
             : Result.Failure(errors);
     }
 
-    public BaseSchema<T, TContext> Use(ISyncRule<T, TContext> rule)
+    protected void Use(ISyncRule<T, TContext> rule)
     {
         _syncRules.Add(rule);
-        return this;
     }
 
-    public BaseSchema<T, TContext> Use(IAsyncRule<T, TContext> rule)
+    protected void Use(IAsyncRule<T, TContext> rule)
     {
         _asyncRules.Add(rule);
-        return this;
     }
 }

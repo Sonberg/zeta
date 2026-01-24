@@ -1,74 +1,47 @@
 using Zeta.Core;
+using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A schema for validating decimal values with a specific context.
 /// </summary>
-public class DecimalSchema<TContext> : ISchema<decimal, TContext>
+public class DecimalSchema<TContext> : BaseSchema<decimal, TContext>
 {
-    private readonly List<IRule<decimal, TContext>> _rules = [];
-
-    public async ValueTask<Result> ValidateAsync(decimal value, ValidationContext<TContext> context)
-    {
-        List<ValidationError>? errors = null;
-        foreach (var rule in _rules)
-        {
-            var error = await rule.ValidateAsync(value, context);
-            if (error == null) continue;
-            errors ??= [];
-            errors.Add(error);
-        }
-
-        return errors == null
-            ? Result.Success()
-            : Result.Failure(errors);
-    }
-
-    public DecimalSchema<TContext> Use(IRule<decimal, TContext> rule)
-    {
-        _rules.Add(rule);
-        return this;
-    }
-
     public DecimalSchema<TContext> Min(decimal min, string? message = null)
     {
-        return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
-        {
-            if (val >= min) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "min_value", message ?? $"Must be at least {min}"));
-        }));
+        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+            val >= min
+                ? null
+                : new ValidationError(ctx.Execution.Path, "min_value", message ?? $"Must be at least {min}")));
+        return this;
     }
 
     public DecimalSchema<TContext> Max(decimal max, string? message = null)
     {
-        return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
-        {
-            if (val <= max) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "max_value", message ?? $"Must be at most {max}"));
-        }));
+        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+            val <= max
+                ? null
+                : new ValidationError(ctx.Execution.Path, "max_value", message ?? $"Must be at most {max}")));
+        return this;
     }
 
     public DecimalSchema<TContext> Positive(string? message = null)
     {
-        return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
-        {
-            if (val > 0) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "positive", message ?? "Must be positive"));
-        }));
+        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+            val > 0
+                ? null
+                : new ValidationError(ctx.Execution.Path, "positive", message ?? "Must be positive")));
+        return this;
     }
 
     public DecimalSchema<TContext> Negative(string? message = null)
     {
-        return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
-        {
-            if (val < 0) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "negative", message ?? "Must be negative"));
-        }));
+        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+            val < 0
+                ? null
+                : new ValidationError(ctx.Execution.Path, "negative", message ?? "Must be negative")));
+        return this;
     }
 
     /// <summary>
@@ -76,13 +49,11 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     /// </summary>
     public DecimalSchema<TContext> Precision(int maxDecimalPlaces, string? message = null)
     {
-        return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
-        {
-            var decimalPlaces = GetDecimalPlaces(val);
-            if (decimalPlaces <= maxDecimalPlaces) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places"));
-        }));
+        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+            GetDecimalPlaces(val) <= maxDecimalPlaces
+                ? null
+                : new ValidationError(ctx.Execution.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places")));
+        return this;
     }
 
     /// <summary>
@@ -90,21 +61,20 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
     /// </summary>
     public DecimalSchema<TContext> MultipleOf(decimal step, string? message = null)
     {
-        return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
-        {
-            if (val % step == 0) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "multiple_of", message ?? $"Must be a multiple of {step}"));
-        }));
+        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+            val % step == 0
+                ? null
+                : new ValidationError(ctx.Execution.Path, "multiple_of", message ?? $"Must be a multiple of {step}")));
+        return this;
     }
 
     public DecimalSchema<TContext> Refine(Func<decimal, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Use(new DelegateRule<decimal, TContext>((val, ctx) =>
-        {
-            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
-        }));
+        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+            predicate(val, ctx.Data)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
+        return this;
     }
 
     public DecimalSchema<TContext> Refine(Func<decimal, bool> predicate, string message, string code = "custom_error")

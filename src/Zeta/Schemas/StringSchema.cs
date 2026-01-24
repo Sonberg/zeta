@@ -6,51 +6,24 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A schema for validating string values with a specific context.
 /// </summary>
-public class StringSchema<TContext> : ISchema<string, TContext>
+public class StringSchema<TContext> : BaseSchema<string, TContext>
 {
-    private readonly List<IRule<string, TContext>> _rules = new();
-
-    public async ValueTask<Result> ValidateAsync(string value, ValidationContext<TContext> context)
-    {
-        List<ValidationError>? errors = null;
-
-        foreach (var rule in _rules)
-        {
-            var error = await rule.ValidateAsync(value, context);
-            if (error == null) continue;
-            errors ??= [];
-            errors.Add(error);
-        }
-
-        return errors == null
-            ? Result.Success()
-            : Result.Failure(errors);
-    }
-
-    public StringSchema<TContext> Use(IRule<string, TContext> rule)
-    {
-        _rules.Add(rule);
-        return this;
-    }
-
     public StringSchema<TContext> MinLength(int min, string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (val.Length >= min) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "min_length", message ?? $"Must be at least {min} characters long"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            val.Length >= min
+                ? null
+                : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must be at least {min} characters long")));
+        return this;
     }
 
     public StringSchema<TContext> MaxLength(int max, string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (val.Length <= max) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "max_length", message ?? $"Must be at most {max} characters long"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            val.Length <= max
+                ? null
+                : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must be at most {max} characters long")));
+        return this;
     }
 
     public StringSchema<TContext> Email(string? message = null)
@@ -63,12 +36,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> Uuid(string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (Guid.TryParse(val, out _)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "uuid", message ?? "Invalid UUID format"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            Guid.TryParse(val, out _)
+                ? null
+                : new ValidationError(ctx.Execution.Path, "uuid", message ?? "Invalid UUID format")));
+        return this;
     }
 
     /// <summary>
@@ -76,14 +48,12 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> Url(string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (System.Uri.TryCreate(val, UriKind.Absolute, out var uri) &&
-                (uri.Scheme == System.Uri.UriSchemeHttp || uri.Scheme == System.Uri.UriSchemeHttps))
-                return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "url", message ?? "Invalid URL format"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            System.Uri.TryCreate(val, UriKind.Absolute, out var uri) &&
+            (uri.Scheme == System.Uri.UriSchemeHttp || uri.Scheme == System.Uri.UriSchemeHttps)
+                ? null
+                : new ValidationError(ctx.Execution.Path, "url", message ?? "Invalid URL format")));
+        return this;
     }
 
     /// <summary>
@@ -91,12 +61,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> Uri(UriKind kind = UriKind.Absolute, string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (System.Uri.TryCreate(val, kind, out _)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "uri", message ?? "Invalid URI format"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            System.Uri.TryCreate(val, kind, out _)
+                ? null
+                : new ValidationError(ctx.Execution.Path, "uri", message ?? "Invalid URI format")));
+        return this;
     }
 
     /// <summary>
@@ -104,12 +73,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> Alphanumeric(string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (val.All(char.IsLetterOrDigit)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "alphanumeric", message ?? "Must contain only letters and numbers"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            val.All(char.IsLetterOrDigit)
+                ? null
+                : new ValidationError(ctx.Execution.Path, "alphanumeric", message ?? "Must contain only letters and numbers")));
+        return this;
     }
 
     /// <summary>
@@ -117,12 +85,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (val.StartsWith(prefix, comparison)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "starts_with", message ?? $"Must start with '{prefix}'"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            val.StartsWith(prefix, comparison)
+                ? null
+                : new ValidationError(ctx.Execution.Path, "starts_with", message ?? $"Must start with '{prefix}'")));
+        return this;
     }
 
     /// <summary>
@@ -130,12 +97,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (val.EndsWith(suffix, comparison)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "ends_with", message ?? $"Must end with '{suffix}'"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            val.EndsWith(suffix, comparison)
+                ? null
+                : new ValidationError(ctx.Execution.Path, "ends_with", message ?? $"Must end with '{suffix}'")));
+        return this;
     }
 
     /// <summary>
@@ -143,12 +109,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (val.IndexOf(substring, comparison) >= 0) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "contains", message ?? $"Must contain '{substring}'"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            val.IndexOf(substring, comparison) >= 0
+                ? null
+                : new ValidationError(ctx.Execution.Path, "contains", message ?? $"Must contain '{substring}'")));
+        return this;
     }
 
     /// <summary>
@@ -156,12 +121,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> Length(int exact, string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (val.Length == exact) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "length", message ?? $"Must be exactly {exact} characters long"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            val.Length == exact
+                ? null
+                : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must be exactly {exact} characters long")));
+        return this;
     }
 
     public StringSchema<TContext> Regex(string pattern, string? message = null, string code = "regex")
@@ -171,24 +135,20 @@ public class StringSchema<TContext> : ISchema<string, TContext>
             System.Text.RegularExpressions.RegexOptions.Compiled,
             TimeSpan.FromSeconds(1));
 
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (compiledRegex.IsMatch(val))
-                return ValueTaskHelper.NullError();
-
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, code, message ?? $"Must match pattern {pattern}"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            compiledRegex.IsMatch(val)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message ?? $"Must match pattern {pattern}")));
+        return this;
     }
 
     public StringSchema<TContext> NotEmpty(string? message = null)
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (!string.IsNullOrWhiteSpace(val)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "required", message ?? "Value cannot be empty"));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            !string.IsNullOrWhiteSpace(val)
+                ? null
+                : new ValidationError(ctx.Execution.Path, "required", message ?? "Value cannot be empty")));
+        return this;
     }
 
     /// <summary>
@@ -196,14 +156,13 @@ public class StringSchema<TContext> : ISchema<string, TContext>
     /// </summary>
     public StringSchema<TContext> Refine(Func<string, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        return Use(new DelegateRule<string, TContext>((val, ctx) =>
-        {
-            if (predicate(val, ctx.Data)) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
-        }));
+        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+            predicate(val, ctx.Data)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
+        return this;
     }
 
-    // Kept for backward compatibility logic or simple checks
     public StringSchema<TContext> Refine(Func<string, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
@@ -224,35 +183,5 @@ public sealed class StringSchema : StringSchema<object?>, ISchema<string>
         return result.IsSuccess
             ? Result<string>.Success(value)
             : Result<string>.Failure(result.Errors);
-    }
-}
-
-internal sealed class DelegateAsyncRule<T, TContext> : IAsyncRule<T, TContext>
-{
-    private readonly Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> _validate;
-
-    public DelegateAsyncRule(Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> validate)
-    {
-        _validate = validate;
-    }
-
-    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context)
-    {
-        return _validate(value, context);
-    }
-}
-
-internal sealed class DelegateSyncRule<T, TContext> : ISyncRule<T, TContext>
-{
-    private readonly Func<T, ValidationContext<TContext>, ValidationError?> _validate;
-
-    public DelegateSyncRule(Func<T, ValidationContext<TContext>, ValidationError?> validate)
-    {
-        _validate = validate;
-    }
-
-    public ValidationError? Validate(T value, ValidationContext<TContext> context)
-    {
-        return _validate(value, context);
     }
 }
