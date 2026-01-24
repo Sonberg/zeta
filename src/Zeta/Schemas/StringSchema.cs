@@ -1,4 +1,5 @@
 using Zeta.Core;
+using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
@@ -226,16 +227,31 @@ public sealed class StringSchema : StringSchema<object?>, ISchema<string>
     }
 }
 
-internal sealed class DelegateRule<T, TContext> : IRule<T, TContext>
+internal sealed class DelegateAsyncRule<T, TContext> : IAsyncRule<T, TContext>
 {
     private readonly Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> _validate;
 
-    public DelegateRule(Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> validate)
+    public DelegateAsyncRule(Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> validate)
     {
         _validate = validate;
     }
 
     public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context)
+    {
+        return _validate(value, context);
+    }
+}
+
+internal sealed class DelegateSyncRule<T, TContext> : ISyncRule<T, TContext>
+{
+    private readonly Func<T, ValidationContext<TContext>, ValidationError?> _validate;
+
+    public DelegateSyncRule(Func<T, ValidationContext<TContext>, ValidationError?> validate)
+    {
+        _validate = validate;
+    }
+
+    public ValidationError? Validate(T value, ValidationContext<TContext> context)
     {
         return _validate(value, context);
     }

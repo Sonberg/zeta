@@ -5,7 +5,7 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A schema for validating boolean values with a specific context.
 /// </summary>
-public class BoolSchema<TContext> : ISchema<bool, TContext>
+public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 {
     private readonly List<IRule<bool, TContext>> _rules = [];
 
@@ -27,23 +27,21 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
             : Result.Failure(errors);
     }
 
-    public BoolSchema<TContext> Use(IRule<bool, TContext> rule)
-    {
-        _rules.Add(rule);
-        return this;
-    }
-
     /// <summary>
     /// Validates that the value is true.
     /// </summary>
     public BoolSchema<TContext> IsTrue(string? message = null)
     {
-        return Use(new DelegateRule<bool, TContext>((val, ctx) =>
+        Use(new DelegateSyncRule<bool, TContext>((val, ctx) =>
         {
-            if (val) return ValueTaskHelper.NullError();
-            return ValueTaskHelper.Error(new ValidationError(
-                ctx.Execution.Path, "is_true", message ?? "Must be true"));
+            return val switch
+            {
+                true => null,
+                false => new ValidationError(ctx.Execution.Path, "is_true", message ?? "Must be true")
+            };
         }));
+
+        return this;
     }
 
     /// <summary>
