@@ -23,16 +23,23 @@ public sealed class ValidationExecutionContext
     public CancellationToken CancellationToken { get; }
 
     /// <summary>
+    /// The time provider for time-based validations. Defaults to <see cref="TimeProvider.System"/>.
+    /// </summary>
+    public TimeProvider TimeProvider { get; }
+
+    /// <summary>
     /// Creates a new validation execution context.
     /// </summary>
     public ValidationExecutionContext(
         string path = "",
         IServiceProvider? services = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        TimeProvider? timeProvider = null)
     {
         Path = path ?? "";
         _services = services;
         CancellationToken = cancellationToken;
+        TimeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <summary>
@@ -41,7 +48,7 @@ public sealed class ValidationExecutionContext
     public ValidationExecutionContext Push(string segment)
     {
         var newPath = string.IsNullOrEmpty(Path) ? segment : $"{Path}.{segment}";
-        return new ValidationExecutionContext(newPath, _services, CancellationToken);
+        return new ValidationExecutionContext(newPath, _services, CancellationToken, TimeProvider);
     }
 
     /// <summary>
@@ -50,7 +57,7 @@ public sealed class ValidationExecutionContext
     public ValidationExecutionContext PushIndex(int index)
     {
         var newPath = string.IsNullOrEmpty(Path) ? $"[{index}]" : $"{Path}[{index}]";
-        return new ValidationExecutionContext(newPath, _services, CancellationToken);
+        return new ValidationExecutionContext(newPath, _services, CancellationToken, TimeProvider);
     }
 
     /// <summary>
