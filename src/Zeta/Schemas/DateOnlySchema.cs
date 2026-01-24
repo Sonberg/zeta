@@ -10,7 +10,7 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
 {
     private readonly List<IRule<DateOnly, TContext>> _rules = [];
 
-    public async ValueTask<Result<DateOnly>> ValidateAsync(DateOnly value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(DateOnly value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
@@ -24,8 +24,8 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
         }
 
         return errors == null
-            ? Result<DateOnly>.Success(value)
-            : Result<DateOnly>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public DateOnlySchema<TContext> Use(IRule<DateOnly, TContext> rule)
@@ -183,11 +183,15 @@ public class DateOnlySchema<TContext> : ISchema<DateOnly, TContext>
 /// </summary>
 public sealed class DateOnlySchema : DateOnlySchema<object?>, ISchema<DateOnly>
 {
-    public ValueTask<Result<DateOnly>> ValidateAsync(DateOnly value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<DateOnly>> ValidateAsync(DateOnly value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<DateOnly>.Success(value)
+            : Result<DateOnly>.Failure(result.Errors);
     }
 }
 #endif

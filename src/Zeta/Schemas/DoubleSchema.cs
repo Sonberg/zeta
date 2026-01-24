@@ -9,22 +9,20 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
 {
     private readonly List<IRule<double, TContext>> _rules = [];
 
-    public async ValueTask<Result<double>> ValidateAsync(double value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(double value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         return errors == null
-            ? Result<double>.Success(value)
-            : Result<double>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public DoubleSchema<TContext> Use(IRule<double, TContext> rule)
@@ -103,10 +101,14 @@ public class DoubleSchema<TContext> : ISchema<double, TContext>
 /// </summary>
 public sealed class DoubleSchema : DoubleSchema<object?>, ISchema<double>
 {
-    public ValueTask<Result<double>> ValidateAsync(double value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<double>> ValidateAsync(double value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<double>.Success(value)
+            : Result<double>.Failure(result.Errors);
     }
 }

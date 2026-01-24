@@ -9,22 +9,20 @@ public class GuidSchema<TContext> : ISchema<Guid, TContext>
 {
     private readonly List<IRule<Guid, TContext>> _rules = [];
 
-    public async ValueTask<Result<Guid>> ValidateAsync(Guid value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(Guid value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         return errors == null
-            ? Result<Guid>.Success(value)
-            : Result<Guid>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public GuidSchema<TContext> Use(IRule<Guid, TContext> rule)
@@ -81,10 +79,14 @@ public class GuidSchema<TContext> : ISchema<Guid, TContext>
 /// </summary>
 public sealed class GuidSchema : GuidSchema<object?>, ISchema<Guid>
 {
-    public ValueTask<Result<Guid>> ValidateAsync(Guid value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<Guid>> ValidateAsync(Guid value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<Guid>.Success(value)
+            : Result<Guid>.Failure(result.Errors);
     }
 }

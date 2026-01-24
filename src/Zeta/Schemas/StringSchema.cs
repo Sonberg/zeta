@@ -9,23 +9,21 @@ public class StringSchema<TContext> : ISchema<string, TContext>
 {
     private readonly List<IRule<string, TContext>> _rules = new();
 
-    public async ValueTask<Result<string>> ValidateAsync(string value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(string value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         return errors == null
-            ? Result<string>.Success(value)
-            : Result<string>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public StringSchema<TContext> Use(IRule<string, TContext> rule)
@@ -203,11 +201,11 @@ public class StringSchema<TContext> : ISchema<string, TContext>
             return ValueTaskHelper.Error(new ValidationError(ctx.Execution.Path, code, message));
         }));
     }
-    
+
     // Kept for backward compatibility logic or simple checks
     public StringSchema<TContext> Refine(Func<string, bool> predicate, string message, string code = "custom_error")
     {
-         return Refine((val, _) => predicate(val), message, code);
+        return Refine((val, _) => predicate(val), message, code);
     }
 }
 
@@ -216,11 +214,15 @@ public class StringSchema<TContext> : ISchema<string, TContext>
 /// </summary>
 public sealed class StringSchema : StringSchema<object?>, ISchema<string>
 {
-    public ValueTask<Result<string>> ValidateAsync(string value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<string>> ValidateAsync(string value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<string>.Success(value)
+            : Result<string>.Failure(result.Errors);
     }
 }
 

@@ -10,22 +10,20 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
 {
     private readonly List<IRule<TimeOnly, TContext>> _rules = [];
 
-    public async ValueTask<Result<TimeOnly>> ValidateAsync(TimeOnly value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(TimeOnly value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         return errors == null
-            ? Result<TimeOnly>.Success(value)
-            : Result<TimeOnly>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public TimeOnlySchema<TContext> Use(IRule<TimeOnly, TContext> rule)
@@ -147,11 +145,16 @@ public class TimeOnlySchema<TContext> : ISchema<TimeOnly, TContext>
 /// </summary>
 public sealed class TimeOnlySchema : TimeOnlySchema<object?>, ISchema<TimeOnly>
 {
-    public ValueTask<Result<TimeOnly>> ValidateAsync(TimeOnly value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<TimeOnly>> ValidateAsync(TimeOnly value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<TimeOnly>.Success(value)
+            : Result<TimeOnly>.Failure(result.Errors);
+        ;
     }
 }
 #endif

@@ -9,22 +9,20 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
 {
     private readonly List<IRule<DateTime, TContext>> _rules = [];
 
-    public async ValueTask<Result<DateTime>> ValidateAsync(DateTime value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(DateTime value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         return errors == null
-            ? Result<DateTime>.Success(value)
-            : Result<DateTime>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public DateTimeSchema<TContext> Use(IRule<DateTime, TContext> rule)
@@ -195,10 +193,14 @@ public class DateTimeSchema<TContext> : ISchema<DateTime, TContext>
 /// </summary>
 public sealed class DateTimeSchema : DateTimeSchema<object?>, ISchema<DateTime>
 {
-    public ValueTask<Result<DateTime>> ValidateAsync(DateTime value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<DateTime>> ValidateAsync(DateTime value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<DateTime>.Success(value)
+            : Result<DateTime>.Failure(result.Errors);
     }
 }

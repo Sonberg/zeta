@@ -9,22 +9,20 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
 {
     private readonly List<IRule<decimal, TContext>> _rules = [];
 
-    public async ValueTask<Result<decimal>> ValidateAsync(decimal value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         return errors == null
-            ? Result<decimal>.Success(value)
-            : Result<decimal>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public DecimalSchema<TContext> Use(IRule<decimal, TContext> rule)
@@ -125,6 +123,7 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
             value *= 10;
             value -= Math.Truncate(value);
         }
+
         return places;
     }
 }
@@ -134,10 +133,14 @@ public class DecimalSchema<TContext> : ISchema<decimal, TContext>
 /// </summary>
 public sealed class DecimalSchema : DecimalSchema<object?>, ISchema<decimal>
 {
-    public ValueTask<Result<decimal>> ValidateAsync(decimal value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<decimal>> ValidateAsync(decimal value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<decimal>.Success(value)
+            : Result<decimal>.Failure(result.Errors);
     }
 }

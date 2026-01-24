@@ -89,7 +89,11 @@ public sealed class ZetaValidator : IZetaValidator
         }
 
         var executionContext = new ValidationExecutionContext("", _services, ct, _timeProvider);
-        return await schema.ValidateAsync(value, new ValidationContext<TContext>(default!, executionContext));
+        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(default!, executionContext));
+
+        return result.IsSuccess
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(result.Errors);
     }
 
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(
@@ -100,7 +104,10 @@ public sealed class ZetaValidator : IZetaValidator
     {
         var executionContext = new ValidationExecutionContext("", _services, ct, _timeProvider);
         var contextData = await factory.CreateAsync(value, _services, ct);
+        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, executionContext));
 
-        return await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, executionContext));
+        return result.IsSuccess
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(result.Errors);
     }
 }

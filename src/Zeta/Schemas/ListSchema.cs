@@ -15,7 +15,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
         _elementSchema = elementSchema;
     }
 
-    public async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
@@ -23,11 +23,9 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
         foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= new List<ValidationError>();
-                errors.Add(error);
-            }
+            if (error == null) continue;
+            errors ??= [];
+            errors.Add(error);
         }
 
         // Validate each element
@@ -46,8 +44,8 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
         }
 
         return errors == null
-            ? Result<List<TElement>>.Success(value)
-            : Result<List<TElement>>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public ListSchema<TElement, TContext> Use(IRule<List<TElement>, TContext> rule)
@@ -123,16 +121,24 @@ public sealed class ListSchema<TElement> : ISchema<List<TElement>>
         _inner = new ListSchema<TElement, object?>(elementSchema);
     }
 
-    public ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return _inner.ValidateAsync(value, context);
+        var result = await _inner.ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<List<TElement>>.Success(value)
+            : Result<List<TElement>>.Failure(result.Errors);
     }
 
-    public ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext<object?> context)
+    public async ValueTask<Result> ValidateAsync(List<TElement> value, ValidationContext<object?> context)
     {
-        return _inner.ValidateAsync(value, context);
+        var result = await _inner.ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result.Success()
+            : Result.Failure(result.Errors);
     }
 
     public ListSchema<TElement> MinLength(int min, string? message = null)

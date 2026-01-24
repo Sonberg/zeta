@@ -9,7 +9,7 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
 {
     private readonly List<IRule<bool, TContext>> _rules = [];
 
-    public async ValueTask<Result<bool>> ValidateAsync(bool value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(bool value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
         foreach (var rule in _rules)
@@ -23,8 +23,8 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
         }
 
         return errors == null
-            ? Result<bool>.Success(value)
-            : Result<bool>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public BoolSchema<TContext> Use(IRule<bool, TContext> rule)
@@ -79,10 +79,12 @@ public class BoolSchema<TContext> : ISchema<bool, TContext>
 /// </summary>
 public sealed class BoolSchema : BoolSchema<object?>, ISchema<bool>
 {
-    public ValueTask<Result<bool>> ValidateAsync(bool value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<bool>> ValidateAsync(bool value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess ? Result<bool>.Success(value) : Result<bool>.Failure(result.Errors);
     }
 }

@@ -1,10 +1,14 @@
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace Zeta;
 
 internal static class ValueTaskHelper
 {
-    public static ValueTask<ValidationError?> NullError() => new ValueTask<ValidationError?>((ValidationError?)null);
+    private static readonly ValueTask<ValidationError?> Null = new((ValidationError?)null);
 
-    public static ValueTask<ValidationError?> Error(ValidationError error) => new ValueTask<ValidationError?>(error);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ValueTask<ValidationError?> NullError() => Null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ValueTask<ValidationError?> Error(ValidationError error) => new(error);
 }

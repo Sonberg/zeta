@@ -15,7 +15,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
         _elementSchema = elementSchema;
     }
 
-    public async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
@@ -46,8 +46,8 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
         }
 
         return errors == null
-            ? Result<TElement[]>.Success(value)
-            : Result<TElement[]>.Failure(errors);
+            ? Result.Success()
+            : Result.Failure(errors);
     }
 
     public ArraySchema<TElement, TContext> Use(IRule<TElement[], TContext> rule)
@@ -123,14 +123,18 @@ public sealed class ArraySchema<TElement> : ISchema<TElement[]>
         _inner = new ArraySchema<TElement, object?>(elementSchema);
     }
 
-    public ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return _inner.ValidateAsync(value, context);
+        var result = await _inner.ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<TElement[]>.Success(value)
+            : Result<TElement[]>.Failure(result.Errors);
     }
 
-    public ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationContext<object?> context)
+    public ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<object?> context)
     {
         return _inner.ValidateAsync(value, context);
     }

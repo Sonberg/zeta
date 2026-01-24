@@ -9,28 +9,24 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
     private readonly List<IRule<T, TContext>> _rules = new();
     private readonly List<IConditionalBranch<T, TContext>> _conditionals = new();
 
-    public async ValueTask<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         List<ValidationError>? errors = null;
 
         foreach (var field in _fields)
         {
             var fieldErrors = await field.ValidateAsync(value, context);
-            if (fieldErrors.Count > 0)
-            {
-                errors ??= new List<ValidationError>();
-                errors.AddRange(fieldErrors);
-            }
+            if (fieldErrors.Count <= 0) continue;
+            errors ??= [];
+            errors.AddRange(fieldErrors);
         }
 
         foreach (var conditional in _conditionals)
         {
             var conditionalErrors = await conditional.ValidateAsync(value, context);
-            if (conditionalErrors.Count > 0)
-            {
-                errors ??= new List<ValidationError>();
-                errors.AddRange(conditionalErrors);
-            }
+            if (conditionalErrors.Count <= 0) continue;
+            errors ??= [];
+            errors.AddRange(conditionalErrors);
         }
 
         foreach (var rule in _rules)
@@ -104,6 +100,7 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
         {
             return member.Member.Name;
         }
+
         throw new ArgumentException("Expression must be a simple property access", nameof(propertySelector));
     }
 }
@@ -113,11 +110,15 @@ public class ObjectSchema<T, TContext> : ISchema<T, TContext>
 /// </summary>
 public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
 {
-    public ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+
+        return result.IsSuccess
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(result.Errors);
     }
 
     public new ObjectSchema<T> Field<TProperty>(Expression<Func<T, TProperty>> propertySelector, ISchema<TProperty, object?> schema)
@@ -254,8 +255,9 @@ internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldVal
         _name = name;
         if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
         {
-             _name = char.ToLower(_name[0]) + _name.Substring(1);
+            _name = char.ToLower(_name[0]) + _name.Substring(1);
         }
+
         _getter = getter;
         _schema = schema;
     }
@@ -284,6 +286,7 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
         {
             _name = char.ToLower(_name[0]) + _name.Substring(1);
         }
+
         _getter = getter;
         _message = message ?? $"{_name} is required";
     }
@@ -297,7 +300,10 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
                 ? _name
                 : $"{context.Execution.Path}.{_name}";
             return new ValueTask<IReadOnlyList<ValidationError>>(
-                new[] { new ValidationError(path, "required", _message) });
+                new[]
+                {
+                    new ValidationError(path, "required", _message)
+                });
         }
 
         return new ValueTask<IReadOnlyList<ValidationError>>(EmptyErrors);
@@ -313,8 +319,12 @@ internal sealed class SchemaContextAdapter<T, TContext> : ISchema<T, TContext>
         _inner = inner;
     }
 
-    public ValueTask<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
-        return _inner.ValidateAsync(value, context.Execution);
+        var result = await _inner.ValidateAsync(value, context.Execution);
+
+        return result.IsSuccess
+            ? Result.Success()
+            : Result.Failure(result.Errors);
     }
 }

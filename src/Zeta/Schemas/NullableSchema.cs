@@ -15,15 +15,14 @@ public class NullableSchema<T, TContext> : ISchema<T?, TContext> where T : class
         _inner = inner;
     }
 
-    public async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (value is null)
         {
-            return Result<T?>.Success(null);
+            return Result.Success();
         }
 
-        var result = await _inner.ValidateAsync(value, context);
-        return result.Map<T?>(v => v);
+        return await _inner.ValidateAsync(value, context);
     }
 }
 
@@ -37,11 +36,15 @@ public sealed class NullableSchema<T> : NullableSchema<T, object?>, ISchema<T?> 
     {
     }
 
-    public ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+        
+        return result.IsSuccess
+            ? Result<T?>.Success(value)
+            : Result<T?>.Failure(result.Errors);
     }
 }
 
@@ -58,15 +61,14 @@ public class NullableValueSchema<T, TContext> : ISchema<T?, TContext> where T : 
         _inner = inner;
     }
 
-    public async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (!value.HasValue)
         {
-            return Result<T?>.Success(null);
+            return Result.Success();
         }
 
-        var result = await _inner.ValidateAsync(value.Value, context);
-        return result.Map<T?>(v => v);
+        return await _inner.ValidateAsync(value.Value, context);
     }
 }
 
@@ -80,10 +82,14 @@ public sealed class NullableValueSchema<T> : NullableValueSchema<T, object?>, IS
     {
     }
 
-    public ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
+    public async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         var context = new ValidationContext<object?>(null, execution);
-        return ValidateAsync(value, context);
+        var result = await ValidateAsync(value, context);
+        
+        return result.IsSuccess
+            ? Result<T?>.Success(value)
+            : Result<T?>.Failure(result.Errors);
     }
 }
