@@ -45,11 +45,11 @@ public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
         _fields.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
-
+    
     // Support simple schemas that don't need context (auto-adapt)
     public ObjectSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty>> propertySelector,
-        ISchema<TProperty> schema)
+        ISchema<TProperty, object?> schema)
     {
         return Field(propertySelector, new SchemaContextAdapter<TProperty, TContext>(schema));
     }
@@ -313,9 +313,9 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
 
 internal sealed class SchemaContextAdapter<T, TContext> : ISchema<T, TContext>
 {
-    private readonly ISchema<T> _inner;
+    private readonly ISchema<T, object?> _inner;
 
-    public SchemaContextAdapter(ISchema<T> inner)
+    public SchemaContextAdapter(ISchema<T, object?> inner)
     {
         _inner = inner;
     }
