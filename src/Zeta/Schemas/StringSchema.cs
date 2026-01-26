@@ -135,84 +135,84 @@ public class StringSchema<TContext> : BaseSchema<string, TContext>
 {
     public StringSchema<TContext> MinLength(int min, string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.MinLength(val, min, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> MaxLength(int max, string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.MaxLength(val, max, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> Length(int exact, string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.Length(val, exact, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> NotEmpty(string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.NotEmpty(val, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> Email(string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.Email(val, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> Uuid(string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.Uuid(val, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> Url(string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.Url(val, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> Uri(UriKind kind = UriKind.Absolute, string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.ValidUri(val, kind, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> Alphanumeric(string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.Alphanumeric(val, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.StartsWith(val, prefix, comparison, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.EndsWith(val, suffix, comparison, ctx.Execution.Path, message)));
         return this;
     }
 
     public StringSchema<TContext> Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.Contains(val, substring, comparison, ctx.Execution.Path, message)));
         return this;
     }
@@ -224,14 +224,14 @@ public class StringSchema<TContext> : BaseSchema<string, TContext>
             RegexOptions.Compiled,
             TimeSpan.FromSeconds(1));
 
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             StringValidators.MatchesRegex(val, compiledRegex, ctx.Execution.Path, message, code)));
         return this;
     }
 
     public StringSchema<TContext> Refine(Func<string, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<string, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<string, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

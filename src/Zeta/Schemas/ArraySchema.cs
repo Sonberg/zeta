@@ -90,7 +90,7 @@ public sealed class ArraySchema<TElement> : ISchema<TElement[]>
 public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
-    private readonly List<ISyncRule<TElement[], TContext>> _rules = [];
+    private readonly List<IValidationRule<TElement[], TContext>> _rules = [];
 
     public ArraySchema(ISchema<TElement, TContext> elementSchema)
     {
@@ -139,7 +139,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<TElement[], TContext>((val, ctx) =>
             val.Length >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
@@ -148,7 +148,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<TElement[], TContext>((val, ctx) =>
             val.Length <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
@@ -157,7 +157,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<TElement[], TContext>((val, ctx) =>
             val.Length == exact
                 ? null
                 : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
@@ -171,7 +171,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> Refine(Func<TElement[], TContext, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<TElement[], TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

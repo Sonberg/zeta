@@ -7,8 +7,8 @@ namespace Zeta.Core;
 /// </summary>
 public abstract class BaseSchema<T, TContext> : ISchema<T, TContext>
 {
-    private readonly List<ISyncRule<T, TContext>> _syncRules = [];
-    private readonly List<IAsyncRule<T, TContext>> _asyncRules = [];
+    private readonly List<IValidationRule<T, TContext>> _syncRules = [];
+    private readonly List<IAsyncValidationRule<T, TContext>> _asyncRules = [];
 
     public virtual async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
@@ -37,12 +37,12 @@ public abstract class BaseSchema<T, TContext> : ISchema<T, TContext>
             : Result.Failure(errors);
     }
 
-    protected void Use(ISyncRule<T, TContext> rule)
+    protected void Use(IValidationRule<T, TContext> rule)
     {
         _syncRules.Add(rule);
     }
 
-    protected void Use(IAsyncRule<T, TContext> rule)
+    protected void Use(IAsyncValidationRule<T, TContext> rule)
     {
         _asyncRules.Add(rule);
     }

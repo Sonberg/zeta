@@ -181,7 +181,7 @@ public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
 
     public ObjectSchema<T, TContext> Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<T, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

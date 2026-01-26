@@ -442,10 +442,10 @@ public sealed class StartsWithUpperRule : IValidationRule<string>
 Z.String().Use(new StartsWithUpperRule())
 ```
 
-For context-aware schemas, implement `IContextRule<T, TContext>`:
+For context-aware schemas, implement `IValidationRule<T, TContext>`:
 
 ```csharp
-public sealed class UniqueEmailRule<TContext> : IContextRule<string, TContext>
+public sealed class UniqueEmailRule<TContext> : IValidationRule<string, TContext>
     where TContext : IEmailContext
 {
     public ValidationError? Validate(string value, ValidationContext<TContext> ctx)

@@ -59,7 +59,7 @@ public class GuidSchema<TContext> : BaseSchema<Guid, TContext>
 {
     public GuidSchema<TContext> NotEmpty(string? message = null)
     {
-        Use(new DelegateSyncRule<Guid, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<Guid, TContext>((val, ctx) =>
             val != Guid.Empty
                 ? null
                 : new ValidationError(ctx.Execution.Path, "not_empty", message ?? "GUID cannot be empty")));
@@ -68,7 +68,7 @@ public class GuidSchema<TContext> : BaseSchema<Guid, TContext>
 
     public GuidSchema<TContext> Version(int version, string? message = null)
     {
-        Use(new DelegateSyncRule<Guid, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<Guid, TContext>((val, ctx) =>
         {
             var bytes = val.ToByteArray();
             var guidVersion = (bytes[7] >> 4) & 0x0F;
@@ -81,7 +81,7 @@ public class GuidSchema<TContext> : BaseSchema<Guid, TContext>
 
     public GuidSchema<TContext> Refine(Func<Guid, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<Guid, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<Guid, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

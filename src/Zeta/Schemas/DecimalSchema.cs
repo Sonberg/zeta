@@ -102,21 +102,21 @@ public class DecimalSchema<TContext> : BaseSchema<decimal, TContext>
 {
     public DecimalSchema<TContext> Min(decimal min, string? message = null)
     {
-        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<decimal, TContext>((val, ctx) =>
             NumericValidators.Min(val, min, ctx.Execution.Path, message)));
         return this;
     }
 
     public DecimalSchema<TContext> Max(decimal max, string? message = null)
     {
-        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<decimal, TContext>((val, ctx) =>
             NumericValidators.Max(val, max, ctx.Execution.Path, message)));
         return this;
     }
 
     public DecimalSchema<TContext> Positive(string? message = null)
     {
-        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<decimal, TContext>((val, ctx) =>
             val > 0
                 ? null
                 : new ValidationError(ctx.Execution.Path, "positive", message ?? "Must be positive")));
@@ -125,7 +125,7 @@ public class DecimalSchema<TContext> : BaseSchema<decimal, TContext>
 
     public DecimalSchema<TContext> Negative(string? message = null)
     {
-        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<decimal, TContext>((val, ctx) =>
             val < 0
                 ? null
                 : new ValidationError(ctx.Execution.Path, "negative", message ?? "Must be negative")));
@@ -134,7 +134,7 @@ public class DecimalSchema<TContext> : BaseSchema<decimal, TContext>
 
     public DecimalSchema<TContext> Precision(int maxDecimalPlaces, string? message = null)
     {
-        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<decimal, TContext>((val, ctx) =>
             GetDecimalPlaces(val) <= maxDecimalPlaces
                 ? null
                 : new ValidationError(ctx.Execution.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places")));
@@ -143,7 +143,7 @@ public class DecimalSchema<TContext> : BaseSchema<decimal, TContext>
 
     public DecimalSchema<TContext> MultipleOf(decimal step, string? message = null)
     {
-        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<decimal, TContext>((val, ctx) =>
             val % step == 0
                 ? null
                 : new ValidationError(ctx.Execution.Path, "multiple_of", message ?? $"Must be a multiple of {step}")));
@@ -152,7 +152,7 @@ public class DecimalSchema<TContext> : BaseSchema<decimal, TContext>
 
     public DecimalSchema<TContext> Refine(Func<decimal, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<decimal, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<decimal, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

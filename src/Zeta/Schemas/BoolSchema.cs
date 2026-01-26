@@ -55,7 +55,7 @@ public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 {
     public BoolSchema<TContext> IsTrue(string? message = null)
     {
-        Use(new DelegateSyncRule<bool, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<bool, TContext>((val, ctx) =>
             val
                 ? null
                 : new ValidationError(ctx.Execution.Path, "is_true", message ?? "Must be true")));
@@ -64,7 +64,7 @@ public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 
     public BoolSchema<TContext> IsFalse(string? message = null)
     {
-        Use(new DelegateSyncRule<bool, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<bool, TContext>((val, ctx) =>
             !val
                 ? null
                 : new ValidationError(ctx.Execution.Path, "is_false", message ?? "Must be false")));
@@ -73,7 +73,7 @@ public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 
     public BoolSchema<TContext> Refine(Func<bool, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<bool, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<bool, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

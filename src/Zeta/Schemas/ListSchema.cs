@@ -90,7 +90,7 @@ public sealed class ListSchema<TElement> : ISchema<List<TElement>>
 public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
-    private readonly List<ISyncRule<List<TElement>, TContext>> _rules = [];
+    private readonly List<IValidationRule<List<TElement>, TContext>> _rules = [];
 
     public ListSchema(ISchema<TElement, TContext> elementSchema)
     {
@@ -139,7 +139,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        _rules.Add(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
             val.Count >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
@@ -148,7 +148,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
             val.Count <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
@@ -157,7 +157,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        _rules.Add(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
             val.Count == exact
                 ? null
                 : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
@@ -171,7 +171,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> Refine(Func<List<TElement>, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateSyncRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

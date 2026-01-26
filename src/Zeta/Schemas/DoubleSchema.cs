@@ -79,21 +79,21 @@ public class DoubleSchema<TContext> : BaseSchema<double, TContext>
 {
     public DoubleSchema<TContext> Min(double min, string? message = null)
     {
-        Use(new DelegateSyncRule<double, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<double, TContext>((val, ctx) =>
             NumericValidators.Min(val, min, ctx.Execution.Path, message)));
         return this;
     }
 
     public DoubleSchema<TContext> Max(double max, string? message = null)
     {
-        Use(new DelegateSyncRule<double, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<double, TContext>((val, ctx) =>
             NumericValidators.Max(val, max, ctx.Execution.Path, message)));
         return this;
     }
 
     public DoubleSchema<TContext> Positive(string? message = null)
     {
-        Use(new DelegateSyncRule<double, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<double, TContext>((val, ctx) =>
             val > 0
                 ? null
                 : new ValidationError(ctx.Execution.Path, "positive", message ?? "Must be positive")));
@@ -102,7 +102,7 @@ public class DoubleSchema<TContext> : BaseSchema<double, TContext>
 
     public DoubleSchema<TContext> Negative(string? message = null)
     {
-        Use(new DelegateSyncRule<double, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<double, TContext>((val, ctx) =>
             val < 0
                 ? null
                 : new ValidationError(ctx.Execution.Path, "negative", message ?? "Must be negative")));
@@ -111,7 +111,7 @@ public class DoubleSchema<TContext> : BaseSchema<double, TContext>
 
     public DoubleSchema<TContext> Finite(string? message = null)
     {
-        Use(new DelegateSyncRule<double, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<double, TContext>((val, ctx) =>
             !double.IsNaN(val) && !double.IsInfinity(val)
                 ? null
                 : new ValidationError(ctx.Execution.Path, "finite", message ?? "Must be a finite number")));
@@ -120,7 +120,7 @@ public class DoubleSchema<TContext> : BaseSchema<double, TContext>
 
     public DoubleSchema<TContext> Refine(Func<double, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<double, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<double, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

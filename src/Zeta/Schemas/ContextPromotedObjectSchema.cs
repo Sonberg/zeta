@@ -14,8 +14,8 @@ namespace Zeta.Schemas;
 public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> where T : class
 {
     private readonly ObjectSchema<T> _inner;
-    private readonly List<ISyncRule<T, TContext>> _syncRules = [];
-    private readonly List<IAsyncRule<T, TContext>> _asyncRules = [];
+    private readonly List<IValidationRule<T, TContext>> _syncRules = [];
+    private readonly List<IAsyncValidationRule<T, TContext>> _asyncRules = [];
     private readonly List<IFieldValidator<T, TContext>> _fields = [];
     private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
 
@@ -133,7 +133,7 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
         string message,
         string code = "custom_error")
     {
-        _syncRules.Add(new DelegateSyncRule<T, TContext>((val, ctx) =>
+        _syncRules.Add(new DelegateValidationRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));
@@ -165,7 +165,7 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
         string message,
         string code = "custom_error")
     {
-        _asyncRules.Add(new DelegateAsyncRule<T, TContext>(async (val, ctx) =>
+        _asyncRules.Add(new DelegateAsyncValidationRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data, ctx.Execution.CancellationToken)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

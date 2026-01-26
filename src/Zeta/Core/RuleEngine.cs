@@ -42,11 +42,11 @@ public sealed class RuleEngine<T>
 /// </summary>
 public sealed class ContextRuleEngine<T, TContext>
 {
-    private readonly List<IContextRule<T, TContext>> _syncRules = [];
-    private readonly List<IAsyncContextRule<T, TContext>> _asyncRules = [];
+    private readonly List<IValidationRule<T, TContext>> _syncRules = [];
+    private readonly List<IAsyncValidationRule<T, TContext>> _asyncRules = [];
 
-    public void Add(IContextRule<T, TContext> rule) => _syncRules.Add(rule);
-    public void Add(IAsyncContextRule<T, TContext> rule) => _asyncRules.Add(rule);
+    public void Add(IValidationRule<T, TContext> rule) => _syncRules.Add(rule);
+    public void Add(IAsyncValidationRule<T, TContext> rule) => _asyncRules.Add(rule);
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext<TContext> context)
     {

@@ -47,11 +47,12 @@ dotnet run --project samples/Zeta.Sample.Api
 - `ValidationExecutionContext` - Path tracking, IServiceProvider access, CancellationToken
 
 ### Rule System (src/Zeta/Rules/)
-- `IValidationRule<T>` - Context-free validation rule using `ValidationExecutionContext`
-- `IContextRule<T, TContext>` - Context-aware validation rule using `ValidationContext<TContext>`
+- `IValidationRule<T>` - Context-free sync validation rule using `ValidationExecutionContext`
+- `IValidationRule<T, TContext>` - Context-aware sync validation rule using `ValidationContext<TContext>`
+- `IAsyncValidationRule<T>` / `IAsyncValidationRule<T, TContext>` - Async variants
 - `RuleEngine<T>` - Executes context-free rules for contextless schemas
 - `ContextRuleEngine<T, TContext>` - Executes context-aware rules
-- `DelegateValidationRule<T>` / `DelegateContextRule<T, TContext>` - Delegate wrappers for inline rules
+- `DelegateValidationRule<T>` / `DelegateValidationRule<T, TContext>` - Delegate wrappers for inline rules
 
 ### Static Validators (src/Zeta/Validation/)
 Shared validation logic used by both contextless and context-aware schemas:

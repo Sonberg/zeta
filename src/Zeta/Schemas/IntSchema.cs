@@ -52,21 +52,21 @@ public class IntSchema<TContext> : BaseSchema<int, TContext>
 {
     public IntSchema<TContext> Min(int min, string? message = null)
     {
-        Use(new DelegateSyncRule<int, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<int, TContext>((val, ctx) =>
             NumericValidators.Min(val, min, ctx.Execution.Path, message)));
         return this;
     }
 
     public IntSchema<TContext> Max(int max, string? message = null)
     {
-        Use(new DelegateSyncRule<int, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<int, TContext>((val, ctx) =>
             NumericValidators.Max(val, max, ctx.Execution.Path, message)));
         return this;
     }
 
     public IntSchema<TContext> Refine(Func<int, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<int, TContext>((val, ctx) =>
+        Use(new DelegateValidationRule<int, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));
