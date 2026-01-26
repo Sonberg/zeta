@@ -143,3 +143,17 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 - Contextless schemas implement `ISchema<T>` only
 - Context-aware schemas implement `ISchema<T, TContext>` only
 - Use `SchemaAdapter<T, TContext>` to bridge contextless schemas into context-aware contexts
+
+### Adding Validation Methods
+When adding a new validation method to a schema type (e.g., `StringSchema.MyMethod()`), you must also add a corresponding extension method for `ContextPromotedSchema<T, TContext>` in `src/Zeta/Core/SchemaExtensions.cs`. This ensures API consistency when users promote schemas with `.WithContext<TContext>()`.
+
+Example: If adding `StringSchema.Foo()`, also add:
+```csharp
+public static ContextPromotedSchema<string, TContext> Foo<TContext>(
+    this ContextPromotedSchema<string, TContext> schema, ...)
+{
+    return schema.Refine(...);
+}
+```
+
+The `SchemaConsistencyTests` will fail if this parity is not maintained.

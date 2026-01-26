@@ -1,5 +1,7 @@
+using System.Text.RegularExpressions;
 using Zeta.Core;
 using Zeta.Schemas;
+using Zeta.Validation;
 
 namespace Zeta;
 
@@ -15,6 +17,453 @@ public static class SchemaExtensions
         return result.IsSuccess
             ? Result<T>.Success(value)
             : Result<T>.Failure(result.Errors);
+    }
+
+    // ==================== ContextPromotedSchema<string> Validation Extensions ====================
+
+    /// <summary>
+    /// Validates that the string has at least <paramref name="min"/> characters.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> MinLength<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, int min, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Length >= min,
+            message ?? $"Must be at least {min} characters long",
+            "min_length");
+    }
+
+    /// <summary>
+    /// Validates that the string has at most <paramref name="max"/> characters.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> MaxLength<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, int max, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Length <= max,
+            message ?? $"Must be at most {max} characters long",
+            "max_length");
+    }
+
+    /// <summary>
+    /// Validates that the string has exactly <paramref name="exact"/> characters.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Length<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, int exact, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Length == exact,
+            message ?? $"Must be exactly {exact} characters long",
+            "length");
+    }
+
+    /// <summary>
+    /// Validates that the string is not empty or whitespace.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> NotEmpty<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => !string.IsNullOrWhiteSpace(val),
+            message ?? "Value cannot be empty",
+            "required");
+    }
+
+    /// <summary>
+    /// Validates that the string is a valid email format.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Email<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => EmailRegex.IsMatch(val),
+            message ?? "Invalid email format",
+            "email");
+    }
+
+    /// <summary>
+    /// Validates that the string is a valid UUID/GUID format.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Uuid<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => Guid.TryParse(val, out _),
+            message ?? "Invalid UUID format",
+            "uuid");
+    }
+
+    /// <summary>
+    /// Validates that the string is a valid HTTP/HTTPS URL.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Url<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => System.Uri.TryCreate(val, UriKind.Absolute, out var uri) &&
+                   (uri.Scheme == System.Uri.UriSchemeHttp || uri.Scheme == System.Uri.UriSchemeHttps),
+            message ?? "Invalid URL format",
+            "url");
+    }
+
+    /// <summary>
+    /// Validates that the string is a valid URI.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Uri<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, UriKind kind = UriKind.Absolute, string? message = null)
+    {
+        return schema.Refine(
+            val => System.Uri.TryCreate(val, kind, out _),
+            message ?? "Invalid URI format",
+            "uri");
+    }
+
+    /// <summary>
+    /// Validates that the string is a valid URI. Alias for Uri().
+    /// </summary>
+    [Obsolete("Use Uri() instead")]
+    public static ContextPromotedSchema<string, TContext> ValidUri<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, UriKind kind = UriKind.Absolute, string? message = null)
+        => Uri(schema, kind, message);
+
+    /// <summary>
+    /// Validates that the string contains only letters and numbers.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Alphanumeric<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => val.All(char.IsLetterOrDigit),
+            message ?? "Must contain only letters and numbers",
+            "alphanumeric");
+    }
+
+    /// <summary>
+    /// Validates that the string starts with the specified prefix.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> StartsWith<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string prefix,
+        StringComparison comparison = StringComparison.Ordinal, string? message = null)
+    {
+        return schema.Refine(
+            val => val.StartsWith(prefix, comparison),
+            message ?? $"Must start with '{prefix}'",
+            "starts_with");
+    }
+
+    /// <summary>
+    /// Validates that the string ends with the specified suffix.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> EndsWith<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string suffix,
+        StringComparison comparison = StringComparison.Ordinal, string? message = null)
+    {
+        return schema.Refine(
+            val => val.EndsWith(suffix, comparison),
+            message ?? $"Must end with '{suffix}'",
+            "ends_with");
+    }
+
+    /// <summary>
+    /// Validates that the string contains the specified substring.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Contains<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string substring,
+        StringComparison comparison = StringComparison.Ordinal, string? message = null)
+    {
+        return schema.Refine(
+            val => val.IndexOf(substring, comparison) >= 0,
+            message ?? $"Must contain '{substring}'",
+            "contains");
+    }
+
+    /// <summary>
+    /// Validates that the string matches the specified regex pattern.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> Regex<TContext>(
+        this ContextPromotedSchema<string, TContext> schema, string pattern,
+        string? message = null, string code = "regex")
+    {
+        var compiledRegex = new Regex(pattern, RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        return schema.Refine(
+            val => compiledRegex.IsMatch(val),
+            message ?? $"Must match pattern {pattern}",
+            code);
+    }
+
+    private static readonly Regex EmailRegex = new(
+        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        RegexOptions.Compiled,
+        TimeSpan.FromSeconds(1));
+
+    // ==================== ContextPromotedSchema<int> Validation Extensions ====================
+
+    /// <summary>
+    /// Validates that the integer is at least <paramref name="min"/>.
+    /// </summary>
+    public static ContextPromotedSchema<int, TContext> Min<TContext>(
+        this ContextPromotedSchema<int, TContext> schema, int min, string? message = null)
+    {
+        return schema.Refine(
+            val => val >= min,
+            message ?? $"Must be at least {min}",
+            "min");
+    }
+
+    /// <summary>
+    /// Validates that the integer is at most <paramref name="max"/>.
+    /// </summary>
+    public static ContextPromotedSchema<int, TContext> Max<TContext>(
+        this ContextPromotedSchema<int, TContext> schema, int max, string? message = null)
+    {
+        return schema.Refine(
+            val => val <= max,
+            message ?? $"Must be at most {max}",
+            "max");
+    }
+
+    // ==================== ContextPromotedSchema<double> Validation Extensions ====================
+
+    /// <summary>
+    /// Validates that the double is at least <paramref name="min"/>.
+    /// </summary>
+    public static ContextPromotedSchema<double, TContext> Min<TContext>(
+        this ContextPromotedSchema<double, TContext> schema, double min, string? message = null)
+    {
+        return schema.Refine(
+            val => val >= min,
+            message ?? $"Must be at least {min}",
+            "min");
+    }
+
+    /// <summary>
+    /// Validates that the double is at most <paramref name="max"/>.
+    /// </summary>
+    public static ContextPromotedSchema<double, TContext> Max<TContext>(
+        this ContextPromotedSchema<double, TContext> schema, double max, string? message = null)
+    {
+        return schema.Refine(
+            val => val <= max,
+            message ?? $"Must be at most {max}",
+            "max");
+    }
+
+    /// <summary>
+    /// Validates that the double is positive (greater than zero).
+    /// </summary>
+    public static ContextPromotedSchema<double, TContext> Positive<TContext>(
+        this ContextPromotedSchema<double, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => val > 0,
+            message ?? "Must be positive",
+            "positive");
+    }
+
+    /// <summary>
+    /// Validates that the double is negative (less than zero).
+    /// </summary>
+    public static ContextPromotedSchema<double, TContext> Negative<TContext>(
+        this ContextPromotedSchema<double, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => val < 0,
+            message ?? "Must be negative",
+            "negative");
+    }
+
+    /// <summary>
+    /// Validates that the double is a finite number (not NaN or Infinity).
+    /// </summary>
+    public static ContextPromotedSchema<double, TContext> Finite<TContext>(
+        this ContextPromotedSchema<double, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => !double.IsNaN(val) && !double.IsInfinity(val),
+            message ?? "Must be a finite number",
+            "finite");
+    }
+
+    // ==================== ContextPromotedSchema<decimal> Validation Extensions ====================
+
+    /// <summary>
+    /// Validates that the decimal is at least <paramref name="min"/>.
+    /// </summary>
+    public static ContextPromotedSchema<decimal, TContext> Min<TContext>(
+        this ContextPromotedSchema<decimal, TContext> schema, decimal min, string? message = null)
+    {
+        return schema.Refine(
+            val => val >= min,
+            message ?? $"Must be at least {min}",
+            "min");
+    }
+
+    /// <summary>
+    /// Validates that the decimal is at most <paramref name="max"/>.
+    /// </summary>
+    public static ContextPromotedSchema<decimal, TContext> Max<TContext>(
+        this ContextPromotedSchema<decimal, TContext> schema, decimal max, string? message = null)
+    {
+        return schema.Refine(
+            val => val <= max,
+            message ?? $"Must be at most {max}",
+            "max");
+    }
+
+    /// <summary>
+    /// Validates that the decimal is positive (greater than zero).
+    /// </summary>
+    public static ContextPromotedSchema<decimal, TContext> Positive<TContext>(
+        this ContextPromotedSchema<decimal, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => val > 0,
+            message ?? "Must be positive",
+            "positive");
+    }
+
+    /// <summary>
+    /// Validates that the decimal is negative (less than zero).
+    /// </summary>
+    public static ContextPromotedSchema<decimal, TContext> Negative<TContext>(
+        this ContextPromotedSchema<decimal, TContext> schema, string? message = null)
+    {
+        return schema.Refine(
+            val => val < 0,
+            message ?? "Must be negative",
+            "negative");
+    }
+
+    /// <summary>
+    /// Validates that the decimal has at most <paramref name="maxDecimalPlaces"/> decimal places.
+    /// </summary>
+    public static ContextPromotedSchema<decimal, TContext> Precision<TContext>(
+        this ContextPromotedSchema<decimal, TContext> schema, int maxDecimalPlaces, string? message = null)
+    {
+        return schema.Refine(
+            val => GetDecimalPlaces(val) <= maxDecimalPlaces,
+            message ?? $"Must have at most {maxDecimalPlaces} decimal places",
+            "precision");
+    }
+
+    /// <summary>
+    /// Validates that the decimal is a multiple of <paramref name="step"/>.
+    /// </summary>
+    public static ContextPromotedSchema<decimal, TContext> MultipleOf<TContext>(
+        this ContextPromotedSchema<decimal, TContext> schema, decimal step, string? message = null)
+    {
+        return schema.Refine(
+            val => val % step == 0,
+            message ?? $"Must be a multiple of {step}",
+            "multiple_of");
+    }
+
+    private static int GetDecimalPlaces(decimal value)
+    {
+        value = Math.Abs(value);
+        value -= Math.Truncate(value);
+        var places = 0;
+        while (value > 0)
+        {
+            places++;
+            value *= 10;
+            value -= Math.Truncate(value);
+        }
+        return places;
+    }
+
+    // ==================== ContextPromotedSchema<TElement[]> Validation Extensions ====================
+
+    /// <summary>
+    /// Validates that the array has at least <paramref name="min"/> elements.
+    /// </summary>
+    public static ContextPromotedSchema<TElement[], TContext> MinLength<TElement, TContext>(
+        this ContextPromotedSchema<TElement[], TContext> schema, int min, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Length >= min,
+            message ?? $"Must have at least {min} items",
+            "min_length");
+    }
+
+    /// <summary>
+    /// Validates that the array has at most <paramref name="max"/> elements.
+    /// </summary>
+    public static ContextPromotedSchema<TElement[], TContext> MaxLength<TElement, TContext>(
+        this ContextPromotedSchema<TElement[], TContext> schema, int max, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Length <= max,
+            message ?? $"Must have at most {max} items",
+            "max_length");
+    }
+
+    /// <summary>
+    /// Validates that the array has exactly <paramref name="exact"/> elements.
+    /// </summary>
+    public static ContextPromotedSchema<TElement[], TContext> Length<TElement, TContext>(
+        this ContextPromotedSchema<TElement[], TContext> schema, int exact, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Length == exact,
+            message ?? $"Must have exactly {exact} items",
+            "length");
+    }
+
+    /// <summary>
+    /// Validates that the array is not empty.
+    /// </summary>
+    public static ContextPromotedSchema<TElement[], TContext> NotEmpty<TElement, TContext>(
+        this ContextPromotedSchema<TElement[], TContext> schema, string? message = null)
+    {
+        return schema.MinLength<TElement, TContext>(1, message ?? "Must not be empty");
+    }
+
+    // ==================== ContextPromotedSchema<List<TElement>> Validation Extensions ====================
+
+    /// <summary>
+    /// Validates that the list has at least <paramref name="min"/> elements.
+    /// </summary>
+    public static ContextPromotedSchema<List<TElement>, TContext> MinLength<TElement, TContext>(
+        this ContextPromotedSchema<List<TElement>, TContext> schema, int min, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Count >= min,
+            message ?? $"Must have at least {min} items",
+            "min_length");
+    }
+
+    /// <summary>
+    /// Validates that the list has at most <paramref name="max"/> elements.
+    /// </summary>
+    public static ContextPromotedSchema<List<TElement>, TContext> MaxLength<TElement, TContext>(
+        this ContextPromotedSchema<List<TElement>, TContext> schema, int max, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Count <= max,
+            message ?? $"Must have at most {max} items",
+            "max_length");
+    }
+
+    /// <summary>
+    /// Validates that the list has exactly <paramref name="exact"/> elements.
+    /// </summary>
+    public static ContextPromotedSchema<List<TElement>, TContext> Length<TElement, TContext>(
+        this ContextPromotedSchema<List<TElement>, TContext> schema, int exact, string? message = null)
+    {
+        return schema.Refine(
+            val => val.Count == exact,
+            message ?? $"Must have exactly {exact} items",
+            "length");
+    }
+
+    /// <summary>
+    /// Validates that the list is not empty.
+    /// </summary>
+    public static ContextPromotedSchema<List<TElement>, TContext> NotEmpty<TElement, TContext>(
+        this ContextPromotedSchema<List<TElement>, TContext> schema, string? message = null)
+    {
+        return schema.MinLength<TElement, TContext>(1, message ?? "Must not be empty");
     }
 
     // ==================== String Schema ====================
