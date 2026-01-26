@@ -39,11 +39,25 @@ dotnet run --project samples/Zeta.Sample.Api
 - `benchmarks/Zeta.Benchmarks/` - Performance benchmarks vs FluentValidation/DataAnnotations
 
 ### Core Types (src/Zeta/Core/)
-- `ISchema<T>` / `ISchema<T, TContext>` - Core validation abstraction. Every schema implements this.
+- `ISchema<T>` - Contextless validation interface. Returns `Result<T>`.
+- `ISchema<T, TContext>` - Context-aware validation interface (separate, no inheritance from `ISchema<T>`). Returns `Result`.
 - `Result<T>` - Discriminated result type with `IsSuccess`, `Value`, `Errors`, and monadic operations (`Map`, `Then`, `Match`)
 - `ValidationError(Path, Code, Message)` - Error record with dot-notation path (e.g., `user.address.street`)
 - `ValidationContext<TData>` - Contains typed context data and execution context
 - `ValidationExecutionContext` - Path tracking, IServiceProvider access, CancellationToken
+
+### Rule System (src/Zeta/Rules/)
+- `IValidationRule<T>` - Context-free validation rule using `ValidationExecutionContext`
+- `IContextRule<T, TContext>` - Context-aware validation rule using `ValidationContext<TContext>`
+- `RuleEngine<T>` - Executes context-free rules for contextless schemas
+- `ContextRuleEngine<T, TContext>` - Executes context-aware rules
+- `DelegateValidationRule<T>` / `DelegateContextRule<T, TContext>` - Delegate wrappers for inline rules
+
+### Static Validators (src/Zeta/Validation/)
+Shared validation logic used by both contextless and context-aware schemas:
+- `StringValidators` - MinLength, MaxLength, Email, Url, Regex, etc.
+- `NumericValidators` - Min, Max, Positive, Negative, Precision, etc.
+- `CollectionValidators` - MinLength, MaxLength, NotEmpty for arrays/lists
 
 ### Schema Types (src/Zeta/Schemas/)
 All schemas are created via the static `Z` class entry point as contextless schemas:
@@ -78,13 +92,14 @@ Z.String()
     .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned");
 ```
 
-**Context Adaptation**: `SchemaContextAdapter<T, TContext>` wraps context-free schemas for use in context-aware object schemas.
+**Schema Bridging**: `SchemaAdapter<T, TContext>` wraps contextless `ISchema<T>` for use in context-aware object schemas.
 
 **Conditional Validation**: `.When()` on ObjectSchema enables dependent field validation via `ConditionalBuilder`.
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)
 - `IZetaValidator` - Injectable service for manual validation in controllers
-- `ValidationFilter` - Minimal API endpoint filter for `.WithValidation(schema)`
+- `ContextlessValidationFilter<T>` - Minimal API endpoint filter for contextless schemas
+- `ValidationFilter<T, TContext>` - Minimal API endpoint filter for context-aware schemas
 - `IValidationContextFactory<TInput, TContext>` - Async context loading before validation (scanned from assemblies via `AddZeta(assembly)`)
 
 ## Design Principles
@@ -116,7 +131,14 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 
 ### Context Promotion
 - Schemas are always created contextless via `Z.String()`, `Z.Int()`, etc.
-- Use `.WithContext<TContext>()` to promote when you need context-aware `Refine()`
+- Contextless `Refine()` uses `Func<T, bool>` (single argument)
+- Use `.WithContext<TContext>()` to promote when you need context-aware `Refine((val, ctx) => ...)`
 - For ObjectSchema: `.WithContext<T, TContext>()` requires both type parameters
 - After promotion, `.Field()` and `.When()` can still be called on ObjectSchema
 - `ContextPromotedSchema<T, TContext>` delegates to inner schema, then runs context-aware rules
+
+### Interface Separation
+- `ISchema<T>` and `ISchema<T, TContext>` are completely separate interfaces (no inheritance relationship)
+- Contextless schemas implement `ISchema<T>` only
+- Context-aware schemas implement `ISchema<T, TContext>` only
+- Use `SchemaAdapter<T, TContext>` to bridge contextless schemas into context-aware contexts

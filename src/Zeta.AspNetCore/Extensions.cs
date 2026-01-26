@@ -7,15 +7,15 @@ namespace Zeta.AspNetCore;
 public static class ZetaExtensions
 {
     /// <summary>
-    /// Adds validation to a minimal API endpoint using the provided schema.
+    /// Adds validation to a minimal API endpoint using the provided contextless schema.
     /// </summary>
     public static RouteHandlerBuilder WithValidation<T>(this RouteHandlerBuilder builder, ISchema<T> schema)
     {
-        return builder.AddEndpointFilter(new ValidationFilter<T, object?>(schema, null));
+        return builder.AddEndpointFilter(new ContextlessValidationFilter<T>(schema));
     }
 
     /// <summary>
-    /// Adds validation to a minimal API endpoint using the provided schema and context factory.
+    /// Adds validation to a minimal API endpoint using the provided context-aware schema.
     /// </summary>
     public static RouteHandlerBuilder WithValidation<T, TContext>(this RouteHandlerBuilder builder, ISchema<T, TContext> schema)
     {

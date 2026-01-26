@@ -6,19 +6,8 @@ namespace Zeta;
 public static class SchemaExtensions
 {
     /// <summary>
-    /// Validates a value using a schema that expects no specific context (object?).
+    /// Validates a value using a context-aware schema with context data.
     /// </summary>
-    public static async ValueTask<Result<T>> ValidateAsync<T>(this ISchema<T, object?> schema, T value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var context = new ValidationContext<object?>(null, execution);
-        var result = await schema.ValidateAsync(value, context);
-
-        return result.IsSuccess
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(result.Errors);
-    }
-
     public static async ValueTask<Result<T>> ValidateAsync<T, TContext>(this ISchema<T, TContext> schema, T value, TContext data)
     {
         var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(data, ValidationExecutionContext.Empty));
@@ -48,14 +37,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<string, TContext> Optional<TContext>(this StringSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<string> Optional(this StringSchema schema)
         => schema.Nullable();
@@ -80,14 +67,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<int, TContext> Optional<TContext>(this IntSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<int> Optional(this IntSchema schema)
         => schema.Nullable();
@@ -112,14 +97,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<double, TContext> Optional<TContext>(this DoubleSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<double> Optional(this DoubleSchema schema)
         => schema.Nullable();
@@ -144,14 +127,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<decimal, TContext> Optional<TContext>(this DecimalSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<decimal> Optional(this DecimalSchema schema)
         => schema.Nullable();
@@ -176,14 +157,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<T, TContext> Optional<T, TContext>(this ObjectSchema<T, TContext> schema) where T : class
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<T> Optional<T>(this ObjectSchema<T> schema) where T : class
         => schema.Nullable();
@@ -208,14 +187,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<TElement[], TContext> Optional<TElement, TContext>(this ArraySchema<TElement, TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<TElement[]> Optional<TElement>(this ArraySchema<TElement> schema)
         => schema.Nullable();
@@ -240,14 +217,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<List<TElement>, TContext> Optional<TElement, TContext>(this ListSchema<TElement, TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableSchema<List<TElement>> Optional<TElement>(this ListSchema<TElement> schema)
         => schema.Nullable();
@@ -272,14 +247,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<DateTime, TContext> Optional<TContext>(this DateTimeSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<DateTime> Optional(this DateTimeSchema schema)
         => schema.Nullable();
@@ -305,14 +278,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<DateOnly, TContext> Optional<TContext>(this DateOnlySchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<DateOnly> Optional(this DateOnlySchema schema)
         => schema.Nullable();
@@ -337,14 +308,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<TimeOnly, TContext> Optional<TContext>(this TimeOnlySchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<TimeOnly> Optional(this TimeOnlySchema schema)
         => schema.Nullable();
@@ -370,14 +339,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<Guid, TContext> Optional<TContext>(this GuidSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<Guid> Optional(this GuidSchema schema)
         => schema.Nullable();
@@ -402,14 +369,12 @@ public static class SchemaExtensions
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<bool, TContext> Optional<TContext>(this BoolSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
-    /// Use for fields that may be omitted in input (e.g., PATCH requests).
     /// </summary>
     public static NullableValueSchema<bool> Optional(this BoolSchema schema)
         => schema.Nullable();
@@ -419,67 +384,61 @@ public static class SchemaExtensions
     /// <summary>
     /// Promotes a contextless string schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<string, TContext> WithContext<TContext>(this StringSchema<object?> schema)
+    public static ContextPromotedSchema<string, TContext> WithContext<TContext>(this StringSchema schema)
         => new(schema);
 
     /// <summary>
     /// Promotes a contextless int schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<int, TContext> WithContext<TContext>(this IntSchema<object?> schema)
+    public static ContextPromotedSchema<int, TContext> WithContext<TContext>(this IntSchema schema)
         => new(schema);
 
     /// <summary>
     /// Promotes a contextless double schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<double, TContext> WithContext<TContext>(this DoubleSchema<object?> schema)
+    public static ContextPromotedSchema<double, TContext> WithContext<TContext>(this DoubleSchema schema)
         => new(schema);
 
     /// <summary>
     /// Promotes a contextless decimal schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<decimal, TContext> WithContext<TContext>(this DecimalSchema<object?> schema)
+    public static ContextPromotedSchema<decimal, TContext> WithContext<TContext>(this DecimalSchema schema)
         => new(schema);
 
     /// <summary>
     /// Promotes a contextless bool schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<bool, TContext> WithContext<TContext>(this BoolSchema<object?> schema)
+    public static ContextPromotedSchema<bool, TContext> WithContext<TContext>(this BoolSchema schema)
         => new(schema);
 
     /// <summary>
     /// Promotes a contextless Guid schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<Guid, TContext> WithContext<TContext>(this GuidSchema<object?> schema)
+    public static ContextPromotedSchema<Guid, TContext> WithContext<TContext>(this GuidSchema schema)
         => new(schema);
 
     /// <summary>
     /// Promotes a contextless DateTime schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<DateTime, TContext> WithContext<TContext>(this DateTimeSchema<object?> schema)
+    public static ContextPromotedSchema<DateTime, TContext> WithContext<TContext>(this DateTimeSchema schema)
         => new(schema);
 
 #if !NETSTANDARD2_0
     /// <summary>
     /// Promotes a contextless DateOnly schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<DateOnly, TContext> WithContext<TContext>(this DateOnlySchema<object?> schema)
+    public static ContextPromotedSchema<DateOnly, TContext> WithContext<TContext>(this DateOnlySchema schema)
         => new(schema);
 
     /// <summary>
     /// Promotes a contextless TimeOnly schema to a context-aware schema, enabling context-aware refinements.
     /// </summary>
-    public static ContextPromotedSchema<TimeOnly, TContext> WithContext<TContext>(this TimeOnlySchema<object?> schema)
+    public static ContextPromotedSchema<TimeOnly, TContext> WithContext<TContext>(this TimeOnlySchema schema)
         => new(schema);
 #endif
 
     /// <summary>
     /// Promotes a contextless object schema to a context-aware schema, enabling context-aware refinements and field additions.
-    /// </summary>
-    public static ContextPromotedObjectSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T, object?> schema) where T : class
-        => new(schema);
-
-    /// <summary>
-    /// Promotes a contextless object schema (sealed) to a context-aware schema, enabling context-aware refinements and field additions.
     /// </summary>
     public static ContextPromotedObjectSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T> schema) where T : class
         => new(schema);

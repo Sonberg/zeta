@@ -4,13 +4,145 @@ using Zeta.Rules;
 namespace Zeta.Schemas;
 
 /// <summary>
-/// A schema for validating DateTime values with a specific context.
+/// A contextless schema for validating DateTime values.
+/// </summary>
+public sealed class DateTimeSchema : ISchema<DateTime>
+{
+    private readonly RuleEngine<DateTime> _rules = new();
+    private TimeProvider? _timeProvider;
+
+    public async ValueTask<Result<DateTime>> ValidateAsync(DateTime value, ValidationExecutionContext? execution = null)
+    {
+        execution ??= ValidationExecutionContext.Empty;
+        _timeProvider = execution.TimeProvider;
+        var errors = await _rules.ExecuteAsync(value, execution);
+
+        return errors == null
+            ? Result<DateTime>.Success(value)
+            : Result<DateTime>.Failure(errors);
+    }
+
+    public DateTimeSchema Min(DateTime min, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            val >= min
+                ? null
+                : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
+        return this;
+    }
+
+    public DateTimeSchema Max(DateTime max, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            val <= max
+                ? null
+                : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
+        return this;
+    }
+
+    public DateTimeSchema Past(string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            val < exec.TimeProvider.GetUtcNow().UtcDateTime
+                ? null
+                : new ValidationError(exec.Path, "past", message ?? "Must be in the past")));
+        return this;
+    }
+
+    public DateTimeSchema Future(string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            val > exec.TimeProvider.GetUtcNow().UtcDateTime
+                ? null
+                : new ValidationError(exec.Path, "future", message ?? "Must be in the future")));
+        return this;
+    }
+
+    public DateTimeSchema Between(DateTime min, DateTime max, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            val >= min && val <= max
+                ? null
+                : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
+        return this;
+    }
+
+    public DateTimeSchema Weekday(string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
+                ? null
+                : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
+        return this;
+    }
+
+    public DateTimeSchema Weekend(string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
+                ? null
+                : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
+        return this;
+    }
+
+    public DateTimeSchema WithinDays(int days, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        {
+            var now = exec.TimeProvider.GetUtcNow().UtcDateTime;
+            var diff = Math.Abs((val - now).TotalDays);
+            return diff <= days
+                ? null
+                : new ValidationError(exec.Path, "within_days", message ?? $"Must be within {days} days from now");
+        }));
+        return this;
+    }
+
+    public DateTimeSchema MinAge(int years, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        {
+            var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
+            var age = today.Year - val.Year;
+            if (val.Date > today.AddYears(-age)) age--;
+
+            return age >= years
+                ? null
+                : new ValidationError(exec.Path, "min_age", message ?? $"Must be at least {years} years old");
+        }));
+        return this;
+    }
+
+    public DateTimeSchema MaxAge(int years, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        {
+            var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
+            var age = today.Year - val.Year;
+            if (val.Date > today.AddYears(-age)) age--;
+
+            return age <= years
+                ? null
+                : new ValidationError(exec.Path, "max_age", message ?? $"Must be at most {years} years old");
+        }));
+        return this;
+    }
+
+    public DateTimeSchema Refine(Func<DateTime, bool> predicate, string message, string code = "custom_error")
+    {
+        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+            predicate(val)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+}
+
+/// <summary>
+/// A context-aware schema for validating DateTime values.
 /// </summary>
 public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 {
-    /// <summary>
-    /// Validates that the date is at or after the specified minimum.
-    /// </summary>
     public DateTimeSchema<TContext> Min(DateTime min, string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -20,9 +152,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the date is at or before the specified maximum.
-    /// </summary>
     public DateTimeSchema<TContext> Max(DateTime max, string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -32,9 +161,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the date is in the past (before current UTC time).
-    /// </summary>
     public DateTimeSchema<TContext> Past(string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -44,9 +170,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the date is in the future (after current UTC time).
-    /// </summary>
     public DateTimeSchema<TContext> Future(string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -56,9 +179,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the date is within a specified range.
-    /// </summary>
     public DateTimeSchema<TContext> Between(DateTime min, DateTime max, string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -68,9 +188,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the date falls on a weekday (Monday-Friday).
-    /// </summary>
     public DateTimeSchema<TContext> Weekday(string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -80,9 +197,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the date falls on a weekend (Saturday or Sunday).
-    /// </summary>
     public DateTimeSchema<TContext> Weekend(string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -92,9 +206,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the date is within the specified number of days from now.
-    /// </summary>
     public DateTimeSchema<TContext> WithinDays(int days, string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -108,9 +219,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the user is at least the specified age based on the date (birthdate validation).
-    /// </summary>
     public DateTimeSchema<TContext> MinAge(int years, string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -126,9 +234,6 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
         return this;
     }
 
-    /// <summary>
-    /// Validates that the user is at most the specified age based on the date (birthdate validation).
-    /// </summary>
     public DateTimeSchema<TContext> MaxAge(int years, string? message = null)
     {
         Use(new DelegateSyncRule<DateTime, TContext>((val, ctx) =>
@@ -156,22 +261,5 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
     public DateTimeSchema<TContext> Refine(Func<DateTime, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
-    }
-}
-
-/// <summary>
-/// A schema for validating DateTime values with default context.
-/// </summary>
-public sealed class DateTimeSchema : DateTimeSchema<object?>, ISchema<DateTime>
-{
-    public async ValueTask<Result<DateTime>> ValidateAsync(DateTime value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var context = new ValidationContext<object?>(null, execution);
-        var result = await ValidateAsync(value, context);
-
-        return result.IsSuccess
-            ? Result<DateTime>.Success(value)
-            : Result<DateTime>.Failure(result.Errors);
     }
 }

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Zeta.Core;
 using Zeta.Rules;
 
 namespace Zeta.Schemas;
@@ -12,13 +13,13 @@ namespace Zeta.Schemas;
 /// <typeparam name="TContext">The context type for context-aware refinements.</typeparam>
 public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> where T : class
 {
-    private readonly ObjectSchema<T, object?> _inner;
+    private readonly ObjectSchema<T> _inner;
     private readonly List<ISyncRule<T, TContext>> _syncRules = [];
     private readonly List<IAsyncRule<T, TContext>> _asyncRules = [];
     private readonly List<IFieldValidator<T, TContext>> _fields = [];
     private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
 
-    public ContextPromotedObjectSchema(ObjectSchema<T, object?> inner)
+    public ContextPromotedObjectSchema(ObjectSchema<T> inner)
     {
         _inner = inner;
     }
@@ -27,8 +28,7 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
     public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         // First run the inner (contextless) schema
-        var innerContext = new ValidationContext<object?>(null, context.Execution);
-        var innerResult = await _inner.ValidateAsync(value, innerContext);
+        var innerResult = await _inner.ValidateAsync(value, context.Execution);
 
         List<ValidationError>? errors = null;
 
@@ -84,8 +84,8 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
         Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty, TContext> schema)
     {
-        var propertyName = ObjectSchema<T, TContext>.GetPropertyName(propertySelector);
-        var getter = ObjectSchema<T, TContext>.CreateGetter(propertySelector);
+        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
         _fields.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
@@ -95,19 +95,9 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
     /// </summary>
     public ContextPromotedObjectSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty>> propertySelector,
-        ISchema<TProperty, object?> schema)
-    {
-        return Field(propertySelector, new SchemaContextAdapter<TProperty, TContext>(schema));
-    }
-
-    /// <summary>
-    /// Adds a field validation with a contextless schema.
-    /// </summary>
-    public ContextPromotedObjectSchema<T, TContext> Field<TProperty>(
-        Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty> schema)
     {
-        return Field(propertySelector, new SchemaContextAdapter<TProperty, TContext>(schema));
+        return Field(propertySelector, new SchemaAdapter<TProperty, TContext>(schema));
     }
 
     /// <summary>

@@ -5,6 +5,113 @@ using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
+/// <summary>
+/// A contextless schema for validating object values.
+/// </summary>
+public sealed class ObjectSchema<T> : ISchema<T>
+{
+    private readonly RuleEngine<T> _rules = new();
+    private readonly List<IContextlessFieldValidator<T>> _fields = [];
+    private readonly List<IContextlessConditionalBranch<T>> _conditionals = [];
+
+    public async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
+    {
+        execution ??= ValidationExecutionContext.Empty;
+        List<ValidationError>? errors = null;
+
+        // Validate rules
+        var ruleErrors = await _rules.ExecuteAsync(value, execution);
+        if (ruleErrors != null)
+        {
+            errors = ruleErrors;
+        }
+
+        // Validate fields
+        foreach (var field in _fields)
+        {
+            var fieldErrors = await field.ValidateAsync(value, execution);
+            if (fieldErrors.Count > 0)
+            {
+                errors ??= [];
+                errors.AddRange(fieldErrors);
+            }
+        }
+
+        // Validate conditionals
+        foreach (var conditional in _conditionals)
+        {
+            var conditionalErrors = await conditional.ValidateAsync(value, execution);
+            if (conditionalErrors.Count > 0)
+            {
+                errors ??= [];
+                errors.AddRange(conditionalErrors);
+            }
+        }
+
+        return errors == null
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(errors);
+    }
+
+    public ObjectSchema<T> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new ContextlessFieldValidator<T, TProperty>(propertyName, getter, schema));
+        return this;
+    }
+
+    public ObjectSchema<T> When(
+        Func<T, bool> condition,
+        Action<ContextlessConditionalBuilder<T>> thenBranch,
+        Action<ContextlessConditionalBuilder<T>>? elseBranch = null)
+    {
+        var thenBuilder = new ContextlessConditionalBuilder<T>();
+        thenBranch(thenBuilder);
+
+        ContextlessConditionalBuilder<T>? elseBuilder = null;
+        if (elseBranch != null)
+        {
+            elseBuilder = new ContextlessConditionalBuilder<T>();
+            elseBranch(elseBuilder);
+        }
+
+        _conditionals.Add(new ContextlessConditionalBranch<T>(condition, thenBuilder, elseBuilder));
+        return this;
+    }
+
+    public ObjectSchema<T> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
+    {
+        _rules.Add(new DelegateValidationRule<T>((val, exec) =>
+            predicate(val)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
+    public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
+    {
+        var body = expr.Body;
+        if (body is UnaryExpression { NodeType: ExpressionType.Convert } u)
+            body = u.Operand;
+        if (body is MemberExpression m)
+            return m.Member.Name;
+        throw new ArgumentException("Expression must be a property access");
+    }
+
+    public static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
+    {
+        var member = (MemberExpression)expr.Body;
+        var prop = (PropertyInfo)member.Member;
+        return instance => (TProperty)prop.GetValue(instance)!;
+    }
+}
+
+/// <summary>
+/// A context-aware schema for validating object values.
+/// </summary>
 public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
 {
     private readonly List<IFieldValidator<T, TContext>> _fields = [];
@@ -40,23 +147,19 @@ public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
         Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty, TContext> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
         _fields.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
-    
-    // Support simple schemas that don't need context (auto-adapt)
+
     public ObjectSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty>> propertySelector,
-        ISchema<TProperty, object?> schema)
+        ISchema<TProperty> schema)
     {
-        return Field(propertySelector, new SchemaContextAdapter<TProperty, TContext>(schema));
+        return Field(propertySelector, new SchemaAdapter<TProperty, TContext>(schema));
     }
 
-    /// <summary>
-    /// Conditionally validates fields based on a predicate.
-    /// </summary>
     public ObjectSchema<T, TContext> When(
         Func<T, bool> condition,
         Action<ConditionalBuilder<T, TContext>> thenBranch,
@@ -84,162 +187,137 @@ public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
                 : new ValidationError(ctx.Execution.Path, code, message)));
         return this;
     }
+}
 
-    public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
+// ==================== Contextless Field Validators ====================
+
+internal interface IContextlessFieldValidator<T>
+{
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationExecutionContext execution);
+}
+
+internal sealed class ContextlessFieldValidator<TInstance, TProperty> : IContextlessFieldValidator<TInstance>
+{
+    private readonly string _name;
+    private readonly Func<TInstance, TProperty> _getter;
+    private readonly ISchema<TProperty> _schema;
+
+    public ContextlessFieldValidator(string name, Func<TInstance, TProperty> getter, ISchema<TProperty> schema)
     {
-        var body = expr.Body;
-
-        if (body is UnaryExpression { NodeType: ExpressionType.Convert } u)
-            body = u.Operand;
-
-        if (body is MemberExpression m)
-            return m.Member.Name;
-
-        throw new ArgumentException("Expression must be a property access");
+        _name = name;
+        if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
+            _name = char.ToLower(_name[0]) + _name.Substring(1);
+        _getter = getter;
+        _schema = schema;
     }
 
-    public static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationExecutionContext execution)
     {
-        var member = (MemberExpression)expr.Body;
-        var prop = (PropertyInfo)member.Member;
-
-        return (T instance) => (TProperty)prop.GetValue(instance)!;
+        var value = _getter(instance);
+        var fieldExecution = execution.Push(_name);
+        var result = await _schema.ValidateAsync(value, fieldExecution);
+        return result.Errors.ToList();
     }
 }
 
-/// <summary>
-/// Default object schema with no context.
-/// </summary>
-public sealed class ObjectSchema<T> : ObjectSchema<T, object?>, ISchema<T>
+internal sealed class ContextlessRequiredFieldValidator<TInstance, TProperty> : IContextlessFieldValidator<TInstance>
 {
-    public async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var context = new ValidationContext<object?>(null, execution);
-        var result = await ValidateAsync(value, context);
+    private readonly string _name;
+    private readonly Func<TInstance, TProperty> _getter;
+    private readonly string _message;
+    private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
 
-        return result.IsSuccess
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(result.Errors);
+    public ContextlessRequiredFieldValidator(string name, Func<TInstance, TProperty> getter, string? message)
+    {
+        _name = name;
+        if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
+            _name = char.ToLower(_name[0]) + _name.Substring(1);
+        _getter = getter;
+        _message = message ?? $"{_name} is required";
     }
 
-    public new ObjectSchema<T> Field<TProperty>(Expression<Func<T, TProperty>> propertySelector, ISchema<TProperty, object?> schema)
+    public ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationExecutionContext execution)
     {
-        base.Field(propertySelector, schema);
-        return this;
-    }
-
-    public new ObjectSchema<T> Field<TProperty>(Expression<Func<T, TProperty>> propertySelector, ISchema<TProperty> schema)
-    {
-        base.Field(propertySelector, schema);
-        return this;
-    }
-
-    public new ObjectSchema<T> Refine(Func<T, object?, bool> predicate, string message, string code = "custom_error")
-    {
-        base.Refine(predicate, message, code);
-        return this;
-    }
-
-    public new ObjectSchema<T> When(
-        Func<T, bool> condition,
-        Action<ConditionalBuilder<T, object?>> thenBranch,
-        Action<ConditionalBuilder<T, object?>>? elseBranch = null)
-    {
-        base.When(condition, thenBranch, elseBranch);
-        return this;
+        var value = _getter(instance);
+        if (value is null)
+        {
+            var path = string.IsNullOrEmpty(execution.Path) ? _name : $"{execution.Path}.{_name}";
+            return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
+        }
+        return new ValueTask<IReadOnlyList<ValidationError>>(EmptyErrors);
     }
 }
 
-/// <summary>
-/// Builder for conditional validation branches.
-/// </summary>
-public sealed class ConditionalBuilder<T, TContext>
-{
-    internal List<IFieldValidator<T, TContext>> Validators { get; } = [];
+// ==================== Contextless Conditional Builder ====================
 
-    /// <summary>
-    /// Marks a field as required (not null).
-    /// </summary>
-    public ConditionalBuilder<T, TContext> Require<TProperty>(
+public sealed class ContextlessConditionalBuilder<T>
+{
+    internal List<IContextlessFieldValidator<T>> Validators { get; } = [];
+
+    public ContextlessConditionalBuilder<T> Require<TProperty>(
         Expression<Func<T, TProperty>> propertySelector,
         string? message = null)
     {
-        var propertyName = ObjectSchema<T, TContext>.GetPropertyName(propertySelector);
-        var getter = ObjectSchema<T, TContext>.CreateGetter(propertySelector);
-        Validators.Add(new RequiredFieldValidator<T, TProperty, TContext>(propertyName, getter, message));
+        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
+        Validators.Add(new ContextlessRequiredFieldValidator<T, TProperty>(propertyName, getter, message));
         return this;
     }
 
-    /// <summary>
-    /// Validates a field with a specific schema.
-    /// </summary>
-    public ConditionalBuilder<T, TContext> Field<TProperty>(
-        Expression<Func<T, TProperty>> propertySelector,
-        ISchema<TProperty, TContext> schema)
-    {
-        var propertyName = ObjectSchema<T, TContext>.GetPropertyName(propertySelector);
-        var getter = ObjectSchema<T, TContext>.CreateGetter(propertySelector);
-        Validators.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
-        return this;
-    }
-
-    /// <summary>
-    /// Validates a field with a specific schema.
-    /// </summary>
-    public ConditionalBuilder<T, TContext> Field<TProperty>(
+    public ContextlessConditionalBuilder<T> Field<TProperty>(
         Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty> schema)
     {
-        return Field(propertySelector, new SchemaContextAdapter<TProperty, TContext>(schema));
+        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
+        Validators.Add(new ContextlessFieldValidator<T, TProperty>(propertyName, getter, schema));
+        return this;
     }
 }
 
-internal interface IConditionalBranch<T, TContext>
+internal interface IContextlessConditionalBranch<T>
 {
-    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationExecutionContext execution);
 }
 
-internal sealed class ConditionalBranch<T, TContext> : IConditionalBranch<T, TContext>
+internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalBranch<T>
 {
     private readonly Func<T, bool> _condition;
-    private readonly ConditionalBuilder<T, TContext> _thenBranch;
-    private readonly ConditionalBuilder<T, TContext>? _elseBranch;
-
+    private readonly ContextlessConditionalBuilder<T> _thenBranch;
+    private readonly ContextlessConditionalBuilder<T>? _elseBranch;
     private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
 
-    public ConditionalBranch(
+    public ContextlessConditionalBranch(
         Func<T, bool> condition,
-        ConditionalBuilder<T, TContext> thenBranch,
-        ConditionalBuilder<T, TContext>? elseBranch)
+        ContextlessConditionalBuilder<T> thenBranch,
+        ContextlessConditionalBuilder<T>? elseBranch)
     {
         _condition = condition;
         _thenBranch = thenBranch;
         _elseBranch = elseBranch;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationExecutionContext execution)
     {
         var branch = _condition(instance) ? _thenBranch : _elseBranch;
         if (branch == null)
-        {
             return EmptyErrors;
-        }
 
         List<ValidationError>? errors = null;
         foreach (var validator in branch.Validators)
         {
-            var fieldErrors = await validator.ValidateAsync(instance, context);
+            var fieldErrors = await validator.ValidateAsync(instance, execution);
             if (fieldErrors.Count > 0)
             {
                 errors ??= [];
                 errors.AddRange(fieldErrors);
             }
         }
-
         return errors ?? EmptyErrors;
     }
 }
+
+// ==================== Context-Aware Field Validators ====================
 
 internal interface IFieldValidator<T, TContext>
 {
@@ -256,10 +334,7 @@ internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldVal
     {
         _name = name;
         if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
-        {
             _name = char.ToLower(_name[0]) + _name.Substring(1);
-        }
-
         _getter = getter;
         _schema = schema;
     }
@@ -278,17 +353,13 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
     private readonly string _name;
     private readonly Func<TInstance, TProperty> _getter;
     private readonly string _message;
-
     private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
 
     public RequiredFieldValidator(string name, Func<TInstance, TProperty> getter, string? message)
     {
         _name = name;
         if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
-        {
             _name = char.ToLower(_name[0]) + _name.Substring(1);
-        }
-
         _getter = getter;
         _message = message ?? $"{_name} is required";
     }
@@ -298,34 +369,85 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
         var value = _getter(instance);
         if (value is null)
         {
-            var path = string.IsNullOrEmpty(context.Execution.Path)
-                ? _name
-                : $"{context.Execution.Path}.{_name}";
-            return new ValueTask<IReadOnlyList<ValidationError>>(
-            [
-                new ValidationError(path, "required", _message)
-            ]);
+            var path = string.IsNullOrEmpty(context.Execution.Path) ? _name : $"{context.Execution.Path}.{_name}";
+            return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
         }
-
         return new ValueTask<IReadOnlyList<ValidationError>>(EmptyErrors);
     }
 }
 
-internal sealed class SchemaContextAdapter<T, TContext> : ISchema<T, TContext>
-{
-    private readonly ISchema<T, object?> _inner;
+// ==================== Context-Aware Conditional Builder ====================
 
-    public SchemaContextAdapter(ISchema<T, object?> inner)
+public sealed class ConditionalBuilder<T, TContext>
+{
+    internal List<IFieldValidator<T, TContext>> Validators { get; } = [];
+
+    public ConditionalBuilder<T, TContext> Require<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        string? message = null)
     {
-        _inner = inner;
+        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
+        Validators.Add(new RequiredFieldValidator<T, TProperty, TContext>(propertyName, getter, message));
+        return this;
     }
 
-    public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
+    public ConditionalBuilder<T, TContext> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty, TContext> schema)
     {
-        var result = await _inner.ValidateAsync(value, context.Execution);
+        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
+        Validators.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
+        return this;
+    }
 
-        return result.IsSuccess
-            ? Result.Success()
-            : Result.Failure(result.Errors);
+    public ConditionalBuilder<T, TContext> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty> schema)
+    {
+        return Field(propertySelector, new SchemaAdapter<TProperty, TContext>(schema));
+    }
+}
+
+internal interface IConditionalBranch<T, TContext>
+{
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
+}
+
+internal sealed class ConditionalBranch<T, TContext> : IConditionalBranch<T, TContext>
+{
+    private readonly Func<T, bool> _condition;
+    private readonly ConditionalBuilder<T, TContext> _thenBranch;
+    private readonly ConditionalBuilder<T, TContext>? _elseBranch;
+    private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
+
+    public ConditionalBranch(
+        Func<T, bool> condition,
+        ConditionalBuilder<T, TContext> thenBranch,
+        ConditionalBuilder<T, TContext>? elseBranch)
+    {
+        _condition = condition;
+        _thenBranch = thenBranch;
+        _elseBranch = elseBranch;
+    }
+
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context)
+    {
+        var branch = _condition(instance) ? _thenBranch : _elseBranch;
+        if (branch == null)
+            return EmptyErrors;
+
+        List<ValidationError>? errors = null;
+        foreach (var validator in branch.Validators)
+        {
+            var fieldErrors = await validator.ValidateAsync(instance, context);
+            if (fieldErrors.Count > 0)
+            {
+                errors ??= [];
+                errors.AddRange(fieldErrors);
+            }
+        }
+        return errors ?? EmptyErrors;
     }
 }

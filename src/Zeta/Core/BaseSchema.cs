@@ -2,10 +2,13 @@ using Zeta.Rules;
 
 namespace Zeta.Core;
 
+/// <summary>
+/// Base class for context-aware schemas.
+/// </summary>
 public abstract class BaseSchema<T, TContext> : ISchema<T, TContext>
 {
-    private readonly ICollection<ISyncRule<T, TContext>> _syncRules = [];
-    private readonly ICollection<IAsyncRule<T, TContext>> _asyncRules = [];
+    private readonly List<ISyncRule<T, TContext>> _syncRules = [];
+    private readonly List<IAsyncRule<T, TContext>> _asyncRules = [];
 
     public virtual async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
@@ -19,7 +22,6 @@ public abstract class BaseSchema<T, TContext> : ISchema<T, TContext>
             errors ??= [];
             errors.Add(error);
         }
-
 
         foreach (var rule in _asyncRules)
         {

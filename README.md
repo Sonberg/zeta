@@ -189,7 +189,7 @@ Z.Object<User>()
     .Field(u => u.Name, Z.String().MinLength(2))
     .Field(u => u.Email, Z.String().Email())
     .Field(u => u.Address, AddressSchema)  // Nested schemas
-    .Refine((u, _) => u.Password != u.Email, "Password cannot be email")
+    .Refine(u => u.Password != u.Email, "Password cannot be email")
 ```
 
 ### Array
@@ -425,24 +425,41 @@ Z.String()
 
 ### Custom Rule Class
 
-```csharp
-public sealed class UniqueEmailRule : IRule<string>
-{
-    public async ValueTask<ValidationError?> ValidateAsync(
-        string value,
-        ValidationContext<object?> ctx)
-    {
-        var repo = ctx.Execution.Services.GetRequiredService<IUserRepository>();
-        var exists = await repo.EmailExistsAsync(value, ctx.Execution.CancellationToken);
+For contextless schemas, implement `IValidationRule<T>`:
 
-        return exists
+```csharp
+public sealed class StartsWithUpperRule : IValidationRule<string>
+{
+    public ValidationError? Validate(string value, ValidationExecutionContext execution)
+    {
+        return char.IsUpper(value[0])
+            ? null
+            : new ValidationError(execution.Path, "starts_upper", "Must start with uppercase");
+    }
+}
+
+// Usage
+Z.String().Use(new StartsWithUpperRule())
+```
+
+For context-aware schemas, implement `IContextRule<T, TContext>`:
+
+```csharp
+public sealed class UniqueEmailRule<TContext> : IContextRule<string, TContext>
+    where TContext : IEmailContext
+{
+    public ValidationError? Validate(string value, ValidationContext<TContext> ctx)
+    {
+        return ctx.Data.EmailExists
             ? new ValidationError(ctx.Execution.Path, "email_taken", "Email already taken")
             : null;
     }
 }
 
 // Usage
-Z.String().Use(new UniqueEmailRule())
+Z.String()
+    .WithContext<UserContext>()
+    .Use(new UniqueEmailRule<UserContext>())
 ```
 
 ## Testing

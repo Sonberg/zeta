@@ -1,10 +1,91 @@
 using Zeta.Core;
 using Zeta.Rules;
+using Zeta.Validation;
 
 namespace Zeta.Schemas;
 
 /// <summary>
-/// A schema for validating arrays where each element is validated by an inner schema.
+/// A contextless schema for validating arrays where each element is validated by an inner schema.
+/// </summary>
+public sealed class ArraySchema<TElement> : ISchema<TElement[]>
+{
+    private readonly ISchema<TElement> _elementSchema;
+    private readonly RuleEngine<TElement[]> _rules = new();
+
+    public ArraySchema(ISchema<TElement> elementSchema)
+    {
+        _elementSchema = elementSchema;
+    }
+
+    public async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
+    {
+        execution ??= ValidationExecutionContext.Empty;
+        List<ValidationError>? errors = null;
+
+        // Validate array-level rules
+        var ruleErrors = await _rules.ExecuteAsync(value, execution);
+        if (ruleErrors != null)
+        {
+            errors = ruleErrors;
+        }
+
+        // Validate each element
+        for (var i = 0; i < value.Length; i++)
+        {
+            var elementExecution = execution.PushIndex(i);
+            var result = await _elementSchema.ValidateAsync(value[i], elementExecution);
+            if (result.IsFailure)
+            {
+                errors ??= [];
+                errors.AddRange(result.Errors);
+            }
+        }
+
+        return errors == null
+            ? Result<TElement[]>.Success(value)
+            : Result<TElement[]>.Failure(errors);
+    }
+
+    public ArraySchema<TElement> MinLength(int min, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<TElement[]>((val, exec) =>
+            CollectionValidators.MinLength(val, min, exec.Path, message)));
+        return this;
+    }
+
+    public ArraySchema<TElement> MaxLength(int max, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<TElement[]>((val, exec) =>
+            CollectionValidators.MaxLength(val, max, exec.Path, message)));
+        return this;
+    }
+
+    public ArraySchema<TElement> Length(int exact, string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<TElement[]>((val, exec) =>
+            CollectionValidators.Length(val, exact, exec.Path, message)));
+        return this;
+    }
+
+    public ArraySchema<TElement> NotEmpty(string? message = null)
+    {
+        _rules.Add(new DelegateValidationRule<TElement[]>((val, exec) =>
+            CollectionValidators.NotEmpty(val, exec.Path, message)));
+        return this;
+    }
+
+    public ArraySchema<TElement> Refine(Func<TElement[], bool> predicate, string message, string code = "custom_error")
+    {
+        _rules.Add(new DelegateValidationRule<TElement[]>((val, exec) =>
+            predicate(val)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+}
+
+/// <summary>
+/// A context-aware schema for validating arrays where each element is validated by an inner schema.
 /// </summary>
 public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 {
@@ -14,6 +95,11 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
     public ArraySchema(ISchema<TElement, TContext> elementSchema)
     {
         _elementSchema = elementSchema;
+    }
+
+    public ArraySchema(ISchema<TElement> elementSchema)
+    {
+        _elementSchema = new SchemaAdapter<TElement, TContext>(elementSchema);
     }
 
     public async ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<TContext> context)
@@ -51,15 +137,9 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
             : Result.Failure(errors);
     }
 
-    public ArraySchema<TElement, TContext> Use(ISyncRule<TElement[], TContext> rule)
-    {
-        _rules.Add(rule);
-        return this;
-    }
-
     public ArraySchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
             val.Length >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
@@ -68,7 +148,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
             val.Length <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
@@ -77,7 +157,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
             val.Length == exact
                 ? null
                 : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
@@ -91,7 +171,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> Refine(Func<TElement[], TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
+        _rules.Add(new DelegateSyncRule<TElement[], TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));
@@ -101,69 +181,5 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
     public ArraySchema<TElement, TContext> Refine(Func<TElement[], bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
-    }
-}
-
-/// <summary>
-/// A schema for validating arrays with default context.
-/// </summary>
-public sealed class ArraySchema<TElement> : ISchema<TElement[]>
-{
-    private readonly ArraySchema<TElement, object?> _inner;
-
-    public ArraySchema(ISchema<TElement> elementSchema)
-    {
-        _inner = new ArraySchema<TElement, object?>(new SchemaContextAdapter<TElement, object?>(elementSchema));
-    }
-
-    public ArraySchema(ISchema<TElement, object?> elementSchema)
-    {
-        _inner = new ArraySchema<TElement, object?>(elementSchema);
-    }
-
-    public async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var context = new ValidationContext<object?>(null, execution);
-        var result = await _inner.ValidateAsync(value, context);
-
-        return result.IsSuccess
-            ? Result<TElement[]>.Success(value)
-            : Result<TElement[]>.Failure(result.Errors);
-    }
-
-    public ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<object?> context)
-    {
-        return _inner.ValidateAsync(value, context);
-    }
-
-    public ArraySchema<TElement> MinLength(int min, string? message = null)
-    {
-        _inner.MinLength(min, message);
-        return this;
-    }
-
-    public ArraySchema<TElement> MaxLength(int max, string? message = null)
-    {
-        _inner.MaxLength(max, message);
-        return this;
-    }
-
-    public ArraySchema<TElement> Length(int exact, string? message = null)
-    {
-        _inner.Length(exact, message);
-        return this;
-    }
-
-    public ArraySchema<TElement> NotEmpty(string? message = null)
-    {
-        _inner.NotEmpty(message);
-        return this;
-    }
-
-    public ArraySchema<TElement> Refine(Func<TElement[], bool> predicate, string message, string code = "custom_error")
-    {
-        _inner.Refine(predicate, message, code);
-        return this;
     }
 }

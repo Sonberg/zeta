@@ -55,7 +55,7 @@ public static class Schemas
             .Field(u => u.ConfirmPassword, Z.String())
             .Field(u => u.Name, Z.String().MinLength(2).MaxLength(100).Nullable())
             .Field(u => u.Age, Z.Int().Min(13).Max(120))
-            .Refine((u, _) => u.Password == u.ConfirmPassword, "Passwords do not match", "password_mismatch");
+            .Refine(u => u.Password == u.ConfirmPassword, "Passwords do not match", "password_mismatch");
 
     /// <summary>
     /// User creation with conditional address validation.
@@ -122,7 +122,7 @@ public static class Schemas
             .Field(p => p.Price, Z.Decimal().Min(0.01m).Max(999999.99m))
             .Field(p => p.CompareAtPrice, Z.Decimal().Min(0.01m).Max(999999.99m).Nullable())
             .Refine(
-                (p, _) => !p.CompareAtPrice.HasValue || p.CompareAtPrice > p.Price,
+                p => !p.CompareAtPrice.HasValue || p.CompareAtPrice > p.Price,
                 "Compare-at price must be greater than the sale price",
                 "invalid_compare_price");
 
@@ -137,7 +137,7 @@ public static class Schemas
             .Field(p => p.Page, Z.Int().Min(1))
             .Field(p => p.PageSize, Z.Int().Min(1).Max(100))
             .Refine(
-                (p, _) => !p.MinPrice.HasValue || !p.MaxPrice.HasValue || p.MinPrice <= p.MaxPrice,
+                p => !p.MinPrice.HasValue || !p.MaxPrice.HasValue || p.MinPrice <= p.MaxPrice,
                 "Maximum price must be greater than or equal to minimum price",
                 "invalid_price_range");
 
@@ -198,7 +198,7 @@ public static class Schemas
             .Field(d => d.PreferredTimeStart, Z.TimeOnly().Nullable())
             .Field(d => d.PreferredTimeEnd, Z.TimeOnly().Nullable())
             .Refine(
-                (d, _) => !d.PreferredTimeStart.HasValue || !d.PreferredTimeEnd.HasValue
+                d => !d.PreferredTimeStart.HasValue || !d.PreferredTimeEnd.HasValue
                     || d.PreferredTimeEnd > d.PreferredTimeStart,
                 "End time must be after start time",
                 "invalid_time_range");

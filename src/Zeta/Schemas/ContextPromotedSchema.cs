@@ -1,3 +1,4 @@
+using Zeta.Core;
 using Zeta.Rules;
 
 namespace Zeta.Schemas;
@@ -10,11 +11,11 @@ namespace Zeta.Schemas;
 /// <typeparam name="TContext">The context type for context-aware refinements.</typeparam>
 public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
 {
-    private readonly ISchema<T, object?> _inner;
+    private readonly ISchema<T> _inner;
     private readonly List<ISyncRule<T, TContext>> _syncRules = [];
     private readonly List<IAsyncRule<T, TContext>> _asyncRules = [];
 
-    public ContextPromotedSchema(ISchema<T, object?> inner)
+    public ContextPromotedSchema(ISchema<T> inner)
     {
         _inner = inner;
     }
@@ -23,8 +24,7 @@ public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
     public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         // First run the inner (contextless) schema
-        var innerContext = new ValidationContext<object?>(null, context.Execution);
-        var innerResult = await _inner.ValidateAsync(value, innerContext);
+        var innerResult = await _inner.ValidateAsync(value, context.Execution);
 
         List<ValidationError>? errors = null;
 

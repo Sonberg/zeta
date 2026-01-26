@@ -24,11 +24,9 @@ public static class Z
 
     // Array
     public static ArraySchema<TElement> Array<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);
-    public static ArraySchema<TElement> Array<TElement>(ISchema<TElement, object?> elementSchema) => new(elementSchema);
 
     // List
     public static ListSchema<TElement> List<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);
-    public static ListSchema<TElement> List<TElement>(ISchema<TElement, object?> elementSchema) => new(elementSchema);
 
     // DateTime
     public static DateTimeSchema DateTime() => new();
