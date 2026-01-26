@@ -70,16 +70,12 @@ public class BoolSchemaTests
     [Fact]
     public async Task ContextRefine_UsesContextData()
     {
-        var schema = Z.Bool<FeatureFlags>()
+        var schema = Z.Bool()
+            .WithContext<FeatureFlags>()
             .Refine((val, ctx) => !ctx.RequireTrue || val, "Feature flag requires true value");
 
-        var contextRequiresTrue = new ValidationContext<FeatureFlags>(
-            new FeatureFlags(true),
-            ValidationExecutionContext.Empty);
-
-        var contextNoRequirement = new ValidationContext<FeatureFlags>(
-            new FeatureFlags(false),
-            ValidationExecutionContext.Empty);
+        var contextRequiresTrue = new FeatureFlags(true);
+        var contextNoRequirement = new FeatureFlags(false);
 
         // When RequireTrue is true, only true passes
         Assert.True((await schema.ValidateAsync(true, contextRequiresTrue)).IsSuccess);

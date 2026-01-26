@@ -3,20 +3,25 @@ using Zeta.Core;
 namespace Zeta;
 
 /// <summary>
-/// Defines a schema that can validate a value of type <typeparamref name="T"/> with context <typeparamref name="TContext"/>.
+/// Defines a context-aware schema that can validate a value of type <typeparamref name="T"/>
+/// with context <typeparamref name="TContext"/>.
 /// </summary>
 public interface ISchema<T, TContext>
 {
     /// <summary>
-    /// Validates the given value asynchronously.
+    /// Validates the given value asynchronously with context.
     /// </summary>
     ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context);
 }
 
 /// <summary>
-/// Alias for schemas with no special context.
+/// Defines a contextless schema that can validate a value of type <typeparamref name="T"/>.
+/// This is completely separate from ISchema&lt;T, TContext&gt; - no inheritance relationship.
 /// </summary>
-public interface ISchema<T> : ISchema<T, object?>
+public interface ISchema<T>
 {
-     ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null);
+    /// <summary>
+    /// Validates the given value asynchronously without context.
+    /// </summary>
+    ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null);
 }

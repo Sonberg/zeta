@@ -39,18 +39,37 @@ dotnet run --project samples/Zeta.Sample.Api
 - `benchmarks/Zeta.Benchmarks/` - Performance benchmarks vs FluentValidation/DataAnnotations
 
 ### Core Types (src/Zeta/Core/)
-- `ISchema<T>` / `ISchema<T, TContext>` - Core validation abstraction. Every schema implements this.
+- `ISchema<T>` - Contextless validation interface. Returns `Result<T>`.
+- `ISchema<T, TContext>` - Context-aware validation interface (separate, no inheritance from `ISchema<T>`). Returns `Result`.
 - `Result<T>` - Discriminated result type with `IsSuccess`, `Value`, `Errors`, and monadic operations (`Map`, `Then`, `Match`)
 - `ValidationError(Path, Code, Message)` - Error record with dot-notation path (e.g., `user.address.street`)
 - `ValidationContext<TData>` - Contains typed context data and execution context
 - `ValidationExecutionContext` - Path tracking, IServiceProvider access, CancellationToken
 
+### Rule System (src/Zeta/Rules/)
+- `IValidationRule<T>` - Context-free sync validation rule using `ValidationExecutionContext`
+- `IValidationRule<T, TContext>` - Context-aware sync validation rule using `ValidationContext<TContext>`
+- `IAsyncValidationRule<T>` / `IAsyncValidationRule<T, TContext>` - Async variants
+- `RuleEngine<T>` - Executes context-free rules for contextless schemas
+- `ContextRuleEngine<T, TContext>` - Executes context-aware rules
+- `DelegateValidationRule<T>` / `DelegateValidationRule<T, TContext>` - Delegate wrappers for inline rules
+
+### Static Validators (src/Zeta/Validation/)
+Shared validation logic used by both contextless and context-aware schemas:
+- `StringValidators` - MinLength, MaxLength, Email, Url, Regex, etc.
+- `NumericValidators` - Min, Max, Positive, Negative, Precision, etc.
+- `CollectionValidators` - MinLength, MaxLength, NotEmpty for arrays/lists
+
 ### Schema Types (src/Zeta/Schemas/)
-All schemas are created via the static `Z` class entry point. Each schema type has two variants:
-- `Z.String()` - No context version, implements `ISchema<string>`
-- `Z.String<TContext>()` - Context-aware version, implements `ISchema<string, TContext>`
+All schemas are created via the static `Z` class entry point as contextless schemas:
+- `Z.String()` returns `StringSchema` which implements `ISchema<string>`
+- Use `.WithContext<TContext>()` to promote to context-aware when needed
 
 Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `ArraySchema`, `ListSchema`, `NullableSchema`
+
+### Context Promotion (src/Zeta/Schemas/)
+- `ContextPromotedSchema<T, TContext>` - Wraps contextless schemas for context-aware refinements
+- `ContextPromotedObjectSchema<T, TContext>` - Specialized version for ObjectSchema that supports `.Field()` and `.When()` after promotion
 
 ### Key Patterns
 
@@ -66,13 +85,25 @@ Z.Object<User>()
     .Field(u => u.Address, addressSchema)      // Nested: "address.street"
 ```
 
-**Context Adaptation**: `SchemaContextAdapter<T, TContext>` wraps context-free schemas for use in context-aware object schemas.
+**Context Promotion**: Use `.WithContext<TContext>()` to promote contextless schemas when you need context-aware refinements:
+```csharp
+Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned");
+```
 
-**Conditional Validation**: `.When()` on ObjectSchema enables dependent field validation via `ConditionalBuilder`.
+**Schema Bridging**: `SchemaAdapter<T, TContext>` wraps contextless `ISchema<T>` for use in context-aware object schemas.
+
+**Conditional Validation**: `.When()` on ObjectSchema enables dependent field validation via `ConditionalBuilder`:
+- `.Require(x => x.Field)` - Ensures field is not null
+- `.Field(x => x.Field, schema)` - Validates field with a schema
+- `.Select(x => x.Field, s => s.MinLength(3))` - Inline schema builder for string, int, double, decimal types
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)
 - `IZetaValidator` - Injectable service for manual validation in controllers
-- `ValidationFilter` - Minimal API endpoint filter for `.WithValidation(schema)`
+- `ContextlessValidationFilter<T>` - Minimal API endpoint filter for contextless schemas
+- `ValidationFilter<T, TContext>` - Minimal API endpoint filter for context-aware schemas
 - `IValidationContextFactory<TInput, TContext>` - Async context loading before validation (scanned from assemblies via `AddZeta(assembly)`)
 
 ## Design Principles
@@ -101,3 +132,31 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 - Fields are required (non-null) by default
 - `.Require()` in conditionals = not null check
 - `.NotEmpty()` on strings = not whitespace
+
+### Context Promotion
+- Schemas are always created contextless via `Z.String()`, `Z.Int()`, etc.
+- Contextless `Refine()` uses `Func<T, bool>` (single argument)
+- Use `.WithContext<TContext>()` to promote when you need context-aware `Refine((val, ctx) => ...)`
+- For ObjectSchema: `.WithContext<T, TContext>()` requires both type parameters
+- After promotion, `.Field()` and `.When()` can still be called on ObjectSchema
+- `ContextPromotedSchema<T, TContext>` delegates to inner schema, then runs context-aware rules
+
+### Interface Separation
+- `ISchema<T>` and `ISchema<T, TContext>` are completely separate interfaces (no inheritance relationship)
+- Contextless schemas implement `ISchema<T>` only
+- Context-aware schemas implement `ISchema<T, TContext>` only
+- Use `SchemaAdapter<T, TContext>` to bridge contextless schemas into context-aware contexts
+
+### Adding Validation Methods
+When adding a new validation method to a schema type (e.g., `StringSchema.MyMethod()`), you must also add a corresponding extension method for `ContextPromotedSchema<T, TContext>` in `src/Zeta/Core/SchemaExtensions.cs`. This ensures API consistency when users promote schemas with `.WithContext<TContext>()`.
+
+Example: If adding `StringSchema.Foo()`, also add:
+```csharp
+public static ContextPromotedSchema<string, TContext> Foo<TContext>(
+    this ContextPromotedSchema<string, TContext> schema, ...)
+{
+    return schema.Refine(...);
+}
+```
+
+The `SchemaConsistencyTests` will fail if this parity is not maintained.

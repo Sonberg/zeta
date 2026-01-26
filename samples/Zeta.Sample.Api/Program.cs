@@ -1,3 +1,4 @@
+using Zeta;
 using Zeta.AspNetCore;
 using Zeta.Sample.Api.Models;
 using Zeta.Sample.Api.Repository;
@@ -32,49 +33,81 @@ if (app.Environment.IsDevelopment())
 
 // Simple validation - no async context
 app.MapPost("/api/minimal/users/register", (RegisterUserRequest request) =>
-        Results.Ok(new { Message = "User registered", Email = request.Email }))
+        Results.Ok(new
+        {
+            Message = "User registered",
+            Email = request.Email
+        }))
     .WithValidation(Schemas.RegisterUserSimple)
     .WithName("MinimalRegisterSimple")
     .WithTags("Minimal API - Users");
 
 // Context-aware validation - async email uniqueness check
 app.MapPost("/api/minimal/users/register/async", (RegisterUserRequest request) =>
-        Results.Ok(new { Message = "User registered (with uniqueness check)", Email = request.Email }))
+        Results.Ok(new
+        {
+            Message = "User registered (with uniqueness check)",
+            Email = request.Email
+        }))
     .WithValidation(Schemas.RegisterUser)
     .WithName("MinimalRegisterAsync")
     .WithTags("Minimal API - Users");
 
 // Conditional validation - address only validated when HasAddress is true
 app.MapPost("/api/minimal/users", (CreateUserRequest request) =>
-        Results.Created($"/api/minimal/users/{Guid.NewGuid()}", new { Message = "User created", User = request }))
+        Results.Created($"/api/minimal/users/{Guid.NewGuid()}", new
+        {
+            Message = "User created",
+            User = request
+        }))
     .WithValidation(Schemas.CreateUser)
     .WithName("MinimalCreateUser")
     .WithTags("Minimal API - Users");
 
 // Simple product validation
 app.MapPost("/api/minimal/products", (CreateProductRequest request) =>
-        Results.Created($"/api/minimal/products/{Guid.NewGuid()}", new { Message = "Product created", Product = request }))
+        Results.Created($"/api/minimal/products/{Guid.NewGuid()}", new
+        {
+            Message = "Product created",
+            Product = request
+        }))
     .WithValidation(Schemas.CreateProductSimple)
     .WithName("MinimalCreateProduct")
     .WithTags("Minimal API - Products");
 
 // Context-aware product validation - async SKU uniqueness
 app.MapPost("/api/minimal/products/async", (CreateProductRequest request) =>
-        Results.Created($"/api/minimal/products/{Guid.NewGuid()}", new { Message = "Product created (SKU checked)", Product = request }))
+        Results.Created($"/api/minimal/products/{Guid.NewGuid()}", new
+        {
+            Message = "Product created (SKU checked)",
+            Product = request
+        }))
     .WithValidation(Schemas.CreateProduct)
     .WithName("MinimalCreateProductAsync")
     .WithTags("Minimal API - Products");
 
 // Cross-field validation - compare price vs sale price
 app.MapPatch("/api/minimal/products/{id:guid}/price", (Guid id, UpdatePriceRequest request) =>
-        Results.Ok(new { Message = "Price updated", ProductId = id, request.Price, request.CompareAtPrice }))
+        Results.Ok(new
+        {
+            Message = "Price updated",
+            ProductId = id,
+            request.Price,
+            request.CompareAtPrice
+        }))
     .WithValidation(Schemas.UpdatePrice)
     .WithName("MinimalUpdatePrice")
     .WithTags("Minimal API - Products");
 
 // Query parameter validation with pagination
 app.MapGet("/api/minimal/products/search", ([AsParameters] ProductSearchRequest request) =>
-        Results.Ok(new { Message = "Search results", request.Query, request.Page, request.PageSize }))
+    Results.Ok(new
+    {
+        Message = "Search results",
+        request.Query,
+        request.Page,
+        request.PageSize
+    }))
     .WithValidation(Schemas.ProductSearch)
     .WithName("MinimalSearchProducts")
     .WithTags("Minimal API - Products");
@@ -93,7 +126,12 @@ app.MapPost("/api/minimal/orders", (CreateOrderRequest request) =>
 
 // Date/Time validation
 app.MapPost("/api/minimal/orders/delivery", (ScheduleDeliveryRequest request) =>
-        Results.Ok(new { Message = "Delivery scheduled", request.OrderId, request.DeliveryDate }))
+        Results.Ok(new
+        {
+            Message = "Delivery scheduled",
+            request.OrderId,
+            request.DeliveryDate
+        }))
     .WithValidation(Schemas.ScheduleDelivery)
     .WithName("MinimalScheduleDelivery")
     .WithTags("Minimal API - Orders");

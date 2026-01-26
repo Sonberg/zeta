@@ -1,4 +1,5 @@
 using Zeta.Sample.Api.Models;
+using Zeta.Schemas;
 
 namespace Zeta.Sample.Api.Validation;
 
@@ -19,15 +20,6 @@ public static class Schemas
         .Field(a => a.ZipCode, Z.String().Regex(@"^\d{5}(-\d{4})?$"))
         .Field(a => a.Country, Z.String().MaxLength(100).Nullable());
 
-    // Context-aware address schema for orders
-    public static ISchema<AddressDto, CreateOrderContext> AddressWithContext =>
-        Z.Object<AddressDto, CreateOrderContext>()
-            .Field(a => a.Street, Z.String<CreateOrderContext>().MinLength(5).MaxLength(200))
-            .Field(a => a.City, Z.String<CreateOrderContext>().MinLength(2).MaxLength(100))
-            .Field(a => a.State, Z.String<CreateOrderContext>().Length(2))
-            .Field(a => a.ZipCode, Z.String<CreateOrderContext>().Regex(@"^\d{5}(-\d{4})?$"))
-            .Field(a => a.Country, Z.String<CreateOrderContext>().MaxLength(100).Nullable());
-
     // =====================
     // User Schemas
     // =====================
@@ -37,20 +29,21 @@ public static class Schemas
     /// Uses cross-field validation for password confirmation.
     /// </summary>
     public static readonly ISchema<RegisterUserRequest, RegisterUserContext> RegisterUser =
-        Z.Object<RegisterUserRequest, RegisterUserContext>()
-            .Field(u => u.Email, Z.String<RegisterUserContext>()
-                .Email()
-                .Refine((email, ctx) => !ctx.EmailExists, "Email is already registered"))
-            .Field(u => u.Password, Z.String<RegisterUserContext>()
+        Z.Object<RegisterUserRequest>()
+            .Field(u => u.Email, Z.String().Email())
+            .Field(u => u.Password, Z.String()
                 .MinLength(8)
                 .Regex(@"[A-Z]", "Password must contain at least one uppercase letter")
                 .Regex(@"[a-z]", "Password must contain at least one lowercase letter")
                 .Regex(@"[0-9]", "Password must contain at least one digit"))
-            .Field(u => u.ConfirmPassword, Z.String<RegisterUserContext>())
-            .Field(u => u.Name, Z.String<RegisterUserContext>().MinLength(2).MaxLength(100).Nullable())
-            .Field(u => u.Age, Z.Int<RegisterUserContext>().Min(13).Max(120))
+            .Field(u => u.ConfirmPassword, Z.String())
+            .Field(u => u.Name, Z.String().MinLength(2).MaxLength(100).Nullable())
+            .Field(u => u.Age, Z.Int().Min(13).Max(120))
+            .WithContext<RegisterUserRequest, RegisterUserContext>()
+            // Context-aware: check email uniqueness
+            .Refine((u, ctx) => !ctx.EmailExists, "Email is already registered")
             // Cross-field validation: passwords must match
-            .Refine((u, _) => u.Password == u.ConfirmPassword, "Passwords do not match", "password_mismatch");
+            .Refine(u => u.Password == u.ConfirmPassword, "Passwords do not match", "password_mismatch");
 
     /// <summary>
     /// Simple user registration (no async context).
@@ -62,7 +55,7 @@ public static class Schemas
             .Field(u => u.ConfirmPassword, Z.String())
             .Field(u => u.Name, Z.String().MinLength(2).MaxLength(100).Nullable())
             .Field(u => u.Age, Z.Int().Min(13).Max(120))
-            .Refine((u, _) => u.Password == u.ConfirmPassword, "Passwords do not match", "password_mismatch");
+            .Refine(u => u.Password == u.ConfirmPassword, "Passwords do not match", "password_mismatch");
 
     /// <summary>
     /// User creation with conditional address validation.
@@ -86,7 +79,7 @@ public static class Schemas
                 .Regex(@"^\+?[1-9]\d{1,14}$", "Invalid phone number format")
                 .Nullable())
             .Field(u => u.DateOfBirth, Z.DateOnly()
-                .Refine((d, _) => d < DateOnly.FromDateTime(DateTime.Today), "Date of birth must be in the past")
+                .Refine(d => d < DateOnly.FromDateTime(DateTime.Today), "Date of birth must be in the past")
                 .Nullable());
 
     // =====================
@@ -97,15 +90,16 @@ public static class Schemas
     /// Product creation with context-aware SKU uniqueness check.
     /// </summary>
     public static readonly ISchema<CreateProductRequest, CreateProductContext> CreateProduct =
-        Z.Object<CreateProductRequest, CreateProductContext>()
-            .Field(p => p.Name, Z.String<CreateProductContext>().MinLength(2).MaxLength(200))
-            .Field(p => p.Description, Z.String<CreateProductContext>().MaxLength(2000).Nullable())
-            .Field(p => p.Sku, Z.String<CreateProductContext>()
-                .Regex(@"^[A-Z0-9\-]+$", "SKU must contain only uppercase letters, numbers, and hyphens")
-                .Refine((sku, ctx) => !ctx.SkuExists, "SKU already exists"))
-            .Field(p => p.Price, Z.Decimal<CreateProductContext>().Min(0.01m).Max(999999.99m))
-            .Field(p => p.StockQuantity, Z.Int<CreateProductContext>().Min(0))
-            .Field(p => p.Tags, Z.Array(Z.String<CreateProductContext>().MinLength(1).MaxLength(50)));
+        Z.Object<CreateProductRequest>()
+            .Field(p => p.Name, Z.String().MinLength(2).MaxLength(200))
+            .Field(p => p.Description, Z.String().MaxLength(2000).Nullable())
+            .Field(p => p.Sku, Z.String()
+                .Regex(@"^[A-Z0-9\-]+$", "SKU must contain only uppercase letters, numbers, and hyphens"))
+            .Field(p => p.Price, Z.Decimal().Min(0.01m).Max(999999.99m))
+            .Field(p => p.StockQuantity, Z.Int().Min(0))
+            .Field(p => p.Tags, Z.Array(Z.String().MinLength(1).MaxLength(50)))
+            .WithContext<CreateProductRequest, CreateProductContext>()
+            .Refine((p, ctx) => !ctx.SkuExists, "SKU already exists");
 
     /// <summary>
     /// Simple product creation (no async context).
@@ -128,7 +122,7 @@ public static class Schemas
             .Field(p => p.Price, Z.Decimal().Min(0.01m).Max(999999.99m))
             .Field(p => p.CompareAtPrice, Z.Decimal().Min(0.01m).Max(999999.99m).Nullable())
             .Refine(
-                (p, _) => !p.CompareAtPrice.HasValue || p.CompareAtPrice > p.Price,
+                p => !p.CompareAtPrice.HasValue || p.CompareAtPrice > p.Price,
                 "Compare-at price must be greater than the sale price",
                 "invalid_compare_price");
 
@@ -143,7 +137,7 @@ public static class Schemas
             .Field(p => p.Page, Z.Int().Min(1))
             .Field(p => p.PageSize, Z.Int().Min(1).Max(100))
             .Refine(
-                (p, _) => !p.MinPrice.HasValue || !p.MaxPrice.HasValue || p.MinPrice <= p.MaxPrice,
+                p => !p.MinPrice.HasValue || !p.MaxPrice.HasValue || p.MinPrice <= p.MaxPrice,
                 "Maximum price must be greater than or equal to minimum price",
                 "invalid_price_range");
 
@@ -152,38 +146,45 @@ public static class Schemas
     // =====================
 
     /// <summary>
-    /// Order item validation with context (validates product exists).
+    /// Order item validation (basic, no context).
     /// </summary>
-    private static ISchema<OrderItemDto, CreateOrderContext> OrderItem =>
-        Z.Object<OrderItemDto, CreateOrderContext>()
-            .Field(i => i.ProductId, Z.Guid<CreateOrderContext>()
-                .Refine((id, ctx) => ctx.ValidProductIds.Contains(id), "Product not found"))
-            .Field(i => i.Quantity, Z.Int<CreateOrderContext>().Min(1).Max(100))
-            .Field(i => i.Notes, Z.String<CreateOrderContext>().MaxLength(500).Nullable());
+    private static readonly ISchema<OrderItemDto> OrderItemBasic =
+        Z.Object<OrderItemDto>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100))
+            .Field(i => i.Notes, Z.String().MaxLength(500).Nullable());
+
+    /// <summary>
+    /// Nullable address schema for optional billing address.
+    /// </summary>
+    private static readonly NullableSchema<AddressDto> AddressNullable =
+        Z.Object<AddressDto>()
+            .Field(a => a.Street, Z.String().MinLength(5).MaxLength(200))
+            .Field(a => a.City, Z.String().MinLength(2).MaxLength(100))
+            .Field(a => a.State, Z.String().Length(2))
+            .Field(a => a.ZipCode, Z.String().Regex(@"^\d{5}(-\d{4})?$"))
+            .Field(a => a.Country, Z.String().MaxLength(100).Nullable())
+            .Nullable();
 
     /// <summary>
     /// Full order creation with nested validation and context.
     /// </summary>
     public static readonly ISchema<CreateOrderRequest, CreateOrderContext> CreateOrder =
-        Z.Object<CreateOrderRequest, CreateOrderContext>()
-            .Field(o => o.CustomerId, Z.Guid<CreateOrderContext>()
-                .Refine((_, ctx) => ctx.CustomerExists, "Customer not found"))
-            .Field(o => o.Items, Z.Array(OrderItem)
-                .Refine((items, _) => items.Length > 0, "Order must contain at least one item"))
-            .Field(o => o.ShippingAddress, AddressWithContext)
-            .Field(o => o.BillingAddress, Z.Object<AddressDto, CreateOrderContext>()
-                .Field(a => a.Street, Z.String<CreateOrderContext>().MinLength(5).MaxLength(200))
-                .Field(a => a.City, Z.String<CreateOrderContext>().MinLength(2).MaxLength(100))
-                .Field(a => a.State, Z.String<CreateOrderContext>().Length(2))
-                .Field(a => a.ZipCode, Z.String<CreateOrderContext>().Regex(@"^\d{5}(-\d{4})?$"))
-                .Field(a => a.Country, Z.String<CreateOrderContext>().MaxLength(100).Nullable())
-                .Nullable())
-            .Field(o => o.CouponCode, Z.String<CreateOrderContext>()
-                .Refine((code, ctx) => string.IsNullOrEmpty(code) || ctx.CouponValid, "Invalid coupon code")
-                .Nullable())
-            .Field(o => o.PaymentMethod, Z.String<CreateOrderContext>()
-                .Refine((pm, _) => pm is "credit_card" or "paypal" or "bank_transfer",
-                    "Payment method must be credit_card, paypal, or bank_transfer"));
+        Z.Object<CreateOrderRequest>()
+            .Field(o => o.CustomerId, Z.Guid())
+            .Field(o => o.Items, Z.Array(OrderItemBasic))
+            .Field(o => o.ShippingAddress, Address)
+            .Field(o => o.BillingAddress, AddressNullable)
+            .Field(o => o.CouponCode, Z.String().Nullable())
+            .Field(o => o.PaymentMethod, Z.String()
+                .Refine(pm => pm is "credit_card" or "paypal" or "bank_transfer",
+                    "Payment method must be credit_card, paypal, or bank_transfer"))
+            .WithContext<CreateOrderRequest, CreateOrderContext>()
+            // Context-aware validations
+            .Refine((o, ctx) => ctx.CustomerExists, "Customer not found")
+            .Refine((o, ctx) => o.Items.All(i => ctx.ValidProductIds.Contains(i.ProductId)), "One or more products not found")
+            .Refine((o, ctx) => string.IsNullOrEmpty(o.CouponCode) || ctx.CouponValid, "Invalid coupon code")
+            .Refine(o => o.Items.Length > 0, "Order must contain at least one item");
 
     /// <summary>
     /// Delivery scheduling with date/time validation.
@@ -192,12 +193,12 @@ public static class Schemas
         Z.Object<ScheduleDeliveryRequest>()
             .Field(d => d.OrderId, Z.Guid())
             .Field(d => d.DeliveryDate, Z.DateOnly()
-                .Refine((d, _) => d >= DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
+                .Refine(d => d >= DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
                     "Delivery date must be at least tomorrow"))
             .Field(d => d.PreferredTimeStart, Z.TimeOnly().Nullable())
             .Field(d => d.PreferredTimeEnd, Z.TimeOnly().Nullable())
             .Refine(
-                (d, _) => !d.PreferredTimeStart.HasValue || !d.PreferredTimeEnd.HasValue
+                d => !d.PreferredTimeStart.HasValue || !d.PreferredTimeEnd.HasValue
                     || d.PreferredTimeEnd > d.PreferredTimeStart,
                 "End time must be after start time",
                 "invalid_time_range");

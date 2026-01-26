@@ -10,6 +10,14 @@ A composable, type-safe, async-first validation framework for .NET inspired by [
 - **Composable** — Schemas are values that can be reused and combined
 - **Path-aware errors** — Errors include location (`user.address.street`, `items[0]`)
 - **ASP.NET Core native** — First-class support for Minimal APIs and Controllers
+- 
+## Mental Model
+
+- A **Schema** describes how to validate a value
+- Schemas are immutable and composable
+- Validation returns a `Result<T>`, never throws
+- Context is optional and only used when explicitly enabled
+- Errors are data, not exceptions
 
 ## Installation
 
@@ -181,7 +189,7 @@ Z.Object<User>()
     .Field(u => u.Name, Z.String().MinLength(2))
     .Field(u => u.Email, Z.String().Email())
     .Field(u => u.Address, AddressSchema)  // Nested schemas
-    .Refine((u, _) => u.Password != u.Email, "Password cannot be email")
+    .Refine(u => u.Password != u.Email, "Password cannot be email")
 ```
 
 ### Array
@@ -229,6 +237,39 @@ Z.Object<User>()
         then: c => c
             .Require(u => u.CompanyName)
             .Require(u => u.VatNumber)
+    );
+```
+
+#### Inline Field Validation with Select
+
+Use `.Select()` for inline schema building within conditionals:
+
+```csharp
+Z.Object<User>()
+    .Field(u => u.Password, Z.String().Nullable())
+    .Field(u => u.RequiresStrongPassword, Z.Bool())
+    .When(
+        u => u.RequiresStrongPassword,
+        then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
+    );
+
+// Supported types: string, int, double, decimal (and their nullable variants)
+Z.Object<Product>()
+    .Field(p => p.Price, Z.Decimal().Nullable())
+    .Field(p => p.Quantity, Z.Int().Nullable())
+    .When(
+        p => p.IsActive,
+        then: c => c
+            .Select(p => p.Price, s => s.Min(0.01m).Max(10000m))
+            .Select(p => p.Quantity, s => s.Min(1).Max(1000))
+    );
+
+// Context-aware conditional with Select
+Z.Object<User>()
+    .WithContext<User, UserContext>()
+    .When(
+        (_, ctx) => ctx.RequireStrongPassword,
+        then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
     );
 ```
 
@@ -370,14 +411,30 @@ public class UserContextFactory : IValidationContextFactory<User, UserContext>
 
 ### Use Context in Schema
 
+Schemas are always created contextless. Use `.WithContext<TContext>()` to promote a schema when you need access to validation context:
+
 ```csharp
-var UserSchema = Z.Object<User, UserContext>()
-    .Field(u => u.Email, Z.String<UserContext>()
-        .Email()
-        .Refine((email, ctx) => !ctx.EmailExists, "Email already taken"))
-    .Field(u => u.Name, Z.String<UserContext>()
-        .MinLength(3)
-        .Refine((name, ctx) => !ctx.IsMaintenanceMode, "Registration disabled"));
+// Promote schema to context-aware when needed
+var EmailSchema = Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
+
+// For ObjectSchema, you can add .Field() before or after .WithContext()
+var UserSchema = Z.Object<User>()
+    .Field(u => u.Name, Z.String().MinLength(3))
+    .WithContext<User, UserContext>()
+    .Field(u => u.Email, EmailSchema)
+    .Refine((user, ctx) => !ctx.IsMaintenanceMode, "Registration disabled");
+```
+
+You can also use context-free `Refine()` on a promoted schema:
+
+```csharp
+Z.String()
+    .WithContext<UserContext>()
+    .Refine(val => val.Length > 3, "Too short")                    // No context
+    .Refine((val, ctx) => val != ctx.BannedEmail, "Email banned"); // With context
 ```
 
 ### Register Factory
@@ -401,24 +458,41 @@ Z.String()
 
 ### Custom Rule Class
 
-```csharp
-public sealed class UniqueEmailRule : IRule<string>
-{
-    public async ValueTask<ValidationError?> ValidateAsync(
-        string value,
-        ValidationContext<object?> ctx)
-    {
-        var repo = ctx.Execution.Services.GetRequiredService<IUserRepository>();
-        var exists = await repo.EmailExistsAsync(value, ctx.Execution.CancellationToken);
+For contextless schemas, implement `IValidationRule<T>`:
 
-        return exists
+```csharp
+public sealed class StartsWithUpperRule : IValidationRule<string>
+{
+    public ValidationError? Validate(string value, ValidationExecutionContext execution)
+    {
+        return char.IsUpper(value[0])
+            ? null
+            : new ValidationError(execution.Path, "starts_upper", "Must start with uppercase");
+    }
+}
+
+// Usage
+Z.String().Use(new StartsWithUpperRule())
+```
+
+For context-aware schemas, implement `IValidationRule<T, TContext>`:
+
+```csharp
+public sealed class UniqueEmailRule<TContext> : IValidationRule<string, TContext>
+    where TContext : IEmailContext
+{
+    public ValidationError? Validate(string value, ValidationContext<TContext> ctx)
+    {
+        return ctx.Data.EmailExists
             ? new ValidationError(ctx.Execution.Path, "email_taken", "Email already taken")
             : null;
     }
 }
 
 // Usage
-Z.String().Use(new UniqueEmailRule())
+Z.String()
+    .WithContext<UserContext>()
+    .Use(new UniqueEmailRule<UserContext>())
 ```
 
 ## Testing
