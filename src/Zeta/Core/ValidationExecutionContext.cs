@@ -31,6 +31,13 @@ public sealed class ValidationExecutionContext
     /// Creates a new validation execution context.
     /// </summary>
     public ValidationExecutionContext(
+        IServiceProvider? services = null,
+        CancellationToken cancellationToken = default,
+        TimeProvider? timeProvider = null) : this("", services, cancellationToken, timeProvider)
+    {
+    }
+
+    internal ValidationExecutionContext(
         string path = "",
         IServiceProvider? services = null,
         CancellationToken cancellationToken = default,
@@ -63,5 +70,5 @@ public sealed class ValidationExecutionContext
     /// <summary>
     /// Gets default empty context (cached instance).
     /// </summary>
-    public static ValidationExecutionContext Empty { get; } = new();
+    public static ValidationExecutionContext Empty { get; } = new(null, CancellationToken.None, TimeProvider.System);
 }

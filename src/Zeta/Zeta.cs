@@ -20,7 +20,7 @@ public static class Z
     public static DecimalSchema Decimal() => new();
 
     // Object
-    public static ObjectSchema<T> Object<T>() => new();
+    public static ObjectSchema<T> Object<T>() where T : class => new();
 
     // Array
     public static ArraySchema<TElement> Array<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);

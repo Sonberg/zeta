@@ -828,6 +828,19 @@ public static class SchemaExtensions
     public static NullableValueSchema<bool> Optional(this BoolSchema schema)
         => schema.Nullable();
 
+    // ==================== Implicit Promotion Extensions ====================
+
+    /// <summary>
+    /// Adds a field with a context-aware schema, automatically promoting the object schema to context-aware.
+    /// </summary>
+    public static ContextPromotedObjectSchema<T, TContext> Field<T, TProperty, TContext>(
+        this ObjectSchema<T> schema,
+        System.Linq.Expressions.Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty, TContext> fieldSchema) where T : class
+    {
+        return schema.WithContext<T, TContext>().Field(propertySelector, fieldSchema);
+    }
+
     // ==================== WithContext Extensions ====================
 
     /// <summary>

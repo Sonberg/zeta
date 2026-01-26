@@ -113,6 +113,28 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
     }
 
     /// <summary>
+    /// Conditionally validates fields based on a context-aware predicate.
+    /// </summary>
+    public ContextPromotedObjectSchema<T, TContext> When(
+        Func<T, TContext, bool> condition,
+        Action<ConditionalBuilder<T, TContext>> thenBranch,
+        Action<ConditionalBuilder<T, TContext>>? elseBranch = null)
+    {
+        var thenBuilder = new ConditionalBuilder<T, TContext>();
+        thenBranch(thenBuilder);
+
+        ConditionalBuilder<T, TContext>? elseBuilder = null;
+        if (elseBranch != null)
+        {
+            elseBuilder = new ConditionalBuilder<T, TContext>();
+            elseBranch(elseBuilder);
+        }
+
+        _conditionals.Add(new ContextAwareConditionalBranch<T, TContext>(condition, thenBuilder, elseBuilder));
+        return this;
+    }
+
+    /// <summary>
     /// Adds a synchronous context-aware refinement.
     /// </summary>
     /// <param name="predicate">A function that takes the value and context data, returning true if valid.</param>

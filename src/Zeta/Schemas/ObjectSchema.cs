@@ -8,7 +8,7 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating object values.
 /// </summary>
-public sealed class ObjectSchema<T> : ISchema<T>
+public sealed class ObjectSchema<T> : ISchema<T> where T : class
 {
     private readonly RuleEngine<T> _rules = new();
     private readonly List<IContextlessFieldValidator<T>> _fields = [];
@@ -91,6 +91,13 @@ public sealed class ObjectSchema<T> : ISchema<T>
         return this;
     }
 
+    /// <summary>
+    /// Promotes this contextless object schema to a context-aware schema, enabling context-aware refinements and fields.
+    /// </summary>
+    /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
+    public ContextPromotedObjectSchema<T, TContext> WithContext<TContext>()
+        => new(this);
+
     public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
     {
         var body = expr.Body;
@@ -112,7 +119,7 @@ public sealed class ObjectSchema<T> : ISchema<T>
 /// <summary>
 /// A context-aware schema for validating object values.
 /// </summary>
-public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
+public class ObjectSchema<T, TContext> : BaseSchema<T, TContext> where T : class
 {
     private readonly List<IFieldValidator<T, TContext>> _fields = [];
     private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
@@ -176,6 +183,28 @@ public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
         }
 
         _conditionals.Add(new ConditionalBranch<T, TContext>(condition, thenBuilder, elseBuilder));
+        return this;
+    }
+
+    /// <summary>
+    /// Conditionally validates fields based on a context-aware predicate.
+    /// </summary>
+    public ObjectSchema<T, TContext> When(
+        Func<T, TContext, bool> condition,
+        Action<ConditionalBuilder<T, TContext>> thenBranch,
+        Action<ConditionalBuilder<T, TContext>>? elseBranch = null)
+    {
+        var thenBuilder = new ConditionalBuilder<T, TContext>();
+        thenBranch(thenBuilder);
+
+        ConditionalBuilder<T, TContext>? elseBuilder = null;
+        if (elseBranch != null)
+        {
+            elseBuilder = new ConditionalBuilder<T, TContext>();
+            elseBranch(elseBuilder);
+        }
+
+        _conditionals.Add(new ContextAwareConditionalBranch<T, TContext>(condition, thenBuilder, elseBuilder));
         return this;
     }
 
@@ -250,7 +279,7 @@ internal sealed class ContextlessRequiredFieldValidator<TInstance, TProperty> : 
 
 // ==================== Contextless Conditional Builder ====================
 
-public sealed class ContextlessConditionalBuilder<T>
+public sealed class ContextlessConditionalBuilder<T> where T : class
 {
     internal List<IContextlessFieldValidator<T>> Validators { get; } = [];
 
@@ -280,7 +309,7 @@ internal interface IContextlessConditionalBranch<T>
     ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationExecutionContext execution);
 }
 
-internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalBranch<T>
+internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalBranch<T> where T : class
 {
     private readonly Func<T, bool> _condition;
     private readonly ContextlessConditionalBuilder<T> _thenBranch;
@@ -378,7 +407,7 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
 
 // ==================== Context-Aware Conditional Builder ====================
 
-public sealed class ConditionalBuilder<T, TContext>
+public sealed class ConditionalBuilder<T, TContext> where T : class
 {
     internal List<IFieldValidator<T, TContext>> Validators { get; } = [];
 
@@ -415,7 +444,7 @@ internal interface IConditionalBranch<T, TContext>
     ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context);
 }
 
-internal sealed class ConditionalBranch<T, TContext> : IConditionalBranch<T, TContext>
+internal sealed class ConditionalBranch<T, TContext> : IConditionalBranch<T, TContext> where T : class
 {
     private readonly Func<T, bool> _condition;
     private readonly ConditionalBuilder<T, TContext> _thenBranch;
@@ -435,6 +464,43 @@ internal sealed class ConditionalBranch<T, TContext> : IConditionalBranch<T, TCo
     public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context)
     {
         var branch = _condition(instance) ? _thenBranch : _elseBranch;
+        if (branch == null)
+            return EmptyErrors;
+
+        List<ValidationError>? errors = null;
+        foreach (var validator in branch.Validators)
+        {
+            var fieldErrors = await validator.ValidateAsync(instance, context);
+            if (fieldErrors.Count > 0)
+            {
+                errors ??= [];
+                errors.AddRange(fieldErrors);
+            }
+        }
+        return errors ?? EmptyErrors;
+    }
+}
+
+internal sealed class ContextAwareConditionalBranch<T, TContext> : IConditionalBranch<T, TContext> where T : class
+{
+    private readonly Func<T, TContext, bool> _condition;
+    private readonly ConditionalBuilder<T, TContext> _thenBranch;
+    private readonly ConditionalBuilder<T, TContext>? _elseBranch;
+    private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
+
+    public ContextAwareConditionalBranch(
+        Func<T, TContext, bool> condition,
+        ConditionalBuilder<T, TContext> thenBranch,
+        ConditionalBuilder<T, TContext>? elseBranch)
+    {
+        _condition = condition;
+        _thenBranch = thenBranch;
+        _elseBranch = elseBranch;
+    }
+
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context)
+    {
+        var branch = _condition(instance, context.Data) ? _thenBranch : _elseBranch;
         if (branch == null)
             return EmptyErrors;
 
