@@ -413,4 +413,226 @@ public static class SchemaExtensions
     /// </summary>
     public static NullableValueSchema<bool> Optional(this BoolSchema schema)
         => schema.Nullable();
+
+    // ==================== WithContext Extensions ====================
+
+    /// <summary>
+    /// Promotes a contextless string schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<string, TContext> WithContext<TContext>(this StringSchema<object?> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless int schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<int, TContext> WithContext<TContext>(this IntSchema<object?> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless double schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<double, TContext> WithContext<TContext>(this DoubleSchema<object?> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless decimal schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<decimal, TContext> WithContext<TContext>(this DecimalSchema<object?> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless bool schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<bool, TContext> WithContext<TContext>(this BoolSchema<object?> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless Guid schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<Guid, TContext> WithContext<TContext>(this GuidSchema<object?> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless DateTime schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<DateTime, TContext> WithContext<TContext>(this DateTimeSchema<object?> schema)
+        => new(schema);
+
+#if !NETSTANDARD2_0
+    /// <summary>
+    /// Promotes a contextless DateOnly schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<DateOnly, TContext> WithContext<TContext>(this DateOnlySchema<object?> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless TimeOnly schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<TimeOnly, TContext> WithContext<TContext>(this TimeOnlySchema<object?> schema)
+        => new(schema);
+#endif
+
+    /// <summary>
+    /// Promotes a contextless object schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T, object?> schema) where T : class
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless object schema (sealed) to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T> schema) where T : class
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless array schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<TElement[], TContext> WithContext<TElement, TContext>(this ArraySchema<TElement> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Promotes a contextless list schema to a context-aware schema, enabling context-aware refinements.
+    /// </summary>
+    public static ContextPromotedSchema<List<TElement>, TContext> WithContext<TElement, TContext>(this ListSchema<TElement> schema)
+        => new(schema);
+
+    // ==================== ContextPromotedSchema Nullable Extensions (Reference Types) ====================
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted string schema that accepts null values.
+    /// </summary>
+    public static NullableSchema<string, TContext> Nullable<TContext>(this ContextPromotedSchema<string, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted string schema that skips validation when null.
+    /// </summary>
+    public static NullableSchema<string, TContext> Optional<TContext>(this ContextPromotedSchema<string, TContext> schema)
+        => schema.Nullable();
+
+    // ==================== ContextPromotedSchema Nullable Extensions (Value Types) ====================
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted int schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<int, TContext> Nullable<TContext>(this ContextPromotedSchema<int, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted int schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<int, TContext> Optional<TContext>(this ContextPromotedSchema<int, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted double schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<double, TContext> Nullable<TContext>(this ContextPromotedSchema<double, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted double schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<double, TContext> Optional<TContext>(this ContextPromotedSchema<double, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted decimal schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<decimal, TContext> Nullable<TContext>(this ContextPromotedSchema<decimal, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted decimal schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<decimal, TContext> Optional<TContext>(this ContextPromotedSchema<decimal, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted bool schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<bool, TContext> Nullable<TContext>(this ContextPromotedSchema<bool, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted bool schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<bool, TContext> Optional<TContext>(this ContextPromotedSchema<bool, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted Guid schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<Guid, TContext> Nullable<TContext>(this ContextPromotedSchema<Guid, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted Guid schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<Guid, TContext> Optional<TContext>(this ContextPromotedSchema<Guid, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted DateTime schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<DateTime, TContext> Nullable<TContext>(this ContextPromotedSchema<DateTime, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted DateTime schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<DateTime, TContext> Optional<TContext>(this ContextPromotedSchema<DateTime, TContext> schema)
+        => schema.Nullable();
+
+#if !NETSTANDARD2_0
+    /// <summary>
+    /// Creates a nullable version of this context-promoted DateOnly schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<DateOnly, TContext> Nullable<TContext>(this ContextPromotedSchema<DateOnly, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted DateOnly schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<DateOnly, TContext> Optional<TContext>(this ContextPromotedSchema<DateOnly, TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted TimeOnly schema that accepts null values.
+    /// </summary>
+    public static NullableValueSchema<TimeOnly, TContext> Nullable<TContext>(this ContextPromotedSchema<TimeOnly, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted TimeOnly schema that skips validation when null.
+    /// </summary>
+    public static NullableValueSchema<TimeOnly, TContext> Optional<TContext>(this ContextPromotedSchema<TimeOnly, TContext> schema)
+        => schema.Nullable();
+#endif
+
+    // ==================== ContextPromotedSchema Nullable Extensions (Arrays and Lists) ====================
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted array schema that accepts null values.
+    /// </summary>
+    public static NullableSchema<TElement[], TContext> Nullable<TElement, TContext>(this ContextPromotedSchema<TElement[], TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted array schema that skips validation when null.
+    /// </summary>
+    public static NullableSchema<TElement[], TContext> Optional<TElement, TContext>(this ContextPromotedSchema<TElement[], TContext> schema)
+        => schema.Nullable();
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted list schema that accepts null values.
+    /// </summary>
+    public static NullableSchema<List<TElement>, TContext> Nullable<TElement, TContext>(this ContextPromotedSchema<List<TElement>, TContext> schema)
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted list schema that skips validation when null.
+    /// </summary>
+    public static NullableSchema<List<TElement>, TContext> Optional<TElement, TContext>(this ContextPromotedSchema<List<TElement>, TContext> schema)
+        => schema.Nullable();
 }
