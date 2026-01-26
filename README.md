@@ -2,6 +2,19 @@
 
 A composable, type-safe, async-first validation framework for .NET inspired by [Zod](https://zod.dev/).
 
+```csharp
+var UserSchema = Z.Object<User>()
+    .Field(u => u.Email, Z.String().Email())
+    .Field(u => u.Age, Z.Int().Min(18));
+
+var result = await UserSchema.ValidateAsync(user);
+
+result.Match(
+    success: user => Console.WriteLine($"Valid: {user.Email}"),
+    failure: errors => errors.ForEach(e => Console.WriteLine($"{e.Path}: {e.Message}"))
+);
+```
+
 ## Features
 
 - **Schema-first** — Define validation as reusable schema objects
@@ -10,46 +23,61 @@ A composable, type-safe, async-first validation framework for .NET inspired by [
 - **Composable** — Schemas are values that can be reused and combined
 - **Path-aware errors** — Errors include location (`user.address.street`, `items[0]`)
 - **ASP.NET Core native** — First-class support for Minimal APIs and Controllers
-- 
-## Mental Model
 
-- A **Schema** describes how to validate a value
-- Schemas are immutable and composable
-- Validation returns a `Result<T>`, never throws
-- Context is opt-in and never leaks into schemas unless explicitly enabled
-- Errors are data, not exceptions
+## Benchmarks
+
+Comparing Zeta against FluentValidation and DataAnnotations on .NET 9 (Apple M2 Pro).
+
+| Method | Mean | Allocated |
+|--------|-----:|----------:|
+| FluentValidation | 150 ns | 600 B |
+| FluentValidation (Async) | 270 ns | 672 B |
+| **Zeta** | **374 ns** | **416 B** |
+| Zeta (Invalid) | 555 ns | 1,144 B |
+| DataAnnotations | 733 ns | 1,880 B |
+| DataAnnotations (Invalid) | 1,105 ns | 2,704 B |
+| FluentValidation (Invalid) | 2,247 ns | 7,920 B |
+| FluentValidation (Invalid, Async) | 2,453 ns | 7,992 B |
+
+### Key findings
+
+- **Zeta is allocation-efficient by design**
+  - Allocates **~40% less memory** than FluentValidation on valid input
+  - Allocates **~7× less memory** than FluentValidation on invalid input
+
+- **Zeta is optimized for validation failures**
+  - **4× faster** than FluentValidation when validation fails
+  - **2× faster** than DataAnnotations when validation fails
+
+- **Consistent async model**
+  - Zeta uses a single async-first execution path
+  - FluentValidation's fastest path is sync-only
+
+- **Happy-path overhead is small**
+  - Zeta is ~200 ns slower than FluentValidation sync
+  - Still **2× faster than DataAnnotations**
+
+### Comparison
+
+| Feature | FluentValidation | DataAnnotations | Zeta |
+|---------|------------------|-----------------|------|
+| Async-first | Partial | No | **Yes** |
+| Schema-based | No | No | **Yes** |
+| Composable | Limited | No | **Yes** |
+| Result pattern | No | No | **Yes** |
+| Path-aware errors | Partial | No | **Yes** |
+| No exceptions | No | No | **Yes** |
+
+Run benchmarks yourself:
+```bash
+dotnet run --project benchmarks/Zeta.Benchmarks -c Release
+```
 
 ## Installation
 
 ```bash
 dotnet add package Zeta
 dotnet add package Zeta.AspNetCore  # For ASP.NET Core integration
-```
-
-## Quick Start
-
-```csharp
-using Zeta;
-
-// Define a schema
-var UserSchema = Z.Object<User>()
-    .Field(u => u.Email, Z.String().Email())
-    .Field(u => u.Age, Z.Int().Min(18));
-
-// Validate
-var result = await UserSchema.ValidateAsync(user);
-
-if (result.IsSuccess)
-{
-    Console.WriteLine($"Valid: {result.Value}");
-}
-else
-{
-    foreach (var error in result.Errors)
-    {
-        Console.WriteLine($"{error.Path}: {error.Message}");
-    }
-}
 ```
 
 ## Schema Types
@@ -242,7 +270,7 @@ Z.Object<User>()
 
 #### Inline Field Validation with Select
 
-> Select lets you temporarily “zoom in” on one or more fields and apply additional rules without redefining the field schema.
+> Select lets you temporarily "zoom in" on one or more fields and apply additional rules without redefining the field schema.
 
 Use `.Select()` for inline schema building within conditionals:
 
@@ -658,55 +686,6 @@ public record ValidationError(
 | `is_true` | Must be true |
 | `is_false` | Must be false |
 | `custom_error` | Custom refinement failed |
-
-## Benchmarks
-
-Comparing Zeta against FluentValidation and DataAnnotations on .NET 9 (Apple M2 Pro).
-
-| Method | Mean | Allocated |
-|--------|-----:|----------:|
-| FluentValidation | 150 ns | 600 B |
-| FluentValidation (Async) | 270 ns | 672 B |
-| **Zeta** | **374 ns** | **416 B** |
-| Zeta (Invalid) | 555 ns | 1,144 B |
-| DataAnnotations | 733 ns | 1,880 B |
-| DataAnnotations (Invalid) | 1,105 ns | 2,704 B |
-| FluentValidation (Invalid) | 2,247 ns | 7,920 B |
-| FluentValidation (Invalid, Async) | 2,453 ns | 7,992 B |
-
-### Key findings
-
-- **Zeta is allocation-efficient by design**
-  - Allocates **~40% less memory** than FluentValidation on valid input
-  - Allocates **~7× less memory** than FluentValidation on invalid input
-
-- **Zeta is optimized for validation failures**
-  - **4× faster** than FluentValidation when validation fails
-  - **2× faster** than DataAnnotations when validation fails
-
-- **Consistent async model**
-  - Zeta uses a single async-first execution path
-  - FluentValidation's fastest path is sync-only
-
-- **Happy-path overhead is small**
-  - Zeta is ~200 ns slower than FluentValidation sync
-  - Still **2× faster than DataAnnotations**
-
-Run benchmarks yourself:
-```bash
-dotnet run --project benchmarks/Zeta.Benchmarks -c Release
-```
-
-## Comparison
-
-| Feature | FluentValidation | DataAnnotations | Zeta |
-|---------|------------------|-----------------|------|
-| Async-first | Partial | No | **Yes** |
-| Schema-based | No | No | **Yes** |
-| Composable | Limited | No | **Yes** |
-| Result pattern | No | No | **Yes** |
-| Path-aware errors | Partial | No | **Yes** |
-| No exceptions | No | No | **Yes** |
 
 ## License
 
