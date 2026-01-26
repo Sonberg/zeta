@@ -95,7 +95,10 @@ Z.String()
 
 **Schema Bridging**: `SchemaAdapter<T, TContext>` wraps contextless `ISchema<T>` for use in context-aware object schemas.
 
-**Conditional Validation**: `.When()` on ObjectSchema enables dependent field validation via `ConditionalBuilder`.
+**Conditional Validation**: `.When()` on ObjectSchema enables dependent field validation via `ConditionalBuilder`:
+- `.Require(x => x.Field)` - Ensures field is not null
+- `.Field(x => x.Field, schema)` - Validates field with a schema
+- `.Select(x => x.Field, s => s.MinLength(3))` - Inline schema builder for string, int, double, decimal types
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)
 - `IZetaValidator` - Injectable service for manual validation in controllers

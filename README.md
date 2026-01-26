@@ -240,6 +240,39 @@ Z.Object<User>()
     );
 ```
 
+#### Inline Field Validation with Select
+
+Use `.Select()` for inline schema building within conditionals:
+
+```csharp
+Z.Object<User>()
+    .Field(u => u.Password, Z.String().Nullable())
+    .Field(u => u.RequiresStrongPassword, Z.Bool())
+    .When(
+        u => u.RequiresStrongPassword,
+        then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
+    );
+
+// Supported types: string, int, double, decimal (and their nullable variants)
+Z.Object<Product>()
+    .Field(p => p.Price, Z.Decimal().Nullable())
+    .Field(p => p.Quantity, Z.Int().Nullable())
+    .When(
+        p => p.IsActive,
+        then: c => c
+            .Select(p => p.Price, s => s.Min(0.01m).Max(10000m))
+            .Select(p => p.Quantity, s => s.Min(1).Max(1000))
+    );
+
+// Context-aware conditional with Select
+Z.Object<User>()
+    .WithContext<User, UserContext>()
+    .When(
+        (_, ctx) => ctx.RequireStrongPassword,
+        then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
+    );
+```
+
 ## Result Pattern
 
 Validation returns `Result<T>` instead of throwing exceptions:
