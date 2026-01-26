@@ -84,7 +84,7 @@ public sealed class ObjectSchema<T> : ISchema<T>
 
     public ObjectSchema<T> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateValidationRule<T>((val, exec) =>
+        _rules.Add(new RefinementRule<T>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -181,7 +181,7 @@ public class ObjectSchema<T, TContext> : BaseSchema<T, TContext>
 
     public ObjectSchema<T, TContext> Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateValidationRule<T, TContext>((val, ctx) =>
+        Use(new RefinementRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

@@ -23,7 +23,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Min(DateOnly min, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
             val >= min
                 ? null
                 : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -32,7 +32,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Max(DateOnly max, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
             val <= max
                 ? null
                 : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -41,7 +41,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Past(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
@@ -53,7 +53,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Future(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
@@ -65,7 +65,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Between(DateOnly min, DateOnly max, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -74,7 +74,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Weekday(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
@@ -83,7 +83,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Weekend(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
@@ -92,7 +92,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema MinAge(int years, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -107,7 +107,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema MaxAge(int years, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -122,7 +122,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Refine(Func<DateOnly, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateValidationRule<DateOnly>((val, exec) =>
+        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -137,7 +137,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 {
     public DateOnlySchema<TContext> Min(DateOnly min, string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -146,7 +146,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> Max(DateOnly max, string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -155,7 +155,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> Past(string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
@@ -167,7 +167,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> Future(string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
@@ -179,7 +179,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> Between(DateOnly min, DateOnly max, string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -188,7 +188,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> Weekday(string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(ctx.Execution.Path, "weekday", message ?? "Must be a weekday")));
@@ -197,7 +197,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> Weekend(string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(ctx.Execution.Path, "weekend", message ?? "Must be a weekend")));
@@ -206,7 +206,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> MinAge(int years, string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -221,7 +221,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> MaxAge(int years, string? message = null)
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -236,7 +236,7 @@ public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
 
     public DateOnlySchema<TContext> Refine(Func<DateOnly, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateValidationRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

@@ -48,35 +48,35 @@ public sealed class ListSchema<TElement> : ISchema<List<TElement>>
 
     public ListSchema<TElement> MinLength(int min, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>>((val, exec) =>
+        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.MinCount(val, min, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>>((val, exec) =>
+        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.MaxCount(val, max, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> Length(int exact, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>>((val, exec) =>
+        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.Count(val, exact, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> NotEmpty(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>>((val, exec) =>
+        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.ListNotEmpty(val, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> Refine(Func<List<TElement>, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>>((val, exec) =>
+        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -109,7 +109,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
         // Validate list-level rules
         foreach (var rule in _rules)
         {
-            var error = rule.Validate(value, context);
+            var error = await rule.ValidateAsync(value, context);
             if (error != null)
             {
                 errors ??= [];
@@ -139,7 +139,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             val.Count >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
@@ -148,7 +148,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             val.Count <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
@@ -157,7 +157,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             val.Count == exact
                 ? null
                 : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
@@ -171,7 +171,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> Refine(Func<List<TElement>, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateValidationRule<List<TElement>, TContext>((val, ctx) =>
+        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

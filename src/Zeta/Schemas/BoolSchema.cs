@@ -22,7 +22,7 @@ public sealed class BoolSchema : ISchema<bool>
 
     public BoolSchema IsTrue(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<bool>((val, exec) =>
+        _rules.Add(new RefinementRule<bool>((val, exec) =>
             val
                 ? null
                 : new ValidationError(exec.Path, "is_true", message ?? "Must be true")));
@@ -31,7 +31,7 @@ public sealed class BoolSchema : ISchema<bool>
 
     public BoolSchema IsFalse(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<bool>((val, exec) =>
+        _rules.Add(new RefinementRule<bool>((val, exec) =>
             !val
                 ? null
                 : new ValidationError(exec.Path, "is_false", message ?? "Must be false")));
@@ -40,7 +40,7 @@ public sealed class BoolSchema : ISchema<bool>
 
     public BoolSchema Refine(Func<bool, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateValidationRule<bool>((val, exec) =>
+        _rules.Add(new RefinementRule<bool>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -55,7 +55,7 @@ public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 {
     public BoolSchema<TContext> IsTrue(string? message = null)
     {
-        Use(new DelegateValidationRule<bool, TContext>((val, ctx) =>
+        Use(new RefinementRule<bool, TContext>((val, ctx) =>
             val
                 ? null
                 : new ValidationError(ctx.Execution.Path, "is_true", message ?? "Must be true")));
@@ -64,7 +64,7 @@ public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 
     public BoolSchema<TContext> IsFalse(string? message = null)
     {
-        Use(new DelegateValidationRule<bool, TContext>((val, ctx) =>
+        Use(new RefinementRule<bool, TContext>((val, ctx) =>
             !val
                 ? null
                 : new ValidationError(ctx.Execution.Path, "is_false", message ?? "Must be false")));
@@ -73,7 +73,7 @@ public class BoolSchema<TContext> : BaseSchema<bool, TContext>
 
     public BoolSchema<TContext> Refine(Func<bool, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateValidationRule<bool, TContext>((val, ctx) =>
+        Use(new RefinementRule<bool, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

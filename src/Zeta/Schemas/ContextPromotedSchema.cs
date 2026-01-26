@@ -12,8 +12,7 @@ namespace Zeta.Schemas;
 public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
 {
     private readonly ISchema<T> _inner;
-    private readonly List<IValidationRule<T, TContext>> _syncRules = [];
-    private readonly List<IAsyncValidationRule<T, TContext>> _asyncRules = [];
+    private readonly List<IValidationRule<T, TContext>> _rules = [];
 
     public ContextPromotedSchema(ISchema<T> inner)
     {
@@ -34,17 +33,8 @@ public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
             errors = [..innerResult.Errors];
         }
 
-        // Execute context-aware sync rules
-        foreach (var rule in _syncRules)
-        {
-            var error = rule.Validate(value, context);
-            if (error == null) continue;
-            errors ??= [];
-            errors.Add(error);
-        }
-
-        // Execute context-aware async rules
-        foreach (var rule in _asyncRules)
+        // Execute context-aware rules
+        foreach (var rule in _rules)
         {
             var error = await rule.ValidateAsync(value, context);
             if (error == null) continue;
@@ -66,7 +56,7 @@ public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
         string message,
         string code = "custom_error")
     {
-        _syncRules.Add(new DelegateValidationRule<T, TContext>((val, ctx) =>
+        _rules.Add(new RefinementRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));
@@ -98,7 +88,7 @@ public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
         string message,
         string code = "custom_error")
     {
-        _asyncRules.Add(new DelegateAsyncValidationRule<T, TContext>(async (val, ctx) =>
+        _rules.Add(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data, ctx.Execution.CancellationToken)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

@@ -24,7 +24,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Min(DateTime min, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             val >= min
                 ? null
                 : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -33,7 +33,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Max(DateTime max, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             val <= max
                 ? null
                 : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -42,7 +42,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Past(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             val < exec.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(exec.Path, "past", message ?? "Must be in the past")));
@@ -51,7 +51,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Future(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             val > exec.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(exec.Path, "future", message ?? "Must be in the future")));
@@ -60,7 +60,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Between(DateTime min, DateTime max, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -69,7 +69,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Weekday(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
@@ -78,7 +78,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Weekend(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
@@ -87,7 +87,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema WithinDays(int days, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
         {
             var now = exec.TimeProvider.GetUtcNow().UtcDateTime;
             var diff = Math.Abs((val - now).TotalDays);
@@ -100,7 +100,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema MinAge(int years, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
         {
             var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -115,7 +115,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema MaxAge(int years, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
         {
             var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -130,7 +130,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Refine(Func<DateTime, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateValidationRule<DateTime>((val, exec) =>
+        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -145,7 +145,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 {
     public DateTimeSchema<TContext> Min(DateTime min, string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             val >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -154,7 +154,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> Max(DateTime max, string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             val <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -163,7 +163,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> Past(string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             val < ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(ctx.Execution.Path, "past", message ?? "Must be in the past")));
@@ -172,7 +172,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> Future(string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             val > ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(ctx.Execution.Path, "future", message ?? "Must be in the future")));
@@ -181,7 +181,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> Between(DateTime min, DateTime max, string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -190,7 +190,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> Weekday(string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(ctx.Execution.Path, "weekday", message ?? "Must be a weekday")));
@@ -199,7 +199,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> Weekend(string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(ctx.Execution.Path, "weekend", message ?? "Must be a weekend")));
@@ -208,7 +208,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> WithinDays(int days, string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
         {
             var now = ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime;
             var diff = Math.Abs((val - now).TotalDays);
@@ -221,7 +221,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> MinAge(int years, string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
         {
             var today = ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -236,7 +236,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> MaxAge(int years, string? message = null)
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
         {
             var today = ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -251,7 +251,7 @@ public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
 
     public DateTimeSchema<TContext> Refine(Func<DateTime, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateValidationRule<DateTime, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateTime, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

@@ -22,7 +22,7 @@ public sealed class GuidSchema : ISchema<Guid>
 
     public GuidSchema NotEmpty(string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<Guid>((val, exec) =>
+        _rules.Add(new RefinementRule<Guid>((val, exec) =>
             val != Guid.Empty
                 ? null
                 : new ValidationError(exec.Path, "not_empty", message ?? "GUID cannot be empty")));
@@ -31,7 +31,7 @@ public sealed class GuidSchema : ISchema<Guid>
 
     public GuidSchema Version(int version, string? message = null)
     {
-        _rules.Add(new DelegateValidationRule<Guid>((val, exec) =>
+        _rules.Add(new RefinementRule<Guid>((val, exec) =>
         {
             var bytes = val.ToByteArray();
             var guidVersion = (bytes[7] >> 4) & 0x0F;
@@ -44,7 +44,7 @@ public sealed class GuidSchema : ISchema<Guid>
 
     public GuidSchema Refine(Func<Guid, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new DelegateValidationRule<Guid>((val, exec) =>
+        _rules.Add(new RefinementRule<Guid>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -59,7 +59,7 @@ public class GuidSchema<TContext> : BaseSchema<Guid, TContext>
 {
     public GuidSchema<TContext> NotEmpty(string? message = null)
     {
-        Use(new DelegateValidationRule<Guid, TContext>((val, ctx) =>
+        Use(new RefinementRule<Guid, TContext>((val, ctx) =>
             val != Guid.Empty
                 ? null
                 : new ValidationError(ctx.Execution.Path, "not_empty", message ?? "GUID cannot be empty")));
@@ -68,7 +68,7 @@ public class GuidSchema<TContext> : BaseSchema<Guid, TContext>
 
     public GuidSchema<TContext> Version(int version, string? message = null)
     {
-        Use(new DelegateValidationRule<Guid, TContext>((val, ctx) =>
+        Use(new RefinementRule<Guid, TContext>((val, ctx) =>
         {
             var bytes = val.ToByteArray();
             var guidVersion = (bytes[7] >> 4) & 0x0F;
@@ -81,7 +81,7 @@ public class GuidSchema<TContext> : BaseSchema<Guid, TContext>
 
     public GuidSchema<TContext> Refine(Func<Guid, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new DelegateValidationRule<Guid, TContext>((val, ctx) =>
+        Use(new RefinementRule<Guid, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));
