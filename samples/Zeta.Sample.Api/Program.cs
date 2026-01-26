@@ -141,22 +141,5 @@ app.MapControllers();
 
 app.Run();
 
-// Context-aware schema: the object schema must be promoted when using context-aware fields
-var contextAwareSchema = Z
-    .Object<User>()
-    .WithContext<User, UserContext>()
-    .Field(f => f.Email, Z.String().WithContext<UserContext>().Email())
-    .Field(f => f.Password, Z.String().MinLength(6).MaxLength(100));
-
-// Contextless schema: validation rules can be applied before WithContext
-var contextlessSchema = Z
-    .Object<User>()
-    .Field(f => f.Email, Z.String().Email())
-    .Field(f => f.Password, Z.String().MinLength(6).MaxLength(100));
-
-public record User(string Email, string Password);
-
-public class UserContext(bool AllowExistingEmails);
-
 // Required for WebApplicationFactory in integration tests
 public partial class Program;
