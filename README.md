@@ -16,7 +16,7 @@ A composable, type-safe, async-first validation framework for .NET inspired by [
 - A **Schema** describes how to validate a value
 - Schemas are immutable and composable
 - Validation returns a `Result<T>`, never throws
-- Context is optional and only used when explicitly enabled
+- Context is opt-in and never leaks into schemas unless explicitly enabled
 - Errors are data, not exceptions
 
 ## Installation
@@ -241,6 +241,8 @@ Z.Object<User>()
 ```
 
 #### Inline Field Validation with Select
+
+> Select lets you temporarily “zoom in” on one or more fields and apply additional rules without redefining the field schema.
 
 Use `.Select()` for inline schema building within conditionals:
 
