@@ -46,11 +46,15 @@ dotnet run --project samples/Zeta.Sample.Api
 - `ValidationExecutionContext` - Path tracking, IServiceProvider access, CancellationToken
 
 ### Schema Types (src/Zeta/Schemas/)
-All schemas are created via the static `Z` class entry point. Each schema type has two variants:
-- `Z.String()` - No context version, implements `ISchema<string>`
-- `Z.String<TContext>()` - Context-aware version, implements `ISchema<string, TContext>`
+All schemas are created via the static `Z` class entry point as contextless schemas:
+- `Z.String()` returns `StringSchema` which implements `ISchema<string>`
+- Use `.WithContext<TContext>()` to promote to context-aware when needed
 
 Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `ArraySchema`, `ListSchema`, `NullableSchema`
+
+### Context Promotion (src/Zeta/Schemas/)
+- `ContextPromotedSchema<T, TContext>` - Wraps contextless schemas for context-aware refinements
+- `ContextPromotedObjectSchema<T, TContext>` - Specialized version for ObjectSchema that supports `.Field()` and `.When()` after promotion
 
 ### Key Patterns
 
@@ -64,6 +68,14 @@ Z.String().MinLength(3).MaxLength(100).Email()
 Z.Object<User>()
     .Field(u => u.Email, Z.String().Email())  // Error path: "email"
     .Field(u => u.Address, addressSchema)      // Nested: "address.street"
+```
+
+**Context Promotion**: Use `.WithContext<TContext>()` to promote contextless schemas when you need context-aware refinements:
+```csharp
+Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned");
 ```
 
 **Context Adaptation**: `SchemaContextAdapter<T, TContext>` wraps context-free schemas for use in context-aware object schemas.
@@ -101,3 +113,10 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 - Fields are required (non-null) by default
 - `.Require()` in conditionals = not null check
 - `.NotEmpty()` on strings = not whitespace
+
+### Context Promotion
+- Schemas are always created contextless via `Z.String()`, `Z.Int()`, etc.
+- Use `.WithContext<TContext>()` to promote when you need context-aware `Refine()`
+- For ObjectSchema: `.WithContext<T, TContext>()` requires both type parameters
+- After promotion, `.Field()` and `.When()` can still be called on ObjectSchema
+- `ContextPromotedSchema<T, TContext>` delegates to inner schema, then runs context-aware rules

@@ -10,6 +10,14 @@ A composable, type-safe, async-first validation framework for .NET inspired by [
 - **Composable** — Schemas are values that can be reused and combined
 - **Path-aware errors** — Errors include location (`user.address.street`, `items[0]`)
 - **ASP.NET Core native** — First-class support for Minimal APIs and Controllers
+- 
+## Mental Model
+
+- A **Schema** describes how to validate a value
+- Schemas are immutable and composable
+- Validation returns a `Result<T>`, never throws
+- Context is optional and only used when explicitly enabled
+- Errors are data, not exceptions
 
 ## Installation
 
@@ -370,14 +378,30 @@ public class UserContextFactory : IValidationContextFactory<User, UserContext>
 
 ### Use Context in Schema
 
+Schemas are always created contextless. Use `.WithContext<TContext>()` to promote a schema when you need access to validation context:
+
 ```csharp
-var UserSchema = Z.Object<User, UserContext>()
-    .Field(u => u.Email, Z.String<UserContext>()
-        .Email()
-        .Refine((email, ctx) => !ctx.EmailExists, "Email already taken"))
-    .Field(u => u.Name, Z.String<UserContext>()
-        .MinLength(3)
-        .Refine((name, ctx) => !ctx.IsMaintenanceMode, "Registration disabled"));
+// Promote schema to context-aware when needed
+var EmailSchema = Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
+
+// For ObjectSchema, you can add .Field() before or after .WithContext()
+var UserSchema = Z.Object<User>()
+    .Field(u => u.Name, Z.String().MinLength(3))
+    .WithContext<User, UserContext>()
+    .Field(u => u.Email, EmailSchema)
+    .Refine((user, ctx) => !ctx.IsMaintenanceMode, "Registration disabled");
+```
+
+You can also use context-free `Refine()` on a promoted schema:
+
+```csharp
+Z.String()
+    .WithContext<UserContext>()
+    .Refine(val => val.Length > 3, "Too short")                    // No context
+    .Refine((val, ctx) => val != ctx.BannedEmail, "Email banned"); // With context
 ```
 
 ### Register Factory

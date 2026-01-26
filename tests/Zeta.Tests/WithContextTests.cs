@@ -381,9 +381,91 @@ public class WithContextTests
         Assert.False(shortResult.IsSuccess);
     }
 
+    [Fact]
+    public async Task WithContext_FieldAfterWithContext_Works()
+    {
+        // Can add fields after WithContext
+        var schema = Z.Object<User>()
+            .WithContext<User, UserContext>()
+            .Field(u => u.Email, Z.String().Email())
+            .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned");
+
+        var context = new UserContext("banned@example.com", 100);
+
+        var validResult = await schema.ValidateAsync(new User("user@example.com"), context);
+        Assert.True(validResult.IsSuccess);
+
+        // Invalid email format
+        var invalidEmailResult = await schema.ValidateAsync(new User("notanemail"), context);
+        Assert.False(invalidEmailResult.IsSuccess);
+        Assert.Contains(invalidEmailResult.Errors, e => e.Code == "email");
+
+        // Banned email
+        var bannedResult = await schema.ValidateAsync(new User("banned@example.com"), context);
+        Assert.False(bannedResult.IsSuccess);
+        Assert.Contains(bannedResult.Errors, e => e.Message == "Email is banned");
+    }
+
+    [Fact]
+    public async Task WithContext_FieldBeforeAndAfterWithContext_Works()
+    {
+        // Can add fields both before and after WithContext
+        var schema = Z.Object<Person>()
+            .Field(p => p.Name, Z.String().MinLength(2))
+            .WithContext<Person, UserContext>()
+            .Field(p => p.Age, Z.Int().Min(0))
+            .Refine((person, ctx) => person.Age <= ctx.MaxValue, "Age exceeds maximum");
+
+        var context = new UserContext("", 50);
+
+        var validResult = await schema.ValidateAsync(new Person("John", 30), context);
+        Assert.True(validResult.IsSuccess);
+
+        // Name too short (field before WithContext)
+        var shortNameResult = await schema.ValidateAsync(new Person("J", 30), context);
+        Assert.False(shortNameResult.IsSuccess);
+        Assert.Contains(shortNameResult.Errors, e => e.Path == "name");
+
+        // Age negative (field after WithContext)
+        var negativeAgeResult = await schema.ValidateAsync(new Person("John", -1), context);
+        Assert.False(negativeAgeResult.IsSuccess);
+        Assert.Contains(negativeAgeResult.Errors, e => e.Path == "age");
+
+        // Age exceeds context max (context-aware refine)
+        var oldResult = await schema.ValidateAsync(new Person("John", 100), context);
+        Assert.False(oldResult.IsSuccess);
+        Assert.Contains(oldResult.Errors, e => e.Message == "Age exceeds maximum");
+    }
+
+    [Fact]
+    public async Task WithContext_WhenAfterWithContext_Works()
+    {
+        var schema = Z.Object<Order>()
+            .WithContext<Order, UserContext>()
+            .Field(o => o.Total, Z.Decimal().Min(0))
+            .When(
+                o => o.Total > 100,
+                then => then.Require(o => o.DiscountCode));
+
+        var context = new UserContext("", 100);
+
+        // Small order without discount code - valid
+        var smallOrderResult = await schema.ValidateAsync(new Order(50m, null), context);
+        Assert.True(smallOrderResult.IsSuccess);
+
+        // Large order with discount code - valid
+        var largeOrderWithCodeResult = await schema.ValidateAsync(new Order(150m, "SAVE10"), context);
+        Assert.True(largeOrderWithCodeResult.IsSuccess);
+
+        // Large order without discount code - fails (requires discount code)
+        var largeOrderWithoutCodeResult = await schema.ValidateAsync(new Order(150m, null), context);
+        Assert.False(largeOrderWithoutCodeResult.IsSuccess);
+        Assert.Contains(largeOrderWithoutCodeResult.Errors, e => e.Code == "required");
+    }
+
     private record User(string Email);
-
+    private record Person(string Name, int Age);
+    private record Order(decimal Total, string? DiscountCode);
     private record GuidContext(Guid BannedId);
-
     private record DateContext(DateTime MaxDate);
 }

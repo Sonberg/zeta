@@ -473,15 +473,15 @@ public static class SchemaExtensions
 #endif
 
     /// <summary>
-    /// Promotes a contextless object schema to a context-aware schema, enabling context-aware refinements.
+    /// Promotes a contextless object schema to a context-aware schema, enabling context-aware refinements and field additions.
     /// </summary>
-    public static ContextPromotedSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T, object?> schema) where T : class
+    public static ContextPromotedObjectSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T, object?> schema) where T : class
         => new(schema);
 
     /// <summary>
-    /// Promotes a contextless object schema (sealed) to a context-aware schema, enabling context-aware refinements.
+    /// Promotes a contextless object schema (sealed) to a context-aware schema, enabling context-aware refinements and field additions.
     /// </summary>
-    public static ContextPromotedSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T> schema) where T : class
+    public static ContextPromotedObjectSchema<T, TContext> WithContext<T, TContext>(this ObjectSchema<T> schema) where T : class
         => new(schema);
 
     /// <summary>
@@ -495,6 +495,20 @@ public static class SchemaExtensions
     /// </summary>
     public static ContextPromotedSchema<List<TElement>, TContext> WithContext<TElement, TContext>(this ListSchema<TElement> schema)
         => new(schema);
+
+    // ==================== ContextPromotedObjectSchema Nullable Extensions ====================
+
+    /// <summary>
+    /// Creates a nullable version of this context-promoted object schema that accepts null values.
+    /// </summary>
+    public static NullableSchema<T, TContext> Nullable<T, TContext>(this ContextPromotedObjectSchema<T, TContext> schema) where T : class
+        => new(schema);
+
+    /// <summary>
+    /// Creates an optional version of this context-promoted object schema that skips validation when null.
+    /// </summary>
+    public static NullableSchema<T, TContext> Optional<T, TContext>(this ContextPromotedObjectSchema<T, TContext> schema) where T : class
+        => schema.Nullable();
 
     // ==================== ContextPromotedSchema Nullable Extensions (Reference Types) ====================
 
