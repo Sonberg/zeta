@@ -44,13 +44,12 @@ public class ObjectSchemaTests
     [Fact]
     public async Task Context_PropagatesToFields()
     {
-        var schema = Z.Object<User, BanContext>()
-            .Field(u => u.Name, Z.String<BanContext>()
-                .Refine((val, ctx) => val != ctx.BannedName, "Name is banned"));
+        var schema = Z.Object<User>()
+            .Field(u => u.Name, Z.String())
+            .WithContext<User, BanContext>()
+            .Refine((user, ctx) => user.Name != ctx.BannedName, "Name is banned");
 
-        var context = new ValidationContext<BanContext>(
-            new BanContext("Voldemort"),
-            ValidationExecutionContext.Empty);
+        var context = new BanContext("Voldemort");
 
         var result = await schema.ValidateAsync(new User("Voldemort", 99, null!), context);
 

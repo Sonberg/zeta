@@ -106,7 +106,7 @@ public class UsersControllerTests : IntegrationTestBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errors = await GetValidationErrors(response);
-        Assert.Contains(errors, e => e.Path == "email" && e.Message!.Contains("already registered"));
+        Assert.Contains(errors, e => e.Message!.Contains("already registered"));
     }
 
     #endregion

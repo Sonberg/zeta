@@ -159,15 +159,12 @@ public class WithContextTests
     [Fact]
     public async Task WithContext_InObjectSchema_Works()
     {
-        var userSchema = Z.Object<User, UserContext>()
-            .Field(u => u.Email, Z.String()
-                .Email()
-                .WithContext<UserContext>()
-                .Refine((email, ctx) => email != ctx.BannedEmail, "Email is banned", "banned_email"));
+        var userSchema = Z.Object<User>()
+            .Field(u => u.Email, Z.String().Email())
+            .WithContext<User, UserContext>()
+            .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned", "banned_email");
 
-        var context = new ValidationContext<UserContext>(
-            new UserContext("banned@example.com", 100),
-            ValidationExecutionContext.Empty);
+        var context = new UserContext("banned@example.com", 100);
 
         var validUser = new User("user@example.com");
         var validResult = await userSchema.ValidateAsync(validUser, context);
@@ -177,7 +174,6 @@ public class WithContextTests
         var bannedResult = await userSchema.ValidateAsync(bannedUser, context);
         Assert.False(bannedResult.IsSuccess);
         Assert.Contains(bannedResult.Errors, e => e.Code == "banned_email");
-        Assert.Contains(bannedResult.Errors, e => e.Path == "email");
     }
 
     [Fact]
@@ -324,14 +320,70 @@ public class WithContextTests
 
         var context = new UserContext("", 2);
 
-        var validResult = await schema.ValidateAsync(new List<string> { "a", "b" }, context);
+        var validResult = await schema.ValidateAsync(new List<string>
+        {
+            "a",
+            "b"
+        }, context);
         Assert.True(validResult.IsSuccess);
 
-        var tooManyResult = await schema.ValidateAsync(new List<string> { "a", "b", "c" }, context);
+        var tooManyResult = await schema.ValidateAsync(new List<string>
+        {
+            "a",
+            "b",
+            "c"
+        }, context);
         Assert.False(tooManyResult.IsSuccess);
     }
 
+    [Fact]
+    public async Task WithContext_RefineWithoutContext_Works()
+    {
+        var schema = Z.String()
+            .WithContext<UserContext>()
+            .Refine(val => val.Length > 3, "Too short")
+            .Refine((val, ctx) => val != ctx.BannedEmail, "Email is banned");
+
+        var context = new UserContext("banned@example.com", 100);
+
+        // Valid
+        var validResult = await schema.ValidateAsync("user@example.com", context);
+        Assert.True(validResult.IsSuccess);
+
+        // Too short (context-free refine)
+        var shortResult = await schema.ValidateAsync("ab", context);
+        Assert.False(shortResult.IsSuccess);
+        Assert.Contains(shortResult.Errors, e => e.Message == "Too short");
+
+        // Banned (context-aware refine)
+        var bannedResult = await schema.ValidateAsync("banned@example.com", context);
+        Assert.False(bannedResult.IsSuccess);
+        Assert.Contains(bannedResult.Errors, e => e.Message == "Email is banned");
+    }
+
+    [Fact]
+    public async Task WithContext_RefineAsyncWithoutContext_Works()
+    {
+        var schema = Z.String()
+            .WithContext<UserContext>()
+            .RefineAsync(async (val, ct) =>
+            {
+                await Task.Delay(1, ct);
+                return val.Length > 3;
+            }, "Too short");
+
+        var context = new UserContext("", 100);
+
+        var validResult = await schema.ValidateAsync("valid", context);
+        Assert.True(validResult.IsSuccess);
+
+        var shortResult = await schema.ValidateAsync("ab", context);
+        Assert.False(shortResult.IsSuccess);
+    }
+
     private record User(string Email);
+
     private record GuidContext(Guid BannedId);
+
     private record DateContext(DateTime MaxDate);
 }

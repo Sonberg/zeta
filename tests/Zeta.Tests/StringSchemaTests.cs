@@ -44,12 +44,11 @@ public class StringSchemaTests
     public async Task ContextRefine_UsesContextData()
     {
         // Setup schema that requires a "MagicWord" from context
-        var schema = Z.String<TestContext>()
+        var schema = Z.String()
+            .WithContext<TestContext>()
             .Refine((val, ctx) => val == ctx.MagicWord, "Wrong magic word");
 
-        var context = new ValidationContext<TestContext>(
-            new TestContext("Abracadabra"),
-            ValidationExecutionContext.Empty);
+        var context = new TestContext("Abracadabra");
 
         var valid = await schema.ValidateAsync("Abracadabra", context);
         Assert.True(valid.IsSuccess);

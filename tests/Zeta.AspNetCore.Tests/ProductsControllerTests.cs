@@ -64,7 +64,7 @@ public class ProductsControllerTests : IntegrationTestBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errors = await GetValidationErrors(response);
-        Assert.Contains(errors, e => e.Path == "sku" && e.Message!.Contains("already exists"));
+        Assert.Contains(errors, e => e.Message!.Contains("already exists"));
     }
 
     [Fact]

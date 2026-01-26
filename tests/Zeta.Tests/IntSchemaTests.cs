@@ -45,12 +45,11 @@ public class IntSchemaTests
     [Fact]
     public async Task ContextRefine_UsesContextData()
     {
-        var schema = Z.Int<LimitContext>()
+        var schema = Z.Int()
+            .WithContext<LimitContext>()
             .Refine((val, ctx) => val <= ctx.MaxLimit, "Exceeds dynamic limit");
 
-        var context = new ValidationContext<LimitContext>(
-            new LimitContext(50), 
-            ValidationExecutionContext.Empty);
+        var context = new LimitContext(50);
 
         Assert.True((await schema.ValidateAsync(50, context)).IsSuccess);
         Assert.False((await schema.ValidateAsync(51, context)).IsSuccess);

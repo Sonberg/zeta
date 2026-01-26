@@ -74,6 +74,20 @@ public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a synchronous refinement that doesn't use context.
+    /// </summary>
+    /// <param name="predicate">A function that takes the value, returning true if valid.</param>
+    /// <param name="message">The error message if validation fails.</param>
+    /// <param name="code">The error code (default: "custom_error").</param>
+    public ContextPromotedSchema<T, TContext> Refine(
+        Func<T, bool> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return Refine((val, _) => predicate(val), message, code);
+    }
+
+    /// <summary>
     /// Adds an asynchronous context-aware refinement.
     /// </summary>
     /// <param name="predicate">An async function that takes the value, context data, and cancellation token, returning true if valid.</param>
@@ -89,5 +103,19 @@ public class ContextPromotedSchema<T, TContext> : ISchema<T, TContext>
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));
         return this;
+    }
+
+    /// <summary>
+    /// Adds an asynchronous refinement that doesn't use context.
+    /// </summary>
+    /// <param name="predicate">An async function that takes the value and cancellation token, returning true if valid.</param>
+    /// <param name="message">The error message if validation fails.</param>
+    /// <param name="code">The error code (default: "custom_error").</param>
+    public ContextPromotedSchema<T, TContext> RefineAsync(
+        Func<T, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
 }
