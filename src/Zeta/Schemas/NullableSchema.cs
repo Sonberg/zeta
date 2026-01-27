@@ -28,6 +28,9 @@ public sealed class NullableSchema<T> : ContextlessSchema<T?> where T : class
             ? Result<T?>.Success(value)
             : Result<T?>.Failure(result.Errors);
     }
+
+    public NullableSchema<T, TContext> WithContext<TContext>()
+        => new NullableSchema<T, TContext>(_inner);
 }
 
 /// <summary>
@@ -84,6 +87,9 @@ public sealed class NullableValueSchema<T> : ContextlessSchema<T?> where T : str
             ? Result<T?>.Success(value)
             : Result<T?>.Failure(result.Errors);
     }
+
+    public NullableValueSchema<T, TContext> WithContext<TContext>()
+        => new NullableValueSchema<T, TContext>(_inner);
 }
 
 /// <summary>

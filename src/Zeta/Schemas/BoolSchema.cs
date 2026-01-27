@@ -8,6 +8,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class BoolSchema : ContextlessSchema<bool>
 {
+    public BoolSchema() { }
+
     public BoolSchema IsTrue(string? message = null)
     {
         Use(new RefinementRule<bool>((val, exec) =>
@@ -39,11 +41,7 @@ public sealed class BoolSchema : ContextlessSchema<bool>
     /// Creates a context-aware bool schema with all rules from this schema.
     /// </summary>
     public BoolSchema<TContext> WithContext<TContext>()
-    {
-        var schema = new BoolSchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new BoolSchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -51,6 +49,10 @@ public sealed class BoolSchema : ContextlessSchema<bool>
 /// </summary>
 public class BoolSchema<TContext> : ContextSchema<bool, TContext>
 {
+    public BoolSchema() { }
+
+    public BoolSchema(ContextRuleEngine<bool, TContext> rules) : base(rules) { }
+
     public BoolSchema<TContext> IsTrue(string? message = null)
     {
         Use(new RefinementRule<bool, TContext>((val, ctx) =>

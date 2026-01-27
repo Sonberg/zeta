@@ -4,7 +4,14 @@ namespace Zeta.Core;
 
 public abstract class ContextlessSchema<T> : ISchema<T>
 {
-    protected ContextlessRuleEngine<T> Rules = new();
+    protected ContextlessRuleEngine<T> Rules { get; }
+
+    protected ContextlessSchema() : this(new ContextlessRuleEngine<T>()) { }
+
+    protected ContextlessSchema(ContextlessRuleEngine<T> rules)
+    {
+        Rules = rules;
+    }
 
     public virtual async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? context = null)
     {
@@ -19,9 +26,4 @@ public abstract class ContextlessSchema<T> : ISchema<T>
     {
         Rules.Add(rule);
     }
-
-    /// <summary>
-    /// Gets the rule engine for transferring rules to context-aware schemas.
-    /// </summary>
-    internal ContextlessRuleEngine<T> GetRuleEngine() => Rules;
 }

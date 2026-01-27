@@ -8,6 +8,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class DateTimeSchema : ContextlessSchema<DateTime>
 {
+    public DateTimeSchema() { }
+
     public DateTimeSchema Min(DateTime min, string? message = null)
     {
         Use(new RefinementRule<DateTime>((val, exec) =>
@@ -127,11 +129,7 @@ public sealed class DateTimeSchema : ContextlessSchema<DateTime>
     /// Creates a context-aware DateTime schema with all rules from this schema.
     /// </summary>
     public DateTimeSchema<TContext> WithContext<TContext>()
-    {
-        var schema = new DateTimeSchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new DateTimeSchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -139,6 +137,10 @@ public sealed class DateTimeSchema : ContextlessSchema<DateTime>
 /// </summary>
 public class DateTimeSchema<TContext> : ContextSchema<DateTime, TContext>
 {
+    public DateTimeSchema() { }
+
+    public DateTimeSchema(ContextRuleEngine<DateTime, TContext> rules) : base(rules) { }
+
     public DateTimeSchema<TContext> Min(DateTime min, string? message = null)
     {
         Use(new RefinementRule<DateTime, TContext>((val, ctx) =>

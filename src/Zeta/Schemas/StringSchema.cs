@@ -10,6 +10,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class StringSchema : ContextlessSchema<string>
 {
+    public StringSchema() { }
+
     public StringSchema MinLength(int min, string? message = null)
     {
         Use(new RefinementRule<string>((val, exec) =>
@@ -119,11 +121,7 @@ public sealed class StringSchema : ContextlessSchema<string>
     /// Creates a context-aware string schema with all rules from this schema.
     /// </summary>
     public StringSchema<TContext> WithContext<TContext>()
-    {
-        var schema = new StringSchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new StringSchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -131,6 +129,10 @@ public sealed class StringSchema : ContextlessSchema<string>
 /// </summary>
 public class StringSchema<TContext> : ContextSchema<string, TContext>
 {
+    public StringSchema() { }
+
+    public StringSchema(ContextRuleEngine<string, TContext> rules) : base(rules) { }
+
     public StringSchema<TContext> MinLength(int min, string? message = null)
     {
         Use(new RefinementRule<string, TContext>((val, ctx) =>

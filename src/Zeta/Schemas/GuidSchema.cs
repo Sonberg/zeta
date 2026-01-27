@@ -8,6 +8,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class GuidSchema : ContextlessSchema<Guid>
 {
+    public GuidSchema() { }
+
     public GuidSchema NotEmpty(string? message = null)
     {
         Use(new RefinementRule<Guid>((val, exec) =>
@@ -43,11 +45,7 @@ public sealed class GuidSchema : ContextlessSchema<Guid>
     /// Creates a context-aware Guid schema with all rules from this schema.
     /// </summary>
     public GuidSchema<TContext> WithContext<TContext>()
-    {
-        var schema = new GuidSchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new GuidSchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -55,6 +53,10 @@ public sealed class GuidSchema : ContextlessSchema<Guid>
 /// </summary>
 public class GuidSchema<TContext> : ContextSchema<Guid, TContext>
 {
+    public GuidSchema() { }
+
+    public GuidSchema(ContextRuleEngine<Guid, TContext> rules) : base(rules) { }
+
     public GuidSchema<TContext> NotEmpty(string? message = null)
     {
         Use(new RefinementRule<Guid, TContext>((val, ctx) =>

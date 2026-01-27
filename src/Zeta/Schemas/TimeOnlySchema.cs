@@ -9,6 +9,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class TimeOnlySchema : ContextlessSchema<TimeOnly>
 {
+    public TimeOnlySchema() { }
+
     public TimeOnlySchema Min(TimeOnly min, string? message = null)
     {
         Use(new RefinementRule<TimeOnly>((val, exec) =>
@@ -87,11 +89,7 @@ public sealed class TimeOnlySchema : ContextlessSchema<TimeOnly>
     /// Creates a context-aware TimeOnly schema with all rules from this schema.
     /// </summary>
     public TimeOnlySchema<TContext> WithContext<TContext>()
-    {
-        var schema = new TimeOnlySchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new TimeOnlySchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -99,6 +97,10 @@ public sealed class TimeOnlySchema : ContextlessSchema<TimeOnly>
 /// </summary>
 public class TimeOnlySchema<TContext> : ContextSchema<TimeOnly, TContext>
 {
+    public TimeOnlySchema() { }
+
+    public TimeOnlySchema(ContextRuleEngine<TimeOnly, TContext> rules) : base(rules) { }
+
     public TimeOnlySchema<TContext> Min(TimeOnly min, string? message = null)
     {
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>

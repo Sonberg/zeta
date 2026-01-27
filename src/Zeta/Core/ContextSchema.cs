@@ -7,7 +7,14 @@ namespace Zeta.Core;
 /// </summary>
 public abstract class ContextSchema<T, TContext> : ISchema<T, TContext>
 {
-    protected ContextRuleEngine<T, TContext> Rules = new();
+    protected ContextRuleEngine<T, TContext> Rules { get; }
+
+    protected ContextSchema() : this(new ContextRuleEngine<T, TContext>()) { }
+
+    protected ContextSchema(ContextRuleEngine<T, TContext> rules)
+    {
+        Rules = rules;
+    }
 
     public virtual async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
@@ -21,13 +28,5 @@ public abstract class ContextSchema<T, TContext> : ISchema<T, TContext>
     protected void Use(IValidationRule<T, TContext> rule)
     {
         Rules.Add(rule);
-    }
-
-    /// <summary>
-    /// Copies rules from a contextless schema's rule engine.
-    /// </summary>
-    internal void CopyRulesFrom(ContextlessRuleEngine<T> source)
-    {
-        Rules.CopyFrom(source);
     }
 }

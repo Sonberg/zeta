@@ -9,6 +9,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class DateOnlySchema : ContextlessSchema<DateOnly>
 {
+    public DateOnlySchema() { }
+
     public DateOnlySchema Min(DateOnly min, string? message = null)
     {
         Use(new RefinementRule<DateOnly>((val, exec) =>
@@ -121,11 +123,7 @@ public sealed class DateOnlySchema : ContextlessSchema<DateOnly>
     /// Creates a context-aware DateOnly schema with all rules from this schema.
     /// </summary>
     public DateOnlySchema<TContext> WithContext<TContext>()
-    {
-        var schema = new DateOnlySchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new DateOnlySchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -133,6 +131,10 @@ public sealed class DateOnlySchema : ContextlessSchema<DateOnly>
 /// </summary>
 public class DateOnlySchema<TContext> : ContextSchema<DateOnly, TContext>
 {
+    public DateOnlySchema() { }
+
+    public DateOnlySchema(ContextRuleEngine<DateOnly, TContext> rules) : base(rules) { }
+
     public DateOnlySchema<TContext> Min(DateOnly min, string? message = null)
     {
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>

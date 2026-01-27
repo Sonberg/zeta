@@ -11,7 +11,7 @@ public sealed class ArraySchema<TElement> : ContextlessSchema<TElement[]>
 {
     private readonly ISchema<TElement> _elementSchema;
 
-    public ArraySchema(ISchema<TElement> elementSchema)
+    public ArraySchema(ISchema<TElement> elementSchema, ContextlessRuleEngine<TElement[]> rules) : base(rules)
     {
         _elementSchema = elementSchema;
     }
@@ -27,7 +27,7 @@ public sealed class ArraySchema<TElement> : ContextlessSchema<TElement[]>
             var elementExecution = execution.PushIndex(i);
             var result = await _elementSchema.ValidateAsync(value[i], elementExecution);
             if (!result.IsFailure) continue;
-            
+
             errors ??= [];
             errors.AddRange(result.Errors);
         }
@@ -79,11 +79,7 @@ public sealed class ArraySchema<TElement> : ContextlessSchema<TElement[]>
     /// The element schema is adapted to work in the context-aware environment.
     /// </summary>
     public ArraySchema<TElement, TContext> WithContext<TContext>()
-    {
-        var schema = new ArraySchema<TElement, TContext>(_elementSchema);
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new ArraySchema<TElement, TContext>(_elementSchema, Rules);
 }
 
 /// <summary>
@@ -93,12 +89,12 @@ public class ArraySchema<TElement, TContext> : ContextSchema<TElement[], TContex
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
 
-    public ArraySchema(ISchema<TElement, TContext> elementSchema)
+    public ArraySchema(ISchema<TElement, TContext> elementSchema, ContextRuleEngine<TElement[], TContext> rules) : base(rules)
     {
         _elementSchema = elementSchema;
     }
 
-    public ArraySchema(ISchema<TElement> elementSchema)
+    public ArraySchema(ISchema<TElement> elementSchema, ContextlessRuleEngine<TElement[]> rules) : base(rules.ToContext<TContext>())
     {
         _elementSchema = new SchemaAdapter<TElement, TContext>(elementSchema);
     }
@@ -116,7 +112,7 @@ public class ArraySchema<TElement, TContext> : ContextSchema<TElement[], TContex
 
             var result = await _elementSchema.ValidateAsync(value[i], elementContext);
             if (!result.IsFailure) continue;
-            
+
             errors ??= [];
             errors.AddRange(result.Errors);
         }

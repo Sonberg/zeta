@@ -9,6 +9,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class DoubleSchema : ContextlessSchema<double>
 {
+    public DoubleSchema() { }
+
     public DoubleSchema Min(double min, string? message = null)
     {
         Use(new RefinementRule<double>((val, exec) =>
@@ -63,11 +65,7 @@ public sealed class DoubleSchema : ContextlessSchema<double>
     /// Creates a context-aware double schema with all rules from this schema.
     /// </summary>
     public DoubleSchema<TContext> WithContext<TContext>()
-    {
-        var schema = new DoubleSchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new DoubleSchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -75,6 +73,10 @@ public sealed class DoubleSchema : ContextlessSchema<double>
 /// </summary>
 public class DoubleSchema<TContext> : ContextSchema<double, TContext>
 {
+    public DoubleSchema() { }
+
+    public DoubleSchema(ContextRuleEngine<double, TContext> rules) : base(rules) { }
+
     public DoubleSchema<TContext> Min(double min, string? message = null)
     {
         Use(new RefinementRule<double, TContext>((val, ctx) =>

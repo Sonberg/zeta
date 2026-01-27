@@ -12,8 +12,21 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
 {
-    private readonly List<IFieldContextlessValidator<T>> _fields = [];
-    private readonly List<IContextlessConditionalBranch<T>> _conditionals = [];
+    private readonly List<IFieldContextlessValidator<T>> _fields;
+    private readonly List<IContextlessConditionalBranch<T>> _conditionals;
+
+    public ObjectSchema() : this(new ContextlessRuleEngine<T>(), [], [])
+    {
+    }
+
+    internal ObjectSchema(
+        ContextlessRuleEngine<T> rules,
+        List<IFieldContextlessValidator<T>> fields,
+        List<IContextlessConditionalBranch<T>> conditionals) : base(rules)
+    {
+        _fields = fields;
+        _conditionals = conditionals;
+    }
 
     public override async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
     {
@@ -96,16 +109,7 @@ public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
     /// </summary>
     /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
     public ObjectSchema<T, TContext> WithContext<TContext>()
-    {
-        var schema = new ObjectSchema<T, TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        schema.CopyFieldsFrom(_fields);
-        schema.CopyConditionalsFrom(_conditionals);
-        return schema;
-    }
-
-    internal IReadOnlyList<IFieldContextlessValidator<T>> GetFields() => _fields;
-    internal IReadOnlyList<IContextlessConditionalBranch<T>> GetConditionals() => _conditionals;
+        => new ObjectSchema<T, TContext>(Rules, _fields, _conditionals);
 
     public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
     {
@@ -130,8 +134,27 @@ public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
 /// </summary>
 public class ObjectSchema<T, TContext> : ContextSchema<T, TContext> where T : class
 {
-    private readonly List<IFieldContextValidator<T, TContext>> _fields = [];
-    private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
+    private readonly List<IFieldContextValidator<T, TContext>> _fields;
+    private readonly List<IConditionalBranch<T, TContext>> _conditionals;
+
+    public ObjectSchema() : this(new ContextRuleEngine<T, TContext>(), [], [])
+    {
+    }
+
+    internal ObjectSchema(ContextRuleEngine<T, TContext> rules, List<IFieldContextValidator<T, TContext>> fields, List<IConditionalBranch<T, TContext>> conditionals) : base(rules)
+    {
+        _fields = fields;
+        _conditionals = conditionals;
+    }
+
+    internal ObjectSchema(
+        ContextlessRuleEngine<T> rules,
+        IReadOnlyList<IFieldContextlessValidator<T>> fields,
+        IReadOnlyList<IContextlessConditionalBranch<T>> conditionals) : base(rules.ToContext<TContext>())
+    {
+        _fields = fields.Select(f => (IFieldContextValidator<T, TContext>)new FieldContextlessValidatorAdapter<T, TContext>(f)).ToList();
+        _conditionals = conditionals.Select(c => (IConditionalBranch<T, TContext>)new ContextlessConditionalBranchAdapter<T, TContext>(c)).ToList();
+    }
 
     public override async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
@@ -237,19 +260,4 @@ public class ObjectSchema<T, TContext> : ContextSchema<T, TContext> where T : cl
         return Refine((val, _) => predicate(val), message, code);
     }
 
-    internal void CopyFieldsFrom(IReadOnlyList<IFieldContextlessValidator<T>> fields)
-    {
-        foreach (var field in fields)
-        {
-            _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(field));
-        }
-    }
-
-    internal void CopyConditionalsFrom(IReadOnlyList<IContextlessConditionalBranch<T>> conditionals)
-    {
-        foreach (var conditional in conditionals)
-        {
-            _conditionals.Add(new ContextlessConditionalBranchAdapter<T, TContext>(conditional));
-        }
-    }
 }

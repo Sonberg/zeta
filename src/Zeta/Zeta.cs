@@ -1,3 +1,4 @@
+using Zeta.Core;
 using Zeta.Schemas;
 
 namespace Zeta;
@@ -23,7 +24,7 @@ public static class Z
     public static ObjectSchema<T> Object<T>() where T : class => new();
 
     // Array
-    public static ArraySchema<TElement> Array<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);
+    public static ArraySchema<TElement> Array<TElement>(ISchema<TElement> elementSchema) => new(elementSchema, new ContextlessRuleEngine<TElement[]>());
 
     // List
     public static ListSchema<TElement> List<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);

@@ -9,6 +9,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class DecimalSchema : ContextlessSchema<decimal>
 {
+    public DecimalSchema() { }
+
     public DecimalSchema Min(decimal min, string? message = null)
     {
         Use(new RefinementRule<decimal>((val, exec) =>
@@ -86,11 +88,7 @@ public sealed class DecimalSchema : ContextlessSchema<decimal>
     /// Creates a context-aware decimal schema with all rules from this schema.
     /// </summary>
     public DecimalSchema<TContext> WithContext<TContext>()
-    {
-        var schema = new DecimalSchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new DecimalSchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -98,6 +96,10 @@ public sealed class DecimalSchema : ContextlessSchema<decimal>
 /// </summary>
 public class DecimalSchema<TContext> : ContextSchema<decimal, TContext>
 {
+    public DecimalSchema() { }
+
+    public DecimalSchema(ContextRuleEngine<decimal, TContext> rules) : base(rules) { }
+
     public DecimalSchema<TContext> Min(decimal min, string? message = null)
     {
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>

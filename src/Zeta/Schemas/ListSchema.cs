@@ -11,7 +11,11 @@ public sealed class ListSchema<TElement> : ContextlessSchema<List<TElement>>
 {
     private readonly ISchema<TElement> _elementSchema;
 
-    public ListSchema(ISchema<TElement> elementSchema)
+    public ListSchema(ISchema<TElement> elementSchema) : this(elementSchema, new ContextlessRuleEngine<List<TElement>>())
+    {
+    }
+
+    public ListSchema(ISchema<TElement> elementSchema, ContextlessRuleEngine<List<TElement>> rules) : base(rules)
     {
         _elementSchema = elementSchema;
     }
@@ -80,11 +84,7 @@ public sealed class ListSchema<TElement> : ContextlessSchema<List<TElement>>
     /// The element schema is adapted to work in the context-aware environment.
     /// </summary>
     public ListSchema<TElement, TContext> WithContext<TContext>()
-    {
-        var schema = new ListSchema<TElement, TContext>(_elementSchema);
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new ListSchema<TElement, TContext>(_elementSchema, Rules);
 }
 
 /// <summary>
@@ -94,12 +94,20 @@ public class ListSchema<TElement, TContext> : ContextSchema<List<TElement>, TCon
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
 
-    public ListSchema(ISchema<TElement, TContext> elementSchema)
+    public ListSchema(ISchema<TElement, TContext> elementSchema) : this(elementSchema, new ContextRuleEngine<List<TElement>, TContext>())
+    {
+    }
+
+    public ListSchema(ISchema<TElement, TContext> elementSchema, ContextRuleEngine<List<TElement>, TContext> rules) : base(rules)
     {
         _elementSchema = elementSchema;
     }
 
-    public ListSchema(ISchema<TElement> elementSchema)
+    public ListSchema(ISchema<TElement> elementSchema) : this(new SchemaAdapter<TElement, TContext>(elementSchema))
+    {
+    }
+
+    public ListSchema(ISchema<TElement> elementSchema, ContextlessRuleEngine<List<TElement>> rules) : base(rules.ToContext<TContext>())
     {
         _elementSchema = new SchemaAdapter<TElement, TContext>(elementSchema);
     }

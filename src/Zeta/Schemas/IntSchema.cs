@@ -9,6 +9,8 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class IntSchema : ContextlessSchema<int>
 {
+    public IntSchema() { }
+
     public IntSchema Min(int min, string? message = null)
     {
         Use(new RefinementRule<int>((val, exec) =>
@@ -36,11 +38,7 @@ public sealed class IntSchema : ContextlessSchema<int>
     /// Creates a context-aware int schema with all rules from this schema.
     /// </summary>
     public IntSchema<TContext> WithContext<TContext>()
-    {
-        var schema = new IntSchema<TContext>();
-        schema.CopyRulesFrom(GetRuleEngine());
-        return schema;
-    }
+        => new IntSchema<TContext>(Rules.ToContext<TContext>());
 }
 
 /// <summary>
@@ -48,6 +46,10 @@ public sealed class IntSchema : ContextlessSchema<int>
 /// </summary>
 public class IntSchema<TContext> : ContextSchema<int, TContext>
 {
+    public IntSchema() { }
+
+    public IntSchema(ContextRuleEngine<int, TContext> rules) : base(rules) { }
+
     public IntSchema<TContext> Min(int min, string? message = null)
     {
         Use(new RefinementRule<int, TContext>((val, ctx) =>

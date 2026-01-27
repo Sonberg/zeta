@@ -1,3 +1,5 @@
+using System.Reflection;
+using Zeta.Core;
 using Zeta.Schemas;
 
 namespace Zeta.Tests;
@@ -116,4 +118,97 @@ public class SchemaConsistencyTests
     }
 
     private class TestClass { }
+
+    /// <summary>
+    /// Ensures all non-abstract classes inheriting from ContextlessSchema have a WithContext method.
+    /// This enforces the pattern since we can't use an abstract method due to return type constraints.
+    /// </summary>
+    [Fact]
+    public void AllContextlessSchemas_HaveWithContextMethod()
+    {
+        var assembly = typeof(ContextlessSchema<>).Assembly;
+        var contextlessSchemaType = typeof(ContextlessSchema<>);
+
+        var contextlessSchemaTypes = assembly.GetTypes()
+            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => IsSubclassOfGeneric(t, contextlessSchemaType))
+            .ToList();
+
+        var missingWithContext = new List<Type>();
+
+        foreach (var type in contextlessSchemaTypes)
+        {
+            // Look for a public generic method named "WithContext" with one type parameter
+            var withContextMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(m => m.Name == "WithContext"
+                    && m.IsGenericMethod
+                    && m.GetGenericArguments().Length == 1);
+
+            if (withContextMethod == null)
+            {
+                missingWithContext.Add(type);
+            }
+        }
+
+        Assert.True(
+            missingWithContext.Count == 0,
+            $"The following ContextlessSchema types are missing a WithContext<TContext>() method:\n" +
+            string.Join("\n", missingWithContext.Select(t => $"  - {t.FullName}")));
+    }
+
+    /// <summary>
+    /// Ensures WithContext methods return context-aware schema types (not just ISchema).
+    /// </summary>
+    [Fact]
+    public void AllContextlessSchemas_WithContextReturnsTypedSchema()
+    {
+        var assembly = typeof(ContextlessSchema<>).Assembly;
+        var contextlessSchemaType = typeof(ContextlessSchema<>);
+
+        var contextlessSchemaTypes = assembly.GetTypes()
+            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => IsSubclassOfGeneric(t, contextlessSchemaType))
+            .ToList();
+
+        var returnsInterfaceOnly = new List<(Type SchemaType, Type ReturnType)>();
+
+        foreach (var type in contextlessSchemaTypes)
+        {
+            var withContextMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(m => m.Name == "WithContext"
+                    && m.IsGenericMethod
+                    && m.GetGenericArguments().Length == 1);
+
+            if (withContextMethod == null) continue;
+
+            var returnType = withContextMethod.ReturnType;
+
+            // Check if return type is an interface (ISchema<T, TContext>)
+            // We want concrete types like StringSchema<TContext>, not ISchema<string, TContext>
+            if (returnType.IsInterface ||
+                (returnType.IsGenericType && returnType.GetGenericTypeDefinition().IsInterface))
+            {
+                returnsInterfaceOnly.Add((type, returnType));
+            }
+        }
+
+        Assert.True(
+            returnsInterfaceOnly.Count == 0,
+            $"The following ContextlessSchema types have WithContext<TContext>() returning an interface instead of a typed schema:\n" +
+            string.Join("\n", returnsInterfaceOnly.Select(x => $"  - {x.SchemaType.Name} returns {x.ReturnType.Name}")));
+    }
+
+    private static bool IsSubclassOfGeneric(Type type, Type genericBase)
+    {
+        while (type != null && type != typeof(object))
+        {
+            var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+            if (genericBase == cur)
+            {
+                return true;
+            }
+            type = type.BaseType!;
+        }
+        return false;
+    }
 }

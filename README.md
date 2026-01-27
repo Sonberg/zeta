@@ -690,3 +690,9 @@ public record ValidationError(
 ## License
 
 MIT
+
+## Wishes
+- More schema types (e.g., TimeSpan, Enum)
+- rename and seperate IntScema -> IntContextSchema & IntContextlessSchema. And move to seperate files. 
+- Merge ValidationContext & ExecutionContext into ValidationContext & ValidationContext<TContext>
+- Take property name from JsonPropertyName attribute if present or provided naming strategy
