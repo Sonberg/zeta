@@ -1,4 +1,4 @@
-namespace Zeta.Schemas;
+namespace Zeta.Validators;
 
 internal sealed class FieldContextContextValidator<TInstance, TProperty, TContext> : IFieldContextValidator<TInstance, TContext>
 {

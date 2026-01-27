@@ -1,4 +1,4 @@
-namespace Zeta.Schemas;
+namespace Zeta.Conditional;
 
 internal sealed class ContextAwareConditionalBranch<T, TContext> : IConditionalBranch<T, TContext> where T : class
 {

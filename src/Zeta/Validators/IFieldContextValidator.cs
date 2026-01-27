@@ -1,4 +1,4 @@
-namespace Zeta.Schemas;
+namespace Zeta.Validators;
 
 internal interface IFieldContextValidator<T, TContext>
 {

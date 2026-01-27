@@ -1,6 +1,6 @@
 using Zeta.Core;
 
-namespace Zeta.Schemas;
+namespace Zeta.Conditional;
 
 internal interface IContextlessConditionalBranch<T>
 {

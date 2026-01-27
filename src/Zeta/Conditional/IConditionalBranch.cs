@@ -1,4 +1,4 @@
-namespace Zeta.Schemas;
+namespace Zeta.Conditional;
 
 internal interface IConditionalBranch<T, TContext>
 {

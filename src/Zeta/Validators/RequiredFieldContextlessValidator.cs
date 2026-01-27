@@ -1,6 +1,6 @@
 using Zeta.Core;
 
-namespace Zeta.Schemas;
+namespace Zeta.Validators;
 
 internal sealed class RequiredFieldContextlessValidator<TInstance, TProperty> : IFieldContextlessValidator<TInstance>
 {

@@ -1,6 +1,6 @@
 using Zeta.Core;
 
-namespace Zeta.Schemas;
+namespace Zeta.Conditional;
 
 internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalBranch<T> where T : class
 {

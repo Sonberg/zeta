@@ -1,6 +1,8 @@
 using System.Linq.Expressions;
+using Zeta.Schemas;
+using Zeta.Validators;
 
-namespace Zeta.Schemas;
+namespace Zeta.Conditional;
 
 public sealed class ContextlessConditionalBuilder<T> where T : class
 {
