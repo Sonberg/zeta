@@ -4,7 +4,7 @@ namespace Zeta.Schemas;
 
 public sealed class ContextlessConditionalBuilder<T> where T : class
 {
-    internal List<IContextlessFieldValidator<T>> Validators { get; } = [];
+    internal List<IFieldContextlessValidator<T>> Validators { get; } = [];
 
     public ContextlessConditionalBuilder<T> Require<TProperty>(
         Expression<Func<T, TProperty>> propertySelector,
@@ -12,7 +12,7 @@ public sealed class ContextlessConditionalBuilder<T> where T : class
     {
         var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectSchema<T>.CreateGetter(propertySelector);
-        Validators.Add(new ContextlessRequiredFieldValidator<T, TProperty>(propertyName, getter, message));
+        Validators.Add(new RequiredFieldContextlessValidator<T, TProperty>(propertyName, getter, message));
         return this;
     }
 
@@ -22,7 +22,7 @@ public sealed class ContextlessConditionalBuilder<T> where T : class
     {
         var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectSchema<T>.CreateGetter(propertySelector);
-        Validators.Add(new ContextlessFieldValidator<T, TProperty>(propertyName, getter, schema));
+        Validators.Add(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema));
         return this;
     }
 

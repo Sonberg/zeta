@@ -15,7 +15,7 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
 {
     private readonly ObjectSchema<T> _inner;
     private readonly List<IValidationRule<T, TContext>> _rules = [];
-    private readonly List<IFieldValidator<T, TContext>> _fields = [];
+    private readonly List<IFieldContextValidator<T, TContext>> _fields = [];
     private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
 
     public ContextPromotedObjectSchema(ObjectSchema<T> inner)
@@ -76,7 +76,7 @@ public class ContextPromotedObjectSchema<T, TContext> : ISchema<T, TContext> whe
     {
         var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectSchema<T>.CreateGetter(propertySelector);
-        _fields.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
+        _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
 

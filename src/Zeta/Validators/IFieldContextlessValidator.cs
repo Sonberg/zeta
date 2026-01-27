@@ -2,7 +2,7 @@ using Zeta.Core;
 
 namespace Zeta.Schemas;
 
-internal interface IContextlessFieldValidator<T>
+internal interface IFieldContextlessValidator<T>
 {
     ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationExecutionContext execution);
 }

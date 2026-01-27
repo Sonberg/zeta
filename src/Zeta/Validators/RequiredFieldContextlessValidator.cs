@@ -2,14 +2,14 @@ using Zeta.Core;
 
 namespace Zeta.Schemas;
 
-internal sealed class ContextlessRequiredFieldValidator<TInstance, TProperty> : IContextlessFieldValidator<TInstance>
+internal sealed class RequiredFieldContextlessValidator<TInstance, TProperty> : IFieldContextlessValidator<TInstance>
 {
     private readonly string _name;
     private readonly Func<TInstance, TProperty> _getter;
     private readonly string _message;
     private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
 
-    public ContextlessRequiredFieldValidator(string name, Func<TInstance, TProperty> getter, string? message)
+    public RequiredFieldContextlessValidator(string name, Func<TInstance, TProperty> getter, string? message)
     {
         _name = name;
         if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))

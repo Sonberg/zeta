@@ -4,7 +4,7 @@ namespace Zeta.Schemas;
 
 public sealed class ConditionalBuilder<T, TContext> where T : class
 {
-    internal List<IFieldValidator<T, TContext>> Validators { get; } = [];
+    internal List<IFieldContextValidator<T, TContext>> Validators { get; } = [];
 
     public ConditionalBuilder<T, TContext> Require<TProperty>(
         Expression<Func<T, TProperty>> propertySelector,
@@ -12,7 +12,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     {
         var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectSchema<T>.CreateGetter(propertySelector);
-        Validators.Add(new RequiredFieldValidator<T, TProperty, TContext>(propertyName, getter, message));
+        Validators.Add(new RequiredFieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, message));
         return this;
     }
 
@@ -22,7 +22,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     {
         var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectSchema<T>.CreateGetter(propertySelector);
-        Validators.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
+        Validators.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
 

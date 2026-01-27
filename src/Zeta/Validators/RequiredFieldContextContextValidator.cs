@@ -1,6 +1,6 @@
 namespace Zeta.Schemas;
 
-internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : IFieldValidator<TInstance, TContext>
+internal sealed class RequiredFieldContextContextValidator<TInstance, TProperty, TContext> : IFieldContextValidator<TInstance, TContext>
 {
     private readonly string _name;
     private readonly Func<TInstance, TProperty> _getter;
@@ -8,7 +8,7 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
     
     private static readonly IReadOnlyList<ValidationError> Empty = [];
 
-    public RequiredFieldValidator(string name, Func<TInstance, TProperty> getter, string? message)
+    public RequiredFieldContextContextValidator(string name, Func<TInstance, TProperty> getter, string? message)
     {
         _name = name;
         if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))

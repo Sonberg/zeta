@@ -1,12 +1,12 @@
 namespace Zeta.Schemas;
 
-internal sealed class FieldValidator<TInstance, TProperty, TContext> : IFieldValidator<TInstance, TContext>
+internal sealed class FieldContextContextValidator<TInstance, TProperty, TContext> : IFieldContextValidator<TInstance, TContext>
 {
     private readonly string _name;
     private readonly Func<TInstance, TProperty> _getter;
     private readonly ISchema<TProperty, TContext> _schema;
 
-    public FieldValidator(string name, Func<TInstance, TProperty> getter, ISchema<TProperty, TContext> schema)
+    public FieldContextContextValidator(string name, Func<TInstance, TProperty> getter, ISchema<TProperty, TContext> schema)
     {
         _name = name;
         if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))

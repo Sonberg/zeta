@@ -10,7 +10,7 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
 {
-    private readonly List<IContextlessFieldValidator<T>> _fields = [];
+    private readonly List<IFieldContextlessValidator<T>> _fields = [];
     private readonly List<IContextlessConditionalBranch<T>> _conditionals = [];
 
     public override async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
@@ -57,7 +57,7 @@ public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
     {
         var propertyName = GetPropertyName(propertySelector);
         var getter = CreateGetter(propertySelector);
-        _fields.Add(new ContextlessFieldValidator<T, TProperty>(propertyName, getter, schema));
+        _fields.Add(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema));
         return this;
     }
 
@@ -119,7 +119,7 @@ public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
 /// </summary>
 public class ObjectSchema<T, TContext> : ContextSchema<T, TContext> where T : class
 {
-    private readonly List<IFieldValidator<T, TContext>> _fields = [];
+    private readonly List<IFieldContextValidator<T, TContext>> _fields = [];
     private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
 
     public override async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
@@ -160,7 +160,7 @@ public class ObjectSchema<T, TContext> : ContextSchema<T, TContext> where T : cl
     {
         var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectSchema<T>.CreateGetter(propertySelector);
-        _fields.Add(new FieldValidator<T, TProperty, TContext>(propertyName, getter, schema));
+        _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
 
