@@ -16,14 +16,14 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
     public DoubleContextSchema<TContext> Min(double min, string? message = null)
     {
         Use(new RefinementRule<double, TContext>((val, ctx) =>
-            NumericValidators.Min(val, min, ctx.Execution.Path, message)));
+            NumericValidators.Min(val, min, ctx.Path, message)));
         return this;
     }
 
     public DoubleContextSchema<TContext> Max(double max, string? message = null)
     {
         Use(new RefinementRule<double, TContext>((val, ctx) =>
-            NumericValidators.Max(val, max, ctx.Execution.Path, message)));
+            NumericValidators.Max(val, max, ctx.Path, message)));
         return this;
     }
 
@@ -32,7 +32,7 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
         Use(new RefinementRule<double, TContext>((val, ctx) =>
             val > 0
                 ? null
-                : new ValidationError(ctx.Execution.Path, "positive", message ?? "Must be positive")));
+                : new ValidationError(ctx.Path, "positive", message ?? "Must be positive")));
         return this;
     }
 
@@ -41,7 +41,7 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
         Use(new RefinementRule<double, TContext>((val, ctx) =>
             val < 0
                 ? null
-                : new ValidationError(ctx.Execution.Path, "negative", message ?? "Must be negative")));
+                : new ValidationError(ctx.Path, "negative", message ?? "Must be negative")));
         return this;
     }
 
@@ -50,7 +50,7 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
         Use(new RefinementRule<double, TContext>((val, ctx) =>
             !double.IsNaN(val) && !double.IsInfinity(val)
                 ? null
-                : new ValidationError(ctx.Execution.Path, "finite", message ?? "Must be a finite number")));
+                : new ValidationError(ctx.Path, "finite", message ?? "Must be a finite number")));
         return this;
     }
 
@@ -59,7 +59,7 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
         Use(new RefinementRule<double, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

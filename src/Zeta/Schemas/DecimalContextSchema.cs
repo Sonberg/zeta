@@ -16,14 +16,14 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
     public DecimalContextSchema<TContext> Min(decimal min, string? message = null)
     {
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>
-            NumericValidators.Min(val, min, ctx.Execution.Path, message)));
+            NumericValidators.Min(val, min, ctx.Path, message)));
         return this;
     }
 
     public DecimalContextSchema<TContext> Max(decimal max, string? message = null)
     {
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>
-            NumericValidators.Max(val, max, ctx.Execution.Path, message)));
+            NumericValidators.Max(val, max, ctx.Path, message)));
         return this;
     }
 
@@ -32,7 +32,7 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>
             val > 0
                 ? null
-                : new ValidationError(ctx.Execution.Path, "positive", message ?? "Must be positive")));
+                : new ValidationError(ctx.Path, "positive", message ?? "Must be positive")));
         return this;
     }
 
@@ -41,7 +41,7 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>
             val < 0
                 ? null
-                : new ValidationError(ctx.Execution.Path, "negative", message ?? "Must be negative")));
+                : new ValidationError(ctx.Path, "negative", message ?? "Must be negative")));
         return this;
     }
 
@@ -50,7 +50,7 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>
             DecimalContextlessSchema.GetDecimalPlaces(val) <= maxDecimalPlaces
                 ? null
-                : new ValidationError(ctx.Execution.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places")));
+                : new ValidationError(ctx.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places")));
         return this;
     }
 
@@ -59,7 +59,7 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>
             val % step == 0
                 ? null
-                : new ValidationError(ctx.Execution.Path, "multiple_of", message ?? $"Must be a multiple of {step}")));
+                : new ValidationError(ctx.Path, "multiple_of", message ?? $"Must be a multiple of {step}")));
         return this;
     }
 
@@ -68,7 +68,7 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
         Use(new RefinementRule<decimal, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

@@ -7,7 +7,7 @@ internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalB
     private readonly Func<T, bool> _condition;
     private readonly ContextlessConditionalBuilder<T> _thenBranch;
     private readonly ContextlessConditionalBuilder<T>? _elseBranch;
-    private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
+    private static readonly IReadOnlyList<ValidationError> EmptyErrors = [];
 
     public ContextlessConditionalBranch(
         Func<T, bool> condition,
@@ -19,7 +19,7 @@ internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalB
         _elseBranch = elseBranch;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationExecutionContext execution)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext context)
     {
         var branch = _condition(instance) ? _thenBranch : _elseBranch;
         if (branch == null)
@@ -28,7 +28,7 @@ internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalB
         List<ValidationError>? errors = null;
         foreach (var validator in branch.Validators)
         {
-            var fieldErrors = await validator.ValidateAsync(instance, execution);
+            var fieldErrors = await validator.ValidateAsync(instance, context);
             if (fieldErrors.Count > 0)
             {
                 errors ??= [];

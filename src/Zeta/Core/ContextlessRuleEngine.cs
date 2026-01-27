@@ -10,16 +10,14 @@ public sealed class ContextlessRuleEngine<T>
     private readonly List<IValidationRule<T>> _rules = [];
 
     public void Add(IValidationRule<T> rule) => _rules.Add(rule);
-
-    public IReadOnlyList<IValidationRule<T>> GetRules() => _rules;
-
-    public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationExecutionContext execution)
+    
+    public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext context)
     {
         List<ValidationError>? errors = null;
 
         foreach (var rule in _rules)
         {
-            var error = await rule.ValidateAsync(value, execution);
+            var error = await rule.ValidateAsync(value, context);
             if (error == null) continue;
             errors ??= [];
             errors.Add(error);

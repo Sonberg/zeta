@@ -6,16 +6,23 @@ public abstract class ContextlessSchema<T> : ISchema<T>
 {
     protected ContextlessRuleEngine<T> Rules { get; }
 
-    protected ContextlessSchema() : this(new ContextlessRuleEngine<T>()) { }
+    protected ContextlessSchema() : this(new ContextlessRuleEngine<T>())
+    {
+    }
 
     protected ContextlessSchema(ContextlessRuleEngine<T> rules)
     {
         Rules = rules;
     }
 
-    public virtual async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? context = null)
+    public ValueTask<Result<T>> ValidateAsync(T value)
     {
-        var errors = await Rules.ExecuteAsync(value, context ?? ValidationExecutionContext.Empty);
+        return ValidateAsync(value, ValidationContext.Empty);
+    }
+
+    public virtual async ValueTask<Result<T>> ValidateAsync(T value, ValidationContext context)
+    {
+        var errors = await Rules.ExecuteAsync(value, context);
 
         return errors == null
             ? Result<T>.Success(value)

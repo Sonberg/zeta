@@ -28,9 +28,14 @@ public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : 
         _conditionals = conditionals;
     }
 
-    public override async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
+
+    public ValueTask<Result<T>> ValidateAsync(T value)
     {
-        execution ??= ValidationExecutionContext.Empty;
+        return ValidateAsync(value, ValidationContext.Empty);
+    }
+
+    public override async ValueTask<Result<T>> ValidateAsync(T value, ValidationContext execution)
+    {
         List<ValidationError>? errors = null;
 
         // Validate rules

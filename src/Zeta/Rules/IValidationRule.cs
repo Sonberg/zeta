@@ -8,7 +8,7 @@ namespace Zeta.Rules;
 /// </summary>
 public interface IValidationRule<in T>
 {
-    ValueTask<ValidationError?> ValidateAsync(T value, ValidationExecutionContext execution);
+    ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext context);
 }
 
 /// <summary>

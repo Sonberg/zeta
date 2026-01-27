@@ -1,5 +1,3 @@
-using Zeta.Core;
-
 namespace Zeta;
 
 /// <summary>
@@ -23,5 +21,5 @@ public interface ISchema<T>
     /// <summary>
     /// Validates the given value asynchronously without context.
     /// </summary>
-    ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null);
+    ValueTask<Result<T>> ValidateAsync(T value, ValidationContext context);
 }

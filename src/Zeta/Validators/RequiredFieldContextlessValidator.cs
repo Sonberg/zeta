@@ -18,7 +18,7 @@ internal sealed class RequiredFieldContextlessValidator<TInstance, TProperty> : 
         _message = message ?? $"{_name} is required";
     }
 
-    public ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationExecutionContext execution)
+    public ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext execution)
     {
         var value = _getter(instance);
         if (value is null)

@@ -16,6 +16,6 @@ internal sealed class ContextlessConditionalBranchAdapter<T, TContext> : ICondit
 
     public ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context)
     {
-        return _inner.ValidateAsync(instance, context.Execution);
+        return _inner.ValidateAsync(instance, context);
     }
 }

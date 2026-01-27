@@ -20,9 +20,8 @@ public sealed class ListContextlessSchema<TElement> : ContextlessSchema<List<TEl
         _elementSchema = elementSchema;
     }
 
-    public override async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationContext execution)
     {
-        execution ??= ValidationExecutionContext.Empty;
         var errors = await Rules.ExecuteAsync(value, execution);
 
         // Validate each element

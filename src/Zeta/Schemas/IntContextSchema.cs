@@ -16,14 +16,14 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext>
     public IntContextSchema<TContext> Min(int min, string? message = null)
     {
         Use(new RefinementRule<int, TContext>((val, ctx) =>
-            NumericValidators.Min(val, min, ctx.Execution.Path, message)));
+            NumericValidators.Min(val, min, ctx.Path, message)));
         return this;
     }
 
     public IntContextSchema<TContext> Max(int max, string? message = null)
     {
         Use(new RefinementRule<int, TContext>((val, ctx) =>
-            NumericValidators.Max(val, max, ctx.Execution.Path, message)));
+            NumericValidators.Max(val, max, ctx.Path, message)));
         return this;
     }
 
@@ -32,7 +32,7 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext>
         Use(new RefinementRule<int, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

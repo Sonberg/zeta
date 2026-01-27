@@ -10,7 +10,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().Past();
 
         // Act - date before fake "now" should pass
@@ -25,7 +25,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().Past();
 
         // Act - date after fake "now" should fail
@@ -41,7 +41,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().Future();
 
         // Act - date after fake "now" should pass
@@ -56,7 +56,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().Future();
 
         // Act - date before fake "now" should fail
@@ -72,7 +72,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15, person born 2006-06-15 would be exactly 18
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().MinAge(18);
 
         // Act - someone born on 2006-06-15 is exactly 18 on 2024-06-15
@@ -88,7 +88,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().MinAge(18);
 
         // Act - someone born on 2006-06-16 is not yet 18 on 2024-06-15
@@ -105,7 +105,7 @@ public class TimeProviderTests
     {
         // Arrange - start at 2024-06-15, person born 2006-06-16 is 17
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().MinAge(18);
         var birthDate = new DateTime(2006, 6, 16, 0, 0, 0, DateTimeKind.Utc);
 
@@ -115,7 +115,7 @@ public class TimeProviderTests
 
         // Advance time by 1 day - now they're 18
         fakeTime.Advance(TimeSpan.FromDays(1));
-        var newContext = new ValidationExecutionContext(timeProvider: fakeTime);
+        var newContext = new ValidationContext(timeProvider: fakeTime);
 
         // Act
         var result2 = await schema.ValidateAsync(birthDate, newContext);
@@ -129,7 +129,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().WithinDays(7);
 
         // Act - date within 7 days of fake "now" should pass
@@ -144,7 +144,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateTime().WithinDays(7);
 
         // Act - date more than 7 days from fake "now" should fail
@@ -160,7 +160,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateOnly().Past();
 
         // Act - date before fake "now" should pass
@@ -175,7 +175,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateOnly().Future();
 
         // Act - date after fake "now" should pass
@@ -190,7 +190,7 @@ public class TimeProviderTests
     {
         // Arrange - "now" is 2024-06-15
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
         var schema = Z.DateOnly().MinAge(21);
 
         // Act - someone born 2003-06-15 is exactly 21
@@ -205,7 +205,7 @@ public class TimeProviderTests
     {
         // Arrange
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationExecutionContext(timeProvider: fakeTime);
+        var context = new ValidationContext(timeProvider: fakeTime);
 
         // Act
         var nested = context.Push("child");

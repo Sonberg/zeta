@@ -303,7 +303,7 @@ public class ObjectSchemaTests
                 then => then.Require(l => l.EmployerName));
 
         var context = new LoanContext(RequireEmployment: true, MinIncomeThreshold: 0);
-        var validationContext = new ValidationContext<LoanContext>(context, ValidationExecutionContext.Empty);
+        var validationContext = new ValidationContext<LoanContext>(context);
 
         var result = await schema.ValidateAsync(new LoanApplication(50000, true, null), validationContext);
         Assert.False(result.IsSuccess);

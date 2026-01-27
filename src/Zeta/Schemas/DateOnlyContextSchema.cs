@@ -18,7 +18,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val >= min
                 ? null
-                : new ValidationError(ctx.Execution.Path, "min_date", message ?? $"Must be at or after {min:O}")));
+                : new ValidationError(ctx.Path, "min_date", message ?? $"Must be at or after {min:O}")));
         return this;
     }
 
@@ -27,7 +27,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val <= max
                 ? null
-                : new ValidationError(ctx.Execution.Path, "max_date", message ?? $"Must be at or before {max:O}")));
+                : new ValidationError(ctx.Path, "max_date", message ?? $"Must be at or before {max:O}")));
         return this;
     }
 
@@ -35,10 +35,10 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
     {
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
-            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
+            var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
                 ? null
-                : new ValidationError(ctx.Execution.Path, "past", message ?? "Must be in the past");
+                : new ValidationError(ctx.Path, "past", message ?? "Must be in the past");
         }));
         return this;
     }
@@ -47,10 +47,10 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
     {
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
-            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
+            var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
                 ? null
-                : new ValidationError(ctx.Execution.Path, "future", message ?? "Must be in the future");
+                : new ValidationError(ctx.Path, "future", message ?? "Must be in the future");
         }));
         return this;
     }
@@ -60,7 +60,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val >= min && val <= max
                 ? null
-                : new ValidationError(ctx.Execution.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
+                : new ValidationError(ctx.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
         return this;
     }
 
@@ -69,7 +69,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
-                : new ValidationError(ctx.Execution.Path, "weekday", message ?? "Must be a weekday")));
+                : new ValidationError(ctx.Path, "weekday", message ?? "Must be a weekday")));
         return this;
     }
 
@@ -78,7 +78,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
-                : new ValidationError(ctx.Execution.Path, "weekend", message ?? "Must be a weekend")));
+                : new ValidationError(ctx.Path, "weekend", message ?? "Must be a weekend")));
         return this;
     }
 
@@ -86,13 +86,13 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
     {
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
-            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
+            var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
             if (val > today.AddYears(-age)) age--;
 
             return age >= years
                 ? null
-                : new ValidationError(ctx.Execution.Path, "min_age", message ?? $"Must be at least {years} years old");
+                : new ValidationError(ctx.Path, "min_age", message ?? $"Must be at least {years} years old");
         }));
         return this;
     }
@@ -101,13 +101,13 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
     {
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
         {
-            var today = DateOnly.FromDateTime(ctx.Execution.TimeProvider.GetUtcNow().UtcDateTime);
+            var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
             if (val > today.AddYears(-age)) age--;
 
             return age <= years
                 ? null
-                : new ValidationError(ctx.Execution.Path, "max_age", message ?? $"Must be at most {years} years old");
+                : new ValidationError(ctx.Path, "max_age", message ?? $"Must be at most {years} years old");
         }));
         return this;
     }
@@ -117,7 +117,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
         Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

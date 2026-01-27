@@ -61,7 +61,7 @@ public sealed class ZetaValidator : IZetaValidator
 
     public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default)
     {
-        return schema.ValidateAsync(value, new ValidationExecutionContext( _services, ct, _timeProvider));
+        return schema.ValidateAsync(value, new ValidationContext(_services, _timeProvider, ct));
     }
 
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
@@ -87,8 +87,9 @@ public sealed class ZetaValidator : IZetaValidator
                 $"Register a factory or use a schema without context.");
         }
 
-        var executionContext = new ValidationExecutionContext(_services, ct, _timeProvider);
-        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(default!, executionContext));
+        // TODO: Maybe not needed.
+        var executionContext = new ValidationContext<TContext>(default!, _services, _timeProvider, ct);
+        var result = await schema.ValidateAsync(value, executionContext);
 
         return result.IsSuccess
             ? Result<T>.Success(value)
@@ -101,9 +102,8 @@ public sealed class ZetaValidator : IZetaValidator
         IValidationContextFactory<T, TContext> factory,
         CancellationToken ct = default)
     {
-        var executionContext = new ValidationExecutionContext( _services, ct, _timeProvider);
         var contextData = await factory.CreateAsync(value, _services, ct);
-        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, executionContext));
+        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _services, _timeProvider, ct));
 
         return result.IsSuccess
             ? Result<T>.Success(value)

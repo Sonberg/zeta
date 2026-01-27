@@ -17,7 +17,7 @@ internal sealed class SchemaAdapter<T, TContext> : ISchema<T, TContext>
 
     public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
-        var result = await _inner.ValidateAsync(value, context.Execution);
+        var result = await _inner.ValidateAsync(value, context);
         return result.IsSuccess
             ? Result.Success()
             : Result.Failure(result.Errors);

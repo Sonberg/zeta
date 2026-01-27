@@ -115,8 +115,7 @@ public class WithContextTests
             .Nullable();
 
         var context = new ValidationContext<UserContext>(
-            new UserContext("banned@example.com", 100),
-            ValidationExecutionContext.Empty);
+            new UserContext("banned@example.com", 100));
 
         // Null should be valid
         var nullResult = await schema.ValidateAsync(null, context);
@@ -141,8 +140,7 @@ public class WithContextTests
             .Nullable();
 
         var context = new ValidationContext<UserContext>(
-            new UserContext("", 100),
-            ValidationExecutionContext.Empty);
+            new UserContext("", 100));
 
         // Null should be valid
         var nullResult = await schema.ValidateAsync(null, context);
@@ -183,11 +181,9 @@ public class WithContextTests
         var schema = Z.String()
             .WithContext<UserContext>()
             .Refine((val, ctx) => val != ctx.BannedEmail, "Banned");
-
-        var execution = ValidationExecutionContext.Empty.Push("user").Push("email");
+        
         var context = new ValidationContext<UserContext>(
-            new UserContext("banned@example.com", 100),
-            execution);
+            new UserContext("banned@example.com", 100)).Push("user").Push("email");
 
         var result = await schema.ValidateAsync("banned@example.com", context);
         Assert.False(result.IsSuccess);
@@ -465,8 +461,12 @@ public class WithContextTests
     }
 
     private record User(string Email);
+
     private record Person(string Name, int Age);
+
     private record Order(decimal Total, string? DiscountCode);
+
     private record GuidContext(Guid BannedId);
+
     private record DateContext(DateTime MaxDate);
 }

@@ -32,7 +32,7 @@ public class ValidationBenchmarks
     [Benchmark(Baseline = true)]
     public async Task<bool> Zeta_Valid()
     {
-        var result = await _zetaSchema.ValidateAsync(_validUser);
+        var result = await _zetaSchema.ValidateAsync(_validUser, ValidationContext.Empty);
         return result.IsSuccess;
     }
 
@@ -53,7 +53,7 @@ public class ValidationBenchmarks
     [Benchmark]
     public bool DataAnnotations_Valid()
     {
-        var context = new ValidationContext(_validUserAnnotated);
+        var context = new System.ComponentModel.DataAnnotations.ValidationContext(_validUserAnnotated);
         var results = new List<ValidationResult>();
         return Validator.TryValidateObject(_validUserAnnotated, context, results, validateAllProperties: true);
     }
@@ -63,7 +63,7 @@ public class ValidationBenchmarks
     [Benchmark]
     public async Task<int> Zeta_Invalid()
     {
-        var result = await _zetaSchema.ValidateAsync(_invalidUser);
+        var result = await _zetaSchema.ValidateAsync(_invalidUser, ValidationContext.Empty);
         return result.Errors.Count;
     }
 
@@ -84,7 +84,7 @@ public class ValidationBenchmarks
     [Benchmark]
     public int DataAnnotations_Invalid()
     {
-        var context = new ValidationContext(_invalidUserAnnotated);
+        var context = new System.ComponentModel.DataAnnotations.ValidationContext(_invalidUserAnnotated);
         var results = new List<ValidationResult>();
         Validator.TryValidateObject(_invalidUserAnnotated, context, results, validateAllProperties: true);
         return results.Count;

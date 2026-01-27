@@ -16,15 +16,14 @@ public sealed class ArrayContextlessSchema<TElement> : ContextlessSchema<TElemen
         _elementSchema = elementSchema;
     }
 
-    public override async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationContext context)
     {
-        execution ??= ValidationExecutionContext.Empty;
-        var errors = await Rules.ExecuteAsync(value, execution);
+        var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element
         for (var i = 0; i < value.Length; i++)
         {
-            var elementExecution = execution.PushIndex(i);
+            var elementExecution = context.PushIndex(i);
             var result = await _elementSchema.ValidateAsync(value[i], elementExecution);
             if (!result.IsFailure) continue;
 

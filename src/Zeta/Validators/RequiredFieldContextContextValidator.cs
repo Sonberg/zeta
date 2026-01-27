@@ -22,7 +22,7 @@ internal sealed class RequiredFieldContextContextValidator<TInstance, TProperty,
         var value = _getter(instance);
         if (value is null)
         {
-            var path = string.IsNullOrEmpty(context.Execution.Path) ? _name : $"{context.Execution.Path}.{_name}";
+            var path = string.IsNullOrEmpty(context.Path) ? _name : $"{context.Path}.{_name}";
             return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
         }
 

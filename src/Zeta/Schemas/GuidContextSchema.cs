@@ -17,7 +17,7 @@ public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext>
         Use(new RefinementRule<Guid, TContext>((val, ctx) =>
             val != Guid.Empty
                 ? null
-                : new ValidationError(ctx.Execution.Path, "not_empty", message ?? "GUID cannot be empty")));
+                : new ValidationError(ctx.Path, "not_empty", message ?? "GUID cannot be empty")));
         return this;
     }
 
@@ -29,7 +29,7 @@ public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext>
             var guidVersion = (bytes[7] >> 4) & 0x0F;
             return guidVersion == version
                 ? null
-                : new ValidationError(ctx.Execution.Path, "version", message ?? $"GUID must be version {version}");
+                : new ValidationError(ctx.Path, "version", message ?? $"GUID must be version {version}");
         }));
         return this;
     }
@@ -39,7 +39,7 @@ public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext>
         Use(new RefinementRule<Guid, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

@@ -27,10 +27,7 @@ public class ArrayContextSchema<TElement, TContext> : ContextSchema<TElement[], 
         // Validate each element
         for (var i = 0; i < value.Length; i++)
         {
-            var elementContext = new ValidationContext<TContext>(
-                context.Data,
-                context.Execution.PushIndex(i));
-
+            var elementContext = context.PushIndex(i);
             var result = await _elementSchema.ValidateAsync(value[i], elementContext);
             if (!result.IsFailure) continue;
 
@@ -48,7 +45,7 @@ public class ArrayContextSchema<TElement, TContext> : ContextSchema<TElement[], 
         Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             val.Length >= min
                 ? null
-                : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
+                : new ValidationError(ctx.Path, "min_length", message ?? $"Must have at least {min} items")));
         return this;
     }
 
@@ -57,7 +54,7 @@ public class ArrayContextSchema<TElement, TContext> : ContextSchema<TElement[], 
         Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             val.Length <= max
                 ? null
-                : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
+                : new ValidationError(ctx.Path, "max_length", message ?? $"Must have at most {max} items")));
         return this;
     }
 
@@ -66,7 +63,7 @@ public class ArrayContextSchema<TElement, TContext> : ContextSchema<TElement[], 
         Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             val.Length == exact
                 ? null
-                : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
+                : new ValidationError(ctx.Path, "length", message ?? $"Must have exactly {exact} items")));
         return this;
     }
 
@@ -80,7 +77,7 @@ public class ArrayContextSchema<TElement, TContext> : ContextSchema<TElement[], 
         Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

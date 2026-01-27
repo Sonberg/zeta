@@ -15,7 +15,7 @@ public sealed class NullableContextlessSchema<T> : ContextlessSchema<T?> where T
         _inner = inner;
     }
 
-    public override async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationContext execution)
     {
         if (value is null)
         {
@@ -46,7 +46,7 @@ public sealed class NullableValueContextlessSchema<T> : ContextlessSchema<T?> wh
         _inner = inner;
     }
 
-    public override async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationContext execution)
     {
         if (!value.HasValue)
         {

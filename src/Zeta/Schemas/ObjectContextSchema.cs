@@ -128,7 +128,7 @@ public class ObjectContextSchema<T, TContext> : ContextSchema<T, TContext> where
         Use(new RefinementRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

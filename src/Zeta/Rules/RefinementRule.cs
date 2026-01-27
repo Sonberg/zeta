@@ -8,12 +8,12 @@ namespace Zeta.Rules;
 /// </summary>
 public readonly struct RefinementRule<T> : IValidationRule<T>
 {
-    private readonly Func<T, ValidationExecutionContext, ValueTask<ValidationError?>> _validate;
+    private readonly Func<T, ValidationContext, ValueTask<ValidationError?>> _validate;
 
     /// <summary>
     /// Creates a rule from a synchronous delegate.
     /// </summary>
-    public RefinementRule(Func<T, ValidationExecutionContext, ValidationError?> validate)
+    public RefinementRule(Func<T, ValidationContext, ValidationError?> validate)
     {
         _validate = (val, exec) => new ValueTask<ValidationError?>(validate(val, exec));
     }
@@ -21,14 +21,14 @@ public readonly struct RefinementRule<T> : IValidationRule<T>
     /// <summary>
     /// Creates a rule from an asynchronous delegate.
     /// </summary>
-    public RefinementRule(Func<T, ValidationExecutionContext, ValueTask<ValidationError?>> validate)
+    public RefinementRule(Func<T, ValidationContext, ValueTask<ValidationError?>> validate)
     {
         _validate = validate;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationExecutionContext execution)
+    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext context)
     {
-        return _validate(value, execution);
+        return _validate(value, context);
     }
 }
 

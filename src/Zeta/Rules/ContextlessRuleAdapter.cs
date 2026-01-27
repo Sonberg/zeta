@@ -1,5 +1,3 @@
-using Zeta.Core;
-
 namespace Zeta.Rules;
 
 /// <summary>
@@ -16,6 +14,6 @@ public readonly struct ContextlessRuleAdapter<T, TContext> : IValidationRule<T, 
 
     public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context)
     {
-        return _inner.ValidateAsync(value, context.Execution);
+        return _inner.ValidateAsync(value, context);
     }
 }

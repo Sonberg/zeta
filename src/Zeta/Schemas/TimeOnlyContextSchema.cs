@@ -18,7 +18,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             val >= min
                 ? null
-                : new ValidationError(ctx.Execution.Path, "min_time", message ?? $"Must be at or after {min:t}")));
+                : new ValidationError(ctx.Path, "min_time", message ?? $"Must be at or after {min:t}")));
         return this;
     }
 
@@ -27,7 +27,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             val <= max
                 ? null
-                : new ValidationError(ctx.Execution.Path, "max_time", message ?? $"Must be at or before {max:t}")));
+                : new ValidationError(ctx.Path, "max_time", message ?? $"Must be at or before {max:t}")));
         return this;
     }
 
@@ -36,7 +36,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             val >= min && val <= max
                 ? null
-                : new ValidationError(ctx.Execution.Path, "between", message ?? $"Must be between {min:t} and {max:t}")));
+                : new ValidationError(ctx.Path, "between", message ?? $"Must be between {min:t} and {max:t}")));
         return this;
     }
 
@@ -47,7 +47,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             val >= businessStart && val <= businessEnd
                 ? null
-                : new ValidationError(ctx.Execution.Path, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})")));
+                : new ValidationError(ctx.Path, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})")));
         return this;
     }
 
@@ -56,7 +56,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             val.Hour < 12
                 ? null
-                : new ValidationError(ctx.Execution.Path, "morning", message ?? "Must be in the morning (before 12:00)")));
+                : new ValidationError(ctx.Path, "morning", message ?? "Must be in the morning (before 12:00)")));
         return this;
     }
 
@@ -65,7 +65,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             val.Hour >= 12 && val.Hour < 18
                 ? null
-                : new ValidationError(ctx.Execution.Path, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)")));
+                : new ValidationError(ctx.Path, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)")));
         return this;
     }
 
@@ -74,7 +74,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             val.Hour >= 18
                 ? null
-                : new ValidationError(ctx.Execution.Path, "evening", message ?? "Must be in the evening (after 18:00)")));
+                : new ValidationError(ctx.Path, "evening", message ?? "Must be in the evening (after 18:00)")));
         return this;
     }
 
@@ -83,7 +83,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
         Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 

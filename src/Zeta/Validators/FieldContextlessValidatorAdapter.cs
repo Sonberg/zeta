@@ -16,6 +16,6 @@ internal sealed class FieldContextlessValidatorAdapter<T, TContext> : IFieldCont
 
     public ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T instance, ValidationContext<TContext> context)
     {
-        return _inner.ValidateAsync(instance, context.Execution);
+        return _inner.ValidateAsync(instance, context);
     }
 }

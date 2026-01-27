@@ -17,7 +17,7 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext>
         Use(new RefinementRule<bool, TContext>((val, ctx) =>
             val
                 ? null
-                : new ValidationError(ctx.Execution.Path, "is_true", message ?? "Must be true")));
+                : new ValidationError(ctx.Path, "is_true", message ?? "Must be true")));
         return this;
     }
 
@@ -26,7 +26,7 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext>
         Use(new RefinementRule<bool, TContext>((val, ctx) =>
             !val
                 ? null
-                : new ValidationError(ctx.Execution.Path, "is_false", message ?? "Must be false")));
+                : new ValidationError(ctx.Path, "is_false", message ?? "Must be false")));
         return this;
     }
 
@@ -35,7 +35,7 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext>
         Use(new RefinementRule<bool, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Execution.Path, code, message)));
+                : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 
