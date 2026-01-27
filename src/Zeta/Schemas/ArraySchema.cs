@@ -73,6 +73,17 @@ public sealed class ArraySchema<TElement> : ContextlessSchema<TElement[]>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware array schema with all rules from this schema.
+    /// The element schema is adapted to work in the context-aware environment.
+    /// </summary>
+    public ArraySchema<TElement, TContext> WithContext<TContext>()
+    {
+        var schema = new ArraySchema<TElement, TContext>(_elementSchema);
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

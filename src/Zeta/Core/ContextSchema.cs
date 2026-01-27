@@ -22,4 +22,12 @@ public abstract class ContextSchema<T, TContext> : ISchema<T, TContext>
     {
         Rules.Add(rule);
     }
+
+    /// <summary>
+    /// Copies rules from a contextless schema's rule engine.
+    /// </summary>
+    internal void CopyRulesFrom(ContextlessRuleEngine<T> source)
+    {
+        Rules.CopyFrom(source);
+    }
 }

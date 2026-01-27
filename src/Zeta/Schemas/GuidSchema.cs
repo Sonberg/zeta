@@ -38,6 +38,16 @@ public sealed class GuidSchema : ContextlessSchema<Guid>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware Guid schema with all rules from this schema.
+    /// </summary>
+    public GuidSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new GuidSchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

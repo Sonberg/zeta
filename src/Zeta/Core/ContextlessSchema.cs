@@ -19,4 +19,9 @@ public abstract class ContextlessSchema<T> : ISchema<T>
     {
         Rules.Add(rule);
     }
+
+    /// <summary>
+    /// Gets the rule engine for transferring rules to context-aware schemas.
+    /// </summary>
+    internal ContextlessRuleEngine<T> GetRuleEngine() => Rules;
 }

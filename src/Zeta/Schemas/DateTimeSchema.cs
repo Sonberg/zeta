@@ -122,6 +122,16 @@ public sealed class DateTimeSchema : ContextlessSchema<DateTime>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware DateTime schema with all rules from this schema.
+    /// </summary>
+    public DateTimeSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new DateTimeSchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

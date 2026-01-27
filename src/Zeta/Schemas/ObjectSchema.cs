@@ -92,11 +92,20 @@ public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
     }
 
     /// <summary>
-    /// Promotes this contextless object schema to a context-aware schema, enabling context-aware refinements and fields.
+    /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.
     /// </summary>
     /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
-    public ContextPromotedObjectSchema<T, TContext> WithContext<TContext>()
-        => new(this);
+    public ObjectSchema<T, TContext> WithContext<TContext>()
+    {
+        var schema = new ObjectSchema<T, TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        schema.CopyFieldsFrom(_fields);
+        schema.CopyConditionalsFrom(_conditionals);
+        return schema;
+    }
+
+    internal IReadOnlyList<IFieldContextlessValidator<T>> GetFields() => _fields;
+    internal IReadOnlyList<IContextlessConditionalBranch<T>> GetConditionals() => _conditionals;
 
     public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
     {
@@ -221,5 +230,26 @@ public class ObjectSchema<T, TContext> : ContextSchema<T, TContext> where T : cl
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));
         return this;
+    }
+
+    public ObjectSchema<T, TContext> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
+    {
+        return Refine((val, _) => predicate(val), message, code);
+    }
+
+    internal void CopyFieldsFrom(IReadOnlyList<IFieldContextlessValidator<T>> fields)
+    {
+        foreach (var field in fields)
+        {
+            _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(field));
+        }
+    }
+
+    internal void CopyConditionalsFrom(IReadOnlyList<IContextlessConditionalBranch<T>> conditionals)
+    {
+        foreach (var conditional in conditionals)
+        {
+            _conditionals.Add(new ContextlessConditionalBranchAdapter<T, TContext>(conditional));
+        }
     }
 }

@@ -116,6 +116,16 @@ public sealed class DateOnlySchema : ContextlessSchema<DateOnly>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware DateOnly schema with all rules from this schema.
+    /// </summary>
+    public DateOnlySchema<TContext> WithContext<TContext>()
+    {
+        var schema = new DateOnlySchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

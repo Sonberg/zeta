@@ -31,6 +31,16 @@ public sealed class IntSchema : ContextlessSchema<int>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware int schema with all rules from this schema.
+    /// </summary>
+    public IntSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new IntSchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

@@ -34,6 +34,16 @@ public sealed class BoolSchema : ContextlessSchema<bool>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware bool schema with all rules from this schema.
+    /// </summary>
+    public BoolSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new BoolSchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

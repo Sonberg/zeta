@@ -82,6 +82,16 @@ public sealed class TimeOnlySchema : ContextlessSchema<TimeOnly>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware TimeOnly schema with all rules from this schema.
+    /// </summary>
+    public TimeOnlySchema<TContext> WithContext<TContext>()
+    {
+        var schema = new TimeOnlySchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

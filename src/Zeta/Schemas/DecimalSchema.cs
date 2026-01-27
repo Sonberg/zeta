@@ -81,6 +81,16 @@ public sealed class DecimalSchema : ContextlessSchema<decimal>
         }
         return places;
     }
+
+    /// <summary>
+    /// Creates a context-aware decimal schema with all rules from this schema.
+    /// </summary>
+    public DecimalSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new DecimalSchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

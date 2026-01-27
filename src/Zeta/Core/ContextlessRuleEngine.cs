@@ -11,6 +11,8 @@ public sealed class ContextlessRuleEngine<T>
 
     public void Add(IValidationRule<T> rule) => _rules.Add(rule);
 
+    public IReadOnlyList<IValidationRule<T>> GetRules() => _rules;
+
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationExecutionContext execution)
     {
         List<ValidationError>? errors = null;
@@ -35,6 +37,17 @@ public sealed class ContextRuleEngine<T, TContext>
     private readonly List<IValidationRule<T, TContext>> _rules = [];
 
     public void Add(IValidationRule<T, TContext> rule) => _rules.Add(rule);
+
+    /// <summary>
+    /// Copies rules from a contextless rule engine, adapting them for context-aware execution.
+    /// </summary>
+    public void CopyFrom(ContextlessRuleEngine<T> source)
+    {
+        foreach (var rule in source.GetRules())
+        {
+            _rules.Add(new ContextlessRuleAdapter<T, TContext>(rule));
+        }
+    }
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext<TContext> context)
     {

@@ -58,6 +58,16 @@ public sealed class DoubleSchema : ContextlessSchema<double>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware double schema with all rules from this schema.
+    /// </summary>
+    public DoubleSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new DoubleSchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>

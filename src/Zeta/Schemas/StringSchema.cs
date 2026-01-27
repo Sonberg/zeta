@@ -114,6 +114,16 @@ public sealed class StringSchema : ContextlessSchema<string>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware string schema with all rules from this schema.
+    /// </summary>
+    public StringSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new StringSchema<TContext>();
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>
@@ -229,5 +239,25 @@ public class StringSchema<TContext> : ContextSchema<string, TContext>
     public StringSchema<TContext> Refine(Func<string, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
+    }
+
+    public StringSchema<TContext> RefineAsync(
+        Func<string, TContext, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<string, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.Execution.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Execution.Path, code, message)));
+        return this;
+    }
+
+    public StringSchema<TContext> RefineAsync(
+        Func<string, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
 }

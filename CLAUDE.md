@@ -67,10 +67,6 @@ All schemas are created via the static `Z` class entry point as contextless sche
 
 Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `ArraySchema`, `ListSchema`, `NullableSchema`
 
-### Context Promotion (src/Zeta/Schemas/)
-- `ContextPromotedSchema<T, TContext>` - Wraps contextless schemas for context-aware refinements
-- `ContextPromotedObjectSchema<T, TContext>` - Specialized version for ObjectSchema that supports `.Field()` and `.When()` after promotion
-
 ### Key Patterns
 
 **Fluent Method Chaining**: Schemas return `this` from validation methods for chaining:
@@ -85,11 +81,12 @@ Z.Object<User>()
     .Field(u => u.Address, addressSchema)      // Nested: "address.street"
 ```
 
-**Context Promotion**: Use `.WithContext<TContext>()` to promote contextless schemas when you need context-aware refinements:
+**Context Promotion**: Use `.WithContext<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:
 ```csharp
 Z.String()
     .Email()
-    .WithContext<UserContext>()
+    .MinLength(5)
+    .WithContext<UserContext>()  // Email and MinLength rules are preserved
     .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned");
 ```
 
@@ -136,10 +133,12 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 ### Context Promotion
 - Schemas are always created contextless via `Z.String()`, `Z.Int()`, etc.
 - Contextless `Refine()` uses `Func<T, bool>` (single argument)
-- Use `.WithContext<TContext>()` to promote when you need context-aware `Refine((val, ctx) => ...)`
-- For ObjectSchema: `.WithContext<T, TContext>()` requires both type parameters
-- After promotion, `.Field()` and `.When()` can still be called on ObjectSchema
-- `ContextPromotedSchema<T, TContext>` delegates to inner schema, then runs context-aware rules
+- Use `.WithContext<TContext>()` to create a context-aware schema
+- `.WithContext<TContext>()` is an **instance method** on each schema class (e.g., `StringSchema.WithContext<TContext>()`)
+- **Rules, fields, and conditionals are automatically transferred** when calling `.WithContext()`
+- For ObjectSchema: `.WithContext<TContext>()` requires only the context type parameter (T is already known)
+- After calling `.WithContext()`, use context-aware `Refine((val, ctx) => ...)` with two arguments
+- `.WithContext()` returns typed schemas: `StringSchema<TContext>`, `IntSchema<TContext>`, `ObjectSchema<T, TContext>`, etc.
 
 ### Interface Separation
 - `ISchema<T>` and `ISchema<T, TContext>` are completely separate interfaces (no inheritance relationship)
@@ -148,15 +147,13 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 - Use `SchemaAdapter<T, TContext>` to bridge contextless schemas into context-aware contexts
 
 ### Adding Validation Methods
-When adding a new validation method to a schema type (e.g., `StringSchema.MyMethod()`), you must also add a corresponding extension method for `ContextPromotedSchema<T, TContext>` in `src/Zeta/Core/SchemaExtensions.cs`. This ensures API consistency when users promote schemas with `.WithContext<TContext>()`.
+When adding a new validation method to a contextless schema type (e.g., `StringSchema.MyMethod()`), you should also add the same method to the corresponding context-aware schema type (e.g., `StringSchema<TContext>.MyMethod()`). This ensures API consistency between contextless and context-aware schemas.
 
-Example: If adding `StringSchema.Foo()`, also add:
+Example: If adding `StringSchema.Foo()`, also add to `StringSchema<TContext>`:
 ```csharp
-public static ContextPromotedSchema<string, TContext> Foo<TContext>(
-    this ContextPromotedSchema<string, TContext> schema, ...)
+public StringSchema<TContext> Foo(...)
 {
-    return schema.Refine(...);
+    Use(new RefinementRule<string, TContext>((val, ctx) => ...));
+    return this;
 }
 ```
-
-The `SchemaConsistencyTests` will fail if this parity is not maintained.

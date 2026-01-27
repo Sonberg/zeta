@@ -74,6 +74,17 @@ public sealed class ListSchema<TElement> : ContextlessSchema<List<TElement>>
                 : new ValidationError(exec.Path, code, message)));
         return this;
     }
+
+    /// <summary>
+    /// Creates a context-aware list schema with all rules from this schema.
+    /// The element schema is adapted to work in the context-aware environment.
+    /// </summary>
+    public ListSchema<TElement, TContext> WithContext<TContext>()
+    {
+        var schema = new ListSchema<TElement, TContext>(_elementSchema);
+        schema.CopyRulesFrom(GetRuleEngine());
+        return schema;
+    }
 }
 
 /// <summary>
