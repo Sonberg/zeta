@@ -12,10 +12,7 @@ public class CreateProductContextFactory : IValidationContextFactory<CreateProdu
 
     public CreateProductContextFactory(IProductRepository repo) => _repo = repo;
 
-    public async Task<CreateProductContext> CreateAsync(
-        CreateProductRequest input,
-        IServiceProvider services,
-        CancellationToken ct)
+    public async Task<CreateProductContext> CreateAsync(CreateProductRequest input, CancellationToken ct)
     {
         var skuExists = await _repo.SkuExistsAsync(input.Sku, ct);
         return new CreateProductContext(skuExists);

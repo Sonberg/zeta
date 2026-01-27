@@ -14,7 +14,6 @@ public class RegisterUserContextFactory : IValidationContextFactory<RegisterUser
 
     public async Task<RegisterUserContext> CreateAsync(
         RegisterUserRequest input,
-        IServiceProvider services,
         CancellationToken ct)
     {
         var emailExists = await _repo.EmailExistsAsync(input.Email, ct);

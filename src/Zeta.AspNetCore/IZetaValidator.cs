@@ -88,7 +88,7 @@ public sealed class ZetaValidator : IZetaValidator
         IValidationContextFactory<T, TContext> factory,
         CancellationToken ct = default)
     {
-        var contextData = await factory.CreateAsync(value, _services, ct);
+        var contextData = await factory.CreateAsync(value, ct);
         var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _timeProvider, ct));
 
         return result.IsSuccess

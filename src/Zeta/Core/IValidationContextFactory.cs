@@ -10,5 +10,5 @@ public interface IValidationContextFactory<in TInput, TContext>
     /// <summary>
     /// Creates the context data asynchronously.
     /// </summary>
-    Task<TContext> CreateAsync(TInput input, IServiceProvider services, CancellationToken ct);
+    Task<TContext> CreateAsync(TInput input, CancellationToken ct);
 }

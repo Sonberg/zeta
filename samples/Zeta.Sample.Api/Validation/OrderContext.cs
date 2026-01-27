@@ -25,15 +25,12 @@ public class CreateOrderContextFactory : IValidationContextFactory<CreateOrderRe
         _orderRepo = orderRepo;
     }
 
-    public async Task<CreateOrderContext> CreateAsync(
-        CreateOrderRequest input,
-        IServiceProvider services,
-        CancellationToken ct)
+    public async Task<CreateOrderContext> CreateAsync(CreateOrderRequest input, CancellationToken ct)
     {
         var customerExists = await _userRepo.UserExistsAsync(input.CustomerId, ct);
 
         var couponValid = string.IsNullOrEmpty(input.CouponCode)
-            || await _orderRepo.CouponValidAsync(input.CouponCode, ct);
+                          || await _orderRepo.CouponValidAsync(input.CouponCode, ct);
 
         // Check which product IDs are valid
         var validProductIds = new HashSet<Guid>();
