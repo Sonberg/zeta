@@ -687,6 +687,9 @@ public record ValidationError(
 | `is_false` | Must be false |
 | `custom_error` | Custom refinement failed |
 
+## Documentation
+- [Mediator integration](docs/Mediator.md)
+
 ## License
 
 MIT
