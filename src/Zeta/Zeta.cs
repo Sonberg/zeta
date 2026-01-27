@@ -45,4 +45,8 @@ public static class Z
 
     // Bool
     public static BoolContextlessSchema Bool() => new();
+
+    public static ValidationContext Context() => ValidationContext.Empty;
+
+    public static ValidationContext<TContext> Context<TContext>(TContext value) => new(value);
 }

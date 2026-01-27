@@ -1,5 +1,3 @@
-using Zeta.Core;
-
 namespace Zeta.AspNetCore;
 
 /// <summary>
@@ -61,7 +59,7 @@ public sealed class ZetaValidator : IZetaValidator
 
     public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default)
     {
-        return schema.ValidateAsync(value, new ValidationContext(_services, _timeProvider, ct));
+        return schema.ValidateAsync(value, new ValidationContext(_timeProvider, ct));
     }
 
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
@@ -79,21 +77,9 @@ public sealed class ZetaValidator : IZetaValidator
             return await ValidateAsync(value, schema, factory, ct);
         }
 
-        // No factory registered - only allow if TContext is object? (no context needed)
-        if (typeof(TContext) != typeof(object))
-        {
-            throw new InvalidOperationException(
-                $"No IValidationContextFactory<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI. " +
-                $"Register a factory or use a schema without context.");
-        }
-
-        // TODO: Maybe not needed.
-        var executionContext = new ValidationContext<TContext>(default!, _services, _timeProvider, ct);
-        var result = await schema.ValidateAsync(value, executionContext);
-
-        return result.IsSuccess
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(result.Errors);
+        throw new InvalidOperationException(
+            $"No IValidationContextFactory<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI. " +
+            $"Register a factory or use a schema without context.");
     }
 
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(
@@ -103,7 +89,7 @@ public sealed class ZetaValidator : IZetaValidator
         CancellationToken ct = default)
     {
         var contextData = await factory.CreateAsync(value, _services, ct);
-        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _services, _timeProvider, ct));
+        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _timeProvider, ct));
 
         return result.IsSuccess
             ? Result<T>.Success(value)

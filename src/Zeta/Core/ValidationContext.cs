@@ -13,9 +13,8 @@ public record ValidationContext<TData> : ValidationContext
 
     public ValidationContext(
         TData data,
-        IServiceProvider? services = null,
         TimeProvider? timeProvider = null,
-        CancellationToken cancellationToken = default) : base(services, timeProvider, cancellationToken)
+        CancellationToken cancellationToken = default) : base(timeProvider, cancellationToken)
     {
         Data = data;
     }
@@ -23,9 +22,8 @@ public record ValidationContext<TData> : ValidationContext
     private ValidationContext(
         string path,
         TData data,
-        IServiceProvider? services = null,
         TimeProvider? timeProvider = null,
-        CancellationToken cancellationToken = default) : base(path, services, timeProvider, cancellationToken)
+        CancellationToken cancellationToken = default) : base(path, timeProvider, cancellationToken)
     {
         Data = data;
     }
@@ -35,8 +33,13 @@ public record ValidationContext<TData> : ValidationContext
     /// </summary>
     public new ValidationContext<TData> Push(string segment)
     {
-        var newPath = string.IsNullOrEmpty(Path) ? segment : $"{Path}.{segment}";
-        return new ValidationContext<TData>(newPath, Data, ServiceProvider, TimeProvider, CancellationToken);
+        return new ValidationContext<TData>(
+            string.IsNullOrEmpty(Path)
+                ? segment
+                : $"{Path}.{segment}",
+            Data,
+            TimeProvider,
+            CancellationToken);
     }
 
     /// <summary>
@@ -44,8 +47,13 @@ public record ValidationContext<TData> : ValidationContext
     /// </summary>
     public new ValidationContext<TData> PushIndex(int index)
     {
-        var newPath = string.IsNullOrEmpty(Path) ? $"[{index}]" : $"{Path}[{index}]";
-        return new ValidationContext<TData>(newPath, Data, ServiceProvider, TimeProvider, CancellationToken);
+        return new ValidationContext<TData>(
+            string.IsNullOrEmpty(Path)
+                ? $"[{index}]"
+                : $"{Path}[{index}]",
+            Data,
+            TimeProvider,
+            CancellationToken);
     }
 }
 
@@ -54,17 +62,10 @@ public record ValidationContext<TData> : ValidationContext
 /// </summary>
 public record ValidationContext
 {
-    protected IServiceProvider? ServiceProvider { get; init; }
-
     /// <summary>
     /// The dot-notation path to the current value being validated (e.g., "user.address.street").
     /// </summary>
     public string Path { get; }
-
-    /// <summary>
-    /// The service provider for dependency injection.
-    /// </summary>
-    public IServiceProvider Services => ServiceProvider ?? throw new InvalidOperationException("Services are not available in this validation context.");
 
     /// <summary>
     /// The cancellation token for async operations.
@@ -80,20 +81,17 @@ public record ValidationContext
     /// Creates a new validation execution context.
     /// </summary>
     public ValidationContext(
-        IServiceProvider? services = null,
         TimeProvider? timeProvider = null,
-        CancellationToken cancellationToken = default) : this("", services, timeProvider, cancellationToken)
+        CancellationToken cancellationToken = default) : this(null, timeProvider, cancellationToken)
     {
     }
 
     protected ValidationContext(
-        string path = "",
-        IServiceProvider? services = null,
+        string? path = null,
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default)
     {
         Path = path ?? "";
-        ServiceProvider = services;
         CancellationToken = cancellationToken;
         TimeProvider = timeProvider ?? TimeProvider.System;
     }
@@ -104,7 +102,7 @@ public record ValidationContext
     public ValidationContext Push(string segment)
     {
         var newPath = string.IsNullOrEmpty(Path) ? segment : $"{Path}.{segment}";
-        return new ValidationContext(newPath, ServiceProvider, TimeProvider, CancellationToken);
+        return new ValidationContext(newPath, TimeProvider, CancellationToken);
     }
 
     /// <summary>
@@ -113,7 +111,7 @@ public record ValidationContext
     public ValidationContext PushIndex(int index)
     {
         var newPath = string.IsNullOrEmpty(Path) ? $"[{index}]" : $"{Path}[{index}]";
-        return new ValidationContext(newPath, ServiceProvider, TimeProvider, CancellationToken);
+        return new ValidationContext(newPath, TimeProvider, CancellationToken);
     }
 
     /// <summary>
