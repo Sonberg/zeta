@@ -12,8 +12,8 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
         Expression<Func<T, TProperty>> propertySelector,
         string? message = null)
     {
-        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         Validators.Add(new RequiredFieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, message));
         return this;
     }
@@ -22,8 +22,8 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
         Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty, TContext> schema)
     {
-        var propertyName = ObjectSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectSchema<T>.CreateGetter(propertySelector);
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         Validators.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema));
         return this;
     }
@@ -43,7 +43,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
         Expression<Func<T, string?>> propertySelector,
-        Func<StringSchema, ISchema<string>> schemaBuilder)
+        Func<StringContextlessSchema, ISchema<string>> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.String()));
     }
@@ -53,7 +53,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
         Expression<Func<T, int>> propertySelector,
-        Func<IntSchema, IntSchema> schemaBuilder)
+        Func<IntContextlessSchema, IntContextlessSchema> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.Int()));
     }
@@ -63,7 +63,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
         Expression<Func<T, int?>> propertySelector,
-        Func<IntSchema, IntSchema> schemaBuilder)
+        Func<IntContextlessSchema, IntContextlessSchema> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.Int()).Nullable());
     }
@@ -73,7 +73,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
         Expression<Func<T, double>> propertySelector,
-        Func<DoubleSchema, DoubleSchema> schemaBuilder)
+        Func<DoubleContextlessSchema, DoubleContextlessSchema> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.Double()));
     }
@@ -83,7 +83,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
         Expression<Func<T, double?>> propertySelector,
-        Func<DoubleSchema, DoubleSchema> schemaBuilder)
+        Func<DoubleContextlessSchema, DoubleContextlessSchema> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.Double()).Nullable());
     }
@@ -93,7 +93,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
         Expression<Func<T, decimal>> propertySelector,
-        Func<DecimalSchema, DecimalSchema> schemaBuilder)
+        Func<DecimalContextlessSchema, DecimalContextlessSchema> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.Decimal()));
     }
@@ -103,7 +103,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
         Expression<Func<T, decimal?>> propertySelector,
-        Func<DecimalSchema, DecimalSchema> schemaBuilder)
+        Func<DecimalContextlessSchema, DecimalContextlessSchema> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.Decimal()).Nullable());
     }

@@ -1,0 +1,130 @@
+using System.Linq.Expressions;
+using System.Reflection;
+using Zeta.Conditional;
+using Zeta.Core;
+using Zeta.Rules;
+using Zeta.Validators;
+
+namespace Zeta.Schemas;
+
+/// <summary>
+/// A contextless schema for validating object values.
+/// </summary>
+public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : class
+{
+    private readonly List<IFieldContextlessValidator<T>> _fields;
+    private readonly List<IContextlessConditionalBranch<T>> _conditionals;
+
+    public ObjectContextlessSchema() : this(new ContextlessRuleEngine<T>(), [], [])
+    {
+    }
+
+    internal ObjectContextlessSchema(
+        ContextlessRuleEngine<T> rules,
+        List<IFieldContextlessValidator<T>> fields,
+        List<IContextlessConditionalBranch<T>> conditionals) : base(rules)
+    {
+        _fields = fields;
+        _conditionals = conditionals;
+    }
+
+    public override async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
+    {
+        execution ??= ValidationExecutionContext.Empty;
+        List<ValidationError>? errors = null;
+
+        // Validate rules
+        var ruleErrors = await Rules.ExecuteAsync(value, execution);
+        if (ruleErrors != null)
+        {
+            errors ??= [];
+            errors.AddRange(ruleErrors);
+        }
+
+        // Validate fields
+        foreach (var field in _fields)
+        {
+            var fieldErrors = await field.ValidateAsync(value, execution);
+            if (fieldErrors.Count <= 0) continue;
+
+            errors ??= [];
+            errors.AddRange(fieldErrors);
+        }
+
+        // Validate conditionals
+        foreach (var conditional in _conditionals)
+        {
+            var conditionalErrors = await conditional.ValidateAsync(value, execution);
+            if (conditionalErrors.Count <= 0) continue;
+
+            errors ??= [];
+            errors.AddRange(conditionalErrors);
+        }
+
+        return errors == null
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(errors);
+    }
+
+    public ObjectContextlessSchema<T> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> When(
+        Func<T, bool> condition,
+        Action<ContextlessConditionalBuilder<T>> thenBranch,
+        Action<ContextlessConditionalBuilder<T>>? elseBranch = null)
+    {
+        var thenBuilder = new ContextlessConditionalBuilder<T>();
+        thenBranch(thenBuilder);
+
+        ContextlessConditionalBuilder<T>? elseBuilder = null;
+        if (elseBranch != null)
+        {
+            elseBuilder = new ContextlessConditionalBuilder<T>();
+            elseBranch(elseBuilder);
+        }
+
+        _conditionals.Add(new ContextlessConditionalBranch<T>(condition, thenBuilder, elseBuilder));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
+    {
+        Use(new RefinementRule<T>((val, exec) =>
+            predicate(val)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
+    /// <summary>
+    /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.
+    /// </summary>
+    /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
+    public ObjectContextSchema<T, TContext> WithContext<TContext>()
+        => new ObjectContextSchema<T, TContext>(Rules, _fields, _conditionals);
+
+    public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
+    {
+        var body = expr.Body;
+        if (body is UnaryExpression { NodeType: ExpressionType.Convert } u)
+            body = u.Operand;
+        if (body is MemberExpression m)
+            return m.Member.Name;
+        throw new ArgumentException("Expression must be a property access");
+    }
+
+    public static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
+    {
+        var member = (MemberExpression)expr.Body;
+        var prop = (PropertyInfo)member.Member;
+        return instance => (TProperty)prop.GetValue(instance)!;
+    }
+}

@@ -15,7 +15,7 @@ public class SchemaConsistencyTests
         var contextless = Z.String();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<StringSchema<object>>(contextAware);
+        Assert.IsType<StringContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public class SchemaConsistencyTests
         var contextless = Z.Int();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<IntSchema<object>>(contextAware);
+        Assert.IsType<IntContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class SchemaConsistencyTests
         var contextless = Z.Double();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<DoubleSchema<object>>(contextAware);
+        Assert.IsType<DoubleContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class SchemaConsistencyTests
         var contextless = Z.Decimal();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<DecimalSchema<object>>(contextAware);
+        Assert.IsType<DecimalContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class SchemaConsistencyTests
         var contextless = Z.Bool();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<BoolSchema<object>>(contextAware);
+        Assert.IsType<BoolContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class SchemaConsistencyTests
         var contextless = Z.Guid();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<GuidSchema<object>>(contextAware);
+        Assert.IsType<GuidContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class SchemaConsistencyTests
         var contextless = Z.DateTime();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<DateTimeSchema<object>>(contextAware);
+        Assert.IsType<DateTimeContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class SchemaConsistencyTests
         var contextless = Z.DateOnly();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<DateOnlySchema<object>>(contextAware);
+        Assert.IsType<DateOnlyContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class SchemaConsistencyTests
         var contextless = Z.TimeOnly();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<TimeOnlySchema<object>>(contextAware);
+        Assert.IsType<TimeOnlyContextSchema<object>>(contextAware);
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class SchemaConsistencyTests
         var contextless = Z.Object<TestClass>();
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<ObjectSchema<TestClass, object>>(contextAware);
+        Assert.IsType<ObjectContextSchema<TestClass, object>>(contextAware);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class SchemaConsistencyTests
         var contextless = Z.Array(Z.Int());
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<ArraySchema<int, object>>(contextAware);
+        Assert.IsType<ArrayContextSchema<int, object>>(contextAware);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class SchemaConsistencyTests
         var contextless = Z.List(Z.String());
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<ListSchema<string, object>>(contextAware);
+        Assert.IsType<ListContextSchema<string, object>>(contextAware);
     }
 
     private class TestClass { }

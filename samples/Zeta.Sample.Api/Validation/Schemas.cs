@@ -157,7 +157,7 @@ public static class Schemas
     /// <summary>
     /// Nullable address schema for optional billing address.
     /// </summary>
-    private static readonly NullableSchema<AddressDto> AddressNullable =
+    private static readonly NullableContextlessSchema<AddressDto> AddressNullable =
         Z.Object<AddressDto>()
             .Field(a => a.Street, Z.String().MinLength(5).MaxLength(200))
             .Field(a => a.City, Z.String().MinLength(2).MaxLength(100))

@@ -296,7 +296,7 @@ public class ObjectSchemaTests
     public async Task When_ContextAwarePredicate_OnObjectSchemaWithContext_Works()
     {
         // Test the same functionality directly on ObjectSchema<T, TContext>
-        var schema = new Zeta.Schemas.ObjectSchema<LoanApplication, LoanContext>()
+        var schema = new Schemas.ObjectContextSchema<LoanApplication, LoanContext>()
             .Field(l => l.Income, Z.Int().Min(0))
             .When(
                 (loan, ctx) => ctx.RequireEmployment,
