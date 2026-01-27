@@ -30,6 +30,7 @@ public static class Schemas
     /// </summary>
     public static readonly ISchema<RegisterUserRequest, RegisterUserContext> RegisterUser =
         Z.Object<RegisterUserRequest>()
+            .WithContext<RegisterUserContext>()
             .Field(u => u.Email, Z.String().Email())
             .Field(u => u.Password, Z.String()
                 .MinLength(8)
@@ -39,7 +40,6 @@ public static class Schemas
             .Field(u => u.ConfirmPassword, Z.String())
             .Field(u => u.Name, Z.String().MinLength(2).MaxLength(100).Nullable())
             .Field(u => u.Age, Z.Int().Min(13).Max(120))
-            .WithContext<RegisterUserRequest, RegisterUserContext>()
             // Context-aware: check email uniqueness
             .Refine((u, ctx) => !ctx.EmailExists, "Email is already registered")
             // Cross-field validation: passwords must match
@@ -91,6 +91,7 @@ public static class Schemas
     /// </summary>
     public static readonly ISchema<CreateProductRequest, CreateProductContext> CreateProduct =
         Z.Object<CreateProductRequest>()
+            .WithContext<CreateProductContext>()
             .Field(p => p.Name, Z.String().MinLength(2).MaxLength(200))
             .Field(p => p.Description, Z.String().MaxLength(2000).Nullable())
             .Field(p => p.Sku, Z.String()
@@ -98,7 +99,6 @@ public static class Schemas
             .Field(p => p.Price, Z.Decimal().Min(0.01m).Max(999999.99m))
             .Field(p => p.StockQuantity, Z.Int().Min(0))
             .Field(p => p.Tags, Z.Array(Z.String().MinLength(1).MaxLength(50)))
-            .WithContext<CreateProductRequest, CreateProductContext>()
             .Refine((p, ctx) => !ctx.SkuExists, "SKU already exists");
 
     /// <summary>
@@ -157,7 +157,7 @@ public static class Schemas
     /// <summary>
     /// Nullable address schema for optional billing address.
     /// </summary>
-    private static readonly NullableSchema<AddressDto> AddressNullable =
+    private static readonly NullableContextlessSchema<AddressDto> AddressNullable =
         Z.Object<AddressDto>()
             .Field(a => a.Street, Z.String().MinLength(5).MaxLength(200))
             .Field(a => a.City, Z.String().MinLength(2).MaxLength(100))
@@ -171,6 +171,7 @@ public static class Schemas
     /// </summary>
     public static readonly ISchema<CreateOrderRequest, CreateOrderContext> CreateOrder =
         Z.Object<CreateOrderRequest>()
+            .WithContext<CreateOrderContext>()
             .Field(o => o.CustomerId, Z.Guid())
             .Field(o => o.Items, Z.Array(OrderItemBasic))
             .Field(o => o.ShippingAddress, Address)
@@ -179,7 +180,6 @@ public static class Schemas
             .Field(o => o.PaymentMethod, Z.String()
                 .Refine(pm => pm is "credit_card" or "paypal" or "bank_transfer",
                     "Payment method must be credit_card, paypal, or bank_transfer"))
-            .WithContext<CreateOrderRequest, CreateOrderContext>()
             // Context-aware validations
             .Refine((o, ctx) => ctx.CustomerExists, "Customer not found")
             .Refine((o, ctx) => o.Items.All(i => ctx.ValidProductIds.Contains(i.ProductId)), "One or more products not found")

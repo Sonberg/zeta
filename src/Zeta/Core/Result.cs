@@ -19,6 +19,8 @@ public record Result
     /// </summary>
     public IReadOnlyList<ValidationError> Errors => _errors ?? [];
 
+    public string? StackTrace { get; set; }
+
     public Result()
     {
         IsSuccess = true;
@@ -28,6 +30,7 @@ public record Result
     protected Result(IReadOnlyList<ValidationError> errors)
     {
         IsSuccess = false;
+        StackTrace = Environment.StackTrace;
         _errors = errors;
     }
 
@@ -66,6 +69,7 @@ public record Result<T> : Result
     private Result(IReadOnlyList<ValidationError> errors) : base(errors)
     {
         _value = default;
+        StackTrace = Environment.StackTrace;
     }
 
     /// <summary>

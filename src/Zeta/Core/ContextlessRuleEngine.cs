@@ -5,11 +5,13 @@ namespace Zeta.Core;
 /// <summary>
 /// Shared rule execution engine for contextless schemas.
 /// </summary>
-public sealed class RuleEngine<T>
+public sealed class ContextlessRuleEngine<T>
 {
     private readonly List<IValidationRule<T>> _rules = [];
 
     public void Add(IValidationRule<T> rule) => _rules.Add(rule);
+
+    public IReadOnlyList<IValidationRule<T>> GetRules() => _rules;
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationExecutionContext execution)
     {
@@ -24,6 +26,18 @@ public sealed class RuleEngine<T>
         }
 
         return errors;
+    }
+    
+    public ContextRuleEngine<T, TContext> ToContext<TContext>()
+    {
+        var newEngine = new ContextRuleEngine<T, TContext>();
+
+        foreach (var rule in _rules)
+        {
+            newEngine.Add(new ContextlessRuleAdapter<T, TContext>(rule));
+        }
+
+        return newEngine;
     }
 }
 

@@ -46,7 +46,7 @@ public class ObjectSchemaTests
     {
         var schema = Z.Object<User>()
             .Field(u => u.Name, Z.String())
-            .WithContext<User, BanContext>()
+            .WithContext<BanContext>()
             .Refine((user, ctx) => user.Name != ctx.BannedName, "Name is banned");
 
         var context = new BanContext("Voldemort");
@@ -223,7 +223,7 @@ public class ObjectSchemaTests
     public async Task When_ContextAwarePredicate_OnContextPromotedObjectSchema_UsesContextInCondition()
     {
         var schema = Z.Object<LoanApplication>()
-            .WithContext<LoanApplication, LoanContext>()
+            .WithContext<LoanContext>()
             .When(
                 (loan, ctx) => ctx.RequireEmployment,
                 then => then.Require(l => l.EmployerName, "Employer name is required"));
@@ -246,7 +246,7 @@ public class ObjectSchemaTests
     public async Task When_ContextAwarePredicate_WithElseBranch_ExecutesCorrectBranch()
     {
         var schema = Z.Object<LoanApplication>()
-            .WithContext<LoanApplication, LoanContext>()
+            .WithContext<LoanContext>()
             .When(
                 (loan, ctx) => loan.Income >= ctx.MinIncomeThreshold,
                 then => then.Field(l => l.EmployerName, Z.String().MinLength(2)),
@@ -271,7 +271,7 @@ public class ObjectSchemaTests
     public async Task When_ContextAwarePredicate_CanAccessBothValueAndContext()
     {
         var schema = Z.Object<LoanApplication>()
-            .WithContext<LoanApplication, LoanContext>()
+            .WithContext<LoanContext>()
             .When(
                 (loan, ctx) => loan.IsEmployed && ctx.RequireEmployment,
                 then => then.Require(l => l.EmployerName, "Employed applicants must provide employer name"));
@@ -296,7 +296,7 @@ public class ObjectSchemaTests
     public async Task When_ContextAwarePredicate_OnObjectSchemaWithContext_Works()
     {
         // Test the same functionality directly on ObjectSchema<T, TContext>
-        var schema = new Zeta.Schemas.ObjectSchema<LoanApplication, LoanContext>()
+        var schema = new Schemas.ObjectContextSchema<LoanApplication, LoanContext>()
             .Field(l => l.Income, Z.Int().Min(0))
             .When(
                 (loan, ctx) => ctx.RequireEmployment,
@@ -398,7 +398,7 @@ public class ObjectSchemaTests
     public async Task Select_ContextAware_DecimalProperty_ValidatesWithInlineBuilder()
     {
         var schema = Z.Object<Product>()
-            .WithContext<Product, ProductContext>()
+            .WithContext<ProductContext>()
             .When(
                 (_, ctx) => ctx.EnforceMinPrice,
                 then => then.Select(p => p.Price, s => s.Min(10.00m)));
@@ -415,7 +415,7 @@ public class ObjectSchemaTests
     public async Task Select_ContextAware_IntProperty_ValidatesWithInlineBuilder()
     {
         var schema = Z.Object<Product>()
-            .WithContext<Product, ProductContext>()
+            .WithContext<ProductContext>()
             .When(
                 p => p.Name != null,
                 then => then.Select(p => p.Quantity, s => s.Min(1).Max(1000)));
@@ -432,7 +432,7 @@ public class ObjectSchemaTests
     public async Task Select_ContextAware_DoubleProperty_ValidatesWithInlineBuilder()
     {
         var schema = Z.Object<Product>()
-            .WithContext<Product, ProductContext>()
+            .WithContext<ProductContext>()
             .When(
                 p => p.Name != null,
                 then => then.Select(p => p.Weight, s => s.Min(0.1).Max(100.0)));

@@ -28,8 +28,9 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_InnerValidationStillRuns()
+    public async Task WithContext_RulesTransfer_FromContextlessToContextAware()
     {
+        // Rules TRANSFER when calling WithContext() - they can be added before
         var schema = Z.String()
             .Email()
             .MinLength(10)
@@ -38,12 +39,12 @@ public class WithContextTests
 
         var context = new UserContext("banned@example.com", 100);
 
-        // Invalid email format - inner validation should fail
+        // Invalid email format - inner validation should fail (rule transferred from contextless)
         var invalidEmailResult = await schema.ValidateAsync("notanemail", context);
         Assert.False(invalidEmailResult.IsSuccess);
         Assert.Contains(invalidEmailResult.Errors, e => e.Code == "email");
 
-        // Valid email but too short
+        // Valid email but too short (MinLength rule transferred from contextless)
         var shortResult = await schema.ValidateAsync("a@b.co", context);
         Assert.False(shortResult.IsSuccess);
         Assert.Contains(shortResult.Errors, e => e.Code == "min_length");
@@ -161,7 +162,7 @@ public class WithContextTests
     {
         var userSchema = Z.Object<User>()
             .Field(u => u.Email, Z.String().Email())
-            .WithContext<User, UserContext>()
+            .WithContext<UserContext>()
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned", "banned_email");
 
         var context = new UserContext("banned@example.com", 100);
@@ -282,7 +283,7 @@ public class WithContextTests
             .Field(u => u.Email, Z.String().Email());
 
         var schema = innerSchema
-            .WithContext<User, UserContext>()
+            .WithContext<UserContext>()
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned");
 
         var context = new UserContext("banned@example.com", 100);
@@ -299,7 +300,7 @@ public class WithContextTests
     {
         var schema = Z.Array(Z.Int())
             .MinLength(0)
-            .WithContext<int, UserContext>()
+            .WithContext<UserContext>()
             .Refine((arr, ctx) => arr.Length <= ctx.MaxValue, "Too many items");
 
         var context = new UserContext("", 3);
@@ -315,7 +316,7 @@ public class WithContextTests
     public async Task WithContext_ListSchema_Works()
     {
         var schema = Z.List(Z.String())
-            .WithContext<string, UserContext>()
+            .WithContext<UserContext>()
             .Refine((list, ctx) => list.Count <= ctx.MaxValue, "Too many items");
 
         var context = new UserContext("", 2);
@@ -386,7 +387,7 @@ public class WithContextTests
     {
         // Can add fields after WithContext
         var schema = Z.Object<User>()
-            .WithContext<User, UserContext>()
+            .WithContext<UserContext>()
             .Field(u => u.Email, Z.String().Email())
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned");
 
@@ -407,13 +408,13 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_FieldBeforeAndAfterWithContext_Works()
+    public async Task WithContext_FieldsTransferFromContextless()
     {
-        // Can add fields both before and after WithContext
+        // Fields TRANSFER when calling WithContext() - they can be added before
         var schema = Z.Object<Person>()
             .Field(p => p.Name, Z.String().MinLength(2))
-            .WithContext<Person, UserContext>()
             .Field(p => p.Age, Z.Int().Min(0))
+            .WithContext<UserContext>()
             .Refine((person, ctx) => person.Age <= ctx.MaxValue, "Age exceeds maximum");
 
         var context = new UserContext("", 50);
@@ -421,17 +422,17 @@ public class WithContextTests
         var validResult = await schema.ValidateAsync(new Person("John", 30), context);
         Assert.True(validResult.IsSuccess);
 
-        // Name too short (field before WithContext)
+        // Name too short (field transferred from contextless)
         var shortNameResult = await schema.ValidateAsync(new Person("J", 30), context);
         Assert.False(shortNameResult.IsSuccess);
         Assert.Contains(shortNameResult.Errors, e => e.Path == "name");
 
-        // Age negative (field after WithContext)
+        // Age negative (field transferred from contextless)
         var negativeAgeResult = await schema.ValidateAsync(new Person("John", -1), context);
         Assert.False(negativeAgeResult.IsSuccess);
         Assert.Contains(negativeAgeResult.Errors, e => e.Path == "age");
 
-        // Age exceeds context max (context-aware refine)
+        // Age exceeds context max (context-aware refine added after WithContext)
         var oldResult = await schema.ValidateAsync(new Person("John", 100), context);
         Assert.False(oldResult.IsSuccess);
         Assert.Contains(oldResult.Errors, e => e.Message == "Age exceeds maximum");
@@ -441,7 +442,7 @@ public class WithContextTests
     public async Task WithContext_WhenAfterWithContext_Works()
     {
         var schema = Z.Object<Order>()
-            .WithContext<Order, UserContext>()
+            .WithContext<UserContext>()
             .Field(o => o.Total, Z.Decimal().Min(0))
             .When(
                 o => o.Total > 100,

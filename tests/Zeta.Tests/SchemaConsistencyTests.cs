@@ -1,202 +1,214 @@
 using System.Reflection;
+using Zeta.Core;
 using Zeta.Schemas;
 
 namespace Zeta.Tests;
 
 /// <summary>
-/// Tests that verify method parity between schema types and their ContextPromotedSchema extension methods.
-/// When a validation method is added to a schema type, a corresponding extension method should be added
-/// to SchemaExtensions for ContextPromotedSchema to maintain API consistency.
+/// Tests that verify schema types have consistent method signatures.
 /// </summary>
 public class SchemaConsistencyTests
 {
-    // Methods that are excluded from parity checks - these are either internal or have different semantics
-    private static readonly HashSet<string> ExcludedMethods = new()
+    [Fact]
+    public void WithContext_StringSchema_ReturnsTypedContextAwareSchema()
     {
-        "Refine",           // Has different signatures for contextless vs context-aware
-        "ValidateAsync",    // Core interface method, not a validation rule
-        "GetType",          // Object method
-        "ToString",         // Object method
-        "Equals",           // Object method
-        "GetHashCode",      // Object method
-    };
+        var contextless = Z.String();
+        var contextAware = contextless.WithContext<object>();
 
-    [Theory]
-    [InlineData(typeof(StringSchema), typeof(ContextPromotedSchema<string, object>))]
-    public void StringSchema_AllValidationMethodsHaveExtensions(Type schemaType, Type promotedType)
-    {
-        AssertMethodParity(schemaType, promotedType, "string");
-    }
-
-    [Theory]
-    [InlineData(typeof(IntSchema), typeof(ContextPromotedSchema<int, object>))]
-    public void IntSchema_AllValidationMethodsHaveExtensions(Type schemaType, Type promotedType)
-    {
-        AssertMethodParity(schemaType, promotedType, "int");
-    }
-
-    [Theory]
-    [InlineData(typeof(DoubleSchema), typeof(ContextPromotedSchema<double, object>))]
-    public void DoubleSchema_AllValidationMethodsHaveExtensions(Type schemaType, Type promotedType)
-    {
-        AssertMethodParity(schemaType, promotedType, "double");
-    }
-
-    [Theory]
-    [InlineData(typeof(DecimalSchema), typeof(ContextPromotedSchema<decimal, object>))]
-    public void DecimalSchema_AllValidationMethodsHaveExtensions(Type schemaType, Type promotedType)
-    {
-        AssertMethodParity(schemaType, promotedType, "decimal");
+        Assert.IsType<StringContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void ArraySchema_AllValidationMethodsHaveExtensions()
+    public void WithContext_IntSchema_ReturnsTypedContextAwareSchema()
     {
-        // ArraySchema<TElement> needs special handling due to the generic element type
-        var schemaType = typeof(ArraySchema<>).MakeGenericType(typeof(int));
-        var promotedType = typeof(ContextPromotedSchema<,>).MakeGenericType(typeof(int[]), typeof(object));
-        AssertMethodParity(schemaType, promotedType, "array");
+        var contextless = Z.Int();
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<IntContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void ListSchema_AllValidationMethodsHaveExtensions()
+    public void WithContext_DoubleSchema_ReturnsTypedContextAwareSchema()
     {
-        // ListSchema<TElement> needs special handling due to the generic element type
-        var schemaType = typeof(ListSchema<>).MakeGenericType(typeof(int));
-        var promotedType = typeof(ContextPromotedSchema<,>).MakeGenericType(typeof(List<int>), typeof(object));
-        AssertMethodParity(schemaType, promotedType, "list");
+        var contextless = Z.Double();
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<DoubleContextSchema<object>>(contextAware);
     }
 
-    private static void AssertMethodParity(Type schemaType, Type promotedType, string typeName)
+    [Fact]
+    public void WithContext_DecimalSchema_ReturnsTypedContextAwareSchema()
     {
-        // Get validation methods from the schema type (instance methods that return the schema type itself)
-        var schemaMethods = schemaType
-            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Where(m => m.ReturnType == schemaType || m.ReturnType.IsAssignableTo(schemaType))
-            .Where(m => !ExcludedMethods.Contains(m.Name))
-            .Select(m => m.Name)
-            .Distinct()
-            .ToHashSet();
+        var contextless = Z.Decimal();
+        var contextAware = contextless.WithContext<object>();
 
-        // Get extension methods for the promoted type from SchemaExtensions
-        var extensionsType = typeof(SchemaExtensions);
-        var extensionMethods = extensionsType
-            .GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .Where(m => m.GetParameters().Length > 0)
-            .Where(m => IsExtensionMethodForPromotedType(m, promotedType))
-            .Select(m => m.Name)
-            .Distinct()
-            .ToHashSet();
-
-        var missing = schemaMethods.Except(extensionMethods).ToList();
-
-        if (missing.Count > 0)
-        {
-            Assert.Fail(
-                $"The following {typeName} validation methods are missing corresponding " +
-                $"ContextPromotedSchema extension methods in SchemaExtensions.cs:\n" +
-                $"  - {string.Join("\n  - ", missing)}\n\n" +
-                $"To fix: Add extension methods for ContextPromotedSchema<{typeName}, TContext> " +
-                $"that match the signatures of these methods.");
-        }
+        Assert.IsType<DecimalContextSchema<object>>(contextAware);
     }
 
-    private static bool IsExtensionMethodForPromotedType(MethodInfo method, Type promotedType)
+    [Fact]
+    public void WithContext_BoolSchema_ReturnsTypedContextAwareSchema()
     {
-        var firstParam = method.GetParameters().FirstOrDefault();
-        if (firstParam == null) return false;
+        var contextless = Z.Bool();
+        var contextAware = contextless.WithContext<object>();
 
-        var paramType = firstParam.ParameterType;
+        Assert.IsType<BoolContextSchema<object>>(contextAware);
+    }
 
-        // Check if it's directly the promoted type
-        if (paramType == promotedType) return true;
+    [Fact]
+    public void WithContext_GuidSchema_ReturnsTypedContextAwareSchema()
+    {
+        var contextless = Z.Guid();
+        var contextAware = contextless.WithContext<object>();
 
-        // Check if it's a generic ContextPromotedSchema<T, TContext> that matches our value type
-        if (paramType.IsGenericType)
+        Assert.IsType<GuidContextSchema<object>>(contextAware);
+    }
+
+    [Fact]
+    public void WithContext_DateTimeSchema_ReturnsTypedContextAwareSchema()
+    {
+        var contextless = Z.DateTime();
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<DateTimeContextSchema<object>>(contextAware);
+    }
+
+    [Fact]
+    public void WithContext_DateOnlySchema_ReturnsTypedContextAwareSchema()
+    {
+        var contextless = Z.DateOnly();
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<DateOnlyContextSchema<object>>(contextAware);
+    }
+
+    [Fact]
+    public void WithContext_TimeOnlySchema_ReturnsTypedContextAwareSchema()
+    {
+        var contextless = Z.TimeOnly();
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<TimeOnlyContextSchema<object>>(contextAware);
+    }
+
+    [Fact]
+    public void WithContext_ObjectSchema_ReturnsTypedContextAwareSchema()
+    {
+        var contextless = Z.Object<TestClass>();
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<ObjectContextSchema<TestClass, object>>(contextAware);
+    }
+
+    [Fact]
+    public void WithContext_ArraySchema_ReturnsTypedContextAwareSchema()
+    {
+        var contextless = Z.Array(Z.Int());
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<ArrayContextSchema<int, object>>(contextAware);
+    }
+
+    [Fact]
+    public void WithContext_ListSchema_ReturnsTypedContextAwareSchema()
+    {
+        var contextless = Z.List(Z.String());
+        var contextAware = contextless.WithContext<object>();
+
+        Assert.IsType<ListContextSchema<string, object>>(contextAware);
+    }
+
+    private class TestClass { }
+
+    /// <summary>
+    /// Ensures all non-abstract classes inheriting from ContextlessSchema have a WithContext method.
+    /// This enforces the pattern since we can't use an abstract method due to return type constraints.
+    /// </summary>
+    [Fact]
+    public void AllContextlessSchemas_HaveWithContextMethod()
+    {
+        var assembly = typeof(ContextlessSchema<>).Assembly;
+        var contextlessSchemaType = typeof(ContextlessSchema<>);
+
+        var contextlessSchemaTypes = assembly.GetTypes()
+            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => IsSubclassOfGeneric(t, contextlessSchemaType))
+            .ToList();
+
+        var missingWithContext = new List<Type>();
+
+        foreach (var type in contextlessSchemaTypes)
         {
-            var genericDef = paramType.GetGenericTypeDefinition();
-            if (genericDef == typeof(ContextPromotedSchema<,>))
+            // Look for a public generic method named "WithContext" with one type parameter
+            var withContextMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(m => m.Name == "WithContext"
+                    && m.IsGenericMethod
+                    && m.GetGenericArguments().Length == 1);
+
+            if (withContextMethod == null)
             {
-                // Check if the first type argument matches (the value type)
-                var valueType = paramType.GetGenericArguments()[0];
-                var targetValueType = promotedType.IsGenericType
-                    ? promotedType.GetGenericArguments()[0]
-                    : promotedType;
-
-                // For array types like int[], we need to check if valueType is an array with matching element
-                if (valueType.IsArray && targetValueType.IsArray)
-                {
-                    return valueType.GetElementType() == targetValueType.GetElementType() ||
-                           IsOpenGenericMatch(valueType.GetElementType(), targetValueType.GetElementType());
-                }
-
-                // For List<T>, we need to check the generic argument
-                if (valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(List<>) &&
-                    targetValueType.IsGenericType && targetValueType.GetGenericTypeDefinition() == typeof(List<>))
-                {
-                    var listElementType = valueType.GetGenericArguments()[0];
-                    var targetListElementType = targetValueType.GetGenericArguments()[0];
-                    return listElementType == targetListElementType ||
-                           IsOpenGenericMatch(listElementType, targetListElementType);
-                }
-
-                return valueType == targetValueType;
+                missingWithContext.Add(type);
             }
         }
 
-        // Check if method is generic and could be applied to the promoted type
-        if (method.IsGenericMethodDefinition)
+        Assert.True(
+            missingWithContext.Count == 0,
+            $"The following ContextlessSchema types are missing a WithContext<TContext>() method:\n" +
+            string.Join("\n", missingWithContext.Select(t => $"  - {t.FullName}")));
+    }
+
+    /// <summary>
+    /// Ensures WithContext methods return context-aware schema types (not just ISchema).
+    /// </summary>
+    [Fact]
+    public void AllContextlessSchemas_WithContextReturnsTypedSchema()
+    {
+        var assembly = typeof(ContextlessSchema<>).Assembly;
+        var contextlessSchemaType = typeof(ContextlessSchema<>);
+
+        var contextlessSchemaTypes = assembly.GetTypes()
+            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => IsSubclassOfGeneric(t, contextlessSchemaType))
+            .ToList();
+
+        var returnsInterfaceOnly = new List<(Type SchemaType, Type ReturnType)>();
+
+        foreach (var type in contextlessSchemaTypes)
         {
-            try
-            {
-                // Try to determine if this generic method could work for our type
-                var typeArgs = method.GetGenericArguments();
-                if (typeArgs.Length >= 1)
-                {
-                    // Check if the first parameter's generic type structure could match
-                    var genericParamType = firstParam.ParameterType;
-                    if (genericParamType.IsGenericType)
-                    {
-                        var genericDef = genericParamType.GetGenericTypeDefinition();
-                        if (genericDef == typeof(ContextPromotedSchema<,>))
-                        {
-                            var valueTypeArg = genericParamType.GetGenericArguments()[0];
+            var withContextMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(m => m.Name == "WithContext"
+                    && m.IsGenericMethod
+                    && m.GetGenericArguments().Length == 1);
 
-                            // For arrays: ContextPromotedSchema<TElement[], TContext>
-                            if (valueTypeArg.IsArray && promotedType.IsGenericType)
-                            {
-                                var targetValueType = promotedType.GetGenericArguments()[0];
-                                if (targetValueType.IsArray)
-                                    return true;
-                            }
+            if (withContextMethod == null) continue;
 
-                            // For lists: ContextPromotedSchema<List<TElement>, TContext>
-                            if (valueTypeArg.IsGenericType &&
-                                valueTypeArg.GetGenericTypeDefinition() == typeof(List<>) &&
-                                promotedType.IsGenericType)
-                            {
-                                var targetValueType = promotedType.GetGenericArguments()[0];
-                                if (targetValueType.IsGenericType &&
-                                    targetValueType.GetGenericTypeDefinition() == typeof(List<>))
-                                    return true;
-                            }
-                        }
-                    }
-                }
-            }
-            catch
+            var returnType = withContextMethod.ReturnType;
+
+            // Check if return type is an interface (ISchema<T, TContext>)
+            // We want concrete types like StringSchema<TContext>, not ISchema<string, TContext>
+            if (returnType.IsInterface ||
+                (returnType.IsGenericType && returnType.GetGenericTypeDefinition().IsInterface))
             {
-                // If we can't resolve the generic, skip it
+                returnsInterfaceOnly.Add((type, returnType));
             }
         }
 
+        Assert.True(
+            returnsInterfaceOnly.Count == 0,
+            $"The following ContextlessSchema types have WithContext<TContext>() returning an interface instead of a typed schema:\n" +
+            string.Join("\n", returnsInterfaceOnly.Select(x => $"  - {x.SchemaType.Name} returns {x.ReturnType.Name}")));
+    }
+
+    private static bool IsSubclassOfGeneric(Type type, Type genericBase)
+    {
+        while (type != null && type != typeof(object))
+        {
+            var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+            if (genericBase == cur)
+            {
+                return true;
+            }
+            type = type.BaseType!;
+        }
         return false;
-    }
-
-    private static bool IsOpenGenericMatch(Type? type1, Type? type2)
-    {
-        if (type1 == null || type2 == null) return false;
-        if (type1.IsGenericParameter || type2.IsGenericParameter) return true;
-        return type1 == type2;
     }
 }

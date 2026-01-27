@@ -1,3 +1,4 @@
+using Zeta.Core;
 using Zeta.Schemas;
 
 namespace Zeta;
@@ -8,40 +9,40 @@ namespace Zeta;
 public static class Z
 {
     // String
-    public static StringSchema String() => new();
+    public static StringContextlessSchema String() => new();
 
     // Integer
-    public static IntSchema Int() => new();
+    public static IntContextlessSchema Int() => new();
 
     // Double
-    public static DoubleSchema Double() => new();
+    public static DoubleContextlessSchema Double() => new();
 
     // Decimal
-    public static DecimalSchema Decimal() => new();
+    public static DecimalContextlessSchema Decimal() => new();
 
     // Object
-    public static ObjectSchema<T> Object<T>() where T : class => new();
+    public static ObjectContextlessSchema<T> Object<T>() where T : class => new();
 
     // Array
-    public static ArraySchema<TElement> Array<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);
+    public static ArrayContextlessSchema<TElement> Array<TElement>(ISchema<TElement> elementSchema) => new(elementSchema, new ContextlessRuleEngine<TElement[]>());
 
     // List
-    public static ListSchema<TElement> List<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);
+    public static ListContextlessSchema<TElement> List<TElement>(ISchema<TElement> elementSchema) => new(elementSchema);
 
     // DateTime
-    public static DateTimeSchema DateTime() => new();
+    public static DateTimeContextlessSchema DateTime() => new();
 
 #if !NETSTANDARD2_0
     // DateOnly
-    public static DateOnlySchema DateOnly() => new();
+    public static DateOnlyContextlessSchema DateOnly() => new();
 
     // TimeOnly
-    public static TimeOnlySchema TimeOnly() => new();
+    public static TimeOnlyContextlessSchema TimeOnly() => new();
 #endif
 
     // Guid
-    public static GuidSchema Guid() => new();
+    public static GuidContextlessSchema Guid() => new();
 
     // Bool
-    public static BoolSchema Bool() => new();
+    public static BoolContextlessSchema Bool() => new();
 }
