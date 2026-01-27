@@ -7,38 +7,29 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating arrays where each element is validated by an inner schema.
 /// </summary>
-public sealed class ArraySchema<TElement> : ISchema<TElement[]>
+public sealed class ArraySchema<TElement> : ContextlessSchema<TElement[]>
 {
     private readonly ISchema<TElement> _elementSchema;
-    private readonly RuleEngine<TElement[]> _rules = new();
 
     public ArraySchema(ISchema<TElement> elementSchema)
     {
         _elementSchema = elementSchema;
     }
 
-    public async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<TElement[]>> ValidateAsync(TElement[] value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
-        List<ValidationError>? errors = null;
-
-        // Validate array-level rules
-        var ruleErrors = await _rules.ExecuteAsync(value, execution);
-        if (ruleErrors != null)
-        {
-            errors = ruleErrors;
-        }
+        var errors = await Rules.ExecuteAsync(value, execution);
 
         // Validate each element
         for (var i = 0; i < value.Length; i++)
         {
             var elementExecution = execution.PushIndex(i);
             var result = await _elementSchema.ValidateAsync(value[i], elementExecution);
-            if (result.IsFailure)
-            {
-                errors ??= [];
-                errors.AddRange(result.Errors);
-            }
+            if (!result.IsFailure) continue;
+            
+            errors ??= [];
+            errors.AddRange(result.Errors);
         }
 
         return errors == null
@@ -48,35 +39,35 @@ public sealed class ArraySchema<TElement> : ISchema<TElement[]>
 
     public ArraySchema<TElement> MinLength(int min, string? message = null)
     {
-        _rules.Add(new RefinementRule<TElement[]>((val, exec) =>
+        Use(new RefinementRule<TElement[]>((val, exec) =>
             CollectionValidators.MinLength(val, min, exec.Path, message)));
         return this;
     }
 
     public ArraySchema<TElement> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new RefinementRule<TElement[]>((val, exec) =>
+        Use(new RefinementRule<TElement[]>((val, exec) =>
             CollectionValidators.MaxLength(val, max, exec.Path, message)));
         return this;
     }
 
     public ArraySchema<TElement> Length(int exact, string? message = null)
     {
-        _rules.Add(new RefinementRule<TElement[]>((val, exec) =>
+        Use(new RefinementRule<TElement[]>((val, exec) =>
             CollectionValidators.Length(val, exact, exec.Path, message)));
         return this;
     }
 
     public ArraySchema<TElement> NotEmpty(string? message = null)
     {
-        _rules.Add(new RefinementRule<TElement[]>((val, exec) =>
+        Use(new RefinementRule<TElement[]>((val, exec) =>
             CollectionValidators.NotEmpty(val, exec.Path, message)));
         return this;
     }
 
     public ArraySchema<TElement> Refine(Func<TElement[], bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<TElement[]>((val, exec) =>
+        Use(new RefinementRule<TElement[]>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -87,10 +78,9 @@ public sealed class ArraySchema<TElement> : ISchema<TElement[]>
 /// <summary>
 /// A context-aware schema for validating arrays where each element is validated by an inner schema.
 /// </summary>
-public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
+public class ArraySchema<TElement, TContext> : ContextSchema<TElement[], TContext>
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
-    private readonly List<IValidationRule<TElement[], TContext>> _rules = [];
 
     public ArraySchema(ISchema<TElement, TContext> elementSchema)
     {
@@ -102,20 +92,9 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
         _elementSchema = new SchemaAdapter<TElement, TContext>(elementSchema);
     }
 
-    public async ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(TElement[] value, ValidationContext<TContext> context)
     {
-        List<ValidationError>? errors = null;
-
-        // Validate array-level rules
-        foreach (var rule in _rules)
-        {
-            var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= [];
-                errors.Add(error);
-            }
-        }
+        var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element
         for (var i = 0; i < value.Length; i++)
@@ -125,11 +104,10 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
                 context.Execution.PushIndex(i));
 
             var result = await _elementSchema.ValidateAsync(value[i], elementContext);
-            if (result.IsFailure)
-            {
-                errors ??= [];
-                errors.AddRange(result.Errors);
-            }
+            if (!result.IsFailure) continue;
+            
+            errors ??= [];
+            errors.AddRange(result.Errors);
         }
 
         return errors == null
@@ -139,7 +117,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        _rules.Add(new RefinementRule<TElement[], TContext>((val, ctx) =>
+        Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             val.Length >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
@@ -148,7 +126,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new RefinementRule<TElement[], TContext>((val, ctx) =>
+        Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             val.Length <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
@@ -157,7 +135,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        _rules.Add(new RefinementRule<TElement[], TContext>((val, ctx) =>
+        Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             val.Length == exact
                 ? null
                 : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
@@ -171,7 +149,7 @@ public class ArraySchema<TElement, TContext> : ISchema<TElement[], TContext>
 
     public ArraySchema<TElement, TContext> Refine(Func<TElement[], TContext, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<TElement[], TContext>((val, ctx) =>
+        Use(new RefinementRule<TElement[], TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

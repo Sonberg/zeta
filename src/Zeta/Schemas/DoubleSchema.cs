@@ -7,37 +7,25 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating double values.
 /// </summary>
-public sealed class DoubleSchema : ISchema<double>
+public sealed class DoubleSchema : ContextlessSchema<double>
 {
-    private readonly RuleEngine<double> _rules = new();
-
-    public async ValueTask<Result<double>> ValidateAsync(double value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var errors = await _rules.ExecuteAsync(value, execution);
-
-        return errors == null
-            ? Result<double>.Success(value)
-            : Result<double>.Failure(errors);
-    }
-
     public DoubleSchema Min(double min, string? message = null)
     {
-        _rules.Add(new RefinementRule<double>((val, exec) =>
+        Use(new RefinementRule<double>((val, exec) =>
             NumericValidators.Min(val, min, exec.Path, message)));
         return this;
     }
 
     public DoubleSchema Max(double max, string? message = null)
     {
-        _rules.Add(new RefinementRule<double>((val, exec) =>
+        Use(new RefinementRule<double>((val, exec) =>
             NumericValidators.Max(val, max, exec.Path, message)));
         return this;
     }
 
     public DoubleSchema Positive(string? message = null)
     {
-        _rules.Add(new RefinementRule<double>((val, exec) =>
+        Use(new RefinementRule<double>((val, exec) =>
             val > 0
                 ? null
                 : new ValidationError(exec.Path, "positive", message ?? "Must be positive")));
@@ -46,7 +34,7 @@ public sealed class DoubleSchema : ISchema<double>
 
     public DoubleSchema Negative(string? message = null)
     {
-        _rules.Add(new RefinementRule<double>((val, exec) =>
+        Use(new RefinementRule<double>((val, exec) =>
             val < 0
                 ? null
                 : new ValidationError(exec.Path, "negative", message ?? "Must be negative")));
@@ -55,7 +43,7 @@ public sealed class DoubleSchema : ISchema<double>
 
     public DoubleSchema Finite(string? message = null)
     {
-        _rules.Add(new RefinementRule<double>((val, exec) =>
+        Use(new RefinementRule<double>((val, exec) =>
             !double.IsNaN(val) && !double.IsInfinity(val)
                 ? null
                 : new ValidationError(exec.Path, "finite", message ?? "Must be a finite number")));
@@ -64,7 +52,7 @@ public sealed class DoubleSchema : ISchema<double>
 
     public DoubleSchema Refine(Func<double, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<double>((val, exec) =>
+        Use(new RefinementRule<double>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -75,7 +63,7 @@ public sealed class DoubleSchema : ISchema<double>
 /// <summary>
 /// A context-aware schema for validating double values.
 /// </summary>
-public class DoubleSchema<TContext> : BaseSchema<double, TContext>
+public class DoubleSchema<TContext> : ContextSchema<double, TContext>
 {
     public DoubleSchema<TContext> Min(double min, string? message = null)
     {

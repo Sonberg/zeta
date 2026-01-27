@@ -7,28 +7,20 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating List&lt;T&gt; where each element is validated by an inner schema.
 /// </summary>
-public sealed class ListSchema<TElement> : ISchema<List<TElement>>
+public sealed class ListSchema<TElement> : ContextlessSchema<List<TElement>>
 {
     private readonly ISchema<TElement> _elementSchema;
-    private readonly RuleEngine<List<TElement>> _rules = new();
 
     public ListSchema(ISchema<TElement> elementSchema)
     {
         _elementSchema = elementSchema;
     }
 
-    public async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<List<TElement>>> ValidateAsync(List<TElement> value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
-        List<ValidationError>? errors = null;
-
-        // Validate list-level rules
-        var ruleErrors = await _rules.ExecuteAsync(value, execution);
-        if (ruleErrors != null)
-        {
-            errors = ruleErrors;
-        }
-
+        var errors = await Rules.ExecuteAsync(value, execution);
+        
         // Validate each element
         for (var i = 0; i < value.Count; i++)
         {
@@ -48,35 +40,35 @@ public sealed class ListSchema<TElement> : ISchema<List<TElement>>
 
     public ListSchema<TElement> MinLength(int min, string? message = null)
     {
-        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
+        Use(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.MinCount(val, min, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
+        Use(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.MaxCount(val, max, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> Length(int exact, string? message = null)
     {
-        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
+        Use(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.Count(val, exact, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> NotEmpty(string? message = null)
     {
-        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
+        Use(new RefinementRule<List<TElement>>((val, exec) =>
             CollectionValidators.ListNotEmpty(val, exec.Path, message)));
         return this;
     }
 
     public ListSchema<TElement> Refine(Func<List<TElement>, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<List<TElement>>((val, exec) =>
+        Use(new RefinementRule<List<TElement>>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -87,10 +79,9 @@ public sealed class ListSchema<TElement> : ISchema<List<TElement>>
 /// <summary>
 /// A context-aware schema for validating List&lt;T&gt; where each element is validated by an inner schema.
 /// </summary>
-public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
+public class ListSchema<TElement, TContext> : ContextSchema<List<TElement>, TContext>
 {
     private readonly ISchema<TElement, TContext> _elementSchema;
-    private readonly List<IValidationRule<List<TElement>, TContext>> _rules = [];
 
     public ListSchema(ISchema<TElement, TContext> elementSchema)
     {
@@ -102,21 +93,10 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
         _elementSchema = new SchemaAdapter<TElement, TContext>(elementSchema);
     }
 
-    public async ValueTask<Result> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(List<TElement> value, ValidationContext<TContext> context)
     {
-        List<ValidationError>? errors = null;
-
-        // Validate list-level rules
-        foreach (var rule in _rules)
-        {
-            var error = await rule.ValidateAsync(value, context);
-            if (error != null)
-            {
-                errors ??= [];
-                errors.Add(error);
-            }
-        }
-
+        var errors = await Rules.ExecuteAsync(value, context);
+        
         // Validate each element
         for (var i = 0; i < value.Count; i++)
         {
@@ -125,11 +105,10 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
                 context.Execution.PushIndex(i));
 
             var result = await _elementSchema.ValidateAsync(value[i], elementContext);
-            if (result.IsFailure)
-            {
-                errors ??= [];
-                errors.AddRange(result.Errors);
-            }
+            if (!result.IsFailure) continue;
+            
+            errors ??= [];
+            errors.AddRange(result.Errors);
         }
 
         return errors == null
@@ -139,7 +118,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
+        Use(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             val.Count >= min
                 ? null
                 : new ValidationError(ctx.Execution.Path, "min_length", message ?? $"Must have at least {min} items")));
@@ -148,7 +127,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
+        Use(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             val.Count <= max
                 ? null
                 : new ValidationError(ctx.Execution.Path, "max_length", message ?? $"Must have at most {max} items")));
@@ -157,7 +136,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
+        Use(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             val.Count == exact
                 ? null
                 : new ValidationError(ctx.Execution.Path, "length", message ?? $"Must have exactly {exact} items")));
@@ -171,7 +150,7 @@ public class ListSchema<TElement, TContext> : ISchema<List<TElement>, TContext>
 
     public ListSchema<TElement, TContext> Refine(Func<List<TElement>, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
+        Use(new RefinementRule<List<TElement>, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Execution.Path, code, message)));

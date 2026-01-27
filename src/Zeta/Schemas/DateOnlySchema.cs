@@ -7,23 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating DateOnly values.
 /// </summary>
-public sealed class DateOnlySchema : ISchema<DateOnly>
+public sealed class DateOnlySchema : ContextlessSchema<DateOnly>
 {
-    private readonly RuleEngine<DateOnly> _rules = new();
-
-    public async ValueTask<Result<DateOnly>> ValidateAsync(DateOnly value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var errors = await _rules.ExecuteAsync(value, execution);
-
-        return errors == null
-            ? Result<DateOnly>.Success(value)
-            : Result<DateOnly>.Failure(errors);
-    }
-
     public DateOnlySchema Min(DateOnly min, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
             val >= min
                 ? null
                 : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -32,7 +20,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Max(DateOnly max, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
             val <= max
                 ? null
                 : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -41,7 +29,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Past(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
@@ -53,7 +41,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Future(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
@@ -65,7 +53,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Between(DateOnly min, DateOnly max, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -74,7 +62,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Weekday(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
@@ -83,7 +71,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Weekend(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
@@ -92,7 +80,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema MinAge(int years, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -107,7 +95,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema MaxAge(int years, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -122,7 +110,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 
     public DateOnlySchema Refine(Func<DateOnly, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<DateOnly>((val, exec) =>
+        Use(new RefinementRule<DateOnly>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -133,7 +121,7 @@ public sealed class DateOnlySchema : ISchema<DateOnly>
 /// <summary>
 /// A context-aware schema for validating DateOnly values.
 /// </summary>
-public class DateOnlySchema<TContext> : BaseSchema<DateOnly, TContext>
+public class DateOnlySchema<TContext> : ContextSchema<DateOnly, TContext>
 {
     public DateOnlySchema<TContext> Min(DateOnly min, string? message = null)
     {

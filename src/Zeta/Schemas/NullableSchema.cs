@@ -6,7 +6,7 @@ namespace Zeta.Schemas;
 /// A contextless schema that wraps another schema and allows null values.
 /// For reference types (classes).
 /// </summary>
-public sealed class NullableSchema<T> : ISchema<T?> where T : class
+public sealed class NullableSchema<T> : ContextlessSchema<T?> where T : class
 {
     private readonly ISchema<T> _inner;
 
@@ -15,7 +15,7 @@ public sealed class NullableSchema<T> : ISchema<T?> where T : class
         _inner = inner;
     }
 
-    public async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
     {
         if (value is null)
         {
@@ -23,6 +23,7 @@ public sealed class NullableSchema<T> : ISchema<T?> where T : class
         }
 
         var result = await _inner.ValidateAsync(value, execution);
+
         return result.IsSuccess
             ? Result<T?>.Success(value)
             : Result<T?>.Failure(result.Errors);
@@ -33,7 +34,7 @@ public sealed class NullableSchema<T> : ISchema<T?> where T : class
 /// A context-aware schema that wraps another schema and allows null values.
 /// For reference types (classes).
 /// </summary>
-public class NullableSchema<T, TContext> : ISchema<T?, TContext> where T : class
+public class NullableSchema<T, TContext> : ContextSchema<T?, TContext> where T : class
 {
     private readonly ISchema<T, TContext> _inner;
 
@@ -47,7 +48,7 @@ public class NullableSchema<T, TContext> : ISchema<T?, TContext> where T : class
         _inner = new SchemaAdapter<T, TContext>(inner);
     }
 
-    public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (value is null)
         {
@@ -62,7 +63,7 @@ public class NullableSchema<T, TContext> : ISchema<T?, TContext> where T : class
 /// A contextless schema that wraps another schema and allows null values.
 /// For value types (structs).
 /// </summary>
-public sealed class NullableValueSchema<T> : ISchema<T?> where T : struct
+public sealed class NullableValueSchema<T> : ContextlessSchema<T?> where T : struct
 {
     private readonly ISchema<T> _inner;
 
@@ -71,7 +72,7 @@ public sealed class NullableValueSchema<T> : ISchema<T?> where T : struct
         _inner = inner;
     }
 
-    public async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<T?>> ValidateAsync(T? value, ValidationExecutionContext? execution = null)
     {
         if (!value.HasValue)
         {
@@ -89,7 +90,7 @@ public sealed class NullableValueSchema<T> : ISchema<T?> where T : struct
 /// A context-aware schema that wraps another schema and allows null values.
 /// For value types (structs).
 /// </summary>
-public class NullableValueSchema<T, TContext> : ISchema<T?, TContext> where T : struct
+public class NullableValueSchema<T, TContext> : ContextSchema<T?, TContext> where T : struct
 {
     private readonly ISchema<T, TContext> _inner;
 
@@ -103,7 +104,7 @@ public class NullableValueSchema<T, TContext> : ISchema<T?, TContext> where T : 
         _inner = new SchemaAdapter<T, TContext>(inner);
     }
 
-    public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (!value.HasValue)
         {

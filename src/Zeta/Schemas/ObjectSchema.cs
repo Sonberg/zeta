@@ -8,44 +8,42 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating object values.
 /// </summary>
-public sealed class ObjectSchema<T> : ISchema<T> where T : class
+public sealed class ObjectSchema<T> : ContextlessSchema<T> where T : class
 {
-    private readonly RuleEngine<T> _rules = new();
     private readonly List<IContextlessFieldValidator<T>> _fields = [];
     private readonly List<IContextlessConditionalBranch<T>> _conditionals = [];
 
-    public async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
+    public override async ValueTask<Result<T>> ValidateAsync(T value, ValidationExecutionContext? execution = null)
     {
         execution ??= ValidationExecutionContext.Empty;
         List<ValidationError>? errors = null;
 
         // Validate rules
-        var ruleErrors = await _rules.ExecuteAsync(value, execution);
+        var ruleErrors = await Rules.ExecuteAsync(value, execution);
         if (ruleErrors != null)
         {
-            errors = ruleErrors;
+            errors ??= [];
+            errors.AddRange(ruleErrors);
         }
 
         // Validate fields
         foreach (var field in _fields)
         {
             var fieldErrors = await field.ValidateAsync(value, execution);
-            if (fieldErrors.Count > 0)
-            {
-                errors ??= [];
-                errors.AddRange(fieldErrors);
-            }
+            if (fieldErrors.Count <= 0) continue;
+
+            errors ??= [];
+            errors.AddRange(fieldErrors);
         }
 
         // Validate conditionals
         foreach (var conditional in _conditionals)
         {
             var conditionalErrors = await conditional.ValidateAsync(value, execution);
-            if (conditionalErrors.Count > 0)
-            {
-                errors ??= [];
-                errors.AddRange(conditionalErrors);
-            }
+            if (conditionalErrors.Count <= 0) continue;
+
+            errors ??= [];
+            errors.AddRange(conditionalErrors);
         }
 
         return errors == null
@@ -84,7 +82,7 @@ public sealed class ObjectSchema<T> : ISchema<T> where T : class
 
     public ObjectSchema<T> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<T>((val, exec) =>
+        Use(new RefinementRule<T>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -119,15 +117,21 @@ public sealed class ObjectSchema<T> : ISchema<T> where T : class
 /// <summary>
 /// A context-aware schema for validating object values.
 /// </summary>
-public class ObjectSchema<T, TContext> : BaseSchema<T, TContext> where T : class
+public class ObjectSchema<T, TContext> : ContextSchema<T, TContext> where T : class
 {
     private readonly List<IFieldValidator<T, TContext>> _fields = [];
     private readonly List<IConditionalBranch<T, TContext>> _conditionals = [];
 
     public override async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
     {
-        var result = await base.ValidateAsync(value, context);
-        var errors = result.Errors.Count > 0 ? result.Errors.ToList() : null;
+        List<ValidationError>? errors = null;
+        
+        var ruleErrors = await Rules.ExecuteAsync(value, context);
+        if (ruleErrors != null)
+        {
+            errors ??= [];
+            errors.AddRange(ruleErrors);
+        }
 
         foreach (var field in _fields)
         {
@@ -273,6 +277,7 @@ internal sealed class ContextlessRequiredFieldValidator<TInstance, TProperty> : 
             var path = string.IsNullOrEmpty(execution.Path) ? _name : $"{execution.Path}.{_name}";
             return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
         }
+
         return new ValueTask<IReadOnlyList<ValidationError>>(EmptyErrors);
     }
 }
@@ -415,6 +420,7 @@ internal sealed class ContextlessConditionalBranch<T> : IContextlessConditionalB
                 errors.AddRange(fieldErrors);
             }
         }
+
         return errors ?? EmptyErrors;
     }
 }
@@ -474,6 +480,7 @@ internal sealed class RequiredFieldValidator<TInstance, TProperty, TContext> : I
             var path = string.IsNullOrEmpty(context.Execution.Path) ? _name : $"{context.Execution.Path}.{_name}";
             return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
         }
+
         return new ValueTask<IReadOnlyList<ValidationError>>(EmptyErrors);
     }
 }
@@ -623,6 +630,7 @@ internal sealed class ConditionalBranch<T, TContext> : IConditionalBranch<T, TCo
                 errors.AddRange(fieldErrors);
             }
         }
+
         return errors ?? EmptyErrors;
     }
 }
@@ -660,6 +668,7 @@ internal sealed class ContextAwareConditionalBranch<T, TContext> : IConditionalB
                 errors.AddRange(fieldErrors);
             }
         }
+
         return errors ?? EmptyErrors;
     }
 }

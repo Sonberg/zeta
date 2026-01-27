@@ -6,25 +6,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating DateTime values.
 /// </summary>
-public sealed class DateTimeSchema : ISchema<DateTime>
+public sealed class DateTimeSchema : ContextlessSchema<DateTime>
 {
-    private readonly RuleEngine<DateTime> _rules = new();
-    private TimeProvider? _timeProvider;
-
-    public async ValueTask<Result<DateTime>> ValidateAsync(DateTime value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        _timeProvider = execution.TimeProvider;
-        var errors = await _rules.ExecuteAsync(value, execution);
-
-        return errors == null
-            ? Result<DateTime>.Success(value)
-            : Result<DateTime>.Failure(errors);
-    }
-
     public DateTimeSchema Min(DateTime min, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             val >= min
                 ? null
                 : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -33,7 +19,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Max(DateTime max, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             val <= max
                 ? null
                 : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -42,7 +28,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Past(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             val < exec.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(exec.Path, "past", message ?? "Must be in the past")));
@@ -51,7 +37,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Future(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             val > exec.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(exec.Path, "future", message ?? "Must be in the future")));
@@ -60,7 +46,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Between(DateTime min, DateTime max, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -69,7 +55,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Weekday(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
@@ -78,7 +64,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Weekend(string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
@@ -87,7 +73,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema WithinDays(int days, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
         {
             var now = exec.TimeProvider.GetUtcNow().UtcDateTime;
             var diff = Math.Abs((val - now).TotalDays);
@@ -100,7 +86,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema MinAge(int years, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
         {
             var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -115,7 +101,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema MaxAge(int years, string? message = null)
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
         {
             var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -130,7 +116,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 
     public DateTimeSchema Refine(Func<DateTime, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -141,7 +127,7 @@ public sealed class DateTimeSchema : ISchema<DateTime>
 /// <summary>
 /// A context-aware schema for validating DateTime values.
 /// </summary>
-public class DateTimeSchema<TContext> : BaseSchema<DateTime, TContext>
+public class DateTimeSchema<TContext> : ContextSchema<DateTime, TContext>
 {
     public DateTimeSchema<TContext> Min(DateTime min, string? message = null)
     {

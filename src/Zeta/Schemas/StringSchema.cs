@@ -8,100 +8,88 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating string values.
 /// </summary>
-public sealed class StringSchema : ISchema<string>
+public sealed class StringSchema : ContextlessSchema<string>
 {
-    private readonly RuleEngine<string> _rules = new();
-
-    public async ValueTask<Result<string>> ValidateAsync(string value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var errors = await _rules.ExecuteAsync(value, execution);
-
-        return errors == null
-            ? Result<string>.Success(value)
-            : Result<string>.Failure(errors);
-    }
-
     public StringSchema MinLength(int min, string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.MinLength(val, min, exec.Path, message)));
         return this;
     }
 
     public StringSchema MaxLength(int max, string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.MaxLength(val, max, exec.Path, message)));
         return this;
     }
 
     public StringSchema Length(int exact, string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.Length(val, exact, exec.Path, message)));
         return this;
     }
 
     public StringSchema NotEmpty(string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.NotEmpty(val, exec.Path, message)));
         return this;
     }
 
     public StringSchema Email(string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.Email(val, exec.Path, message)));
         return this;
     }
 
     public StringSchema Uuid(string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.Uuid(val, exec.Path, message)));
         return this;
     }
 
     public StringSchema Url(string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.Url(val, exec.Path, message)));
         return this;
     }
 
     public StringSchema Uri(UriKind kind = UriKind.Absolute, string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.ValidUri(val, kind, exec.Path, message)));
         return this;
     }
 
     public StringSchema Alphanumeric(string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.Alphanumeric(val, exec.Path, message)));
         return this;
     }
 
     public StringSchema StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.StartsWith(val, prefix, comparison, exec.Path, message)));
         return this;
     }
 
     public StringSchema EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.EndsWith(val, suffix, comparison, exec.Path, message)));
         return this;
     }
 
     public StringSchema Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.Contains(val, substring, comparison, exec.Path, message)));
         return this;
     }
@@ -113,14 +101,14 @@ public sealed class StringSchema : ISchema<string>
             RegexOptions.Compiled,
             TimeSpan.FromSeconds(1));
 
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             StringValidators.MatchesRegex(val, compiledRegex, exec.Path, message, code)));
         return this;
     }
 
     public StringSchema Refine(Func<string, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<string>((val, exec) =>
+        Use(new RefinementRule<string>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -131,7 +119,7 @@ public sealed class StringSchema : ISchema<string>
 /// <summary>
 /// A context-aware schema for validating string values.
 /// </summary>
-public class StringSchema<TContext> : BaseSchema<string, TContext>
+public class StringSchema<TContext> : ContextSchema<string, TContext>
 {
     public StringSchema<TContext> MinLength(int min, string? message = null)
     {

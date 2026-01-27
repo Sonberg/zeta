@@ -5,7 +5,7 @@ namespace Zeta.Core;
 /// <summary>
 /// Shared rule execution engine for contextless schemas.
 /// </summary>
-public sealed class RuleEngine<T>
+public sealed class ContextlessRuleEngine<T>
 {
     private readonly List<IValidationRule<T>> _rules = [];
 

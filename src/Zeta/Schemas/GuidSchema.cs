@@ -6,23 +6,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating Guid values.
 /// </summary>
-public sealed class GuidSchema : ISchema<Guid>
+public sealed class GuidSchema : ContextlessSchema<Guid>
 {
-    private readonly RuleEngine<Guid> _rules = new();
-
-    public async ValueTask<Result<Guid>> ValidateAsync(Guid value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var errors = await _rules.ExecuteAsync(value, execution);
-
-        return errors == null
-            ? Result<Guid>.Success(value)
-            : Result<Guid>.Failure(errors);
-    }
-
     public GuidSchema NotEmpty(string? message = null)
     {
-        _rules.Add(new RefinementRule<Guid>((val, exec) =>
+        Use(new RefinementRule<Guid>((val, exec) =>
             val != Guid.Empty
                 ? null
                 : new ValidationError(exec.Path, "not_empty", message ?? "GUID cannot be empty")));
@@ -31,7 +19,7 @@ public sealed class GuidSchema : ISchema<Guid>
 
     public GuidSchema Version(int version, string? message = null)
     {
-        _rules.Add(new RefinementRule<Guid>((val, exec) =>
+        Use(new RefinementRule<Guid>((val, exec) =>
         {
             var bytes = val.ToByteArray();
             var guidVersion = (bytes[7] >> 4) & 0x0F;
@@ -44,7 +32,7 @@ public sealed class GuidSchema : ISchema<Guid>
 
     public GuidSchema Refine(Func<Guid, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<Guid>((val, exec) =>
+        Use(new RefinementRule<Guid>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -55,7 +43,7 @@ public sealed class GuidSchema : ISchema<Guid>
 /// <summary>
 /// A context-aware schema for validating Guid values.
 /// </summary>
-public class GuidSchema<TContext> : BaseSchema<Guid, TContext>
+public class GuidSchema<TContext> : ContextSchema<Guid, TContext>
 {
     public GuidSchema<TContext> NotEmpty(string? message = null)
     {

@@ -6,23 +6,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating boolean values.
 /// </summary>
-public sealed class BoolSchema : ISchema<bool>
+public sealed class BoolSchema : ContextlessSchema<bool>
 {
-    private readonly RuleEngine<bool> _rules = new();
-
-    public async ValueTask<Result<bool>> ValidateAsync(bool value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var errors = await _rules.ExecuteAsync(value, execution);
-
-        return errors == null
-            ? Result<bool>.Success(value)
-            : Result<bool>.Failure(errors);
-    }
-
     public BoolSchema IsTrue(string? message = null)
     {
-        _rules.Add(new RefinementRule<bool>((val, exec) =>
+        Use(new RefinementRule<bool>((val, exec) =>
             val
                 ? null
                 : new ValidationError(exec.Path, "is_true", message ?? "Must be true")));
@@ -31,7 +19,7 @@ public sealed class BoolSchema : ISchema<bool>
 
     public BoolSchema IsFalse(string? message = null)
     {
-        _rules.Add(new RefinementRule<bool>((val, exec) =>
+        Use(new RefinementRule<bool>((val, exec) =>
             !val
                 ? null
                 : new ValidationError(exec.Path, "is_false", message ?? "Must be false")));
@@ -40,7 +28,7 @@ public sealed class BoolSchema : ISchema<bool>
 
     public BoolSchema Refine(Func<bool, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<bool>((val, exec) =>
+        Use(new RefinementRule<bool>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -51,7 +39,7 @@ public sealed class BoolSchema : ISchema<bool>
 /// <summary>
 /// A context-aware schema for validating boolean values.
 /// </summary>
-public class BoolSchema<TContext> : BaseSchema<bool, TContext>
+public class BoolSchema<TContext> : ContextSchema<bool, TContext>
 {
     public BoolSchema<TContext> IsTrue(string? message = null)
     {

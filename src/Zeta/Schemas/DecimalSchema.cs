@@ -7,37 +7,25 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating decimal values.
 /// </summary>
-public sealed class DecimalSchema : ISchema<decimal>
+public sealed class DecimalSchema : ContextlessSchema<decimal>
 {
-    private readonly RuleEngine<decimal> _rules = new();
-
-    public async ValueTask<Result<decimal>> ValidateAsync(decimal value, ValidationExecutionContext? execution = null)
-    {
-        execution ??= ValidationExecutionContext.Empty;
-        var errors = await _rules.ExecuteAsync(value, execution);
-
-        return errors == null
-            ? Result<decimal>.Success(value)
-            : Result<decimal>.Failure(errors);
-    }
-
     public DecimalSchema Min(decimal min, string? message = null)
     {
-        _rules.Add(new RefinementRule<decimal>((val, exec) =>
+        Use(new RefinementRule<decimal>((val, exec) =>
             NumericValidators.Min(val, min, exec.Path, message)));
         return this;
     }
 
     public DecimalSchema Max(decimal max, string? message = null)
     {
-        _rules.Add(new RefinementRule<decimal>((val, exec) =>
+        Use(new RefinementRule<decimal>((val, exec) =>
             NumericValidators.Max(val, max, exec.Path, message)));
         return this;
     }
 
     public DecimalSchema Positive(string? message = null)
     {
-        _rules.Add(new RefinementRule<decimal>((val, exec) =>
+        Use(new RefinementRule<decimal>((val, exec) =>
             val > 0
                 ? null
                 : new ValidationError(exec.Path, "positive", message ?? "Must be positive")));
@@ -46,7 +34,7 @@ public sealed class DecimalSchema : ISchema<decimal>
 
     public DecimalSchema Negative(string? message = null)
     {
-        _rules.Add(new RefinementRule<decimal>((val, exec) =>
+        Use(new RefinementRule<decimal>((val, exec) =>
             val < 0
                 ? null
                 : new ValidationError(exec.Path, "negative", message ?? "Must be negative")));
@@ -55,7 +43,7 @@ public sealed class DecimalSchema : ISchema<decimal>
 
     public DecimalSchema Precision(int maxDecimalPlaces, string? message = null)
     {
-        _rules.Add(new RefinementRule<decimal>((val, exec) =>
+        Use(new RefinementRule<decimal>((val, exec) =>
             GetDecimalPlaces(val) <= maxDecimalPlaces
                 ? null
                 : new ValidationError(exec.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places")));
@@ -64,7 +52,7 @@ public sealed class DecimalSchema : ISchema<decimal>
 
     public DecimalSchema MultipleOf(decimal step, string? message = null)
     {
-        _rules.Add(new RefinementRule<decimal>((val, exec) =>
+        Use(new RefinementRule<decimal>((val, exec) =>
             val % step == 0
                 ? null
                 : new ValidationError(exec.Path, "multiple_of", message ?? $"Must be a multiple of {step}")));
@@ -73,7 +61,7 @@ public sealed class DecimalSchema : ISchema<decimal>
 
     public DecimalSchema Refine(Func<decimal, bool> predicate, string message, string code = "custom_error")
     {
-        _rules.Add(new RefinementRule<decimal>((val, exec) =>
+        Use(new RefinementRule<decimal>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -98,7 +86,7 @@ public sealed class DecimalSchema : ISchema<decimal>
 /// <summary>
 /// A context-aware schema for validating decimal values.
 /// </summary>
-public class DecimalSchema<TContext> : BaseSchema<decimal, TContext>
+public class DecimalSchema<TContext> : ContextSchema<decimal, TContext>
 {
     public DecimalSchema<TContext> Min(decimal min, string? message = null)
     {
