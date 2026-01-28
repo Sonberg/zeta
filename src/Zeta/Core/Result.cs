@@ -81,7 +81,7 @@ public record Result<T> : Result
     /// Creates a failed result with the given errors.
     /// Duplicate errors are automatically removed.
     /// </summary>
-    public new static Result<T> Failure(params ValidationError[] errors) => new(errors);
+    public static Result<T> Failure(params ValidationError[] errors) => new(errors);
 
     /// <summary>
     /// Creates a failed result with the given errors.
