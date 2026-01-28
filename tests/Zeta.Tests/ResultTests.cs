@@ -133,4 +133,48 @@ public class ResultTests
 
         Assert.Equal("Error", output);
     }
+
+    // ==================== Cached Success Tests ====================
+
+    [Fact]
+    public void Success_ReferenceType_SameInstance_ReturnsCachedResult()
+    {
+        var user = new TestUser { Name = "John" };
+        var result1 = Result<TestUser>.Success(user);
+        var result2 = Result<TestUser>.Success(user);
+
+        Assert.Same(result1, result2); // Same Result instance (cached)
+        Assert.Same(user, result1.Value);
+        Assert.Same(user, result2.Value);
+    }
+
+    [Fact]
+    public void Success_ReferenceType_DifferentInstances_ReturnsDifferentResults()
+    {
+        var user1 = new TestUser { Name = "John" };
+        var user2 = new TestUser { Name = "Jane" };
+        var result1 = Result<TestUser>.Success(user1);
+        var result2 = Result<TestUser>.Success(user2);
+
+        Assert.NotSame(result1, result2); // Different Result instances
+        Assert.Same(user1, result1.Value);
+        Assert.Same(user2, result2.Value);
+    }
+
+    [Fact]
+    public void Success_ValueType_AlwaysCreatesNewResult()
+    {
+        var result1 = Result<int>.Success(42);
+        var result2 = Result<int>.Success(42);
+
+        // Value types don't get cached (not reference-equal)
+        Assert.NotSame(result1, result2);
+        Assert.Equal(42, result1.Value);
+        Assert.Equal(42, result2.Value);
+    }
+
+    private class TestUser
+    {
+        public string Name { get; set; } = "";
+    }
 }

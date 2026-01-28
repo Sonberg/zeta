@@ -428,20 +428,20 @@ public record ValidationError(
 
 ## Benchmarks
 
-Comparing Zeta against FluentValidation and DataAnnotations on .NET 9 (Apple M2 Pro).
+Comparing Zeta against FluentValidation and DataAnnotations on .NET 10 (Apple M2 Pro).
 
 | Method | Mean | Allocated |
 |--------|-----:|----------:|
-| FluentValidation | 150 ns | 600 B |
-| FluentValidation (Async) | 270 ns | 672 B |
-| **Zeta** | **374 ns** | **416 B** |
-| Zeta (Invalid) | 555 ns | 1,144 B |
-| DataAnnotations | 733 ns | 1,880 B |
-| DataAnnotations (Invalid) | 1,105 ns | 2,704 B |
-| FluentValidation (Invalid) | 2,247 ns | 7,920 B |
+| FluentValidation | 128 ns | 600 B |
+| FluentValidation (Async) | 228 ns | 672 B |
+| **Zeta** | **327 ns** | **248 B** |
+| Zeta (Invalid) | 461 ns | 1,096 B |
+| DataAnnotations | 602 ns | 1,848 B |
+| DataAnnotations (Invalid) | 994 ns | 2,672 B |
+| FluentValidation (Invalid) | 1,912 ns | 7,728 B |
 
 **Key findings:**
-- Allocates **~40% less memory** than FluentValidation on valid input
+- Allocates **~60% less memory** than FluentValidation on valid input
 - Allocates **~7x less memory** than FluentValidation on invalid input
 - **4x faster** than FluentValidation when validation fails
 - **2x faster** than DataAnnotations when validation fails

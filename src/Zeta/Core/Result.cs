@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Zeta;
 
 /// <summary>
@@ -51,6 +53,10 @@ public record Result<T> : Result
 {
     private readonly T? _value;
 
+    // Cache for reference type success results (object-based to work with any reference type)
+    private static readonly ConditionalWeakTable<object, Result<T>>? _successCache =
+        typeof(T).IsValueType ? null : new ConditionalWeakTable<object, Result<T>>();
+
     /// <summary>
     /// Gets the validated value. Throws if validation failed.
     /// </summary>
@@ -70,8 +76,18 @@ public record Result<T> : Result
 
     /// <summary>
     /// Creates a successful result with the given value.
+    /// For reference types, results are cached by reference identity.
     /// </summary>
-    public static Result<T> Success(T value) => new(value);
+    public static Result<T> Success(T value)
+    {
+        // For reference types, use caching to reduce allocations
+        if (_successCache != null && value is not null)
+        {
+            return _successCache.GetValue(value, static v => new Result<T>((T)v));
+        }
+
+        return new Result<T>(value);
+    }
 
     /// <summary>
     /// Creates a failed result with the given errors.
