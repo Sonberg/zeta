@@ -211,4 +211,121 @@ public class SchemaConsistencyTests
         }
         return false;
     }
+
+    /// <summary>
+    /// Ensures ObjectContextlessSchema has Field overloads with Func builders for all primitive schema types.
+    /// This catches missing overloads when new schema types are added.
+    /// </summary>
+    [Fact]
+    public void ObjectContextlessSchema_HasFieldOverloads_ForAllPrimitiveTypes()
+    {
+        // These are the primitive types that should have Field(Expression, Func<Schema, Schema>) overloads
+        var expectedTypes = new[]
+        {
+            typeof(string),
+            typeof(int),
+            typeof(double),
+            typeof(decimal),
+            typeof(bool),
+            typeof(Guid),
+            typeof(DateTime),
+            typeof(DateOnly),
+            typeof(TimeOnly)
+        };
+
+        var objectSchemaType = typeof(ObjectContextlessSchema<>);
+        var fieldMethods = objectSchemaType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(m => m.Name == "Field" && !m.IsGenericMethod)
+            .ToList();
+
+        var missingTypes = new List<Type>();
+
+        foreach (var expectedType in expectedTypes)
+        {
+            // Look for a Field method where the first parameter is Expression<Func<T, expectedType>>
+            var hasOverload = fieldMethods.Any(m =>
+            {
+                var parameters = m.GetParameters();
+                if (parameters.Length != 2) return false;
+
+                var firstParam = parameters[0].ParameterType;
+                if (!firstParam.IsGenericType) return false;
+                if (firstParam.GetGenericTypeDefinition() != typeof(System.Linq.Expressions.Expression<>)) return false;
+
+                var funcType = firstParam.GetGenericArguments()[0];
+                if (!funcType.IsGenericType) return false;
+
+                var funcArgs = funcType.GetGenericArguments();
+                // funcArgs[0] is T (generic), funcArgs[1] is the property type
+                return funcArgs.Length == 2 && funcArgs[1] == expectedType;
+            });
+
+            if (!hasOverload)
+            {
+                missingTypes.Add(expectedType);
+            }
+        }
+
+        Assert.True(
+            missingTypes.Count == 0,
+            $"ObjectContextlessSchema<T> is missing Field overloads for types:\n" +
+            string.Join("\n", missingTypes.Select(t => $"  - {t.Name}")));
+    }
+
+    /// <summary>
+    /// Ensures ObjectContextSchema has Field overloads with Func builders for all primitive schema types.
+    /// This maintains parity with ObjectContextlessSchema.
+    /// </summary>
+    [Fact]
+    public void ObjectContextSchema_HasFieldOverloads_ForAllPrimitiveTypes()
+    {
+        var expectedTypes = new[]
+        {
+            typeof(string),
+            typeof(int),
+            typeof(double),
+            typeof(decimal),
+            typeof(bool),
+            typeof(Guid),
+            typeof(DateTime),
+            typeof(DateOnly),
+            typeof(TimeOnly)
+        };
+
+        var objectSchemaType = typeof(ObjectContextSchema<,>);
+        var fieldMethods = objectSchemaType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(m => m.Name == "Field" && !m.IsGenericMethod)
+            .ToList();
+
+        var missingTypes = new List<Type>();
+
+        foreach (var expectedType in expectedTypes)
+        {
+            var hasOverload = fieldMethods.Any(m =>
+            {
+                var parameters = m.GetParameters();
+                if (parameters.Length != 2) return false;
+
+                var firstParam = parameters[0].ParameterType;
+                if (!firstParam.IsGenericType) return false;
+                if (firstParam.GetGenericTypeDefinition() != typeof(System.Linq.Expressions.Expression<>)) return false;
+
+                var funcType = firstParam.GetGenericArguments()[0];
+                if (!funcType.IsGenericType) return false;
+
+                var funcArgs = funcType.GetGenericArguments();
+                return funcArgs.Length == 2 && funcArgs[1] == expectedType;
+            });
+
+            if (!hasOverload)
+            {
+                missingTypes.Add(expectedType);
+            }
+        }
+
+        Assert.True(
+            missingTypes.Count == 0,
+            $"ObjectContextSchema<T, TContext> is missing Field overloads for types:\n" +
+            string.Join("\n", missingTypes.Select(t => $"  - {t.Name}")));
+    }
 }
