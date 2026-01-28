@@ -1,14 +1,24 @@
 # Fluent Field Builders
 
-This guide covers Zeta's fluent field builder pattern for defining inline schemas in object validation.
+Fluent field builders are the **default and recommended way** to define field validation in Zeta. This guide covers when and how to use them effectively.
 
 ---
 
 ## What Are Fluent Field Builders?
 
-Fluent field builders allow you to define field schemas inline using a builder function instead of pre-building schemas. This makes object schema definitions more concise and readable.
+Fluent field builders allow you to define field schemas inline using a builder function. This is the most concise and readable approach for most validation scenarios.
 
-### Traditional Syntax
+### Default Approach (Fluent Builders)
+
+```csharp
+var userSchema = Z.Object<User>()
+    .Field(u => u.Email, s => s.Email().MinLength(5))
+    .Field(u => u.Age, s => s.Min(18).Max(100));
+```
+
+### For Composability (Pre-Built Schemas)
+
+When you need to reuse the same schema across multiple objects, extract it:
 
 ```csharp
 var emailSchema = Z.String().Email().MinLength(5);
@@ -17,14 +27,6 @@ var ageSchema = Z.Int().Min(18).Max(100);
 var userSchema = Z.Object<User>()
     .Field(u => u.Email, emailSchema)
     .Field(u => u.Age, ageSchema);
-```
-
-### Fluent Builder Syntax
-
-```csharp
-var userSchema = Z.Object<User>()
-    .Field(u => u.Email, s => s.Email().MinLength(5))
-    .Field(u => u.Age, s => s.Min(18).Max(100));
 ```
 
 ---
@@ -90,31 +92,33 @@ Z.Object<Settings>()
 
 ## When to Use Each Approach
 
-### Use Fluent Builders When:
+### Use Fluent Builders (Default)
 
-1. **Schema is simple and used once**
+This is the **recommended approach for most scenarios**:
+
+1. **Single-use validation logic**
    ```csharp
    Z.Object<UserRequest>()
        .Field(u => u.Email, s => s.Email())
        .Field(u => u.Age, s => s.Min(18));
    ```
 
-2. **Inline definition improves readability**
+2. **Inline definitions for clarity**
    ```csharp
-   // Clear and concise
+   // Clear and concise - validation logic right where you need it
    Z.Object<Product>()
        .Field(p => p.Name, s => s.MinLength(3).MaxLength(100))
        .Field(p => p.Price, s => s.Positive().Precision(2));
    ```
 
-3. **Validation logic is straightforward**
+3. **Straightforward validation**
    ```csharp
    Z.Object<Comment>()
        .Field(c => c.Content, s => s.MinLength(1).MaxLength(500))
        .Field(c => c.CreatedAt, s => s.Past());
    ```
 
-### Use Pre-Built Schemas When:
+### Use Pre-Built Schemas (For Composability)
 
 1. **Schema is reused across multiple objects**
    ```csharp
@@ -217,10 +221,10 @@ Z.Object<User>()
 
 ## Best Practices
 
-1. **Keep it simple** - Use fluent builders for straightforward validation
-2. **Extract when reused** - Create named schemas when used in multiple places
-3. **Be consistent** - Pick a style and stick with it within a schema
-4. **Readable first** - Choose the approach that makes your code clearest
+1. **Fluent builders first** - Use inline builders as your default approach
+2. **Extract for reuse** - Only create pre-built schemas when the same validation is used in multiple places
+3. **Be consistent** - Within a single schema, prefer one style over mixing both
+4. **Composability when needed** - Pre-build schemas for nested objects, arrays, or context-aware validation
 
 ---
 
