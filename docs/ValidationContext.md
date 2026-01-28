@@ -136,6 +136,43 @@ Z.String()
 
 ---
 
+## Async Refinement with Context
+
+Use `RefineAsync` for async validation logic:
+
+```csharp
+Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .RefineAsync(
+        async (email, ctx, ct) => !await ctx.Repo.EmailExistsAsync(email, ct),
+        message: "Email already taken",
+        code: "email_exists"
+    );
+```
+
+RefineAsync can access:
+- The validated value
+- The context data
+- The CancellationToken for async operations
+
+**Object Schema Example:**
+
+```csharp
+Z.Object<User>()
+    .Field(u => u.Name, Z.String().MinLength(3))
+    .WithContext<User, UserContext>()
+    .Field(u => u.Email,
+        Z.String()
+            .Email()
+            .WithContext<UserContext>()
+            .RefineAsync(async (email, ctx, ct) =>
+                !await ctx.Repo.EmailExistsAsync(email, ct),
+                "Email already registered"));
+```
+
+---
+
 ## Context-Aware Conditionals
 
 Use context in `.When()` conditions:

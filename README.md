@@ -100,7 +100,9 @@ Z.TimeOnly()
     .Min(minTime).Max(maxTime).Between(min, max)
     .BusinessHours()              // 9 AM - 5 PM (default)
     .BusinessHours(start, end)    // Custom hours
-    .Morning().Afternoon().Evening()
+    .Morning()                    // 6 AM - 12 PM
+    .Afternoon()                  // 12 PM - 6 PM
+    .Evening()                    // 6 PM - 12 AM
 ```
 
 ### Other Types
@@ -108,7 +110,7 @@ Z.TimeOnly()
 ```csharp
 Z.Guid()
     .NotEmpty()         // Not Guid.Empty
-    .Version(4)         // Specific UUID version (1-5)
+    .Version(4)         // Specific UUID version (1, 2, 3, 4, or 5)
 
 Z.Bool()
     .IsTrue()           // Must be true (e.g., terms accepted)
@@ -138,6 +140,17 @@ Z.Object<User>()
     .Field(u => u.Email, Z.String().Email())
     .Field(u => u.Address, AddressSchema)  // Nested schemas
     .Refine(u => u.Password != u.Email, "Password cannot be email")
+```
+
+**Fluent Field Builder** - Define field schemas inline with builder functions:
+
+```csharp
+Z.Object<User>()
+    .Field(u => u.Email, s => s.Email().MinLength(5))
+    .Field(u => u.Age, s => s.Min(18).Max(100))
+    .Field(u => u.Price, s => s.Positive().Precision(2));
+
+// Supported for: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
 ```
 
 ### Collections
@@ -319,6 +332,21 @@ public sealed class StartsWithUpperRule : IValidationRule<string>
 Z.String().Use(new StartsWithUpperRule())
 ```
 
+### Async Refinement
+
+For async validation with context:
+
+```csharp
+Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .RefineAsync(
+        async (email, ctx, ct) => !await _repo.EmailExistsAsync(email, ct),
+        message: "Email already taken",
+        code: "email_exists"
+    )
+```
+
 See the [Custom Rules guide](docs/CustomRules.md) for context-aware rules and advanced patterns.
 
 ## Validation Context
@@ -350,7 +378,15 @@ var UserSchema = Z.Object<User>()
         Z.String()
             .Email()
             .WithContext<UserContext>()
-            .Refine((email, ctx) => !ctx.EmailExists, "Email already taken"));
+            .Refine((email, ctx) => !ctx.EmailExists, "Email already taken"))
+    // Or use RefineAsync for async validation
+    .Field(u => u.Username,
+        Z.String()
+            .MinLength(3)
+            .WithContext<UserContext>()
+            .RefineAsync(async (username, ctx, ct) =>
+                !await ctx.Repo.UsernameExistsAsync(username, ct),
+                "Username already taken"));
 
 // Register
 builder.Services.AddZeta(typeof(Program).Assembly);
@@ -417,6 +453,7 @@ dotnet run --project benchmarks/Zeta.Benchmarks -c Release
 
 ## Documentation
 
+- [Fluent Field Builders](docs/FluentFieldBuilders.md) - Inline schema definitions for object fields
 - [Validation Context](docs/ValidationContext.md) - Async data loading and context-aware schemas
 - [Custom Rules](docs/CustomRules.md) - Creating reusable validation rules
 - [Testing](docs/Testing.md) - Testing strategies and TimeProvider support

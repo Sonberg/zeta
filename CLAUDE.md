@@ -74,11 +74,20 @@ Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `Boo
 Z.String().MinLength(3).MaxLength(100).Email()
 ```
 
-**ObjectSchema Field Validation**: Uses expression trees to extract property names, auto-camelCases them for error paths:
+**ObjectSchema Field Validation**: Uses expression trees to extract property names, auto-camelCases them for error paths. Supports both pre-built schemas and fluent inline builders:
 ```csharp
+// Traditional: pre-built schemas
 Z.Object<User>()
     .Field(u => u.Email, Z.String().Email())  // Error path: "email"
     .Field(u => u.Address, addressSchema)      // Nested: "address.street"
+
+// NEW: Fluent inline builders (more concise)
+Z.Object<User>()
+    .Field(u => u.Email, s => s.Email().MinLength(5))
+    .Field(u => u.Age, s => s.Min(18).Max(100))
+    .Field(u => u.Price, s => s.Positive().Precision(2))
+
+// Supported types: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
 ```
 
 **Context Promotion**: Use `.WithContext<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:
@@ -87,8 +96,12 @@ Z.String()
     .Email()
     .MinLength(5)
     .WithContext<UserContext>()  // Email and MinLength rules are preserved
-    .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned");
+    .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned")
+    .RefineAsync(async (email, ctx, ct) =>
+        !await ctx.Repo.EmailExistsAsync(email, ct), "Email exists");
 ```
+
+**Async Refinement**: Context-aware schemas support `RefineAsync` for async validation with access to context data and CancellationToken.
 
 **Schema Bridging**: `SchemaAdapter<T, TContext>` wraps contextless `ISchema<T>` for use in context-aware object schemas.
 

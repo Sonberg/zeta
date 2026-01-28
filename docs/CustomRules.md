@@ -51,6 +51,46 @@ Z.String()
 
 ---
 
+## Async Context-Aware Refinements
+
+Use `RefineAsync` for async validation with context:
+
+```csharp
+Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .RefineAsync(
+        async (email, ctx, ct) => !await ctx.Repo.EmailExistsAsync(email, ct),
+        message: "Email already registered",
+        code: "email_exists"
+    );
+```
+
+You can combine sync and async refinements:
+
+```csharp
+Z.String()
+    .Email()
+    .WithContext<UserContext>()
+    .Refine((email, ctx) => !ctx.BannedDomains.Any(d => email.EndsWith(d)),
+        "Domain not allowed")
+    .RefineAsync(async (email, ctx, ct) =>
+        !await ctx.Repo.EmailExistsAsync(email, ct),
+        "Email already registered");
+```
+
+**Note**: `RefineAsync` also has a contextless overload:
+
+```csharp
+Z.String()
+    .WithContext<UserContext>()
+    .RefineAsync(async (value, ct) =>
+        await SomeExternalValidationAsync(value, ct),
+        "External validation failed");
+```
+
+---
+
 ## Custom Rule Classes
 
 For reusable validation logic, implement `IValidationRule<T>`:

@@ -217,10 +217,16 @@ public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : 
         throw new ArgumentException("Expression must be a property access");
     }
 
-    internal static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
+    internal static Func<T, TProperty> CreateGetter<TProperty>(
+        Expression<Func<T, TProperty>> expr)
     {
-        var member = (MemberExpression)expr.Body;
-        var prop = (PropertyInfo)member.Member;
-        return instance => (TProperty)prop.GetValue(instance)!;
+        if (expr.Body is UnaryExpression { NodeType: ExpressionType.Convert } u)
+        {
+            return Expression
+                .Lambda<Func<T, TProperty>>(u, expr.Parameters)
+                .Compile();
+        }
+
+        return expr.Compile();
     }
 }
