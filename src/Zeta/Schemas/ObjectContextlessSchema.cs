@@ -113,10 +113,9 @@ public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : 
     /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.
     /// </summary>
     /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
-    public ObjectContextSchema<T, TContext> WithContext<TContext>()
-        => new ObjectContextSchema<T, TContext>(Rules, _fields, _conditionals);
+    public ObjectContextSchema<T, TContext> WithContext<TContext>() => new(Rules, _fields, _conditionals);
 
-    public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
+    internal static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
     {
         var body = expr.Body;
         if (body is UnaryExpression { NodeType: ExpressionType.Convert } u)
@@ -126,7 +125,7 @@ public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : 
         throw new ArgumentException("Expression must be a property access");
     }
 
-    public static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
+    internal static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
     {
         var member = (MemberExpression)expr.Body;
         var prop = (PropertyInfo)member.Member;
