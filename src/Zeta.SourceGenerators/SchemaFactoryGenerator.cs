@@ -11,12 +11,12 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
 
     private static readonly SchemaMapping[] SchemaMappings =
     {
-        new("string", "StringContextlessSchema", "Z.String"),
+        new("string", "StringContextlessSchema", "Z.String"), 
         new("int", "IntContextlessSchema", "Z.Int"),
-        new("double", "DoubleContextlessSchema", "Z.Double"),
+        new("double", "DoubleContextlessSchema", "Z.Double"), 
         new("decimal", "DecimalContextlessSchema", "Z.Decimal"),
         new("bool", "BoolContextlessSchema", "Z.Bool"),
-        new("System.Guid", "GuidContextlessSchema", "Z.Guid"),
+        new("System.Guid", "GuidContextlessSchema", "Z.Guid"), 
         new("System.DateTime", "DateTimeContextlessSchema", "Z.DateTime"),
     };
 
@@ -50,85 +50,93 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
 
         foreach (var mapping in SchemaMappings)
         {
-            sb.AppendLine($@"    /// <summary>
-    /// Adds a field validator with fluent schema builder for {mapping.Type} properties.
-    /// </summary>
-    public ObjectContextlessSchema<T> Field(
-        Expression<Func<T, {mapping.Type}>> propertySelector,
-        Func<{mapping.SchemaClass}, {mapping.SchemaClass}> schema)
-    {{
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
-        _fields.Add(new FieldContextlessValidator<T, {mapping.Type}>(propertyName, getter, schema({mapping.FactoryMethod}())));
-        return this;
-    }}
-");
+            sb.AppendLine($$"""
+                                /// <summary>
+                                /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties.
+                                /// </summary>
+                                public ObjectContextlessSchema<T> Field(
+                                    Expression<Func<T, {{mapping.Type}}>> propertySelector,
+                                    Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
+                                {
+                                    var propertyName = GetPropertyName(propertySelector);
+                                    var getter = CreateGetter(propertySelector);
+                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
+                                    return this;
+                                }
+
+                            """);
         }
 
         // Add conditional compilation for DateOnly and TimeOnly
         sb.AppendLine("#if !NETSTANDARD2_0");
-        sb.AppendLine($@"    /// <summary>
-    /// Adds a field validator with fluent schema builder for DateOnly properties.
-    /// </summary>
-    public ObjectContextlessSchema<T> Field(
-        Expression<Func<T, DateOnly>> propertySelector,
-        Func<DateOnlyContextlessSchema, DateOnlyContextlessSchema> schema)
-    {{
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
-        _fields.Add(new FieldContextlessValidator<T, DateOnly>(propertyName, getter, schema(Z.DateOnly())));
-        return this;
-    }}
+        sb.AppendLine($$"""
+                            /// <summary>
+                            /// Adds a field validator with fluent schema builder for DateOnly properties.
+                            /// </summary>
+                            public ObjectContextlessSchema<T> Field(
+                                Expression<Func<T, DateOnly>> propertySelector,
+                                Func<DateOnlyContextlessSchema, DateOnlyContextlessSchema> schema)
+                            {
+                                var propertyName = GetPropertyName(propertySelector);
+                                var getter = CreateGetter(propertySelector);
+                                _fields.Add(new FieldContextlessValidator<T, DateOnly>(propertyName, getter, schema(Z.DateOnly())));
+                                return this;
+                            }
 
-    /// <summary>
-    /// Adds a field validator with fluent schema builder for TimeOnly properties.
-    /// </summary>
-    public ObjectContextlessSchema<T> Field(
-        Expression<Func<T, TimeOnly>> propertySelector,
-        Func<TimeOnlyContextlessSchema, TimeOnlyContextlessSchema> schema)
-    {{
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
-        _fields.Add(new FieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema(Z.TimeOnly())));
-        return this;
-    }}
-#endif");
+                            /// <summary>
+                            /// Adds a field validator with fluent schema builder for TimeOnly properties.
+                            /// </summary>
+                            public ObjectContextlessSchema<T> Field(
+                                Expression<Func<T, TimeOnly>> propertySelector,
+                                Func<TimeOnlyContextlessSchema, TimeOnlyContextlessSchema> schema)
+                            {
+                                var propertyName = GetPropertyName(propertySelector);
+                                var getter = CreateGetter(propertySelector);
+                                _fields.Add(new FieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema(Z.TimeOnly())));
+                                return this;
+                            }
+                        #endif
+                        """);
 
         // Add generic method for nested objects
-        sb.AppendLine(@"
-    /// <summary>
-    /// Adds a field validator with fluent schema builder for nested object properties.
-    /// </summary>
-    public ObjectContextlessSchema<T> Field<TProperty>(
-        Expression<Func<T, TProperty>> propertySelector,
-        Func<ObjectContextlessSchema<TProperty>, ObjectContextlessSchema<TProperty>> schema)
-        where TProperty : class
-    {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
-        _fields.Add(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema(Z.Object<TProperty>())));
-        return this;
-    }");
+        sb.AppendLine("""
+
+                          /// <summary>
+                          /// Adds a field validator with fluent schema builder for nested object properties.
+                          /// </summary>
+                          public ObjectContextlessSchema<T> Field<TProperty>(
+                              Expression<Func<T, TProperty>> propertySelector,
+                              Func<ObjectContextlessSchema<TProperty>, ObjectContextlessSchema<TProperty>> schema)
+                              where TProperty : class
+                          {
+                              var propertyName = GetPropertyName(propertySelector);
+                              var getter = CreateGetter(propertySelector);
+                              _fields.Add(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema(Z.Object<TProperty>())));
+                              return this;
+                          }
+                      """);
 
         // Add methods for List<TElement> collections with primitive element types
         foreach (var mapping in SchemaMappings)
         {
             var typeForXml = mapping.Type.Replace("<", "&lt;").Replace(">", "&gt;");
-            sb.AppendLine($@"
-    /// <summary>
-    /// Adds a field validator with fluent schema builder for List&lt;{typeForXml}&gt; properties.
-    /// </summary>
-    public ObjectContextlessSchema<T> Field(
-        Expression<Func<T, System.Collections.Generic.List<{mapping.Type}>>> propertySelector,
-        Func<CollectionContextlessSchema<{mapping.Type}>, CollectionContextlessSchema<{mapping.Type}>> schema)
-    {{
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
-        var elementSchema = {mapping.FactoryMethod}();
-        var collectionSchema = Z.Collection(elementSchema);
-        _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<{mapping.Type}>>(propertyName, getter, schema(collectionSchema)));
-        return this;
-    }}");
+            sb.AppendLine($$"""
+
+                                /// <summary>
+                                /// Adds a field validator with fluent schema builder for List&lt;{{typeForXml}}&gt; properties.
+                                /// </summary>
+                                public ObjectContextlessSchema<T> Field(
+                                    Expression<Func<T, System.Collections.Generic.List<{{mapping.Type}}>>> propertySelector,
+                                    Func<CollectionContextlessSchema<{{mapping.Type}}>, CollectionContextlessSchema<{{mapping.Type}}>> schema)
+                                {
+                                    var propertyName = GetPropertyName(propertySelector);
+                                    var getter = CreateGetter(propertySelector);
+                                    var elementSchema = {{mapping.FactoryMethod}}();
+                                    var collectionSchema = Z.Collection(elementSchema);
+                                    _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>>(propertyName, getter, schema(collectionSchema)));
+                                    return this;
+                                }
+                            """);
         }
 
         sb.AppendLine("}");
@@ -151,85 +159,93 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
 
         foreach (var mapping in SchemaMappings)
         {
-            sb.AppendLine($@"    /// <summary>
-    /// Adds a field validator with fluent schema builder for {mapping.Type} properties.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Field(
-        Expression<Func<T, {mapping.Type}>> propertySelector,
-        Func<{mapping.SchemaClass}, ContextSchema<{mapping.Type}, TContext>> schema)
-    {{
-        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        _fields.Add(new FieldContextContextValidator<T, {mapping.Type}, TContext>(propertyName, getter, schema({mapping.FactoryMethod}())));
-        return this;
-    }}
-");
+            sb.AppendLine($$"""
+                                /// <summary>
+                                /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties.
+                                /// </summary>
+                                public ObjectContextSchema<T, TContext> Field(
+                                    Expression<Func<T, {{mapping.Type}}>> propertySelector,
+                                    Func<{{mapping.SchemaClass}}, ContextSchema<{{mapping.Type}}, TContext>> schema)
+                                {
+                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
+                                    return this;
+                                }
+
+                            """);
         }
 
         // Add conditional compilation for DateOnly and TimeOnly
         sb.AppendLine("#if !NETSTANDARD2_0");
-        sb.AppendLine($@"    /// <summary>
-    /// Adds a field validator with fluent schema builder for DateOnly properties.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Field(
-        Expression<Func<T, DateOnly>> propertySelector,
-        Func<DateOnlyContextlessSchema, ContextSchema<DateOnly, TContext>> schema)
-    {{
-        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        _fields.Add(new FieldContextContextValidator<T, DateOnly, TContext>(propertyName, getter, schema(Z.DateOnly())));
-        return this;
-    }}
+        sb.AppendLine($$"""
+                            /// <summary>
+                            /// Adds a field validator with fluent schema builder for DateOnly properties.
+                            /// </summary>
+                            public ObjectContextSchema<T, TContext> Field(
+                                Expression<Func<T, DateOnly>> propertySelector,
+                                Func<DateOnlyContextlessSchema, ContextSchema<DateOnly, TContext>> schema)
+                            {
+                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                _fields.Add(new FieldContextContextValidator<T, DateOnly, TContext>(propertyName, getter, schema(Z.DateOnly())));
+                                return this;
+                            }
 
-    /// <summary>
-    /// Adds a field validator with fluent schema builder for TimeOnly properties.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Field(
-        Expression<Func<T, TimeOnly>> propertySelector,
-        Func<TimeOnlyContextlessSchema, ContextSchema<TimeOnly, TContext>> schema)
-    {{
-        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        _fields.Add(new FieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, schema(Z.TimeOnly())));
-        return this;
-    }}
-#endif");
+                            /// <summary>
+                            /// Adds a field validator with fluent schema builder for TimeOnly properties.
+                            /// </summary>
+                            public ObjectContextSchema<T, TContext> Field(
+                                Expression<Func<T, TimeOnly>> propertySelector,
+                                Func<TimeOnlyContextlessSchema, ContextSchema<TimeOnly, TContext>> schema)
+                            {
+                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                _fields.Add(new FieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, schema(Z.TimeOnly())));
+                                return this;
+                            }
+                        #endif
+                        """);
 
         // Add generic method for nested objects
-        sb.AppendLine(@"
-    /// <summary>
-    /// Adds a field validator with fluent schema builder for nested object properties.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Field<TProperty>(
-        Expression<Func<T, TProperty>> propertySelector,
-        Func<ObjectContextlessSchema<TProperty>, ObjectContextSchema<TProperty, TContext>> schema)
-        where TProperty : class
-    {
-        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema(Z.Object<TProperty>())));
-        return this;
-    }");
+        sb.AppendLine("""
+
+                          /// <summary>
+                          /// Adds a field validator with fluent schema builder for nested object properties.
+                          /// </summary>
+                          public ObjectContextSchema<T, TContext> Field<TProperty>(
+                              Expression<Func<T, TProperty>> propertySelector,
+                              Func<ObjectContextlessSchema<TProperty>, ObjectContextSchema<TProperty, TContext>> schema)
+                              where TProperty : class
+                          {
+                              var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                              var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                              _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema(Z.Object<TProperty>())));
+                              return this;
+                          }
+                      """);
 
         // Add methods for List<TElement> collections with primitive element types
         foreach (var mapping in SchemaMappings)
         {
             var typeForXml = mapping.Type.Replace("<", "&lt;").Replace(">", "&gt;");
-            sb.AppendLine($@"
-    /// <summary>
-    /// Adds a field validator with fluent schema builder for List&lt;{typeForXml}&gt; properties.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Field(
-        Expression<Func<T, System.Collections.Generic.List<{mapping.Type}>>> propertySelector,
-        Func<CollectionContextlessSchema<{mapping.Type}>, CollectionContextSchema<{mapping.Type}, TContext>> schema)
-    {{
-        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        var elementSchema = {mapping.FactoryMethod}();
-        var collectionSchema = Z.Collection(elementSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{mapping.Type}>, TContext>(propertyName, getter, schema(collectionSchema)));
-        return this;
-    }}");
+            sb.AppendLine($$"""
+
+                                /// <summary>
+                                /// Adds a field validator with fluent schema builder for List&lt;{{typeForXml}}&gt; properties.
+                                /// </summary>
+                                public ObjectContextSchema<T, TContext> Field(
+                                    Expression<Func<T, System.Collections.Generic.List<{{mapping.Type}}>>> propertySelector,
+                                    Func<CollectionContextlessSchema<{{mapping.Type}}>, CollectionContextSchema<{{mapping.Type}}, TContext>> schema)
+                                {
+                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                    var elementSchema = {{mapping.FactoryMethod}}();
+                                    var collectionSchema = Z.Collection(elementSchema);
+                                    _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, schema(collectionSchema)));
+                                    return this;
+                                }
+                            """);
         }
 
         sb.AppendLine("}");
