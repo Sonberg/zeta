@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Zeta;
 
 /// <summary>
@@ -19,8 +21,6 @@ public record Result
     /// </summary>
     public IReadOnlyList<ValidationError> Errors => _errors ?? [];
 
-    public string? StackTrace { get; set; }
-
     public Result()
     {
         IsSuccess = true;
@@ -30,7 +30,6 @@ public record Result
     protected Result(IReadOnlyList<ValidationError> errors)
     {
         IsSuccess = false;
-        StackTrace = Environment.StackTrace;
         _errors = errors;
     }
 
@@ -54,6 +53,10 @@ public record Result<T> : Result
 {
     private readonly T? _value;
 
+    // Cache for reference type success results (object-based to work with any reference type)
+    private static readonly ConditionalWeakTable<object, Result<T>>? _successCache =
+        typeof(T).IsValueType ? null : new ConditionalWeakTable<object, Result<T>>();
+
     /// <summary>
     /// Gets the validated value. Throws if validation failed.
     /// </summary>
@@ -69,19 +72,28 @@ public record Result<T> : Result
     private Result(IReadOnlyList<ValidationError> errors) : base(errors)
     {
         _value = default;
-        StackTrace = Environment.StackTrace;
     }
 
     /// <summary>
     /// Creates a successful result with the given value.
+    /// For reference types, results are cached by reference identity.
     /// </summary>
-    public static Result<T> Success(T value) => new(value);
+    public static Result<T> Success(T value)
+    {
+        // For reference types, use caching to reduce allocations
+        if (_successCache != null && value is not null)
+        {
+            return _successCache.GetValue(value, static v => new Result<T>((T)v));
+        }
+
+        return new Result<T>(value);
+    }
 
     /// <summary>
     /// Creates a failed result with the given errors.
     /// Duplicate errors are automatically removed.
     /// </summary>
-    public new static Result<T> Failure(params ValidationError[] errors) => new(errors);
+    public static Result<T> Failure(params ValidationError[] errors) => new(errors);
 
     /// <summary>
     /// Creates a failed result with the given errors.
