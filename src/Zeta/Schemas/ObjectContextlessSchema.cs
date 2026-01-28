@@ -81,6 +81,98 @@ public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : 
         return this;
     }
 
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, string>> propertySelector,
+        Func<StringContextlessSchema, StringContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, string>(propertyName, getter, schema(Z.String())));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, int>> propertySelector,
+        Func<IntContextlessSchema, IntContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, int>(propertyName, getter, schema(Z.Int())));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, double>> propertySelector,
+        Func<DoubleContextlessSchema, DoubleContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, double>(propertyName, getter, schema(Z.Double())));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, decimal>> propertySelector,
+        Func<DecimalContextlessSchema, DecimalContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, decimal>(propertyName, getter, schema(Z.Decimal())));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, bool>> propertySelector,
+        Func<BoolContextlessSchema, BoolContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, bool>(propertyName, getter, schema(Z.Bool())));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, Guid>> propertySelector,
+        Func<GuidContextlessSchema, GuidContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, Guid>(propertyName, getter, schema(Z.Guid())));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, DateTime>> propertySelector,
+        Func<DateTimeContextlessSchema, DateTimeContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, DateTime>(propertyName, getter, schema(Z.DateTime())));
+        return this;
+    }
+
+#if !NETSTANDARD2_0
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, DateOnly>> propertySelector,
+        Func<DateOnlyContextlessSchema, DateOnlyContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, DateOnly>(propertyName, getter, schema(Z.DateOnly())));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, TimeOnly>> propertySelector,
+        Func<TimeOnlyContextlessSchema, TimeOnlyContextlessSchema> schema)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema(Z.TimeOnly())));
+        return this;
+    }
+#endif
+
     public ObjectContextlessSchema<T> When(
         Func<T, bool> condition,
         Action<ContextlessConditionalBuilder<T>> thenBranch,
@@ -113,10 +205,9 @@ public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : 
     /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.
     /// </summary>
     /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
-    public ObjectContextSchema<T, TContext> WithContext<TContext>()
-        => new ObjectContextSchema<T, TContext>(Rules, _fields, _conditionals);
+    public ObjectContextSchema<T, TContext> WithContext<TContext>() => new(Rules, _fields, _conditionals);
 
-    public static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
+    internal static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
     {
         var body = expr.Body;
         if (body is UnaryExpression { NodeType: ExpressionType.Convert } u)
@@ -126,7 +217,7 @@ public sealed class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : 
         throw new ArgumentException("Expression must be a property access");
     }
 
-    public static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
+    internal static Func<T, TProperty> CreateGetter<TProperty>(Expression<Func<T, TProperty>> expr)
     {
         var member = (MemberExpression)expr.Body;
         var prop = (PropertyInfo)member.Member;

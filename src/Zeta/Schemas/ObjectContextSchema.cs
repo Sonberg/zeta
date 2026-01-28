@@ -82,6 +82,98 @@ public class ObjectContextSchema<T, TContext> : ContextSchema<T, TContext> where
         return Field(propertySelector, new SchemaAdapter<TProperty, TContext>(schema));
     }
 
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, string>> propertySelector,
+        Func<StringContextSchema<TContext>, StringContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, string, TContext>(propertyName, getter, schema(new StringContextSchema<TContext>())));
+        return this;
+    }
+
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, int>> propertySelector,
+        Func<IntContextSchema<TContext>, IntContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, int, TContext>(propertyName, getter, schema(new IntContextSchema<TContext>())));
+        return this;
+    }
+
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, double>> propertySelector,
+        Func<DoubleContextSchema<TContext>, DoubleContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, double, TContext>(propertyName, getter, schema(new DoubleContextSchema<TContext>())));
+        return this;
+    }
+
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, decimal>> propertySelector,
+        Func<DecimalContextSchema<TContext>, DecimalContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, decimal, TContext>(propertyName, getter, schema(new DecimalContextSchema<TContext>())));
+        return this;
+    }
+
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, bool>> propertySelector,
+        Func<BoolContextSchema<TContext>, BoolContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, bool, TContext>(propertyName, getter, schema(new BoolContextSchema<TContext>())));
+        return this;
+    }
+
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, Guid>> propertySelector,
+        Func<GuidContextSchema<TContext>, GuidContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, Guid, TContext>(propertyName, getter, schema(new GuidContextSchema<TContext>())));
+        return this;
+    }
+
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, DateTime>> propertySelector,
+        Func<DateTimeContextSchema<TContext>, DateTimeContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, DateTime, TContext>(propertyName, getter, schema(new DateTimeContextSchema<TContext>())));
+        return this;
+    }
+
+#if !NETSTANDARD2_0
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, DateOnly>> propertySelector,
+        Func<DateOnlyContextSchema<TContext>, DateOnlyContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, DateOnly, TContext>(propertyName, getter, schema(new DateOnlyContextSchema<TContext>())));
+        return this;
+    }
+
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, TimeOnly>> propertySelector,
+        Func<TimeOnlyContextSchema<TContext>, TimeOnlyContextSchema<TContext>> schema)
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, schema(new TimeOnlyContextSchema<TContext>())));
+        return this;
+    }
+#endif
+
     public ObjectContextSchema<T, TContext> When(
         Func<T, bool> condition,
         Action<ConditionalBuilder<T, TContext>> thenBranch,
