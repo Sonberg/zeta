@@ -61,6 +61,18 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double>
         return this;
     }
 
+    public DoubleContextlessSchema RefineAsync(
+        Func<double, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<double>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware double schema with all rules from this schema.
     /// </summary>

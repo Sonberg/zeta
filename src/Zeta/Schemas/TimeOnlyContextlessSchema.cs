@@ -85,6 +85,18 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly>
         return this;
     }
 
+    public TimeOnlyContextlessSchema RefineAsync(
+        Func<TimeOnly, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<TimeOnly>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware TimeOnly schema with all rules from this schema.
     /// </summary>

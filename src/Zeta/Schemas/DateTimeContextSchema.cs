@@ -131,4 +131,24 @@ public class DateTimeContextSchema<TContext> : ContextSchema<DateTime, TContext>
     {
         return Refine((val, _) => predicate(val), message, code);
     }
+
+    public DateTimeContextSchema<TContext> RefineAsync(
+        Func<DateTime, TContext, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<DateTime, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this;
+    }
+
+    public DateTimeContextSchema<TContext> RefineAsync(
+        Func<DateTime, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
+    }
 }

@@ -70,6 +70,18 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal>
         return this;
     }
 
+    public DecimalContextlessSchema RefineAsync(
+        Func<decimal, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<decimal>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     internal static int GetDecimalPlaces(decimal value)
     {
         value = Math.Abs(value);

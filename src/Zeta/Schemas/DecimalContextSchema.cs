@@ -76,4 +76,24 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
     {
         return Refine((val, _) => predicate(val), message, code);
     }
+
+    public DecimalContextSchema<TContext> RefineAsync(
+        Func<decimal, TContext, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<decimal, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this;
+    }
+
+    public DecimalContextSchema<TContext> RefineAsync(
+        Func<decimal, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
+    }
 }

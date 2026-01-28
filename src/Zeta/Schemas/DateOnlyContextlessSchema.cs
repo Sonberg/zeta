@@ -119,6 +119,18 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly>
         return this;
     }
 
+    public DateOnlyContextlessSchema RefineAsync(
+        Func<DateOnly, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<DateOnly>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware DateOnly schema with all rules from this schema.
     /// </summary>

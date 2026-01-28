@@ -91,5 +91,25 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
     {
         return Refine((val, _) => predicate(val), message, code);
     }
+
+    public TimeOnlyContextSchema<TContext> RefineAsync(
+        Func<TimeOnly, TContext, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<TimeOnly, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this;
+    }
+
+    public TimeOnlyContextSchema<TContext> RefineAsync(
+        Func<TimeOnly, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
+    }
 }
 #endif

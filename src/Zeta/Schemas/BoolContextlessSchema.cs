@@ -37,6 +37,18 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool>
         return this;
     }
 
+    public BoolContextlessSchema RefineAsync(
+        Func<bool, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<bool>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware bool schema with all rules from this schema.
     /// </summary>
