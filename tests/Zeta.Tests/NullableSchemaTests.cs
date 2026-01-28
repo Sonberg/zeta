@@ -185,7 +185,7 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableArray_NullValue_ReturnsSuccess()
     {
-        var schema = Z.Array(Z.Int().Min(0)).Nullable();
+        var schema = Z.Collection(Z.Int().Min(0)).Nullable();
         var result = await schema.ValidateAsync(null);
 
         Assert.True(result.IsSuccess);
@@ -195,7 +195,7 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableArray_ValidValue_ReturnsSuccess()
     {
-        var schema = Z.Array(Z.Int().Min(0)).Nullable();
+        var schema = Z.Collection(Z.Int().Min(0)).Nullable();
         var result = await schema.ValidateAsync([1, 2, 3]);
 
         Assert.True(result.IsSuccess);
@@ -205,7 +205,7 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableArray_InvalidValue_ReturnsFailure()
     {
-        var schema = Z.Array(Z.Int().Min(0)).Nullable();
+        var schema = Z.Collection(Z.Int().Min(0)).Nullable();
         var result = await schema.ValidateAsync([1, -1, 3]);
 
         Assert.False(result.IsSuccess);
@@ -217,7 +217,7 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableList_NullValue_ReturnsSuccess()
     {
-        var schema = Z.List(Z.String().Email()).Nullable();
+        var schema = Z.Collection(Z.String().Email()).Nullable();
         var result = await schema.ValidateAsync(null);
 
         Assert.True(result.IsSuccess);
@@ -227,7 +227,7 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableList_ValidValue_ReturnsSuccess()
     {
-        var schema = Z.List(Z.String().Email()).Nullable();
+        var schema = Z.Collection(Z.String().Email()).Nullable();
         var result = await schema.ValidateAsync(["a@b.com", "c@d.com"]);
 
         Assert.True(result.IsSuccess);
@@ -237,7 +237,7 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableList_InvalidValue_ReturnsFailure()
     {
-        var schema = Z.List(Z.String().Email()).Nullable();
+        var schema = Z.Collection(Z.String().Email()).Nullable();
         var result = await schema.ValidateAsync(["a@b.com", "invalid"]);
 
         Assert.False(result.IsSuccess);

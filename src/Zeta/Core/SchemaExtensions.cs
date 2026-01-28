@@ -176,61 +176,31 @@ public static class SchemaExtensions
     /// <summary>
     /// Creates a nullable version of this array schema that accepts null values.
     /// </summary>
-    public static NullableContextSchema<TElement[], TContext> Nullable<TElement, TContext>(this ArrayContextSchema<TElement, TContext> schema)
+    public static NullableContextSchema<ICollection<TElement>, TContext> Nullable<TElement, TContext>(this CollectionContextSchema<TElement, TContext> schema)
     {
-        return new NullableContextSchema<TElement[], TContext>(schema);
+        return new NullableContextSchema<ICollection<TElement>, TContext>(schema);
     }
 
     /// <summary>
-    /// Creates a nullable version of this array schema that accepts null values.
+    /// Creates a nullable version of this collection schema that accepts null values.
     /// </summary>
-    public static NullableContextlessSchema<TElement[]> Nullable<TElement>(this ArrayContextlessSchema<TElement> schema)
+    public static NullableContextlessSchema<ICollection<TElement>> Nullable<TElement>(this CollectionContextlessSchema<TElement> schema)
     {
-        return new NullableContextlessSchema<TElement[]>(schema);
-    }
-
-    /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
-    /// </summary>
-    public static NullableContextSchema<TElement[], TContext> Optional<TElement, TContext>(this ArrayContextSchema<TElement, TContext> schema)
-        => schema.Nullable();
-
-    /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
-    /// </summary>
-    public static NullableContextlessSchema<TElement[]> Optional<TElement>(this ArrayContextlessSchema<TElement> schema)
-        => schema.Nullable();
-
-    // ==================== List Schema ====================
-
-    /// <summary>
-    /// Creates a nullable version of this list schema that accepts null values.
-    /// </summary>
-    public static NullableContextSchema<List<TElement>, TContext> Nullable<TElement, TContext>(this ListContextSchema<TElement, TContext> schema)
-    {
-        return new NullableContextSchema<List<TElement>, TContext>(schema);
-    }
-
-    /// <summary>
-    /// Creates a nullable version of this list schema that accepts null values.
-    /// </summary>
-    public static NullableContextlessSchema<List<TElement>> Nullable<TElement>(this ListContextlessSchema<TElement> schema)
-    {
-        return new NullableContextlessSchema<List<TElement>>(schema);
+        return new NullableContextlessSchema<ICollection<TElement>>(schema);
     }
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
     /// </summary>
-    public static NullableContextSchema<List<TElement>, TContext> Optional<TElement, TContext>(this ListContextSchema<TElement, TContext> schema)
+    public static NullableContextSchema<ICollection<TElement>, TContext> Optional<TElement, TContext>(this CollectionContextSchema<TElement, TContext> schema)
         => schema.Nullable();
 
     /// <summary>
     /// Creates an optional version of this schema that skips validation when null.
     /// </summary>
-    public static NullableContextlessSchema<List<TElement>> Optional<TElement>(this ListContextlessSchema<TElement> schema)
+    public static NullableContextlessSchema<ICollection<TElement>> Optional<TElement>(this CollectionContextlessSchema<TElement> schema)
         => schema.Nullable();
-
+    
     // ==================== DateTime Schema ====================
 
     /// <summary>

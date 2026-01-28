@@ -6,23 +6,23 @@ namespace Zeta.Validation;
 /// </summary>
 public static class CollectionValidators
 {
-    public static ValidationError? MinLength<T>(T[] value, int min, string path, string? message = null)
-        => value.Length >= min
+    public static ValidationError? MinLength<T>(ICollection<T> value, int min, string path, string? message = null)
+        => value.Count >= min
             ? null
             : new ValidationError(path, "min_length", message ?? $"Must have at least {min} items");
 
-    public static ValidationError? MaxLength<T>(T[] value, int max, string path, string? message = null)
-        => value.Length <= max
+    public static ValidationError? MaxLength<T>(ICollection<T> value, int max, string path, string? message = null)
+        => value.Count <= max
             ? null
             : new ValidationError(path, "max_length", message ?? $"Must have at most {max} items");
 
-    public static ValidationError? Length<T>(T[] value, int exact, string path, string? message = null)
-        => value.Length == exact
+    public static ValidationError? Length<T>(ICollection<T> value, int exact, string path, string? message = null)
+        => value.Count == exact
             ? null
             : new ValidationError(path, "length", message ?? $"Must have exactly {exact} items");
 
-    public static ValidationError? NotEmpty<T>(T[] value, string path, string? message = null)
-        => value.Length > 0
+    public static ValidationError? NotEmpty<T>(ICollection<T> value, string path, string? message = null)
+        => value.Count > 0
             ? null
             : new ValidationError(path, "min_length", message ?? "Must not be empty");
 
