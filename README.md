@@ -17,61 +17,12 @@ result.Match(
 
 ## Features
 
-- **Schema-first** — Define validation as reusable schema objects
-- **Async by default** — Every rule can be async, no separate sync/async paths
-- **Result pattern** — No exceptions for validation failures
-- **Composable** — Schemas are values that can be reused and combined
-- **Path-aware errors** — Errors include location (`user.address.street`, `items[0]`)
-- **ASP.NET Core native** — First-class support for Minimal APIs and Controllers
-
-## Benchmarks
-
-Comparing Zeta against FluentValidation and DataAnnotations on .NET 9 (Apple M2 Pro).
-
-| Method | Mean | Allocated |
-|--------|-----:|----------:|
-| FluentValidation | 150 ns | 600 B |
-| FluentValidation (Async) | 270 ns | 672 B |
-| **Zeta** | **374 ns** | **416 B** |
-| Zeta (Invalid) | 555 ns | 1,144 B |
-| DataAnnotations | 733 ns | 1,880 B |
-| DataAnnotations (Invalid) | 1,105 ns | 2,704 B |
-| FluentValidation (Invalid) | 2,247 ns | 7,920 B |
-| FluentValidation (Invalid, Async) | 2,453 ns | 7,992 B |
-
-### Key findings
-
-- **Zeta is allocation-efficient by design**
-  - Allocates **~40% less memory** than FluentValidation on valid input
-  - Allocates **~7× less memory** than FluentValidation on invalid input
-
-- **Zeta is optimized for validation failures**
-  - **4× faster** than FluentValidation when validation fails
-  - **2× faster** than DataAnnotations when validation fails
-
-- **Consistent async model**
-  - Zeta uses a single async-first execution path
-  - FluentValidation's fastest path is sync-only
-
-- **Happy-path overhead is small**
-  - Zeta is ~200 ns slower than FluentValidation sync
-  - Still **2× faster than DataAnnotations**
-
-### Comparison
-
-| Feature | FluentValidation | DataAnnotations | Zeta |
-|---------|------------------|-----------------|------|
-| Async-first | Partial | No | **Yes** |
-| Schema-based | No | No | **Yes** |
-| Composable | Limited | No | **Yes** |
-| Result pattern | No | No | **Yes** |
-| Path-aware errors | Partial | No | **Yes** |
-| No exceptions | No | No | **Yes** |
-
-Run benchmarks yourself:
-```bash
-dotnet run --project benchmarks/Zeta.Benchmarks -c Release
-```
+- **Schema-first** - Define validation as reusable schema objects
+- **Async by default** - Every rule can be async, no separate sync/async paths
+- **Result pattern** - No exceptions for validation failures
+- **Composable** - Schemas are values that can be reused and combined
+- **Path-aware errors** - Errors include location (`user.address.street`, `items[0]`)
+- **ASP.NET Core native** - First-class support for Minimal APIs and Controllers
 
 ## Installation
 
@@ -102,29 +53,21 @@ Z.String()
     .Refine(s => s.StartsWith("A"), "Must start with A")
 ```
 
-### Int
+### Numeric Types
 
 ```csharp
 Z.Int()
     .Min(0)
     .Max(100)
     .Refine(n => n % 2 == 0, "Must be even")
-```
 
-### Double
-
-```csharp
 Z.Double()
     .Min(0.0)
     .Max(100.0)
     .Positive()
     .Negative()
     .Finite()
-```
 
-### Decimal
-
-```csharp
 Z.Decimal()
     .Min(0m)
     .Max(1000m)
@@ -133,7 +76,7 @@ Z.Decimal()
     .MultipleOf(0.25m)  // Must be multiple of step
 ```
 
-### DateTime
+### Date and Time
 
 ```csharp
 Z.DateTime()
@@ -147,48 +90,26 @@ Z.DateTime()
     .WithinDays(7)      // Within N days from now
     .MinAge(18)         // For birthdate validation
     .MaxAge(65)
-```
 
-### DateOnly
-
-```csharp
 Z.DateOnly()
-    .Min(minDate)
-    .Max(maxDate)
-    .Past()
-    .Future()
-    .Between(min, max)
-    .Weekday()
-    .Weekend()
-    .MinAge(18)
-    .MaxAge(65)
-```
+    .Min(minDate).Max(maxDate).Past().Future()
+    .Between(min, max).Weekday().Weekend()
+    .MinAge(18).MaxAge(65)
 
-### TimeOnly
-
-```csharp
 Z.TimeOnly()
-    .Min(minTime)
-    .Max(maxTime)
-    .Between(min, max)
+    .Min(minTime).Max(maxTime).Between(min, max)
     .BusinessHours()              // 9 AM - 5 PM (default)
     .BusinessHours(start, end)    // Custom hours
-    .Morning()                    // Before noon
-    .Afternoon()                  // Noon to 6 PM
-    .Evening()                    // After 6 PM
+    .Morning().Afternoon().Evening()
 ```
 
-### Guid
+### Other Types
 
 ```csharp
 Z.Guid()
     .NotEmpty()         // Not Guid.Empty
     .Version(4)         // Specific UUID version (1-5)
-```
 
-### Bool
-
-```csharp
 Z.Bool()
     .IsTrue()           // Must be true (e.g., terms accepted)
     .IsFalse()          // Must be false
@@ -201,7 +122,6 @@ All schemas are required by default. Use `.Nullable()` to make fields optional:
 ```csharp
 Z.String().Nullable()           // Allows null strings
 Z.Int().Nullable()              // Allows null ints (int?)
-Z.DateTime().Nullable()         // Allows null DateTime (DateTime?)
 Z.Object<Address>().Nullable()  // Allows null objects
 
 // In object schemas
@@ -220,7 +140,7 @@ Z.Object<User>()
     .Refine(u => u.Password != u.Email, "Password cannot be email")
 ```
 
-### Array
+### Collections
 
 ```csharp
 Z.Array(Z.String().Email())
@@ -228,16 +148,12 @@ Z.Array(Z.String().Email())
     .MaxLength(10)
     .NotEmpty()
 
-// Errors include index path: "emails[0]", "items[2].name"
-```
-
-### List
-
-```csharp
 Z.List(Z.Int().Min(0))
     .MinLength(1)
     .MaxLength(100)
     .NotEmpty()
+
+// Errors include index path: "emails[0]", "items[2].name"
 ```
 
 ### Conditional Validation
@@ -254,23 +170,7 @@ Z.Object<Order>()
         then: c => c.Require(o => o.CardNumber),    // CardNumber required when paying by card
         @else: c => c.Require(o => o.BankAccount)  // BankAccount required otherwise
     );
-
-// Multiple conditions
-Z.Object<User>()
-    .Field(u => u.IsCompany, Z.Bool())
-    .Field(u => u.CompanyName, Z.String().Nullable())
-    .Field(u => u.VatNumber, Z.String().Nullable())
-    .When(
-        u => u.IsCompany,
-        then: c => c
-            .Require(u => u.CompanyName)
-            .Require(u => u.VatNumber)
-    );
 ```
-
-#### Inline Field Validation with Select
-
-> Select lets you temporarily "zoom in" on one or more fields and apply additional rules without redefining the field schema.
 
 Use `.Select()` for inline schema building within conditionals:
 
@@ -280,25 +180,6 @@ Z.Object<User>()
     .Field(u => u.RequiresStrongPassword, Z.Bool())
     .When(
         u => u.RequiresStrongPassword,
-        then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
-    );
-
-// Supported types: string, int, double, decimal (and their nullable variants)
-Z.Object<Product>()
-    .Field(p => p.Price, Z.Decimal().Nullable())
-    .Field(p => p.Quantity, Z.Int().Nullable())
-    .When(
-        p => p.IsActive,
-        then: c => c
-            .Select(p => p.Price, s => s.Min(0.01m).Max(10000m))
-            .Select(p => p.Quantity, s => s.Min(1).Max(1000))
-    );
-
-// Context-aware conditional with Select
-Z.Object<User>()
-    .WithContext<User, UserContext>()
-    .When(
-        (_, ctx) => ctx.RequireStrongPassword,
         then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
     );
 ```
@@ -334,11 +215,7 @@ var user = result.GetOrDefault(defaultUser);
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
-
-// Register Zeta services (includes IZetaValidator)
 builder.Services.AddZeta();
-
-builder.Services.AddControllers();
 ```
 
 ### Minimal APIs
@@ -412,67 +289,6 @@ result.ToResult()
 result.ToResult(v => Results.Created(...))
 ```
 
-## Validation Context
-
-For async data loading before validation (e.g., checking database):
-
-### Define Context
-
-```csharp
-// Context data loaded before validation
-public record UserContext(bool EmailExists, bool IsMaintenanceMode);
-
-// Factory to load context
-public class UserContextFactory : IValidationContextFactory<User, UserContext>
-{
-    private readonly IUserRepository _repo;
-
-    public UserContextFactory(IUserRepository repo) => _repo = repo;
-
-    public async Task<UserContext> CreateAsync(User input, IServiceProvider services, CancellationToken ct)
-    {
-        return new UserContext(
-            EmailExists: await _repo.EmailExistsAsync(input.Email, ct),
-            IsMaintenanceMode: await _repo.IsMaintenanceModeAsync(ct)
-        );
-    }
-}
-```
-
-### Use Context in Schema
-
-Schemas are always created contextless. Use `.WithContext<TContext>()` to promote a schema when you need access to validation context:
-
-```csharp
-// Promote schema to context-aware when needed
-var EmailSchema = Z.String()
-    .Email()
-    .WithContext<UserContext>()
-    .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
-
-// For ObjectSchema, you can add .Field() before or after .WithContext()
-var UserSchema = Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(3))
-    .WithContext<User, UserContext>()
-    .Field(u => u.Email, EmailSchema)
-    .Refine((user, ctx) => !ctx.IsMaintenanceMode, "Registration disabled");
-```
-
-You can also use context-free `Refine()` on a promoted schema:
-
-```csharp
-Z.String()
-    .WithContext<UserContext>()
-    .Refine(val => val.Length > 3, "Too short")                    // No context
-    .Refine((val, ctx) => val != ctx.BannedEmail, "Email banned"); // With context
-```
-
-### Register Factory
-
-```csharp
-builder.Services.AddZeta(typeof(Program).Assembly);  // Scans for factories
-```
-
 ## Custom Rules
 
 ### Inline Refinement
@@ -487,8 +303,6 @@ Z.String()
 ```
 
 ### Custom Rule Class
-
-For contextless schemas, implement `IValidationRule<T>`:
 
 ```csharp
 public sealed class StartsWithUpperRule : IValidationRule<string>
@@ -505,131 +319,44 @@ public sealed class StartsWithUpperRule : IValidationRule<string>
 Z.String().Use(new StartsWithUpperRule())
 ```
 
-For context-aware schemas, implement `IValidationRule<T, TContext>`:
+See the [Custom Rules guide](docs/CustomRules.md) for context-aware rules and advanced patterns.
+
+## Validation Context
+
+For async data loading before validation (e.g., checking database):
 
 ```csharp
-public sealed class UniqueEmailRule<TContext> : IValidationRule<string, TContext>
-    where TContext : IEmailContext
+// Define context
+public record UserContext(bool EmailExists);
+
+// Factory to load context
+public class UserContextFactory : IValidationContextFactory<User, UserContext>
 {
-    public ValidationError? Validate(string value, ValidationContext<TContext> ctx)
+    private readonly IUserRepository _repo;
+
+    public UserContextFactory(IUserRepository repo) => _repo = repo;
+
+    public async Task<UserContext> CreateAsync(User input, IServiceProvider services, CancellationToken ct)
     {
-        return ctx.Data.EmailExists
-            ? new ValidationError(ctx.Execution.Path, "email_taken", "Email already taken")
-            : null;
+        return new UserContext(EmailExists: await _repo.EmailExistsAsync(input.Email, ct));
     }
 }
 
-// Usage
-Z.String()
-    .WithContext<UserContext>()
-    .Use(new UniqueEmailRule<UserContext>())
+// Use in schema with .WithContext()
+var UserSchema = Z.Object<User>()
+    .Field(u => u.Name, Z.String().MinLength(3))
+    .WithContext<User, UserContext>()
+    .Field(u => u.Email,
+        Z.String()
+            .Email()
+            .WithContext<UserContext>()
+            .Refine((email, ctx) => !ctx.EmailExists, "Email already taken"));
+
+// Register
+builder.Services.AddZeta(typeof(Program).Assembly);
 ```
 
-## Testing
-
-Zeta supports `TimeProvider` for testing time-based validations like `Past()`, `Future()`, `MinAge()`, and `WithinDays()`.
-
-### Unit Testing Schemas
-
-```csharp
-using Microsoft.Extensions.Time.Testing;
-using Zeta.Core;
-
-[Fact]
-public async Task MinAge_WithFakeTime_ValidatesCorrectly()
-{
-    // Arrange - "now" is June 15, 2024
-    var fakeTime = new FakeTimeProvider(
-        new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-    var context = new ValidationExecutionContext(timeProvider: fakeTime);
-    var schema = Z.DateTime().MinAge(18);
-
-    // Someone born June 16, 2006 is not yet 18 on June 15, 2024
-    var birthDate = new DateTime(2006, 6, 16, 0, 0, 0, DateTimeKind.Utc);
-
-    // Act
-    var result = await schema.ValidateAsync(birthDate, context);
-
-    // Assert
-    Assert.True(result.IsFailure);
-    Assert.Contains(result.Errors, e => e.Code == "min_age");
-
-    // Advance time by 1 day - now they're 18
-    fakeTime.Advance(TimeSpan.FromDays(1));
-    var newContext = new ValidationExecutionContext(timeProvider: fakeTime);
-
-    var result2 = await schema.ValidateAsync(birthDate, newContext);
-    Assert.True(result2.IsSuccess);
-}
-```
-
-### Testing with IZetaValidator
-
-Register `TimeProvider` in the service collection to control time in controller tests:
-
-```csharp
-[Fact]
-public async Task CreateUser_UnderageUser_ReturnsValidationError()
-{
-    // Arrange
-    var fakeTime = new FakeTimeProvider(
-        new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-
-    var services = new ServiceCollection();
-    services.AddSingleton<TimeProvider>(fakeTime);
-    services.AddScoped<IZetaValidator, ZetaValidator>();
-    var serviceProvider = services.BuildServiceProvider();
-
-    var validator = serviceProvider.GetRequiredService<IZetaValidator>();
-    var schema = Z.Object<UserRequest>()
-        .Field(x => x.Email, Z.String().Email())
-        .Field(x => x.BirthDate, Z.DateTime().MinAge(18));
-
-    var request = new UserRequest("test@example.com", new DateTime(2010, 1, 1));
-
-    // Act
-    var result = await validator.ValidateAsync(request, schema);
-
-    // Assert
-    Assert.True(result.IsFailure);
-    Assert.Contains(result.Errors, e => e.Code == "min_age");
-}
-```
-
-### Integration Testing with WebApplicationFactory
-
-```csharp
-public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
-{
-    [Fact]
-    public async Task CreateBooking_FutureDate_Succeeds()
-    {
-        var fakeTime = new FakeTimeProvider(
-            new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
-
-        var factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureServices(services =>
-                {
-                    services.AddSingleton<TimeProvider>(fakeTime);
-                });
-            });
-
-        var client = factory.CreateClient();
-
-        // Date is in the "future" relative to fake time
-        var response = await client.PostAsJsonAsync("/bookings", new
-        {
-            date = "2024-06-15"
-        });
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-}
-```
-
-The `FakeTimeProvider` class is from the `Microsoft.Extensions.TimeProvider.Testing` package.
+See the [Validation Context guide](docs/ValidationContext.md) for more details.
 
 ## Error Model
 
@@ -646,56 +373,55 @@ public record ValidationError(
 | Code | Meaning |
 |------|---------|
 | `required` | Value is null/missing |
-| `min_length` | Below minimum length |
-| `max_length` | Above maximum length |
+| `min_length` / `max_length` | Length constraints |
 | `length` | Not exact length |
-| `min_value` | Below minimum value |
-| `max_value` | Above maximum value |
-| `min_date` | Before minimum date |
-| `max_date` | After maximum date |
-| `min_time` | Before minimum time |
-| `max_time` | After maximum time |
-| `email` | Invalid email format |
-| `uuid` | Invalid UUID format |
-| `url` | Invalid URL format |
-| `uri` | Invalid URI format |
+| `min_value` / `max_value` | Value constraints |
+| `email` / `uuid` / `url` / `uri` | Format validation |
 | `alphanumeric` | Contains non-alphanumeric chars |
-| `starts_with` | Missing required prefix |
-| `ends_with` | Missing required suffix |
-| `contains` | Missing required substring |
+| `starts_with` / `ends_with` / `contains` | String content |
 | `regex` | Pattern mismatch |
-| `precision` | Too many decimal places |
-| `multiple_of` | Not a multiple of step value |
-| `positive` | Must be positive |
-| `negative` | Must be negative |
-| `finite` | Must be finite number |
-| `past` | Must be in the past |
-| `future` | Must be in the future |
-| `between` | Outside allowed range |
-| `within_days` | Outside allowed day range |
-| `weekday` | Must be a weekday |
-| `weekend` | Must be a weekend |
-| `min_age` | Below minimum age |
-| `max_age` | Above maximum age |
-| `business_hours` | Outside business hours |
-| `morning` | Not in morning hours |
-| `afternoon` | Not in afternoon hours |
-| `evening` | Not in evening hours |
-| `not_empty` | GUID is empty |
-| `version` | Invalid UUID version |
-| `is_true` | Must be true |
-| `is_false` | Must be false |
+| `precision` / `multiple_of` | Numeric constraints |
+| `positive` / `negative` / `finite` | Number signs |
+| `past` / `future` / `between` / `within_days` | Date constraints |
+| `weekday` / `weekend` | Day of week |
+| `min_age` / `max_age` | Age validation |
+| `business_hours` / `morning` / `afternoon` / `evening` | Time constraints |
+| `not_empty` / `version` | GUID validation |
+| `is_true` / `is_false` | Boolean constraints |
 | `custom_error` | Custom refinement failed |
 
+## Benchmarks
+
+Comparing Zeta against FluentValidation and DataAnnotations on .NET 9 (Apple M2 Pro).
+
+| Method | Mean | Allocated |
+|--------|-----:|----------:|
+| FluentValidation | 150 ns | 600 B |
+| FluentValidation (Async) | 270 ns | 672 B |
+| **Zeta** | **374 ns** | **416 B** |
+| Zeta (Invalid) | 555 ns | 1,144 B |
+| DataAnnotations | 733 ns | 1,880 B |
+| DataAnnotations (Invalid) | 1,105 ns | 2,704 B |
+| FluentValidation (Invalid) | 2,247 ns | 7,920 B |
+
+**Key findings:**
+- Allocates **~40% less memory** than FluentValidation on valid input
+- Allocates **~7x less memory** than FluentValidation on invalid input
+- **4x faster** than FluentValidation when validation fails
+- **2x faster** than DataAnnotations when validation fails
+
+Run benchmarks:
+```bash
+dotnet run --project benchmarks/Zeta.Benchmarks -c Release
+```
+
 ## Documentation
-- [Mediator integration](docs/Mediator.md)
+
+- [Validation Context](docs/ValidationContext.md) - Async data loading and context-aware schemas
+- [Custom Rules](docs/CustomRules.md) - Creating reusable validation rules
+- [Testing](docs/Testing.md) - Testing strategies and TimeProvider support
+- [Mediator Integration](docs/Mediator.md) - Using Zeta with MediatR pipelines
 
 ## License
 
 MIT
-
-## Wishes
-- More schema types (e.g., TimeSpan, Enum)
-- rename and seperate IntScema -> IntContextSchema & IntContextlessSchema. And move to seperate files. 
-- Merge ValidationContext & ExecutionContext into ValidationContext & ValidationContext<TContext>
-- Take property name from JsonPropertyName attribute if present or provided naming strategy
