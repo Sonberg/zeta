@@ -94,6 +94,43 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
     }}
 #endif");
 
+        // Add generic method for nested objects
+        sb.AppendLine(@"
+    /// <summary>
+    /// Adds a field validator with fluent schema builder for nested object properties.
+    /// </summary>
+    public ObjectContextlessSchema<T> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        Func<ObjectContextlessSchema<TProperty>, ObjectContextlessSchema<TProperty>> schema)
+        where TProperty : class
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        _fields.Add(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema(Z.Object<TProperty>())));
+        return this;
+    }");
+
+        // Add methods for List<TElement> collections with primitive element types
+        foreach (var mapping in SchemaMappings)
+        {
+            var typeForXml = mapping.Type.Replace("<", "&lt;").Replace(">", "&gt;");
+            sb.AppendLine($@"
+    /// <summary>
+    /// Adds a field validator with fluent schema builder for List&lt;{typeForXml}&gt; properties.
+    /// </summary>
+    public ObjectContextlessSchema<T> Field(
+        Expression<Func<T, System.Collections.Generic.List<{mapping.Type}>>> propertySelector,
+        Func<CollectionContextlessSchema<{mapping.Type}>, CollectionContextlessSchema<{mapping.Type}>> schema)
+    {{
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        var elementSchema = {mapping.FactoryMethod}();
+        var collectionSchema = Z.Collection(elementSchema);
+        _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<{mapping.Type}>>(propertyName, getter, schema(collectionSchema)));
+        return this;
+    }}");
+        }
+
         sb.AppendLine("}");
         return sb.ToString();
     }
@@ -157,6 +194,43 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
         return this;
     }}
 #endif");
+
+        // Add generic method for nested objects
+        sb.AppendLine(@"
+    /// <summary>
+    /// Adds a field validator with fluent schema builder for nested object properties.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field<TProperty>(
+        Expression<Func<T, TProperty>> propertySelector,
+        Func<ObjectContextlessSchema<TProperty>, ObjectContextSchema<TProperty, TContext>> schema)
+        where TProperty : class
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema(Z.Object<TProperty>())));
+        return this;
+    }");
+
+        // Add methods for List<TElement> collections with primitive element types
+        foreach (var mapping in SchemaMappings)
+        {
+            var typeForXml = mapping.Type.Replace("<", "&lt;").Replace(">", "&gt;");
+            sb.AppendLine($@"
+    /// <summary>
+    /// Adds a field validator with fluent schema builder for List&lt;{typeForXml}&gt; properties.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, System.Collections.Generic.List<{mapping.Type}>>> propertySelector,
+        Func<CollectionContextlessSchema<{mapping.Type}>, CollectionContextSchema<{mapping.Type}, TContext>> schema)
+    {{
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        var elementSchema = {mapping.FactoryMethod}();
+        var collectionSchema = Z.Collection(elementSchema);
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{mapping.Type}>, TContext>(propertyName, getter, schema(collectionSchema)));
+        return this;
+    }}");
+        }
 
         sb.AppendLine("}");
         return sb.ToString();
