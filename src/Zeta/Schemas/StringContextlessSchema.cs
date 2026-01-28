@@ -117,6 +117,18 @@ public sealed class StringContextlessSchema : ContextlessSchema<string>
         return this;
     }
 
+    public StringContextlessSchema RefineAsync(
+        Func<string, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<string>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware string schema with all rules from this schema.
     /// </summary>
