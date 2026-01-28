@@ -74,20 +74,24 @@ Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `Boo
 Z.String().MinLength(3).MaxLength(100).Email()
 ```
 
-**ObjectSchema Field Validation**: Uses expression trees to extract property names, auto-camelCases them for error paths. Supports both pre-built schemas and fluent inline builders:
+**ObjectSchema Field Validation**: Uses expression trees to extract property names, auto-camelCases them for error paths. Use fluent inline builders for most fields:
 ```csharp
-// Traditional: pre-built schemas
+// Default: Fluent inline builders
 Z.Object<User>()
-    .Field(u => u.Email, Z.String().Email())  // Error path: "email"
-    .Field(u => u.Address, addressSchema)      // Nested: "address.street"
-
-// NEW: Fluent inline builders (more concise)
-Z.Object<User>()
-    .Field(u => u.Email, s => s.Email().MinLength(5))
+    .Field(u => u.Email, s => s.Email().MinLength(5))  // Error path: "email"
     .Field(u => u.Age, s => s.Min(18).Max(100))
     .Field(u => u.Price, s => s.Positive().Precision(2))
 
 // Supported types: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
+
+// For composability: pre-built schemas when reusing across multiple objects
+var addressSchema = Z.Object<Address>()
+    .Field(a => a.Street, s => s.MinLength(3))
+    .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}$"));
+
+Z.Object<User>()
+    .Field(u => u.Email, s => s.Email())
+    .Field(u => u.Address, addressSchema)  // Reuse nested schema, path: "address.street"
 ```
 
 **Context Promotion**: Use `.WithContext<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:

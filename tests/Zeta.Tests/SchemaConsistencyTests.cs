@@ -102,19 +102,19 @@ public class SchemaConsistencyTests
     [Fact]
     public void WithContext_ArraySchema_ReturnsTypedContextAwareSchema()
     {
-        var contextless = Z.Array(Z.Int());
+        var contextless = Z.Collection(Z.Int());
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<ArrayContextSchema<int, object>>(contextAware);
+        Assert.IsType<CollectionContextSchema<int, object>>(contextAware);
     }
 
     [Fact]
     public void WithContext_ListSchema_ReturnsTypedContextAwareSchema()
     {
-        var contextless = Z.List(Z.String());
+        var contextless = Z.Collection(Z.String());
         var contextAware = contextless.WithContext<object>();
 
-        Assert.IsType<ListContextSchema<string, object>>(contextAware);
+        Assert.IsType<CollectionContextSchema<string, object>>(contextAware);
     }
 
     private class TestClass { }

@@ -127,7 +127,7 @@ public class OptionalSchemaTests
     [Fact]
     public async Task OptionalArray_NullValue_ReturnsSuccess()
     {
-        var schema = Z.Array(Z.Int()).Optional();
+        var schema = Z.Collection(Z.Int()).Optional();
         var result = await schema.ValidateAsync(null);
 
         Assert.True(result.IsSuccess);
@@ -137,7 +137,7 @@ public class OptionalSchemaTests
     [Fact]
     public async Task OptionalList_NullValue_ReturnsSuccess()
     {
-        var schema = Z.List(Z.String()).Optional();
+        var schema = Z.Collection(Z.String()).Optional();
         var result = await schema.ValidateAsync(null);
 
         Assert.True(result.IsSuccess);

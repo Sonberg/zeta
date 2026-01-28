@@ -36,4 +36,11 @@
     <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
+  <!-- Source Generator Reference -->
+  <ItemGroup>
+    <ProjectReference Include="../Zeta.SourceGenerators/Zeta.SourceGenerators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
 </Project>

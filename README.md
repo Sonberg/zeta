@@ -4,8 +4,8 @@ A composable, type-safe, async-first validation framework for .NET inspired by [
 
 ```csharp
 var UserSchema = Z.Object<User>()
-    .Field(u => u.Email, Z.String().Email())
-    .Field(u => u.Age, Z.Int().Min(18));
+    .Field(u => u.Email, s => s.Email())
+    .Field(u => u.Age, s => s.Min(18));
 
 var result = await UserSchema.ValidateAsync(user);
 
@@ -134,23 +134,29 @@ Z.Object<User>()
 
 ### Object
 
-```csharp
-Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(2))
-    .Field(u => u.Email, Z.String().Email())
-    .Field(u => u.Address, AddressSchema)  // Nested schemas
-    .Refine(u => u.Password != u.Email, "Password cannot be email")
-```
-
-**Fluent Field Builder** - Define field schemas inline with builder functions:
+Define field schemas inline with builder functions:
 
 ```csharp
 Z.Object<User>()
+    .Field(u => u.Name, s => s.MinLength(2))
     .Field(u => u.Email, s => s.Email().MinLength(5))
     .Field(u => u.Age, s => s.Min(18).Max(100))
-    .Field(u => u.Price, s => s.Positive().Precision(2));
+    .Field(u => u.Price, s => s.Positive().Precision(2))
+    .Refine(u => u.Password != u.Email, "Password cannot be email");
 
 // Supported for: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
+```
+
+**For Composability** - Extract reusable schemas when needed across multiple objects:
+
+```csharp
+var AddressSchema = Z.Object<Address>()
+    .Field(a => a.Street, s => s.MinLength(3))
+    .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}$"));
+
+Z.Object<User>()
+    .Field(u => u.Name, s => s.MinLength(2))
+    .Field(u => u.Address, AddressSchema);  // Reuse nested schema
 ```
 
 ### Collections
@@ -235,8 +241,8 @@ builder.Services.AddZeta();
 
 ```csharp
 var UserSchema = Z.Object<User>()
-    .Field(u => u.Email, Z.String().Email())
-    .Field(u => u.Name, Z.String().MinLength(3));
+    .Field(u => u.Email, s => s.Email())
+    .Field(u => u.Name, s => s.MinLength(3));
 
 app.MapPost("/users", (User user) => Results.Ok(user))
     .WithValidation(UserSchema);
@@ -268,8 +274,8 @@ public class UsersController : ControllerBase
     private readonly IZetaValidator _validator;
 
     private static readonly ISchema<User> UserSchema = Z.Object<User>()
-        .Field(u => u.Name, Z.String().MinLength(3))
-        .Field(u => u.Email, Z.String().Email());
+        .Field(u => u.Name, s => s.MinLength(3))
+        .Field(u => u.Email, s => s.Email());
 
     public UsersController(IZetaValidator validator)
     {
@@ -372,14 +378,10 @@ public class UserContextFactory : IValidationContextFactory<User, UserContext>
 
 // Use in schema with .WithContext()
 var UserSchema = Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(3))
+    .Field(u => u.Name, s => s.MinLength(3))
     .WithContext<User, UserContext>()
-    .Field(u => u.Email,
-        Z.String()
-            .Email()
-            .WithContext<UserContext>()
-            .Refine((email, ctx) => !ctx.EmailExists, "Email already taken"))
-    // Or use RefineAsync for async validation
+    .Field(u => u.Email, s => s.Email())  // Fluent builders still work
+    // For context-aware validation, use pre-built schemas
     .Field(u => u.Username,
         Z.String()
             .MinLength(3)
