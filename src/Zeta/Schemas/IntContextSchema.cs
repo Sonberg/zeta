@@ -40,4 +40,24 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext>
     {
         return Refine((val, _) => predicate(val), message, code);
     }
+
+    public IntContextSchema<TContext> RefineAsync(
+        Func<int, TContext, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<int, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this;
+    }
+
+    public IntContextSchema<TContext> RefineAsync(
+        Func<int, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
+    }
 }

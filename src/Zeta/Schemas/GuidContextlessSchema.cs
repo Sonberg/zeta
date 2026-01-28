@@ -41,6 +41,18 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
         return this;
     }
 
+    public GuidContextlessSchema RefineAsync(
+        Func<Guid, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<Guid>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware Guid schema with all rules from this schema.
     /// </summary>

@@ -67,4 +67,24 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
     {
         return Refine((val, _) => predicate(val), message, code);
     }
+
+    public DoubleContextSchema<TContext> RefineAsync(
+        Func<double, TContext, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<double, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this;
+    }
+
+    public DoubleContextSchema<TContext> RefineAsync(
+        Func<double, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
+    }
 }

@@ -34,6 +34,18 @@ public sealed class IntContextlessSchema : ContextlessSchema<int>
         return this;
     }
 
+    public IntContextlessSchema RefineAsync(
+        Func<int, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<int>(async (val, exec) =>
+            await predicate(val, exec.CancellationToken)
+                ? null
+                : new ValidationError(exec.Path, code, message)));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware int schema with all rules from this schema.
     /// </summary>

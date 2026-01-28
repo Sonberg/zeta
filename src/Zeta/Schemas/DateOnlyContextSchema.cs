@@ -125,5 +125,25 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
     {
         return Refine((val, _) => predicate(val), message, code);
     }
+
+    public DateOnlyContextSchema<TContext> RefineAsync(
+        Func<DateOnly, TContext, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        Use(new RefinementRule<DateOnly, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this;
+    }
+
+    public DateOnlyContextSchema<TContext> RefineAsync(
+        Func<DateOnly, CancellationToken, ValueTask<bool>> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
+    }
 }
 #endif
