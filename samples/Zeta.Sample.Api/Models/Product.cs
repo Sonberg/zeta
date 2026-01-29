@@ -6,7 +6,7 @@ public record CreateProductRequest(
     string Sku,
     decimal Price,
     int StockQuantity,
-    string[] Tags);
+    List<string> Tags);
 
 public record UpdatePriceRequest(
     decimal Price,

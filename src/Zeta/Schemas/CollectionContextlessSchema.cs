@@ -9,9 +9,9 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<ICollection<TElement>>
 {
-    private readonly ISchema<TElement> _elementSchema;
+    private readonly ISchema<TElement>? _elementSchema;
 
-    public CollectionContextlessSchema(ISchema<TElement> elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules)
+    public CollectionContextlessSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules)
     {
         _elementSchema = elementSchema;
     }
@@ -19,20 +19,23 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
     public override async ValueTask<Result<ICollection<TElement>>> ValidateAsync(ICollection<TElement> value, ValidationContext context)
     {
         var errors = await Rules.ExecuteAsync(value, context);
-        var index = 0;
-        
-        // Validate each element
-        foreach (var item in value)
-        {
-            var elementExecution = context.PushIndex(index);
-            var result = await _elementSchema.ValidateAsync(item, elementExecution);
-            if (result.IsFailure)
-            {
-                errors ??= [];
-                errors.AddRange(result.Errors);
-            }
 
-            index++;
+        // Validate each element if element schema is provided
+        if (_elementSchema is not null)
+        {
+            var index = 0;
+            foreach (var item in value)
+            {
+                var elementExecution = context.PushIndex(index);
+                var result = await _elementSchema.ValidateAsync(item, elementExecution);
+                if (result.IsFailure)
+                {
+                    errors ??= [];
+                    errors.AddRange(result.Errors);
+                }
+
+                index++;
+            }
         }
 
         return errors == null

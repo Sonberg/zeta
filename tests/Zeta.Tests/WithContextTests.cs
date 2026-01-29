@@ -294,7 +294,7 @@ public class WithContextTests
     [Fact]
     public async Task WithContext_ArraySchema_Works()
     {
-        var schema = Z.Collection(Z.Int())
+        var schema = Z.Collection<int>()
             .MinLength(0)
             .WithContext<UserContext>()
             .Refine((arr, ctx) => arr.Count <= ctx.MaxValue, "Too many items");
@@ -311,7 +311,7 @@ public class WithContextTests
     [Fact]
     public async Task WithContext_ListSchema_Works()
     {
-        var schema = Z.Collection(Z.String())
+        var schema = Z.Collection<string>()
             .WithContext<UserContext>()
             .Refine((list, ctx) => list.Count <= ctx.MaxValue, "Too many items");
 

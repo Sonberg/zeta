@@ -172,19 +172,37 @@ Z.Object<User>()
 
 ### Collections
 
+Validate arrays and lists with `.Each()` for element validation:
+
 ```csharp
-Z.Array(Z.String().Email())
-    .MinLength(1)
+// Simple element validation
+Z.Collection<string>()
+    .Each(s => s.Email())          // Validate each element
+    .MinLength(1)                  // Collection-level validation
     .MaxLength(10)
+
+Z.Collection<int>()
+    .Each(n => n.Min(0).Max(100))
     .NotEmpty()
 
-Z.List(Z.Int().Min(0))
-    .MinLength(1)
-    .MaxLength(100)
-    .NotEmpty()
+// In object schemas with fluent builders
+Z.Object<User>()
+    .Field(u => u.Tags, tags => tags
+        .Each(s => s.MinLength(3).MaxLength(50))
+        .MinLength(1).MaxLength(10));
 
-// Errors include index path: "emails[0]", "items[2].name"
+// Complex nested objects - pass pre-built schema
+var orderItemSchema = Z.Object<OrderItem>()
+    .Field(i => i.ProductId, s => s)
+    .Field(i => i.Quantity, s => s.Min(1));
+
+Z.Collection(orderItemSchema)
+    .MinLength(1);
+
+// Errors include index path: "tags[0]", "items[2].quantity"
 ```
+
+See the [Collections guide](docs/Collections.md) for advanced patterns including context-aware validation.
 
 ### Conditional Validation
 
@@ -466,6 +484,7 @@ dotnet run --project benchmarks/Zeta.Benchmarks -c Release
 
 ## Documentation
 
+- [Collections](docs/Collections.md) - Arrays, lists, and element validation patterns
 - [Fluent Field Builders](docs/FluentFieldBuilders.md) - Inline schema definitions for object fields
 - [Validation Context](docs/ValidationContext.md) - Async data loading and context-aware schemas
 - [Custom Rules](docs/CustomRules.md) - Creating reusable validation rules

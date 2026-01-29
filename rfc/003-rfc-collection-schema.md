@@ -1,6 +1,8 @@
 # RFC 003
 ## Revision of Collection schema
 
+**Status:** ✅ Implemented
+
 ### Collection validation
 
 - Length
@@ -22,7 +24,7 @@ var schema =
     Z.Object<User>()
         .Property(
             u => u.Roles,
-            roles => roles.ForEach(item =>
+            roles => roles.Each(item =>
                 item.Refine(v => v == "Admin", "Must be Admin")
             )
         );

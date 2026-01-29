@@ -24,7 +24,10 @@ public static class Z
     public static ObjectContextlessSchema<T> Object<T>() where T : class => new();
 
     // Collection
-    public static CollectionContextlessSchema<TElement> Collection<TElement>(ISchema<TElement> schema) => new(schema, new ContextlessRuleEngine<ICollection<TElement>>());
+    public static CollectionContextlessSchema<TElement> Collection<TElement>() => new(null, new ContextlessRuleEngine<ICollection<TElement>>());
+
+    // Collection with pre-built element schema (for nested objects)
+    public static CollectionContextlessSchema<TElement> Collection<TElement>(ISchema<TElement> elementSchema) => new(elementSchema, new ContextlessRuleEngine<ICollection<TElement>>());
     
     // DateTime
     public static DateTimeContextlessSchema DateTime() => new();

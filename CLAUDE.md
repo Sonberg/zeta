@@ -92,6 +92,25 @@ var addressSchema = Z.Object<Address>()
 Z.Object<User>()
     .Field(u => u.Email, s => s.Email())
     .Field(u => u.Address, addressSchema)  // Reuse nested schema, path: "address.street"
+
+// Collection fields with .Each() for element validation (RFC 003)
+Z.Object<User>()
+    .Field(u => u.Roles, roles => roles
+        .Each(r => r.MinLength(3).MaxLength(50))  // Validate each string element
+        .MinLength(1).MaxLength(10))  // Validate collection size
+
+// Standalone collections
+Z.Collection<string>()  // Parameterless, generic type parameter
+    .Each(s => s.Email())  // Apply validation to each element
+    .MinLength(1)          // Collection-level validation
+
+// For complex nested objects, pass a pre-built schema
+var orderItemSchema = Z.Object<OrderItem>()
+    .Field(i => i.ProductId, s => s /* Guid validation */)
+    .Field(i => i.Quantity, s => s.Min(1));
+
+Z.Collection(orderItemSchema)  // Pass element schema for complex types
+    .MinLength(1)
 ```
 
 **Context Promotion**: Use `.WithContext<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:

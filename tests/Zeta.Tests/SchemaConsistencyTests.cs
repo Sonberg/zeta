@@ -102,7 +102,7 @@ public class SchemaConsistencyTests
     [Fact]
     public void WithContext_ArraySchema_ReturnsTypedContextAwareSchema()
     {
-        var contextless = Z.Collection(Z.Int());
+        var contextless = Z.Collection<int>();
         var contextAware = contextless.WithContext<object>();
 
         Assert.IsType<CollectionContextSchema<int, object>>(contextAware);
@@ -111,7 +111,7 @@ public class SchemaConsistencyTests
     [Fact]
     public void WithContext_ListSchema_ReturnsTypedContextAwareSchema()
     {
-        var contextless = Z.Collection(Z.String());
+        var contextless = Z.Collection<string>();
         var contextAware = contextless.WithContext<object>();
 
         Assert.IsType<CollectionContextSchema<string, object>>(contextAware);
@@ -130,7 +130,7 @@ public class SchemaConsistencyTests
         var contextlessSchemaType = typeof(ContextlessSchema<>);
 
         var contextlessSchemaTypes = assembly.GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => !t.IsAbstract && !t.IsInterface && t.IsPublic)
             .Where(t => IsSubclassOfGeneric(t, contextlessSchemaType))
             .ToList();
 
@@ -166,7 +166,7 @@ public class SchemaConsistencyTests
         var contextlessSchemaType = typeof(ContextlessSchema<>);
 
         var contextlessSchemaTypes = assembly.GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => !t.IsAbstract && !t.IsInterface && t.IsPublic)
             .Where(t => IsSubclassOfGeneric(t, contextlessSchemaType))
             .ToList();
 
