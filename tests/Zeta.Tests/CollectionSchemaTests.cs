@@ -268,7 +268,145 @@ public class CollectionSchemaTests
         Assert.True(result.IsSuccess);
     }
 
+    // RFC 003: .Each() with object builders
+    [Fact]
+    public async Task Each_WithObjectBuilder_ValidElements_ReturnsSuccess()
+    {
+        var schema = Z.Collection<OrderItem>()
+            .Each(item => item
+                .Field(i => i.ProductId, Z.Guid())
+                .Field(i => i.Quantity, Z.Int().Min(1)));
+
+        var items = new[]
+        {
+            new OrderItem(Guid.NewGuid(), 5),
+            new OrderItem(Guid.NewGuid(), 10)
+        };
+
+        var result = await schema.ValidateAsync(items);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Each_WithObjectBuilder_InvalidElement_ReturnsFailure()
+    {
+        var schema = Z.Collection<OrderItem>()
+            .Each(item => item
+                .Field(i => i.ProductId, Z.Guid())
+                .Field(i => i.Quantity, Z.Int().Min(1)));
+
+        var items = new[]
+        {
+            new OrderItem(Guid.NewGuid(), 5),
+            new OrderItem(Guid.NewGuid(), 0)  // Invalid: quantity < 1
+        };
+
+        var result = await schema.ValidateAsync(items);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("[1].quantity", result.Errors[0].Path);
+        Assert.Equal("min_value", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task Each_WithObjectBuilder_MultipleInvalidElements_ReturnsAllErrors()
+    {
+        var schema = Z.Collection<OrderItem>()
+            .Each(item => item
+                .Field(i => i.ProductId, Z.Guid())
+                .Field(i => i.Quantity, Z.Int().Min(1).Max(100)));
+
+        var items = new[]
+        {
+            new OrderItem(Guid.NewGuid(), 0),    // Invalid: too low
+            new OrderItem(Guid.NewGuid(), 150),  // Invalid: too high
+            new OrderItem(Guid.NewGuid(), 50)    // Valid
+        };
+
+        var result = await schema.ValidateAsync(items);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Path == "[0].quantity");
+        Assert.Contains(result.Errors, e => e.Path == "[1].quantity");
+    }
+
+    [Fact]
+    public async Task Each_WithObjectBuilder_ChainedWithCollectionValidation()
+    {
+        var schema = Z.Collection<OrderItem>()
+            .Each(item => item
+                .Field(i => i.ProductId, Z.Guid())
+                .Field(i => i.Quantity, Z.Int().Min(1)))
+            .MinLength(1)
+            .MaxLength(10);
+
+        var items = new[]
+        {
+            new OrderItem(Guid.NewGuid(), 5)
+        };
+
+        var result = await schema.ValidateAsync(items);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Each_WithObjectBuilder_InObjectField_ValidatesCorrectly()
+    {
+        // Build the item schema using .Each() with object builder
+        var itemsSchema = Z.Collection<OrderItem>()
+            .Each(item => item
+                .Field(i => i.ProductId, Z.Guid())
+                .Field(i => i.Quantity, Z.Int().Min(1)))
+            .MinLength(1);
+
+        var schema = Z.Object<CreateOrderRequest>()
+            .Field(o => o.CustomerId, Z.Guid())
+            .Field(o => o.Items, itemsSchema);
+
+        var order = new CreateOrderRequest(
+            Guid.NewGuid(),
+            [
+                new OrderItem(Guid.NewGuid(), 5),
+                new OrderItem(Guid.NewGuid(), 10)
+            ]);
+
+        var result = await schema.ValidateAsync(order);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Each_WithObjectBuilder_InObjectField_InvalidElement_PropagatesPath()
+    {
+        // Build the item schema using .Each() with object builder
+        var itemsSchema = Z.Collection<OrderItem>()
+            .Each(item => item
+                .Field(i => i.ProductId, Z.Guid())
+                .Field(i => i.Quantity, Z.Int().Min(1).Max(100)));
+
+        var schema = Z.Object<CreateOrderRequest>()
+            .Field(o => o.CustomerId, Z.Guid())
+            .Field(o => o.Items, itemsSchema);
+
+        var order = new CreateOrderRequest(
+            Guid.NewGuid(),
+            [
+                new OrderItem(Guid.NewGuid(), 5),
+                new OrderItem(Guid.NewGuid(), 150)  // Invalid: too high
+            ]);
+
+        var result = await schema.ValidateAsync(order);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("items[1].quantity", result.Errors[0].Path);
+        Assert.Equal("max_value", result.Errors[0].Code);
+    }
+
     record UserWithRoles(List<string> Roles);
+    record OrderItem(Guid ProductId, int Quantity);
+    record CreateOrderRequest(Guid CustomerId, OrderItem[] Items);
 
     class TestContext
     {

@@ -315,6 +315,23 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
 
                         """);
 
+        // Add generic object builder overload for contextless
+        sb.AppendLine("""
+                          /// <summary>
+                          /// Applies transformations to the object element schema for each item in the collection.
+                          /// Allows inline object schema building for complex types.
+                          /// </summary>
+                          public static CollectionContextlessSchema<TElement> Each<TElement>(
+                              this CollectionContextlessSchema<TElement> schema,
+                              Func<ObjectContextlessSchema<TElement>, ObjectContextlessSchema<TElement>> elementTransform)
+                              where TElement : class
+                          {
+                              var newElementSchema = elementTransform(Z.Object<TElement>());
+                              return new CollectionContextlessSchema<TElement>(newElementSchema, schema.GetRules());
+                          }
+
+                      """);
+
         // Generate context-aware extension methods
         foreach (var mapping in SchemaMappings)
         {
@@ -360,6 +377,23 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
                         #endif
 
                         """);
+
+        // Add generic object builder overload for context-aware
+        sb.AppendLine("""
+                          /// <summary>
+                          /// Applies transformations to the object element schema for each item in the collection.
+                          /// Allows inline object schema building for complex types with context awareness.
+                          /// </summary>
+                          public static CollectionContextSchema<TElement, TContext> Each<TElement, TContext>(
+                              this CollectionContextSchema<TElement, TContext> schema,
+                              Func<ObjectContextlessSchema<TElement>, ObjectContextSchema<TElement, TContext>> elementTransform)
+                              where TElement : class
+                          {
+                              var newElementSchema = elementTransform(Z.Object<TElement>());
+                              return new CollectionContextSchema<TElement, TContext>(newElementSchema, schema.GetRules());
+                          }
+
+                      """);
 
         // Add helper methods to access Rules
         sb.AppendLine("""
