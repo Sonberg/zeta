@@ -8,35 +8,40 @@ namespace Zeta.Schemas;
 /// </summary>
 public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollection<TElement>, TContext>
 {
-    private readonly ISchema<TElement, TContext> _elementSchema;
+    private readonly ISchema<TElement, TContext>? _elementSchema;
 
-    public CollectionContextSchema(ISchema<TElement, TContext> elementSchema, ContextRuleEngine<ICollection<TElement>, TContext> rules) : base(rules)
+    public CollectionContextSchema(ISchema<TElement, TContext>? elementSchema, ContextRuleEngine<ICollection<TElement>, TContext> rules) : base(rules)
     {
         _elementSchema = elementSchema;
     }
 
-    public CollectionContextSchema(ISchema<TElement> elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules.ToContext<TContext>())
+    public CollectionContextSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules.ToContext<TContext>())
     {
-        _elementSchema = new SchemaAdapter<TElement, TContext>(elementSchema);
+        _elementSchema = elementSchema is not null
+            ? new SchemaAdapter<TElement, TContext>(elementSchema)
+            : null;
     }
 
     public override async ValueTask<Result> ValidateAsync(ICollection<TElement> value, ValidationContext<TContext> context)
     {
         var errors = await Rules.ExecuteAsync(value, context);
-        var index = 0;
 
-        // Validate each element
-        foreach (var item in value)
+        // Validate each element if element schema is provided
+        if (_elementSchema is not null)
         {
-            var elementContext = context.PushIndex(index);
-            var result = await _elementSchema.ValidateAsync(item, elementContext);
-            if (result.IsFailure)
+            var index = 0;
+            foreach (var item in value)
             {
-                errors ??= [];
-                errors.AddRange(result.Errors);
-            }
+                var elementContext = context.PushIndex(index);
+                var result = await _elementSchema.ValidateAsync(item, elementContext);
+                if (result.IsFailure)
+                {
+                    errors ??= [];
+                    errors.AddRange(result.Errors);
+                }
 
-            index++;
+                index++;
+            }
         }
 
         return errors == null

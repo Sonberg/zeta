@@ -98,7 +98,7 @@ public static class Schemas
                 .Regex(@"^[A-Z0-9\-]+$", "SKU must contain only uppercase letters, numbers, and hyphens"))
             .Field(p => p.Price, Z.Decimal().Min(0.01m).Max(999999.99m))
             .Field(p => p.StockQuantity, Z.Int().Min(0))
-            .Field(p => p.Tags, Z.Collection(Z.String().MinLength(1).MaxLength(50)))
+            .Field(p => p.Tags, tags => tags.Each(s => s.MinLength(1).MaxLength(50)).WithContext<CreateProductContext>())
             .Refine((p, ctx) => !ctx.SkuExists, "SKU already exists");
 
     /// <summary>
@@ -111,7 +111,7 @@ public static class Schemas
             .Field(p => p.Sku, Z.String().Regex(@"^[A-Z0-9\-]+$", "SKU must contain only uppercase letters, numbers, and hyphens"))
             .Field(p => p.Price, Z.Decimal().Min(0.01m).Max(999999.99m))
             .Field(p => p.StockQuantity, Z.Int().Min(0))
-            .Field(p => p.Tags, Z.Collection(Z.String().MinLength(1).MaxLength(50)));
+            .Field(p => p.Tags, tags => tags.Each(s => s.MinLength(1).MaxLength(50)));
 
     /// <summary>
     /// Price update with cross-field validation.

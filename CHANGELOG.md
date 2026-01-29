@@ -1,6 +1,10 @@
 # Change log
 
 ## Next release
+- Add `.Each()` method for collection schemas to enable fluent element validation (RFC 003)
+- Add `.Each()` support for inline object builders - validate complex object collections without pre-building schemas
+- **Breaking:** Change `Z.Collection()` to be parameterless with generic type parameter (e.g., `Z.Collection<string>()` instead of `Z.Collection(Z.String())`)
+- Refactor `CollectionSchemaExtensions` to be source-generated for maintainability
 
 ## Version 0.1.7
 - Add fluent field support for ObjectSchema with source-generated properties
