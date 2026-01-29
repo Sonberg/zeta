@@ -1,5 +1,15 @@
 # Zeta
 
+[![GitHub stars](https://img.shields.io/github/stars/Sonberg/zeta.svg?style=social)](https://github.com/Sonberg/zeta/stargazers)
+
+[![NuGet](https://img.shields.io/nuget/v/Zeta.svg)](https://www.nuget.org/packages/Sonberg.Zeta)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Zeta.svg)](https://www.nuget.org/packages/Sonberg.Zeta)
+
+[![Build](https://github.com/sonberg/zeta/actions/workflows/publish.yml/badge.svg)](https://github.com/Sonberg/zeta/actions)
+[![Build](https://github.com/sonberg/zeta/actions/workflows/ci.yml/badge.svg)](https://github.com/Sonberg/zeta/actions)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A composable, type-safe, async-first validation framework for .NET inspired by [Zod](https://zod.dev/).
 
 ```csharp
