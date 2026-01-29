@@ -43,8 +43,8 @@ dotnet run --project samples/Zeta.Sample.Api
 - `ISchema<T, TContext>` - Context-aware validation interface (separate, no inheritance from `ISchema<T>`). Returns `Result`.
 - `Result<T>` - Discriminated result type with `IsSuccess`, `Value`, `Errors`, and monadic operations (`Map`, `Then`, `Match`)
 - `ValidationError(Path, Code, Message)` - Error record with dot-notation path (e.g., `user.address.street`)
-- `ValidationContext<TData>` - Contains typed context data and execution context
-- `ValidationExecutionContext` - Path tracking, IServiceProvider access, CancellationToken
+- `ValidationContext<TData>` - Contains typed context data, path tracking, CancellationToken & TimeProvider
+- `ValidationContext` - Contains path tracking, CancellationToken & TimeProvider
 
 ### Rule System (src/Zeta/Rules/)
 - `IValidationRule<T>` - Context-free sync validation rule using `ValidationExecutionContext`
@@ -174,3 +174,6 @@ public StringSchema<TContext> Foo(...)
     return this;
 }
 ```
+
+### After changes
+Add a section in CHANGELOG.md below "Next release".
