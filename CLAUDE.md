@@ -176,4 +176,4 @@ public StringSchema<TContext> Foo(...)
 ```
 
 ### After changes
-Add a section in CHANGELOG.md below "Next release".
+Add a section in CHANGELOG.md below "Next release". Versions are managed with tags in git

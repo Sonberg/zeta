@@ -460,6 +460,7 @@ dotnet run --project benchmarks/Zeta.Benchmarks -c Release
 - [Custom Rules](docs/CustomRules.md) - Creating reusable validation rules
 - [Testing](docs/Testing.md) - Testing strategies and TimeProvider support
 - [Mediator Integration](docs/Mediator.md) - Using Zeta with MediatR pipelines
+- [Changelog](CHANGELOG.md) - Release history and version changes
 
 ## License
 
