@@ -1,6 +1,7 @@
 # Zeta
 
 [![GitHub stars](https://img.shields.io/github/stars/Sonberg/zeta.svg?style=social)](https://github.com/Sonberg/zeta/stargazers)
+[![codecov](https://codecov.io/gh/Sonberg/zeta/branch/main/graph/badge.svg)](https://codecov.io/gh/Sonberg/zeta)
 
 [![NuGet](https://img.shields.io/nuget/v/Zeta.svg)](https://www.nuget.org/packages/Sonberg.Zeta)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Zeta.svg)](https://www.nuget.org/packages/Sonberg.Zeta)
