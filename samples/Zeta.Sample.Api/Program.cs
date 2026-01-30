@@ -139,7 +139,6 @@ app.MapPost("/api/minimal/orders/delivery", (ScheduleDeliveryRequest request) =>
 
 // Map controllers
 app.MapControllers();
-
 app.Run();
 
 // Required for WebApplicationFactory in integration tests
