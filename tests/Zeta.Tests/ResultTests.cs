@@ -173,6 +173,170 @@ public class ResultTests
         Assert.Equal(42, result2.Value);
     }
 
+    // ==================== Value Property Tests ====================
+
+    [Fact]
+    public void Value_OnSuccess_ReturnsValue()
+    {
+        var result = Result<string>.Success("test");
+
+        Assert.Equal("test", result.Value);
+    }
+
+    [Fact]
+    public void Value_OnFailure_ThrowsInvalidOperationException()
+    {
+        var result = Result<string>.Failure(new ValidationError("", "error", "Failed"));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => result.Value);
+        Assert.Contains("Cannot access Value on a failed result", exception.Message);
+    }
+
+    // ==================== Then Tests ====================
+
+    [Fact]
+    public async Task Then_Async_OnSuccess_ChainsValidation()
+    {
+        var result = Result<int>.Success(10);
+        var chained = await result.Then(async x =>
+        {
+            await Task.Delay(1);
+            return Result<string>.Success($"Value: {x}");
+        });
+
+        Assert.True(chained.IsSuccess);
+        Assert.Equal("Value: 10", chained.Value);
+    }
+
+    [Fact]
+    public async Task Then_Async_OnFailure_PreservesErrors()
+    {
+        var error = new ValidationError("field", "code", "message");
+        var result = Result<int>.Failure(error);
+        var chained = await result.Then(async x =>
+        {
+            await Task.Delay(1);
+            return Result<string>.Success($"Value: {x}");
+        });
+
+        Assert.True(chained.IsFailure);
+        Assert.Single(chained.Errors);
+        Assert.Equal("field", chained.Errors[0].Path);
+    }
+
+    [Fact]
+    public void Then_Sync_OnSuccess_ChainsValidation()
+    {
+        var result = Result<int>.Success(10);
+        var chained = result.Then(x => Result<string>.Success($"Value: {x}"));
+
+        Assert.True(chained.IsSuccess);
+        Assert.Equal("Value: 10", chained.Value);
+    }
+
+    [Fact]
+    public void Then_Sync_OnFailure_PreservesErrors()
+    {
+        var error = new ValidationError("field", "code", "message");
+        var result = Result<int>.Failure(error);
+        var chained = result.Then(x => Result<string>.Success($"Value: {x}"));
+
+        Assert.True(chained.IsFailure);
+        Assert.Single(chained.Errors);
+        Assert.Equal("field", chained.Errors[0].Path);
+    }
+
+    // ==================== Match with Actions Tests ====================
+
+    [Fact]
+    public void Match_Actions_OnSuccess_CallsSuccessAction()
+    {
+        var result = Result<int>.Success(42);
+        var successCalled = false;
+        var failureCalled = false;
+
+        result.Match(
+            success: v => successCalled = true,
+            failure: e => failureCalled = true);
+
+        Assert.True(successCalled);
+        Assert.False(failureCalled);
+    }
+
+    [Fact]
+    public void Match_Actions_OnFailure_CallsFailureAction()
+    {
+        var result = Result<int>.Failure(new ValidationError("", "e", "m"));
+        var successCalled = false;
+        var failureCalled = false;
+
+        result.Match(
+            success: v => successCalled = true,
+            failure: e => failureCalled = true);
+
+        Assert.False(successCalled);
+        Assert.True(failureCalled);
+    }
+
+    // ==================== GetOrThrow Tests ====================
+
+    [Fact]
+    public void GetOrThrow_OnSuccess_ReturnsValue()
+    {
+        var result = Result<string>.Success("test");
+
+        var value = result.GetOrThrow();
+
+        Assert.Equal("test", value);
+    }
+
+    [Fact]
+    public void GetOrThrow_OnFailure_ThrowsValidationException()
+    {
+        var error1 = new ValidationError("name", "required", "Name is required");
+        var error2 = new ValidationError("email", "email", "Invalid email");
+        var result = Result<string>.Failure(error1, error2);
+
+        var exception = Assert.Throws<ValidationException>(() => result.GetOrThrow());
+
+        Assert.Equal(2, exception.Errors.Count);
+        Assert.Contains("name: Name is required", exception.Message);
+        Assert.Contains("email: Invalid email", exception.Message);
+    }
+
+    [Fact]
+    public void GetOrThrow_OnFailureWithEmptyPath_FormatsMessageWithoutPath()
+    {
+        var error = new ValidationError("", "required", "Value is required");
+        var result = Result<string>.Failure(error);
+
+        var exception = Assert.Throws<ValidationException>(() => result.GetOrThrow());
+
+        Assert.Single(exception.Errors);
+        Assert.Equal("Value is required", exception.Message);
+    }
+
+    // ==================== Implicit Operator Tests ====================
+
+    [Fact]
+    public void ImplicitOperator_ConvertsValueToSuccessResult()
+    {
+        Result<int> result = 42;
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public void ImplicitOperator_WithReferenceType_ConvertsToSuccessResult()
+    {
+        var user = new TestUser { Name = "John" };
+        Result<TestUser> result = user;
+
+        Assert.True(result.IsSuccess);
+        Assert.Same(user, result.Value);
+    }
+
     private class TestUser
     {
         public string Name { get; set; } = "";
