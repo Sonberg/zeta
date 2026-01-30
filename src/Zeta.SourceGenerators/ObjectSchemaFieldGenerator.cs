@@ -27,6 +27,7 @@ internal static class ObjectSchemaFieldGenerator
         GenerateListCollectionOverloads(sb);
         GenerateArrayCollectionOverloads(sb);
         GenerateGenericArrayOverload(sb);
+        GenerateGenericListOverload(sb);
 
         sb.AppendLine("}");
         return sb.ToString();
@@ -57,34 +58,25 @@ internal static class ObjectSchemaFieldGenerator
     private static void GenerateDateOnlyTimeOnlyOverloads(StringBuilder sb)
     {
         sb.AppendLine("#if !NETSTANDARD2_0");
-        sb.AppendLine($$"""
+        foreach (var mapping in SchemaMapping.ModernNetMappings)
+        {
+            sb.AppendLine($$"""
                             /// <summary>
-                            /// Adds a field validator with fluent schema builder for DateOnly properties.
+                            /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties.
                             /// </summary>
                             public ObjectContextlessSchema<T> Field(
-                                Expression<Func<T, DateOnly>> propertySelector,
-                                Func<DateOnlyContextlessSchema, DateOnlyContextlessSchema> schema)
+                                Expression<Func<T, {{mapping.Type}}>> propertySelector,
+                                Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
                             {
                                 var propertyName = GetPropertyName(propertySelector);
                                 var getter = CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextlessValidator<T, DateOnly>(propertyName, getter, schema(Z.DateOnly())));
+                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
                                 return this;
                             }
 
-                            /// <summary>
-                            /// Adds a field validator with fluent schema builder for TimeOnly properties.
-                            /// </summary>
-                            public ObjectContextlessSchema<T> Field(
-                                Expression<Func<T, TimeOnly>> propertySelector,
-                                Func<TimeOnlyContextlessSchema, TimeOnlyContextlessSchema> schema)
-                            {
-                                var propertyName = GetPropertyName(propertySelector);
-                                var getter = CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema(Z.TimeOnly())));
-                                return this;
-                            }
-                        #endif
                         """);
+        }
+        sb.AppendLine("#endif");
     }
 
     private static void GenerateNestedObjectOverload(StringBuilder sb)
@@ -164,6 +156,27 @@ internal static class ObjectSchemaFieldGenerator
                           /// </summary>
                           public ObjectContextlessSchema<T> Field<TElement>(
                               Expression<Func<T, TElement[]>> propertySelector,
+                              Func<CollectionContextlessSchema<TElement>, CollectionContextlessSchema<TElement>> schema)
+                              where TElement : class
+                          {
+                              var propertyName = GetPropertyName(propertySelector);
+                              var getter = CreateGetter(propertySelector);
+                              var collectionSchema = Z.Collection<TElement>();
+                              _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<TElement>>(propertyName, getter, schema(collectionSchema)));
+                              return this;
+                          }
+                      """);
+    }
+
+    private static void GenerateGenericListOverload(StringBuilder sb)
+    {
+        sb.AppendLine("""
+
+                          /// <summary>
+                          /// Adds a field validator with fluent schema builder for List<TElement> properties.
+                          /// </summary>
+                          public ObjectContextlessSchema<T> Field<TElement>(
+                              Expression<Func<T, System.Collections.Generic.List<TElement>>> propertySelector,
                               Func<CollectionContextlessSchema<TElement>, CollectionContextlessSchema<TElement>> schema)
                               where TElement : class
                           {
