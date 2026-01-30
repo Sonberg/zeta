@@ -1,4 +1,5 @@
 # RFC 003
+
 ## Revision of Collection schema
 
 **Status:** ✅ Implemented
@@ -9,8 +10,13 @@
 - MinLength
 - MaxLength
 
-### Item validation
+## Item validation
+
 Attach a schema that each item will be validated with like:
+
+.Each only accept ISchema<T> or ISchema<T, TContext>
+
+### Out of scope
 
 ```csharp
 Z.Collection(
