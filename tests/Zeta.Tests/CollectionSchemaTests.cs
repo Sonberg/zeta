@@ -404,9 +404,94 @@ public class CollectionSchemaTests
         Assert.Equal("max_value", result.Errors[0].Code);
     }
 
+    [Fact]
+    public async Task Each_InlineArrayField_WithObjectBuilder_ValidatesCorrectly()
+    {
+        // Test that array properties get the correct CollectionContextlessSchema type
+        // This verifies the fix for array field overloads
+        var schema = Z.Object<CreateOrderRequest>()
+            .Field(o => o.CustomerId, Z.Guid())
+            .Field(o => o.Items, items => items  // items should be CollectionContextlessSchema<OrderItem>
+                .Each(item => item
+                    .Field(i => i.ProductId, Z.Guid())
+                    .Field(i => i.Quantity, Z.Int().Min(1).Max(100)))
+                .MinLength(1)
+                .MaxLength(10));
+
+        var order = new CreateOrderRequest(
+            Guid.NewGuid(),
+            [
+                new OrderItem(Guid.NewGuid(), 5),
+                new OrderItem(Guid.NewGuid(), 10)
+            ]);
+
+        var result = await schema.ValidateAsync(order);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Each_InlineArrayField_WithObjectBuilder_InvalidElement_PropagatesPath()
+    {
+        // Test that errors are properly propagated with inline array field builders
+        var schema = Z.Object<CreateOrderRequest>()
+            .Field(o => o.CustomerId, Z.Guid())
+            .Field(o => o.Items, items => items
+                .Each(item => item
+                    .Field(i => i.ProductId, Z.Guid())
+                    .Field(i => i.Quantity, Z.Int().Min(1).Max(100)))
+                .MinLength(1));
+
+        var order = new CreateOrderRequest(
+            Guid.NewGuid(),
+            [
+                new OrderItem(Guid.NewGuid(), 5),
+                new OrderItem(Guid.NewGuid(), 150)  // Invalid: quantity > 100
+            ]);
+
+        var result = await schema.ValidateAsync(order);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("items[1].quantity", result.Errors[0].Path);
+        Assert.Equal("max_value", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task Each_InlineArrayField_WithPrimitiveTypes_ValidatesCorrectly()
+    {
+        // Test that primitive array types work with inline builders
+        var schema = Z.Object<UserProfile>()
+            .Field(u => u.Tags, tags => tags
+                .Each(t => t.MinLength(3).MaxLength(20))
+                .MinLength(1)
+                .MaxLength(5));
+
+        var profile = new UserProfile(["coding", "music", "sports"]);
+        var result = await schema.ValidateAsync(profile);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Each_InlineArrayField_WithPrimitiveTypes_InvalidElement_ReturnsError()
+    {
+        var schema = Z.Object<UserProfile>()
+            .Field(u => u.Tags, tags => tags
+                .Each(t => t.MinLength(3))
+                .MinLength(1));
+
+        var profile = new UserProfile(["coding", "ab"]);  // "ab" is too short
+        var result = await schema.ValidateAsync(profile);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("tags[1]", result.Errors[0].Path);
+        Assert.Equal("min_length", result.Errors[0].Code);
+    }
+
     record UserWithRoles(List<string> Roles);
     record OrderItem(Guid ProductId, int Quantity);
     record CreateOrderRequest(Guid CustomerId, OrderItem[] Items);
+    record UserProfile(string[] Tags);
 
     class TestContext
     {

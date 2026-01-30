@@ -1,6 +1,13 @@
 # Change log
 
 ## Next release
+- Fix array field overloads to correctly return `CollectionContextlessSchema<T>` instead of `ObjectContextlessSchema<T[]>` for inline array field builders
+- Refactor source generators into separate files for better maintainability:
+  - `SchemaMapping.cs` - Shared type-to-schema mappings
+  - `ObjectSchemaFieldGenerator.cs` - ObjectContextlessSchema field overloads
+  - `ObjectContextSchemaFieldGenerator.cs` - ObjectContextSchema field overloads
+  - `CollectionExtensionsGenerator.cs` - Collection .Each() extension methods
+  - `SchemaFactoryGenerator.cs` - Main orchestrator
 
 ## Version 0.1.8
 - Add `.Each()` method for collection schemas to enable fluent element validation (RFC 003)
