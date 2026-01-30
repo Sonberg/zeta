@@ -31,3 +31,14 @@ var schema =
 
 await schema.ValidateAsync(new User { Roles = ["Reader"] });
 ```
+
+Make this work:
+
+```csharp
+var schema = Z.Object<CreateOrderRequest>()
+    .WithContext<CreateOrderContext>()
+    .Field(x => x.CustomerId, x => x.NotEmpty())
+    .Field(x => x.Items, x => x.Each(item => item
+        .Field(i => i.ProductId, Z.Guid())
+        .Field(i => i.Quantity, Z.Int().Min(1).Max(100))));
+```
