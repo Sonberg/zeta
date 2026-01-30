@@ -1,4 +1,5 @@
 # Change log
+- Remove .When - Will be reimplemented
 
 ## Next release
 - Fix array field overloads to correctly return `CollectionContextlessSchema<T>` instead of `ObjectContextlessSchema<T[]>` for inline array field builders

@@ -64,10 +64,7 @@ public static class Schemas
     public static readonly ISchema<CreateUserRequest> CreateUser =
         Z.Object<CreateUserRequest>()
             .Field(u => u.Email, Z.String().Email())
-            .Field(u => u.Name, Z.String().MinLength(2).MaxLength(100))
-            .When(
-                u => u.HasAddress,
-                then => then.Field(u => u.Address!, Address));
+            .Field(u => u.Name, Z.String().MinLength(2).MaxLength(100));
 
     /// <summary>
     /// Profile update - all fields optional but validated when present.
