@@ -1,5 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
+using Zeta.Rules.Numeric;
 using Zeta.Validation;
 
 namespace Zeta.Schemas;
@@ -13,61 +14,37 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal>
 
     public DecimalContextlessSchema Min(decimal min, string? message = null)
     {
-        Use(new StatefulRefinementRule<decimal, (decimal, string?)>(
-            static (val, exec, state) => NumericValidators.Min(val, state.Item1, exec.Path, state.Item2),
-            (min, message)));
+        Use(new MinDecimalRule(min, message));
         return this;
     }
 
     public DecimalContextlessSchema Max(decimal max, string? message = null)
     {
-        Use(new StatefulRefinementRule<decimal, (decimal, string?)>(
-            static (val, exec, state) => NumericValidators.Max(val, state.Item1, exec.Path, state.Item2),
-            (max, message)));
+        Use(new MaxDecimalRule(max, message));
         return this;
     }
 
     public DecimalContextlessSchema Positive(string? message = null)
     {
-        Use(new StatefulRefinementRule<decimal, string?>(
-            static (val, exec, state) =>
-                val > 0
-                    ? null
-                    : new ValidationError(exec.Path, "positive", state ?? "Must be positive"),
-            message));
+        Use(new PositiveDecimalRule(message));
         return this;
     }
 
     public DecimalContextlessSchema Negative(string? message = null)
     {
-        Use(new StatefulRefinementRule<decimal, string?>(
-            static (val, exec, state) =>
-                val < 0
-                    ? null
-                    : new ValidationError(exec.Path, "negative", state ?? "Must be negative"),
-            message));
+        Use(new NegativeDecimalRule(message));
         return this;
     }
 
     public DecimalContextlessSchema Precision(int maxDecimalPlaces, string? message = null)
     {
-        Use(new StatefulRefinementRule<decimal, (int, string?)>(
-            static (val, exec, state) =>
-                GetDecimalPlaces(val) <= state.Item1
-                    ? null
-                    : new ValidationError(exec.Path, "precision", state.Item2 ?? $"Must have at most {state.Item1} decimal places"),
-            (maxDecimalPlaces, message)));
+        Use(new PrecisionRule(maxDecimalPlaces, message));
         return this;
     }
 
     public DecimalContextlessSchema MultipleOf(decimal step, string? message = null)
     {
-        Use(new StatefulRefinementRule<decimal, (decimal, string?)>(
-            static (val, exec, state) =>
-                val % state.Item1 == 0
-                    ? null
-                    : new ValidationError(exec.Path, "multiple_of", state.Item2 ?? $"Must be a multiple of {state.Item1}"),
-            (step, message)));
+        Use(new MultipleOfRule(step, message));
         return this;
     }
 
@@ -90,20 +67,6 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal>
                 ? null
                 : new ValidationError(exec.Path, code, message)));
         return this;
-    }
-
-    internal static int GetDecimalPlaces(decimal value)
-    {
-        value = Math.Abs(value);
-        value -= Math.Truncate(value);
-        var places = 0;
-        while (value > 0)
-        {
-            places++;
-            value *= 10;
-            value -= Math.Truncate(value);
-        }
-        return places;
     }
 
     /// <summary>

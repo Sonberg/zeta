@@ -38,4 +38,55 @@ public static class NumericValidators
         => value <= max
             ? null
             : new ValidationError(path, "max_value", message ?? $"Must be at most {max}");
+
+    // Double-specific validations
+    public static ValidationError? Positive(double value, string path, string? message = null)
+        => value > 0
+            ? null
+            : new ValidationError(path, "positive", message ?? "Must be positive");
+
+    public static ValidationError? Negative(double value, string path, string? message = null)
+        => value < 0
+            ? null
+            : new ValidationError(path, "negative", message ?? "Must be negative");
+
+    public static ValidationError? Finite(double value, string path, string? message = null)
+        => !double.IsNaN(value) && !double.IsInfinity(value)
+            ? null
+            : new ValidationError(path, "finite", message ?? "Must be a finite number");
+
+    // Decimal-specific validations
+    public static ValidationError? Positive(decimal value, string path, string? message = null)
+        => value > 0
+            ? null
+            : new ValidationError(path, "positive", message ?? "Must be positive");
+
+    public static ValidationError? Negative(decimal value, string path, string? message = null)
+        => value < 0
+            ? null
+            : new ValidationError(path, "negative", message ?? "Must be negative");
+
+    public static ValidationError? Precision(decimal value, int maxDecimalPlaces, string path, string? message = null)
+        => GetDecimalPlaces(value) <= maxDecimalPlaces
+            ? null
+            : new ValidationError(path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places");
+
+    public static ValidationError? MultipleOf(decimal value, decimal divisor, string path, string? message = null)
+        => value % divisor == 0
+            ? null
+            : new ValidationError(path, "multiple_of", message ?? $"Must be a multiple of {divisor}");
+
+    private static int GetDecimalPlaces(decimal value)
+    {
+        value = Math.Abs(value);
+        value -= Math.Truncate(value);
+        var places = 0;
+        while (value > 0)
+        {
+            places++;
+            value *= 10;
+            value -= Math.Truncate(value);
+        }
+        return places;
+    }
 }

@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Zeta.Core;
 using Zeta.Rules;
+using Zeta.Rules.String;
 using Zeta.Validation;
 
 namespace Zeta.Schemas;
@@ -16,97 +17,73 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext>
 
     public StringContextSchema<TContext> MinLength(int min, string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, (int, string?)>(
-            static (val, ctx, state) => StringValidators.MinLength(val, state.Item1, ctx.Path, state.Item2),
-            (min, message)));
+        Use(new MinLengthRule<TContext>(min, message));
         return this;
     }
 
     public StringContextSchema<TContext> MaxLength(int max, string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, (int, string?)>(
-            static (val, ctx, state) => StringValidators.MaxLength(val, state.Item1, ctx.Path, state.Item2),
-            (max, message)));
+        Use(new MaxLengthRule<TContext>(max, message));
         return this;
     }
 
     public StringContextSchema<TContext> Length(int exact, string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, (int, string?)>(
-            static (val, ctx, state) => StringValidators.Length(val, state.Item1, ctx.Path, state.Item2),
-            (exact, message)));
+        Use(new LengthRule<TContext>(exact, message));
         return this;
     }
 
     public StringContextSchema<TContext> NotEmpty(string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, string?>(
-            static (val, ctx, state) => StringValidators.NotEmpty(val, ctx.Path, state),
-            message));
+        Use(new NotEmptyRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Email(string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, string?>(
-            static (val, ctx, state) => StringValidators.Email(val, ctx.Path, state),
-            message));
+        Use(new EmailRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Uuid(string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, string?>(
-            static (val, ctx, state) => StringValidators.Uuid(val, ctx.Path, state),
-            message));
+        Use(new UuidRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Url(string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, string?>(
-            static (val, ctx, state) => StringValidators.Url(val, ctx.Path, state),
-            message));
+        Use(new UrlRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Uri(UriKind kind = UriKind.Absolute, string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, (UriKind, string?)>(
-            static (val, ctx, state) => StringValidators.ValidUri(val, state.Item1, ctx.Path, state.Item2),
-            (kind, message)));
+        Use(new UriRule<TContext>(kind, message));
         return this;
     }
 
     public StringContextSchema<TContext> Alphanumeric(string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, string?>(
-            static (val, ctx, state) => StringValidators.Alphanumeric(val, ctx.Path, state),
-            message));
+        Use(new AlphanumericRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, (string, StringComparison, string?)>(
-            static (val, ctx, state) => StringValidators.StartsWith(val, state.Item1, state.Item2, ctx.Path, state.Item3),
-            (prefix, comparison, message)));
+        Use(new StartsWithRule<TContext>(prefix, comparison, message));
         return this;
     }
 
     public StringContextSchema<TContext> EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, (string, StringComparison, string?)>(
-            static (val, ctx, state) => StringValidators.EndsWith(val, state.Item1, state.Item2, ctx.Path, state.Item3),
-            (suffix, comparison, message)));
+        Use(new EndsWithRule<TContext>(suffix, comparison, message));
         return this;
     }
 
     public StringContextSchema<TContext> Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new StatefulRefinementRule<string, TContext, (string, StringComparison, string?)>(
-            static (val, ctx, state) => StringValidators.Contains(val, state.Item1, state.Item2, ctx.Path, state.Item3),
-            (substring, comparison, message)));
+        Use(new ContainsRule<TContext>(substring, comparison, message));
         return this;
     }
 
@@ -117,9 +94,7 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext>
             RegexOptions.Compiled,
             TimeSpan.FromSeconds(1));
 
-        Use(new StatefulRefinementRule<string, TContext, (System.Text.RegularExpressions.Regex, string?, string)>(
-            static (val, ctx, state) => StringValidators.MatchesRegex(val, state.Item1, ctx.Path, state.Item2, state.Item3),
-            (compiledRegex, message, code)));
+        Use(new RegexRule<TContext>(compiledRegex, message, code));
         return this;
     }
 

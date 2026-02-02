@@ -1,5 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
+using Zeta.Rules.Numeric;
 using Zeta.Validation;
 
 namespace Zeta.Schemas;
@@ -13,50 +14,31 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double>
 
     public DoubleContextlessSchema Min(double min, string? message = null)
     {
-        Use(new StatefulRefinementRule<double, (double, string?)>(
-            static (val, exec, state) => NumericValidators.Min(val, state.Item1, exec.Path, state.Item2),
-            (min, message)));
+        Use(new MinDoubleRule(min, message));
         return this;
     }
 
     public DoubleContextlessSchema Max(double max, string? message = null)
     {
-        Use(new StatefulRefinementRule<double, (double, string?)>(
-            static (val, exec, state) => NumericValidators.Max(val, state.Item1, exec.Path, state.Item2),
-            (max, message)));
+        Use(new MaxDoubleRule(max, message));
         return this;
     }
 
     public DoubleContextlessSchema Positive(string? message = null)
     {
-        Use(new StatefulRefinementRule<double, string?>(
-            static (val, exec, state) =>
-                val > 0
-                    ? null
-                    : new ValidationError(exec.Path, "positive", state ?? "Must be positive"),
-            message));
+        Use(new PositiveDoubleRule(message));
         return this;
     }
 
     public DoubleContextlessSchema Negative(string? message = null)
     {
-        Use(new StatefulRefinementRule<double, string?>(
-            static (val, exec, state) =>
-                val < 0
-                    ? null
-                    : new ValidationError(exec.Path, "negative", state ?? "Must be negative"),
-            message));
+        Use(new NegativeDoubleRule(message));
         return this;
     }
 
     public DoubleContextlessSchema Finite(string? message = null)
     {
-        Use(new StatefulRefinementRule<double, string?>(
-            static (val, exec, state) =>
-                !double.IsNaN(val) && !double.IsInfinity(val)
-                    ? null
-                    : new ValidationError(exec.Path, "finite", state ?? "Must be a finite number"),
-            message));
+        Use(new FiniteRule(message));
         return this;
     }
 

@@ -2,6 +2,17 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- **Performance:** Replace `StatefulRefinementRule` with dedicated validation rule structs to eliminate all lambda overhead
+  - Created dedicated readonly struct rules in `Rules/String/`, `Rules/Numeric/`, and `Rules/Collection/` folders
+  - **String rules:** `MinLengthRule`, `MaxLengthRule`, `LengthRule`, `NotEmptyRule`, `EmailRule`, `UuidRule`, `UrlRule`, `UriRule`, `AlphanumericRule`, `StartsWithRule`, `EndsWithRule`, `ContainsRule`, `RegexRule`
+  - **Numeric rules:** `MinIntRule`, `MaxIntRule`, `MinDoubleRule`, `MaxDoubleRule`, `MinDecimalRule`, `MaxDecimalRule`, `PositiveDoubleRule`, `PositiveDecimalRule`, `NegativeDoubleRule`, `NegativeDecimalRule`, `FiniteRule`, `PrecisionRule`, `MultipleOfRule`
+  - **Collection rules:** `MinLengthRule<T>`, `MaxLengthRule<T>`, `LengthRule<T>`, `NotEmptyRule<T>`
+  - Each rule implements `IValidationRule<T>` directly without delegates or tuples
+  - Updated all String, Int, Double, Decimal, and Collection schemas (both contextless and context-aware) to use dedicated rules
+  - Added validation methods to `NumericValidators` for `Positive`, `Negative`, `Finite`, `Precision`, and `MultipleOf`
+  - **Benefits:** Zero lambda overhead, clearer types (`EmailRule` vs `StatefulRefinementRule<string, string?>`), better IDE support
+  - **Result:** Same zero-allocation performance with cleaner, more maintainable code
+  - `StatefulRefinementRule` remains available for user-defined custom rules
 - **Performance:** Eliminate closure allocations in built-in validation methods using stateful refinement rules
   - Introduced `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` that use static lambdas with value-type state
   - Updated String, Int, Double, Decimal, and Collection schemas (both contextless and context-aware)
