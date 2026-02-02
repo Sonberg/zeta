@@ -13,15 +13,17 @@ public sealed class IntContextlessSchema : ContextlessSchema<int>
 
     public IntContextlessSchema Min(int min, string? message = null)
     {
-        Use(new RefinementRule<int>((val, exec) =>
-            NumericValidators.Min(val, min, exec.Path, message)));
+        Use(new StatefulRefinementRule<int, (int, string?)>(
+            static (val, exec, state) => NumericValidators.Min(val, state.Item1, exec.Path, state.Item2),
+            (min, message)));
         return this;
     }
 
     public IntContextlessSchema Max(int max, string? message = null)
     {
-        Use(new RefinementRule<int>((val, exec) =>
-            NumericValidators.Max(val, max, exec.Path, message)));
+        Use(new StatefulRefinementRule<int, (int, string?)>(
+            static (val, exec, state) => NumericValidators.Max(val, state.Item1, exec.Path, state.Item2),
+            (max, message)));
         return this;
     }
 

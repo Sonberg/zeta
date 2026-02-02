@@ -13,51 +13,61 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal>
 
     public DecimalContextlessSchema Min(decimal min, string? message = null)
     {
-        Use(new RefinementRule<decimal>((val, exec) =>
-            NumericValidators.Min(val, min, exec.Path, message)));
+        Use(new StatefulRefinementRule<decimal, (decimal, string?)>(
+            static (val, exec, state) => NumericValidators.Min(val, state.Item1, exec.Path, state.Item2),
+            (min, message)));
         return this;
     }
 
     public DecimalContextlessSchema Max(decimal max, string? message = null)
     {
-        Use(new RefinementRule<decimal>((val, exec) =>
-            NumericValidators.Max(val, max, exec.Path, message)));
+        Use(new StatefulRefinementRule<decimal, (decimal, string?)>(
+            static (val, exec, state) => NumericValidators.Max(val, state.Item1, exec.Path, state.Item2),
+            (max, message)));
         return this;
     }
 
     public DecimalContextlessSchema Positive(string? message = null)
     {
-        Use(new RefinementRule<decimal>((val, exec) =>
-            val > 0
-                ? null
-                : new ValidationError(exec.Path, "positive", message ?? "Must be positive")));
+        Use(new StatefulRefinementRule<decimal, string?>(
+            static (val, exec, state) =>
+                val > 0
+                    ? null
+                    : new ValidationError(exec.Path, "positive", state ?? "Must be positive"),
+            message));
         return this;
     }
 
     public DecimalContextlessSchema Negative(string? message = null)
     {
-        Use(new RefinementRule<decimal>((val, exec) =>
-            val < 0
-                ? null
-                : new ValidationError(exec.Path, "negative", message ?? "Must be negative")));
+        Use(new StatefulRefinementRule<decimal, string?>(
+            static (val, exec, state) =>
+                val < 0
+                    ? null
+                    : new ValidationError(exec.Path, "negative", state ?? "Must be negative"),
+            message));
         return this;
     }
 
     public DecimalContextlessSchema Precision(int maxDecimalPlaces, string? message = null)
     {
-        Use(new RefinementRule<decimal>((val, exec) =>
-            GetDecimalPlaces(val) <= maxDecimalPlaces
-                ? null
-                : new ValidationError(exec.Path, "precision", message ?? $"Must have at most {maxDecimalPlaces} decimal places")));
+        Use(new StatefulRefinementRule<decimal, (int, string?)>(
+            static (val, exec, state) =>
+                GetDecimalPlaces(val) <= state.Item1
+                    ? null
+                    : new ValidationError(exec.Path, "precision", state.Item2 ?? $"Must have at most {state.Item1} decimal places"),
+            (maxDecimalPlaces, message)));
         return this;
     }
 
     public DecimalContextlessSchema MultipleOf(decimal step, string? message = null)
     {
-        Use(new RefinementRule<decimal>((val, exec) =>
-            val % step == 0
-                ? null
-                : new ValidationError(exec.Path, "multiple_of", message ?? $"Must be a multiple of {step}")));
+        Use(new StatefulRefinementRule<decimal, (decimal, string?)>(
+            static (val, exec, state) =>
+                val % state.Item1 == 0
+                    ? null
+                    : new ValidationError(exec.Path, "multiple_of", state.Item2 ?? $"Must be a multiple of {state.Item1}"),
+            (step, message)));
         return this;
     }
 

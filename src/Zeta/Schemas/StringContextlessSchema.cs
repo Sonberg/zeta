@@ -14,85 +14,97 @@ public sealed class StringContextlessSchema : ContextlessSchema<string>
 
     public StringContextlessSchema MinLength(int min, string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.MinLength(val, min, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, (int, string?)>(
+            static (val, exec, state) => StringValidators.MinLength(val, state.Item1, exec.Path, state.Item2),
+            (min, message)));
         return this;
     }
 
     public StringContextlessSchema MaxLength(int max, string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.MaxLength(val, max, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, (int, string?)>(
+            static (val, exec, state) => StringValidators.MaxLength(val, state.Item1, exec.Path, state.Item2),
+            (max, message)));
         return this;
     }
 
     public StringContextlessSchema Length(int exact, string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.Length(val, exact, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, (int, string?)>(
+            static (val, exec, state) => StringValidators.Length(val, state.Item1, exec.Path, state.Item2),
+            (exact, message)));
         return this;
     }
 
     public StringContextlessSchema NotEmpty(string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.NotEmpty(val, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, string?>(
+            static (val, exec, state) => StringValidators.NotEmpty(val, exec.Path, state),
+            message));
         return this;
     }
 
     public StringContextlessSchema Email(string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.Email(val, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, string?>(
+            static (val, exec, state) => StringValidators.Email(val, exec.Path, state),
+            message));
         return this;
     }
 
     public StringContextlessSchema Uuid(string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.Uuid(val, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, string?>(
+            static (val, exec, state) => StringValidators.Uuid(val, exec.Path, state),
+            message));
         return this;
     }
 
     public StringContextlessSchema Url(string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.Url(val, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, string?>(
+            static (val, exec, state) => StringValidators.Url(val, exec.Path, state),
+            message));
         return this;
     }
 
     public StringContextlessSchema Uri(UriKind kind = UriKind.Absolute, string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.ValidUri(val, kind, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, (UriKind, string?)>(
+            static (val, exec, state) => StringValidators.ValidUri(val, state.Item1, exec.Path, state.Item2),
+            (kind, message)));
         return this;
     }
 
     public StringContextlessSchema Alphanumeric(string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.Alphanumeric(val, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, string?>(
+            static (val, exec, state) => StringValidators.Alphanumeric(val, exec.Path, state),
+            message));
         return this;
     }
 
     public StringContextlessSchema StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.StartsWith(val, prefix, comparison, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, (string, StringComparison, string?)>(
+            static (val, exec, state) => StringValidators.StartsWith(val, state.Item1, state.Item2, exec.Path, state.Item3),
+            (prefix, comparison, message)));
         return this;
     }
 
     public StringContextlessSchema EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.EndsWith(val, suffix, comparison, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, (string, StringComparison, string?)>(
+            static (val, exec, state) => StringValidators.EndsWith(val, state.Item1, state.Item2, exec.Path, state.Item3),
+            (suffix, comparison, message)));
         return this;
     }
 
     public StringContextlessSchema Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.Contains(val, substring, comparison, exec.Path, message)));
+        Use(new StatefulRefinementRule<string, (string, StringComparison, string?)>(
+            static (val, exec, state) => StringValidators.Contains(val, state.Item1, state.Item2, exec.Path, state.Item3),
+            (substring, comparison, message)));
         return this;
     }
 
@@ -103,8 +115,9 @@ public sealed class StringContextlessSchema : ContextlessSchema<string>
             RegexOptions.Compiled,
             TimeSpan.FromSeconds(1));
 
-        Use(new RefinementRule<string>((val, exec) =>
-            StringValidators.MatchesRegex(val, compiledRegex, exec.Path, message, code)));
+        Use(new StatefulRefinementRule<string, (System.Text.RegularExpressions.Regex, string?, string)>(
+            static (val, exec, state) => StringValidators.MatchesRegex(val, state.Item1, exec.Path, state.Item2, state.Item3),
+            (compiledRegex, message, code)));
         return this;
     }
 

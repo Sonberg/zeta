@@ -13,42 +13,50 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double>
 
     public DoubleContextlessSchema Min(double min, string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            NumericValidators.Min(val, min, exec.Path, message)));
+        Use(new StatefulRefinementRule<double, (double, string?)>(
+            static (val, exec, state) => NumericValidators.Min(val, state.Item1, exec.Path, state.Item2),
+            (min, message)));
         return this;
     }
 
     public DoubleContextlessSchema Max(double max, string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            NumericValidators.Max(val, max, exec.Path, message)));
+        Use(new StatefulRefinementRule<double, (double, string?)>(
+            static (val, exec, state) => NumericValidators.Max(val, state.Item1, exec.Path, state.Item2),
+            (max, message)));
         return this;
     }
 
     public DoubleContextlessSchema Positive(string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            val > 0
-                ? null
-                : new ValidationError(exec.Path, "positive", message ?? "Must be positive")));
+        Use(new StatefulRefinementRule<double, string?>(
+            static (val, exec, state) =>
+                val > 0
+                    ? null
+                    : new ValidationError(exec.Path, "positive", state ?? "Must be positive"),
+            message));
         return this;
     }
 
     public DoubleContextlessSchema Negative(string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            val < 0
-                ? null
-                : new ValidationError(exec.Path, "negative", message ?? "Must be negative")));
+        Use(new StatefulRefinementRule<double, string?>(
+            static (val, exec, state) =>
+                val < 0
+                    ? null
+                    : new ValidationError(exec.Path, "negative", state ?? "Must be negative"),
+            message));
         return this;
     }
 
     public DoubleContextlessSchema Finite(string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            !double.IsNaN(val) && !double.IsInfinity(val)
-                ? null
-                : new ValidationError(exec.Path, "finite", message ?? "Must be a finite number")));
+        Use(new StatefulRefinementRule<double, string?>(
+            static (val, exec, state) =>
+                !double.IsNaN(val) && !double.IsInfinity(val)
+                    ? null
+                    : new ValidationError(exec.Path, "finite", state ?? "Must be a finite number"),
+            message));
         return this;
     }
 

@@ -2,6 +2,11 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- **Performance:** Eliminate closure allocations in built-in validation methods using stateful refinement rules
+  - Introduced `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` that use static lambdas with value-type state
+  - Updated String, Int, Double, Decimal, and Collection schemas (both contextless and context-aware)
+  - **Result:** Zero allocations during validation for built-in validators (benchmarks confirm 0 B allocated)
+  - User-provided `Refine()` predicates may still allocate (acceptable for backward compatibility)
 - Fix array field overloads to correctly return `CollectionContextlessSchema<T>` instead of `ObjectContextlessSchema<T[]>` for inline array field builders
 - Refactor source generators into separate files for better maintainability:
   - `SchemaMapping.cs` - Shared type-to-schema mappings
