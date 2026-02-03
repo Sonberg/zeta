@@ -2,6 +2,12 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- **Refactoring:** Move all validation logic from static validator classes into rule structs
+  - Moved validation logic from `StringValidators`, `NumericValidators`, and `CollectionValidators` directly into rule implementations
+  - Each rule is now fully self-contained with its own validation logic
+  - Removed `Validation/` folder and all static validator classes
+  - **Benefits:** Simpler architecture, fewer indirections, easier to understand and maintain
+  - No performance impact - all tests pass with identical behavior
 - **Performance:** Optimize validation infrastructure to reduce allocations by 39%
   - Cached empty error lists in `FieldContextlessValidator` and `FieldContextContextValidator` to avoid `.ToList()` allocations on successful validations
   - Optimized string concatenation in `ValidationContext.Push()` to use `string.Concat()` instead of interpolation
@@ -14,7 +20,6 @@
   - **Collection rules:** `MinLengthRule<T>`, `MaxLengthRule<T>`, `LengthRule<T>`, `NotEmptyRule<T>`
   - Each rule implements `IValidationRule<T>` directly without delegates or tuples
   - Updated all String, Int, Double, Decimal, and Collection schemas (both contextless and context-aware) to use dedicated rules
-  - Added validation methods to `NumericValidators` for `Positive`, `Negative`, `Finite`, `Precision`, and `MultipleOf`
   - **Benefits:** Zero lambda overhead, clearer types (`EmailRule` vs `StatefulRefinementRule<string, string?>`), better IDE support
   - **Result:** Same zero-allocation performance with cleaner, more maintainable code
   - `StatefulRefinementRule` remains available for user-defined custom rules

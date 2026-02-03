@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -17,8 +16,11 @@ public readonly struct UuidRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Uuid(value, context.Path, _message));
+        var error = Guid.TryParse(value, out _)
+            ? null
+            : new ValidationError(context.Path, "uuid", _message ?? "Invalid UUID format");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -36,7 +38,10 @@ public readonly struct UuidRule<TContext> : IValidationRule<string, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Uuid(value, context.Path, _message));
+        var error = Guid.TryParse(value, out _)
+            ? null
+            : new ValidationError(context.Path, "uuid", _message ?? "Invalid UUID format");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

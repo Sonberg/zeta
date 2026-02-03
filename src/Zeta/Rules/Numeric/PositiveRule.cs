@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Numeric;
 
@@ -17,8 +16,10 @@ public readonly struct PositiveDoubleRule : IValidationRule<double>
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Positive(value, context.Path, _message));
+        var error = value > 0
+            ? null
+            : new ValidationError(context.Path, "positive", _message ?? "Must be positive");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -36,8 +37,10 @@ public readonly struct PositiveDoubleRule<TContext> : IValidationRule<double, TC
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Positive(value, context.Path, _message));
+        var error = value > 0
+            ? null
+            : new ValidationError(context.Path, "positive", _message ?? "Must be positive");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -55,8 +58,10 @@ public readonly struct PositiveDecimalRule : IValidationRule<decimal>
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Positive(value, context.Path, _message));
+        var error = value > 0
+            ? null
+            : new ValidationError(context.Path, "positive", _message ?? "Must be positive");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -74,7 +79,9 @@ public readonly struct PositiveDecimalRule<TContext> : IValidationRule<decimal, 
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Positive(value, context.Path, _message));
+        var error = value > 0
+            ? null
+            : new ValidationError(context.Path, "positive", _message ?? "Must be positive");
+        return new ValueTask<ValidationError?>(error);
     }
 }

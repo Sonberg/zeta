@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Numeric;
 
@@ -19,8 +18,24 @@ public readonly struct PrecisionRule : IValidationRule<decimal>
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Precision(value, _decimals, context.Path, _message));
+        var error = GetDecimalPlaces(value) <= _decimals
+            ? null
+            : new ValidationError(context.Path, "precision", _message ?? $"Must have at most {_decimals} decimal places");
+        return new ValueTask<ValidationError?>(error);
+    }
+
+    private static int GetDecimalPlaces(decimal value)
+    {
+        value = Math.Abs(value);
+        value -= Math.Truncate(value);
+        var places = 0;
+        while (value > 0)
+        {
+            places++;
+            value *= 10;
+            value -= Math.Truncate(value);
+        }
+        return places;
     }
 }
 
@@ -40,7 +55,23 @@ public readonly struct PrecisionRule<TContext> : IValidationRule<decimal, TConte
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Precision(value, _decimals, context.Path, _message));
+        var error = GetDecimalPlaces(value) <= _decimals
+            ? null
+            : new ValidationError(context.Path, "precision", _message ?? $"Must have at most {_decimals} decimal places");
+        return new ValueTask<ValidationError?>(error);
+    }
+
+    private static int GetDecimalPlaces(decimal value)
+    {
+        value = Math.Abs(value);
+        value -= Math.Truncate(value);
+        var places = 0;
+        while (value > 0)
+        {
+            places++;
+            value *= 10;
+            value -= Math.Truncate(value);
+        }
+        return places;
     }
 }

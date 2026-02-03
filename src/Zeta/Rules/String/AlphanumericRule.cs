@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -17,8 +16,11 @@ public readonly struct AlphanumericRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Alphanumeric(value, context.Path, _message));
+        var error = value.All(char.IsLetterOrDigit)
+            ? null
+            : new ValidationError(context.Path, "alphanumeric", _message ?? "Must contain only letters and numbers");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -36,7 +38,10 @@ public readonly struct AlphanumericRule<TContext> : IValidationRule<string, TCon
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Alphanumeric(value, context.Path, _message));
+        var error = value.All(char.IsLetterOrDigit)
+            ? null
+            : new ValidationError(context.Path, "alphanumeric", _message ?? "Must contain only letters and numbers");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

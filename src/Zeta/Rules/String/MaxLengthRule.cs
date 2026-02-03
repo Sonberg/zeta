@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -19,8 +18,11 @@ public readonly struct MaxLengthRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.MaxLength(value, _max, context.Path, _message));
+        var error = value.Length <= _max
+            ? null
+            : new ValidationError(context.Path, "max_length", _message ?? $"Must be at most {_max} characters long");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -40,7 +42,10 @@ public readonly struct MaxLengthRule<TContext> : IValidationRule<string, TContex
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.MaxLength(value, _max, context.Path, _message));
+        var error = value.Length <= _max
+            ? null
+            : new ValidationError(context.Path, "max_length", _message ?? $"Must be at most {_max} characters long");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -21,8 +20,11 @@ public readonly struct StartsWithRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.StartsWith(value, _prefix, _comparison, context.Path, _message));
+        var error = value.StartsWith(_prefix, _comparison)
+            ? null
+            : new ValidationError(context.Path, "starts_with", _message ?? $"Must start with '{_prefix}'");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -44,7 +46,10 @@ public readonly struct StartsWithRule<TContext> : IValidationRule<string, TConte
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.StartsWith(value, _prefix, _comparison, context.Path, _message));
+        var error = value.StartsWith(_prefix, _comparison)
+            ? null
+            : new ValidationError(context.Path, "starts_with", _message ?? $"Must start with '{_prefix}'");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

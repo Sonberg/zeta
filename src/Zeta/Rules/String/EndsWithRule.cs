@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -21,8 +20,11 @@ public readonly struct EndsWithRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.EndsWith(value, _suffix, _comparison, context.Path, _message));
+        var error = value.EndsWith(_suffix, _comparison)
+            ? null
+            : new ValidationError(context.Path, "ends_with", _message ?? $"Must end with '{_suffix}'");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -44,7 +46,10 @@ public readonly struct EndsWithRule<TContext> : IValidationRule<string, TContext
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.EndsWith(value, _suffix, _comparison, context.Path, _message));
+        var error = value.EndsWith(_suffix, _comparison)
+            ? null
+            : new ValidationError(context.Path, "ends_with", _message ?? $"Must end with '{_suffix}'");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

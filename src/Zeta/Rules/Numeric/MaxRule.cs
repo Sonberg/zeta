@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Numeric;
 
@@ -19,8 +18,10 @@ public readonly struct MaxIntRule : IValidationRule<int>
 
     public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Max(value, _max, context.Path, _message));
+        var error = value <= _max
+            ? null
+            : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -40,8 +41,10 @@ public readonly struct MaxIntRule<TContext> : IValidationRule<int, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Max(value, _max, context.Path, _message));
+        var error = value <= _max
+            ? null
+            : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -61,8 +64,10 @@ public readonly struct MaxDoubleRule : IValidationRule<double>
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Max(value, _max, context.Path, _message));
+        var error = value <= _max
+            ? null
+            : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -82,8 +87,10 @@ public readonly struct MaxDoubleRule<TContext> : IValidationRule<double, TContex
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Max(value, _max, context.Path, _message));
+        var error = value <= _max
+            ? null
+            : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -103,8 +110,10 @@ public readonly struct MaxDecimalRule : IValidationRule<decimal>
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Max(value, _max, context.Path, _message));
+        var error = value <= _max
+            ? null
+            : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -124,7 +133,9 @@ public readonly struct MaxDecimalRule<TContext> : IValidationRule<decimal, TCont
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Max(value, _max, context.Path, _message));
+        var error = value <= _max
+            ? null
+            : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
+        return new ValueTask<ValidationError?>(error);
     }
 }

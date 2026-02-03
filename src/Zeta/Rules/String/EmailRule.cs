@@ -1,5 +1,5 @@
+using System.Text.RegularExpressions;
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -8,6 +8,11 @@ namespace Zeta.Rules.String;
 /// </summary>
 public readonly struct EmailRule : IValidationRule<string>
 {
+    private static readonly Regex EmailRegex = new(
+        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        RegexOptions.Compiled,
+        TimeSpan.FromSeconds(1));
+
     private readonly string? _message;
 
     public EmailRule(string? message = null)
@@ -17,8 +22,11 @@ public readonly struct EmailRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Email(value, context.Path, _message));
+        var error = EmailRegex.IsMatch(value)
+            ? null
+            : new ValidationError(context.Path, "email", _message ?? "Invalid email format");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -27,6 +35,11 @@ public readonly struct EmailRule : IValidationRule<string>
 /// </summary>
 public readonly struct EmailRule<TContext> : IValidationRule<string, TContext>
 {
+    private static readonly Regex EmailRegex = new(
+        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        RegexOptions.Compiled,
+        TimeSpan.FromSeconds(1));
+
     private readonly string? _message;
 
     public EmailRule(string? message = null)
@@ -36,7 +49,10 @@ public readonly struct EmailRule<TContext> : IValidationRule<string, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Email(value, context.Path, _message));
+        var error = EmailRegex.IsMatch(value)
+            ? null
+            : new ValidationError(context.Path, "email", _message ?? "Invalid email format");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

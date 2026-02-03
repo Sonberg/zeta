@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -19,8 +18,11 @@ public readonly struct LengthRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Length(value, _exact, context.Path, _message));
+        var error = value.Length == _exact
+            ? null
+            : new ValidationError(context.Path, "length", _message ?? $"Must be exactly {_exact} characters long");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -40,7 +42,10 @@ public readonly struct LengthRule<TContext> : IValidationRule<string, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Length(value, _exact, context.Path, _message));
+        var error = value.Length == _exact
+            ? null
+            : new ValidationError(context.Path, "length", _message ?? $"Must be exactly {_exact} characters long");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

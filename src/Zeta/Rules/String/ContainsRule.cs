@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -21,8 +20,11 @@ public readonly struct ContainsRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Contains(value, _substring, _comparison, context.Path, _message));
+        var error = value.IndexOf(_substring, _comparison) >= 0
+            ? null
+            : new ValidationError(context.Path, "contains", _message ?? $"Must contain '{_substring}'");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -44,7 +46,10 @@ public readonly struct ContainsRule<TContext> : IValidationRule<string, TContext
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Contains(value, _substring, _comparison, context.Path, _message));
+        var error = value.IndexOf(_substring, _comparison) >= 0
+            ? null
+            : new ValidationError(context.Path, "contains", _message ?? $"Must contain '{_substring}'");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

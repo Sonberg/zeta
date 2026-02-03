@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Collection;
 
@@ -18,8 +17,11 @@ public readonly struct NotEmptyRule<T> : IValidationRule<ICollection<T>>
 
     public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            CollectionValidators.NotEmpty(value, context.Path, _message));
+        var error = value.Count > 0
+            ? null
+            : new ValidationError(context.Path, "min_length", _message ?? "Must not be empty");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -37,7 +39,10 @@ public readonly struct NotEmptyRule<T, TContext> : IValidationRule<ICollection<T
 
     public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            CollectionValidators.NotEmpty(value, context.Path, _message));
+        var error = value.Count > 0
+            ? null
+            : new ValidationError(context.Path, "min_length", _message ?? "Must not be empty");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

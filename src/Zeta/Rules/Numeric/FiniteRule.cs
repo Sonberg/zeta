@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Numeric;
 
@@ -17,8 +16,10 @@ public readonly struct FiniteRule : IValidationRule<double>
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Finite(value, context.Path, _message));
+        var error = !double.IsNaN(value) && !double.IsInfinity(value)
+            ? null
+            : new ValidationError(context.Path, "finite", _message ?? "Must be a finite number");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -36,7 +37,9 @@ public readonly struct FiniteRule<TContext> : IValidationRule<double, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Finite(value, context.Path, _message));
+        var error = !double.IsNaN(value) && !double.IsInfinity(value)
+            ? null
+            : new ValidationError(context.Path, "finite", _message ?? "Must be a finite number");
+        return new ValueTask<ValidationError?>(error);
     }
 }

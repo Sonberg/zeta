@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Collection;
 
@@ -20,8 +19,11 @@ public readonly struct LengthRule<T> : IValidationRule<ICollection<T>>
 
     public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            CollectionValidators.Length(value, _exact, context.Path, _message));
+        var error = value.Count == _exact
+            ? null
+            : new ValidationError(context.Path, "length", _message ?? $"Must have exactly {_exact} items");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -41,7 +43,10 @@ public readonly struct LengthRule<T, TContext> : IValidationRule<ICollection<T>,
 
     public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            CollectionValidators.Length(value, _exact, context.Path, _message));
+        var error = value.Count == _exact
+            ? null
+            : new ValidationError(context.Path, "length", _message ?? $"Must have exactly {_exact} items");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

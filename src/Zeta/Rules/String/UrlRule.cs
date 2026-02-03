@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -17,8 +16,12 @@ public readonly struct UrlRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Url(value, context.Path, _message));
+        var error = Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+                    (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            ? null
+            : new ValidationError(context.Path, "url", _message ?? "Invalid URL format");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -36,7 +39,11 @@ public readonly struct UrlRule<TContext> : IValidationRule<string, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.Url(value, context.Path, _message));
+        var error = Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+                    (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            ? null
+            : new ValidationError(context.Path, "url", _message ?? "Invalid URL format");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

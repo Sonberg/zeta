@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Numeric;
 
@@ -19,8 +18,10 @@ public readonly struct MultipleOfRule : IValidationRule<decimal>
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.MultipleOf(value, _divisor, context.Path, _message));
+        var error = value % _divisor == 0
+            ? null
+            : new ValidationError(context.Path, "multiple_of", _message ?? $"Must be a multiple of {_divisor}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -40,7 +41,9 @@ public readonly struct MultipleOfRule<TContext> : IValidationRule<decimal, TCont
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.MultipleOf(value, _divisor, context.Path, _message));
+        var error = value % _divisor == 0
+            ? null
+            : new ValidationError(context.Path, "multiple_of", _message ?? $"Must be a multiple of {_divisor}");
+        return new ValueTask<ValidationError?>(error);
     }
 }

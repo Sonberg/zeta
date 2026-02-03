@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Collection;
 
@@ -20,8 +19,11 @@ public readonly struct MinLengthRule<T> : IValidationRule<ICollection<T>>
 
     public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            CollectionValidators.MinLength(value, _min, context.Path, _message));
+        var error = value.Count >= _min
+            ? null
+            : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} items");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -41,7 +43,10 @@ public readonly struct MinLengthRule<T, TContext> : IValidationRule<ICollection<
 
     public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            CollectionValidators.MinLength(value, _min, context.Path, _message));
+        var error = value.Count >= _min
+            ? null
+            : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} items");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.Numeric;
 
@@ -19,8 +18,10 @@ public readonly struct MinIntRule : IValidationRule<int>
 
     public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Min(value, _min, context.Path, _message));
+        var error = value >= _min
+            ? null
+            : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -40,8 +41,10 @@ public readonly struct MinIntRule<TContext> : IValidationRule<int, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Min(value, _min, context.Path, _message));
+        var error = value >= _min
+            ? null
+            : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -61,8 +64,10 @@ public readonly struct MinDoubleRule : IValidationRule<double>
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Min(value, _min, context.Path, _message));
+        var error = value >= _min
+            ? null
+            : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -82,8 +87,10 @@ public readonly struct MinDoubleRule<TContext> : IValidationRule<double, TContex
 
     public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Min(value, _min, context.Path, _message));
+        var error = value >= _min
+            ? null
+            : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -103,8 +110,10 @@ public readonly struct MinDecimalRule : IValidationRule<decimal>
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Min(value, _min, context.Path, _message));
+        var error = value >= _min
+            ? null
+            : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -124,7 +133,9 @@ public readonly struct MinDecimalRule<TContext> : IValidationRule<decimal, TCont
 
     public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            NumericValidators.Min(value, _min, context.Path, _message));
+        var error = value >= _min
+            ? null
+            : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
+        return new ValueTask<ValidationError?>(error);
     }
 }

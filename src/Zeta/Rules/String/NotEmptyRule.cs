@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -17,8 +16,11 @@ public readonly struct NotEmptyRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.NotEmpty(value, context.Path, _message));
+        var error = !string.IsNullOrWhiteSpace(value)
+            ? null
+            : new ValidationError(context.Path, "required", _message ?? "Value cannot be empty");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -36,7 +38,10 @@ public readonly struct NotEmptyRule<TContext> : IValidationRule<string, TContext
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.NotEmpty(value, context.Path, _message));
+        var error = !string.IsNullOrWhiteSpace(value)
+            ? null
+            : new ValidationError(context.Path, "required", _message ?? "Value cannot be empty");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }

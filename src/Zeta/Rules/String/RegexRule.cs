@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Zeta.Core;
-using Zeta.Validation;
 
 namespace Zeta.Rules.String;
 
@@ -22,8 +21,11 @@ public readonly struct RegexRule : IValidationRule<string>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.MatchesRegex(value, _regex, context.Path, _message, _code));
+        var error = _regex.IsMatch(value)
+            ? null
+            : new ValidationError(context.Path, _code, _message ?? $"Must match pattern {_regex}");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
 
@@ -45,7 +47,10 @@ public readonly struct RegexRule<TContext> : IValidationRule<string, TContext>
 
     public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<TContext> context)
     {
-        return new ValueTask<ValidationError?>(
-            StringValidators.MatchesRegex(value, _regex, context.Path, _message, _code));
+        var error = _regex.IsMatch(value)
+            ? null
+            : new ValidationError(context.Path, _code, _message ?? $"Must match pattern {_regex}");
+
+        return new ValueTask<ValidationError?>(error);
     }
 }
