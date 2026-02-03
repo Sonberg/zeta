@@ -2,6 +2,12 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- **Testing:** Add comprehensive unit tests for all validation rules
+  - Added `StringRuleTests` with 57 tests covering all string validation rules
+  - Added `NumericRuleTests` with 54 tests covering int, double, and decimal rules
+  - Added `CollectionRuleTests` with 28 tests covering collection validation rules
+  - Tests verify correct behavior for valid inputs, invalid inputs, edge cases, and custom error messages
+  - Total test count increased from 379 to 518 tests (139 new tests)
 - **Refactoring:** Move all validation logic from static validator classes into rule structs
   - Moved validation logic from `StringValidators`, `NumericValidators`, and `CollectionValidators` directly into rule implementations
   - Each rule is now fully self-contained with its own validation logic
