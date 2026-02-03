@@ -52,31 +52,24 @@ internal static class CollectionExtensionsGenerator
 
         // DateOnly and TimeOnly
         sb.AppendLine("#if !NETSTANDARD2_0");
-        sb.AppendLine("""
+        foreach (var mapping in SchemaMapping.ModernNetMappings)
+        {
+            sb.AppendLine($$"""
                             /// <summary>
-                            /// Applies transformations to the DateOnly element schema for each item in the collection.
+                            /// Applies transformations to the {{mapping.Type}} element schema for each item in the collection.
                             /// </summary>
-                            public static CollectionContextlessSchema<DateOnly> Each(
-                                this CollectionContextlessSchema<DateOnly> schema,
-                                Func<DateOnlyContextlessSchema, ISchema<DateOnly>> elementTransform)
+                            public static CollectionContextlessSchema<{{mapping.Type}}> Each(
+                                this CollectionContextlessSchema<{{mapping.Type}}> schema,
+                                Func<{{mapping.SchemaClass}}, ISchema<{{mapping.Type}}>> elementTransform)
                             {
-                                var newElementSchema = elementTransform(Z.DateOnly());
-                                return new CollectionContextlessSchema<DateOnly>(newElementSchema, schema.GetRules());
+                                var newElementSchema = elementTransform({{mapping.FactoryMethod}}());
+                                return new CollectionContextlessSchema<{{mapping.Type}}>(newElementSchema, schema.GetRules());
                             }
-
-                            /// <summary>
-                            /// Applies transformations to the TimeOnly element schema for each item in the collection.
-                            /// </summary>
-                            public static CollectionContextlessSchema<TimeOnly> Each(
-                                this CollectionContextlessSchema<TimeOnly> schema,
-                                Func<TimeOnlyContextlessSchema, ISchema<TimeOnly>> elementTransform)
-                            {
-                                var newElementSchema = elementTransform(Z.TimeOnly());
-                                return new CollectionContextlessSchema<TimeOnly>(newElementSchema, schema.GetRules());
-                            }
-                        #endif
 
                         """);
+        }
+        sb.AppendLine("#endif");
+
 
         // Generic object builder
         sb.AppendLine("""
@@ -91,6 +84,19 @@ internal static class CollectionExtensionsGenerator
                           {
                               var newElementSchema = elementTransform(Z.Object<TElement>());
                               return new CollectionContextlessSchema<TElement>(newElementSchema, schema.GetRules());
+                          }
+
+                          /// <summary>
+                          /// Applies transformations to the object element schema for each item in the collection.
+                          /// Allows inline object schema building for complex types with context awareness.
+                          /// </summary>
+                          public static CollectionContextSchema<TElement, TContext> Each<TElement, TContext>(
+                              this CollectionContextlessSchema<TElement> schema,
+                              Func<ObjectContextlessSchema<TElement>, ObjectContextSchema<TElement, TContext>> elementTransform)
+                              where TElement : class
+                          {
+                              var newElementSchema = elementTransform(Z.Object<TElement>());
+                              return new CollectionContextSchema<TElement, TContext>(newElementSchema, schema.GetRules<TElement>().ToContext<TContext>());
                           }
 
                       """);
@@ -118,31 +124,24 @@ internal static class CollectionExtensionsGenerator
 
         // DateOnly and TimeOnly
         sb.AppendLine("#if !NETSTANDARD2_0");
-        sb.AppendLine("""
+        foreach (var mapping in SchemaMapping.ModernNetMappings)
+        {
+            sb.AppendLine($$"""
                             /// <summary>
-                            /// Applies transformations to the DateOnly element schema for each item in the collection.
+                            /// Applies transformations to the {{mapping.Type}} element schema for each item in the collection.
                             /// </summary>
-                            public static CollectionContextSchema<DateOnly, TContext> Each<TContext>(
-                                this CollectionContextSchema<DateOnly, TContext> schema,
-                                Func<DateOnlyContextlessSchema, ISchema<DateOnly, TContext>> elementTransform)
+                            public static CollectionContextSchema<{{mapping.Type}}, TContext> Each<TContext>(
+                                this CollectionContextSchema<{{mapping.Type}}, TContext> schema,
+                                Func<{{mapping.SchemaClass}}, ISchema<{{mapping.Type}}, TContext>> elementTransform)
                             {
-                                var newElementSchema = elementTransform(Z.DateOnly());
-                                return new CollectionContextSchema<DateOnly, TContext>(newElementSchema, schema.GetRules());
+                                var newElementSchema = elementTransform({{mapping.FactoryMethod}}());
+                                return new CollectionContextSchema<{{mapping.Type}}, TContext>(newElementSchema, schema.GetRules());
                             }
-
-                            /// <summary>
-                            /// Applies transformations to the TimeOnly element schema for each item in the collection.
-                            /// </summary>
-                            public static CollectionContextSchema<TimeOnly, TContext> Each<TContext>(
-                                this CollectionContextSchema<TimeOnly, TContext> schema,
-                                Func<TimeOnlyContextlessSchema, ISchema<TimeOnly, TContext>> elementTransform)
-                            {
-                                var newElementSchema = elementTransform(Z.TimeOnly());
-                                return new CollectionContextSchema<TimeOnly, TContext>(newElementSchema, schema.GetRules());
-                            }
-                        #endif
 
                         """);
+        }
+        sb.AppendLine("#endif");
+
 
         // Generic object builder
         sb.AppendLine("""
@@ -160,6 +159,7 @@ internal static class CollectionExtensionsGenerator
                           }
 
                       """);
+                      
     }
 
     private static void GenerateHelperMethods(StringBuilder sb)
