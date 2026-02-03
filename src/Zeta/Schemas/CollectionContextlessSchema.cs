@@ -9,11 +9,11 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<ICollection<TElement>>
 {
-    private readonly ISchema<TElement>? _elementSchema;
+    private ISchema<TElement>? ElementSchema { get; set; }
 
     public CollectionContextlessSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules)
     {
-        _elementSchema = elementSchema;
+        ElementSchema = elementSchema;
     }
 
     public override async ValueTask<Result<ICollection<TElement>>> ValidateAsync(ICollection<TElement> value, ValidationContext context)
@@ -21,13 +21,13 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element if element schema is provided
-        if (_elementSchema is not null)
+        if (ElementSchema is not null)
         {
             var index = 0;
             foreach (var item in value)
             {
                 var elementExecution = context.PushIndex(index);
-                var result = await _elementSchema.ValidateAsync(item, elementExecution);
+                var result = await ElementSchema.ValidateAsync(item, elementExecution);
                 if (result.IsFailure)
                 {
                     errors ??= [];
@@ -76,9 +76,21 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         return this;
     }
 
+    public CollectionContextlessSchema<TElement> Each(ISchema<TElement> elementSchema)
+    {
+        ElementSchema = elementSchema;
+
+        return this;
+    }
+    
+    public CollectionContextSchema<TElement, TContext> Each<TContext>(ISchema<TElement, TContext> elementSchema)
+    {
+        return new CollectionContextSchema<TElement, TContext>(ElementSchema, Rules);
+    }
+
     /// <summary>
     /// Creates a context-aware array schema with all rules from this schema.
     /// The element schema is adapted to work in the context-aware environment.
     /// </summary>
-    public CollectionContextSchema<TElement, TContext> WithContext<TContext>() => new(_elementSchema, Rules);
+    public CollectionContextSchema<TElement, TContext> WithContext<TContext>() => new(ElementSchema, Rules);
 }

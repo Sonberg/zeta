@@ -110,7 +110,12 @@ public class CollectionSchemaTests
         var schema = Z.Object<Order>()
             .Field(o => o.Items, items => items.Each(s => s.MinLength(3)));
 
-        var order = new Order(new List<string> { "abc", "ab", "abcd" }); // "ab" is invalid
+        var order = new Order(new List<string>
+        {
+            "abc",
+            "ab",
+            "abcd"
+        }); // "ab" is invalid
         var result = await schema.ValidateAsync(order);
 
         Assert.False(result.IsSuccess);
@@ -180,7 +185,11 @@ public class CollectionSchemaTests
                 .Each(r => r.Refine(v => v == "Admin" || v == "User", "Invalid role"))
                 .NotEmpty());
 
-        var user = new UserWithRoles(new List<string> { "Admin", "User" });
+        var user = new UserWithRoles(new List<string>
+        {
+            "Admin",
+            "User"
+        });
         var result = await schema.ValidateAsync(user);
         Assert.True(result.IsSuccess);
     }
@@ -193,7 +202,11 @@ public class CollectionSchemaTests
                 .Each(r => r.Refine(v => v == "Admin", "Must be Admin"))
                 .NotEmpty());
 
-        var user = new UserWithRoles(new List<string> { "Admin", "Reader" });
+        var user = new UserWithRoles(new List<string>
+        {
+            "Admin",
+            "Reader"
+        });
         var result = await schema.ValidateAsync(user);
 
         Assert.False(result.IsSuccess);
@@ -272,15 +285,16 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_ValidElements_ReturnsSuccess()
     {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
         var schema = Z.Collection<OrderItem>()
-            .Each(item => item
-                .Field(i => i.ProductId, Z.Guid())
-                .Field(i => i.Quantity, Z.Int().Min(1)));
+            .Each(itemSchema);
 
         var items = new[]
         {
-            new OrderItem(Guid.NewGuid(), 5),
-            new OrderItem(Guid.NewGuid(), 10)
+            new OrderItem(Guid.NewGuid(), 5), new OrderItem(Guid.NewGuid(), 10)
         };
 
         var result = await schema.ValidateAsync(items);
@@ -290,15 +304,16 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_InvalidElement_ReturnsFailure()
     {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
         var schema = Z.Collection<OrderItem>()
-            .Each(item => item
-                .Field(i => i.ProductId, Z.Guid())
-                .Field(i => i.Quantity, Z.Int().Min(1)));
+            .Each(itemSchema);
 
         var items = new[]
         {
-            new OrderItem(Guid.NewGuid(), 5),
-            new OrderItem(Guid.NewGuid(), 0)  // Invalid: quantity < 1
+            new OrderItem(Guid.NewGuid(), 5), new OrderItem(Guid.NewGuid(), 0) // Invalid: quantity < 1
         };
 
         var result = await schema.ValidateAsync(items);
@@ -312,16 +327,18 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_MultipleInvalidElements_ReturnsAllErrors()
     {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+
         var schema = Z.Collection<OrderItem>()
-            .Each(item => item
-                .Field(i => i.ProductId, Z.Guid())
-                .Field(i => i.Quantity, Z.Int().Min(1).Max(100)));
+            .Each(itemSchema);
 
         var items = new[]
         {
-            new OrderItem(Guid.NewGuid(), 0),    // Invalid: too low
-            new OrderItem(Guid.NewGuid(), 150),  // Invalid: too high
-            new OrderItem(Guid.NewGuid(), 50)    // Valid
+            new OrderItem(Guid.NewGuid(), 0), // Invalid: too low
+            new OrderItem(Guid.NewGuid(), 150), // Invalid: too high
+            new OrderItem(Guid.NewGuid(), 50) // Valid
         };
 
         var result = await schema.ValidateAsync(items);
@@ -335,10 +352,12 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_ChainedWithCollectionValidation()
     {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
         var schema = Z.Collection<OrderItem>()
-            .Each(item => item
-                .Field(i => i.ProductId, Z.Guid())
-                .Field(i => i.Quantity, Z.Int().Min(1)))
+            .Each(itemSchema)
             .MinLength(1)
             .MaxLength(10);
 
@@ -355,10 +374,12 @@ public class CollectionSchemaTests
     public async Task Each_WithObjectBuilder_InObjectField_ValidatesCorrectly()
     {
         // Build the item schema using .Each() with object builder
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
         var itemsSchema = Z.Collection<OrderItem>()
-            .Each(item => item
-                .Field(i => i.ProductId, Z.Guid())
-                .Field(i => i.Quantity, Z.Int().Min(1)))
+            .Each(itemSchema)
             .MinLength(1);
 
         var schema = Z.Object<CreateOrderRequest>()
@@ -380,10 +401,12 @@ public class CollectionSchemaTests
     public async Task Each_WithObjectBuilder_InObjectField_InvalidElement_PropagatesPath()
     {
         // Build the item schema using .Each() with object builder
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+
         var itemsSchema = Z.Collection<OrderItem>()
-            .Each(item => item
-                .Field(i => i.ProductId, Z.Guid())
-                .Field(i => i.Quantity, Z.Int().Min(1).Max(100)));
+            .Each(itemSchema);
 
         var schema = Z.Object<CreateOrderRequest>()
             .Field(o => o.CustomerId, Z.Guid())
@@ -393,7 +416,7 @@ public class CollectionSchemaTests
             Guid.NewGuid(),
             [
                 new OrderItem(Guid.NewGuid(), 5),
-                new OrderItem(Guid.NewGuid(), 150)  // Invalid: too high
+                new OrderItem(Guid.NewGuid(), 150) // Invalid: too high
             ]);
 
         var result = await schema.ValidateAsync(order);
@@ -409,12 +432,14 @@ public class CollectionSchemaTests
     {
         // Test that array properties get the correct CollectionContextlessSchema type
         // This verifies the fix for array field overloads
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+
         var schema = Z.Object<CreateOrderRequest>()
             .Field(o => o.CustomerId, Z.Guid())
-            .Field(o => o.Items, items => items  // items should be CollectionContextlessSchema<OrderItem>
-                .Each(item => item
-                    .Field(i => i.ProductId, Z.Guid())
-                    .Field(i => i.Quantity, Z.Int().Min(1).Max(100)))
+            .Field(o => o.Items, items => items // items should be CollectionContextlessSchema<OrderItem>
+                .Each(itemSchema)
                 .MinLength(1)
                 .MaxLength(10));
 
@@ -433,19 +458,21 @@ public class CollectionSchemaTests
     public async Task Each_InlineArrayField_WithObjectBuilder_InvalidElement_PropagatesPath()
     {
         // Test that errors are properly propagated with inline array field builders
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+            
         var schema = Z.Object<CreateOrderRequest>()
             .Field(o => o.CustomerId, Z.Guid())
             .Field(o => o.Items, items => items
-                .Each(item => item
-                    .Field(i => i.ProductId, Z.Guid())
-                    .Field(i => i.Quantity, Z.Int().Min(1).Max(100)))
+                .Each(itemSchema)
                 .MinLength(1));
 
         var order = new CreateOrderRequest(
             Guid.NewGuid(),
             [
                 new OrderItem(Guid.NewGuid(), 5),
-                new OrderItem(Guid.NewGuid(), 150)  // Invalid: quantity > 100
+                new OrderItem(Guid.NewGuid(), 150) // Invalid: quantity > 100
             ]);
 
         var result = await schema.ValidateAsync(order);
@@ -479,7 +506,7 @@ public class CollectionSchemaTests
                 .Each(t => t.MinLength(3))
                 .MinLength(1));
 
-        var profile = new UserProfile(["coding", "ab"]);  // "ab" is too short
+        var profile = new UserProfile(["coding", "ab"]); // "ab" is too short
         var result = await schema.ValidateAsync(profile);
 
         Assert.False(result.IsSuccess);
@@ -489,8 +516,11 @@ public class CollectionSchemaTests
     }
 
     record UserWithRoles(List<string> Roles);
+
     record OrderItem(Guid ProductId, int Quantity);
+
     record CreateOrderRequest(Guid CustomerId, OrderItem[] Items);
+
     record UserProfile(string[] Tags);
 
     class TestContext

@@ -135,6 +135,6 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly>
     /// Creates a context-aware DateOnly schema with all rules from this schema.
     /// </summary>
     public DateOnlyContextSchema<TContext> WithContext<TContext>()
-        => new DateOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
+        => new(Rules.ToContext<TContext>());
 }
 #endif

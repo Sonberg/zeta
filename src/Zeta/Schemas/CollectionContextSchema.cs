@@ -9,16 +9,16 @@ namespace Zeta.Schemas;
 /// </summary>
 public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollection<TElement>, TContext>
 {
-    private readonly ISchema<TElement, TContext>? _elementSchema;
+    private ISchema<TElement, TContext>? ElementSchema { get; set; }
 
     public CollectionContextSchema(ISchema<TElement, TContext>? elementSchema, ContextRuleEngine<ICollection<TElement>, TContext> rules) : base(rules)
     {
-        _elementSchema = elementSchema;
+        ElementSchema = elementSchema;
     }
 
     public CollectionContextSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules.ToContext<TContext>())
     {
-        _elementSchema = elementSchema is not null
+        ElementSchema = elementSchema is not null
             ? new SchemaAdapter<TElement, TContext>(elementSchema)
             : null;
     }
@@ -28,13 +28,13 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element if element schema is provided
-        if (_elementSchema is not null)
+        if (ElementSchema is not null)
         {
             var index = 0;
             foreach (var item in value)
             {
                 var elementContext = context.PushIndex(index);
-                var result = await _elementSchema.ValidateAsync(item, elementContext);
+                var result = await ElementSchema.ValidateAsync(item, elementContext);
                 if (result.IsFailure)
                 {
                     errors ??= [];
@@ -86,5 +86,12 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
     public CollectionContextSchema<TElement, TContext> Refine(Func<ICollection<TElement>, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
+    }
+
+    public CollectionContextSchema<TElement, TContext> Each(ISchema<TElement, TContext> elementSchema)
+    {
+        ElementSchema = elementSchema;
+
+        return this;
     }
 }

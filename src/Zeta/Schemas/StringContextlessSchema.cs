@@ -10,7 +10,9 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class StringContextlessSchema : ContextlessSchema<string>
 {
-    public StringContextlessSchema() { }
+    public StringContextlessSchema()
+    {
+    }
 
     public StringContextlessSchema MinLength(int min, string? message = null)
     {
@@ -120,5 +122,5 @@ public sealed class StringContextlessSchema : ContextlessSchema<string>
     /// Creates a context-aware string schema with all rules from this schema.
     /// </summary>
     public StringContextSchema<TContext> WithContext<TContext>()
-        => new StringContextSchema<TContext>(Rules.ToContext<TContext>());
+        => new(Rules.ToContext<TContext>());
 }
