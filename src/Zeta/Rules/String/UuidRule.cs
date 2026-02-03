@@ -20,7 +20,7 @@ public readonly struct UuidRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "uuid", _message ?? "Invalid UUID format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -42,6 +42,6 @@ public readonly struct UuidRule<TContext> : IValidationRule<string, TContext>
             ? null
             : new ValidationError(context.Path, "uuid", _message ?? "Invalid UUID format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

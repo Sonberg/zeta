@@ -22,7 +22,7 @@ public readonly struct UriRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "uri", _message ?? "Invalid URI format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -46,6 +46,6 @@ public readonly struct UriRule<TContext> : IValidationRule<string, TContext>
             ? null
             : new ValidationError(context.Path, "uri", _message ?? "Invalid URI format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

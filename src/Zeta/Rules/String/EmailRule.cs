@@ -26,7 +26,7 @@ public readonly struct EmailRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "email", _message ?? "Invalid email format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -53,6 +53,6 @@ public readonly struct EmailRule<TContext> : IValidationRule<string, TContext>
             ? null
             : new ValidationError(context.Path, "email", _message ?? "Invalid email format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

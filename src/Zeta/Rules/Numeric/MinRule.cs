@@ -21,7 +21,7 @@ public readonly struct MinIntRule : IValidationRule<int>
         var error = value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -44,7 +44,7 @@ public readonly struct MinIntRule<TContext> : IValidationRule<int, TContext>
         var error = value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -67,7 +67,7 @@ public readonly struct MinDoubleRule : IValidationRule<double>
         var error = value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -90,7 +90,7 @@ public readonly struct MinDoubleRule<TContext> : IValidationRule<double, TContex
         var error = value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -113,7 +113,7 @@ public readonly struct MinDecimalRule : IValidationRule<decimal>
         var error = value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -136,6 +136,6 @@ public readonly struct MinDecimalRule<TContext> : IValidationRule<decimal, TCont
         var error = value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

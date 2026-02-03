@@ -23,7 +23,7 @@ public readonly struct MinLengthRule<T> : IValidationRule<ICollection<T>>
             ? null
             : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} items");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -47,6 +47,6 @@ public readonly struct MinLengthRule<T, TContext> : IValidationRule<ICollection<
             ? null
             : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} items");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

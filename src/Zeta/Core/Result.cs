@@ -196,12 +196,26 @@ public static class ResultExtensions
     /// </summary>
     public static Result<T[]> Combine<T>(this IEnumerable<Result<T>> results)
     {
-        var list = results.ToList();
-        var errors = list.Where(r => r.IsFailure).SelectMany(r => r.Errors).ToList();
+        List<ValidationError>? errors = null;
+        List<T>? values = null;
 
-        return errors.Count > 0
+        foreach (var result in results)
+        {
+            if (result.IsFailure)
+            {
+                errors ??= new List<ValidationError>();
+                errors.AddRange(result.Errors);
+            }
+            else
+            {
+                values ??= new List<T>();
+                values.Add(result.Value);
+            }
+        }
+
+        return errors != null
             ? Result<T[]>.Failure(errors)
-            : Result<T[]>.Success(list.Select(r => r.Value).ToArray());
+            : Result<T[]>.Success(values?.ToArray() ?? Array.Empty<T>());
     }
 
     /// <summary>

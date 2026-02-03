@@ -20,7 +20,7 @@ public readonly struct AlphanumericRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "alphanumeric", _message ?? "Must contain only letters and numbers");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -42,6 +42,6 @@ public readonly struct AlphanumericRule<TContext> : IValidationRule<string, TCon
             ? null
             : new ValidationError(context.Path, "alphanumeric", _message ?? "Must contain only letters and numbers");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

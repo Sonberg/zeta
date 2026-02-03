@@ -20,7 +20,7 @@ public readonly struct NotEmptyRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "required", _message ?? "Value cannot be empty");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -42,6 +42,6 @@ public readonly struct NotEmptyRule<TContext> : IValidationRule<string, TContext
             ? null
             : new ValidationError(context.Path, "required", _message ?? "Value cannot be empty");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

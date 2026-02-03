@@ -22,6 +22,6 @@ internal sealed class FieldContextContextValidator<TInstance, TProperty, TContex
         var value = _getter(instance);
         var fieldContext = context.Push(_name);
         var result = await _schema.ValidateAsync(value, fieldContext);
-        return result.IsSuccess ? EmptyErrors : result.Errors.ToList();
+        return result.IsSuccess ? EmptyErrors : result.Errors;
     }
 }

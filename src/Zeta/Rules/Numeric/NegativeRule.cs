@@ -19,7 +19,7 @@ public readonly struct NegativeDoubleRule : IValidationRule<double>
         var error = value < 0
             ? null
             : new ValidationError(context.Path, "negative", _message ?? "Must be negative");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -40,7 +40,7 @@ public readonly struct NegativeDoubleRule<TContext> : IValidationRule<double, TC
         var error = value < 0
             ? null
             : new ValidationError(context.Path, "negative", _message ?? "Must be negative");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -61,7 +61,7 @@ public readonly struct NegativeDecimalRule : IValidationRule<decimal>
         var error = value < 0
             ? null
             : new ValidationError(context.Path, "negative", _message ?? "Must be negative");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -82,6 +82,6 @@ public readonly struct NegativeDecimalRule<TContext> : IValidationRule<decimal, 
         var error = value < 0
             ? null
             : new ValidationError(context.Path, "negative", _message ?? "Must be negative");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

@@ -24,6 +24,6 @@ internal sealed class FieldContextlessValidator<TInstance, TProperty> : IFieldCo
         var value = _getter(instance);
         var fieldExecution = execution.Push(_name);
         var result = await _schema.ValidateAsync(value, fieldExecution);
-        return result.IsSuccess ? EmptyErrors : result.Errors.ToList();
+        return result.IsSuccess ? EmptyErrors : result.Errors;
     }
 }

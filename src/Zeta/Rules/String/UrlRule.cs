@@ -21,7 +21,7 @@ public readonly struct UrlRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "url", _message ?? "Invalid URL format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -44,6 +44,6 @@ public readonly struct UrlRule<TContext> : IValidationRule<string, TContext>
             ? null
             : new ValidationError(context.Path, "url", _message ?? "Invalid URL format");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

@@ -2,6 +2,14 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- **Performance:** Optimize field validators and Result.Combine() to reduce allocations in invalid cases
+  - Removed unnecessary `.ToList()` conversion in `FieldContextlessValidator` and `FieldContextContextValidator` - errors are already `IReadOnlyList<ValidationError>`
+  - Optimized `Result.Combine()` to use single-pass enumeration instead of multiple LINQ operations (3 allocations reduced to 1)
+  - Added path caching in `ValidationContext.Push()` using `ConcurrentDictionary` to reduce string allocations for frequently validated nested paths
+  - Created `ValueTaskHelper.FromResult()` to use optimal ValueTask creation (`ValueTask.FromResult()` on .NET Standard 2.1+, `new ValueTask<T>()` on .NET Standard 2.0)
+  - **Result:** Invalid case improved from 446.5 ns / 1,096 B to 398.6 ns / 904 B (10.7% faster, 17.5% less memory)
+  - Valid case improved from 296.9 ns to 293.2 ns (1.2% faster), allocations unchanged at 152 B
+  - Still 4.8x faster and 8.5x less memory than FluentValidation on invalid input
 - **Testing:** Add comprehensive unit tests for all validation rules
   - Added `StringRuleTests` with 57 tests covering all string validation rules
   - Added `NumericRuleTests` with 54 tests covering int, double, and decimal rules

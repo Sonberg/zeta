@@ -22,7 +22,7 @@ public readonly struct MaxLengthRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "max_length", _message ?? $"Must be at most {_max} characters long");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -46,6 +46,6 @@ public readonly struct MaxLengthRule<TContext> : IValidationRule<string, TContex
             ? null
             : new ValidationError(context.Path, "max_length", _message ?? $"Must be at most {_max} characters long");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

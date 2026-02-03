@@ -21,7 +21,7 @@ public readonly struct MaxIntRule : IValidationRule<int>
         var error = value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -44,7 +44,7 @@ public readonly struct MaxIntRule<TContext> : IValidationRule<int, TContext>
         var error = value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -67,7 +67,7 @@ public readonly struct MaxDoubleRule : IValidationRule<double>
         var error = value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -90,7 +90,7 @@ public readonly struct MaxDoubleRule<TContext> : IValidationRule<double, TContex
         var error = value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -113,7 +113,7 @@ public readonly struct MaxDecimalRule : IValidationRule<decimal>
         var error = value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -136,6 +136,6 @@ public readonly struct MaxDecimalRule<TContext> : IValidationRule<decimal, TCont
         var error = value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

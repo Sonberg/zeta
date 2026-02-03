@@ -16,7 +16,7 @@ public readonly struct StatefulRefinementRule<T, TState> : IValidationRule<T>
     /// </summary>
     public StatefulRefinementRule(Func<T, ValidationContext, TState, ValidationError?> validate, TState state)
     {
-        _validate = (val, exec, s) => new ValueTask<ValidationError?>(validate(val, exec, s));
+        _validate = (val, exec, s) => ValueTaskHelper.FromResult(validate(val, exec, s));
         _state = state;
     }
 
@@ -49,7 +49,7 @@ public readonly struct StatefulRefinementRule<T, TContext, TState> : IValidation
     /// </summary>
     public StatefulRefinementRule(Func<T, ValidationContext<TContext>, TState, ValidationError?> validate, TState state)
     {
-        _validate = (val, ctx, s) => new ValueTask<ValidationError?>(validate(val, ctx, s));
+        _validate = (val, ctx, s) => ValueTaskHelper.FromResult(validate(val, ctx, s));
         _state = state;
     }
 

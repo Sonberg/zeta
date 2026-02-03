@@ -21,7 +21,7 @@ public readonly struct PrecisionRule : IValidationRule<decimal>
         var error = GetDecimalPlaces(value) <= _decimals
             ? null
             : new ValidationError(context.Path, "precision", _message ?? $"Must have at most {_decimals} decimal places");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 
     private static int GetDecimalPlaces(decimal value)
@@ -58,7 +58,7 @@ public readonly struct PrecisionRule<TContext> : IValidationRule<decimal, TConte
         var error = GetDecimalPlaces(value) <= _decimals
             ? null
             : new ValidationError(context.Path, "precision", _message ?? $"Must have at most {_decimals} decimal places");
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 
     private static int GetDecimalPlaces(decimal value)

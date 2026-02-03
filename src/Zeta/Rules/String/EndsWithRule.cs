@@ -24,7 +24,7 @@ public readonly struct EndsWithRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "ends_with", _message ?? $"Must end with '{_suffix}'");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -50,6 +50,6 @@ public readonly struct EndsWithRule<TContext> : IValidationRule<string, TContext
             ? null
             : new ValidationError(context.Path, "ends_with", _message ?? $"Must end with '{_suffix}'");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

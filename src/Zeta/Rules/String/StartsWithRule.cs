@@ -24,7 +24,7 @@ public readonly struct StartsWithRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, "starts_with", _message ?? $"Must start with '{_prefix}'");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -50,6 +50,6 @@ public readonly struct StartsWithRule<TContext> : IValidationRule<string, TConte
             ? null
             : new ValidationError(context.Path, "starts_with", _message ?? $"Must start with '{_prefix}'");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

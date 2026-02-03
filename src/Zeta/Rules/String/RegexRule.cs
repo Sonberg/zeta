@@ -25,7 +25,7 @@ public readonly struct RegexRule : IValidationRule<string>
             ? null
             : new ValidationError(context.Path, _code, _message ?? $"Must match pattern {_regex}");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }
 
@@ -51,6 +51,6 @@ public readonly struct RegexRule<TContext> : IValidationRule<string, TContext>
             ? null
             : new ValidationError(context.Path, _code, _message ?? $"Must match pattern {_regex}");
 
-        return new ValueTask<ValidationError?>(error);
+        return ValueTaskHelper.FromResult(error);
     }
 }

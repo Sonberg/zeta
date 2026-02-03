@@ -1,4 +1,24 @@
+using System.Collections.Concurrent;
+
 namespace Zeta;
+
+/// <summary>
+/// Internal cache for common path segments to reduce string allocations.
+/// </summary>
+internal static class PathCache
+{
+    private static readonly ConcurrentDictionary<string, string> _cache = new();
+    private const int MaxPathLength = 100; // Don't cache very long paths
+
+    public static string GetOrAdd(string path)
+    {
+        // Don't cache long paths to prevent unbounded growth
+        if (path.Length > MaxPathLength)
+            return path;
+
+        return _cache.GetOrAdd(path, static p => p);
+    }
+}
 
 /// <summary>
 /// Provides a strongly-typed context for validation, including shared async data and execution details.
@@ -33,10 +53,12 @@ public record ValidationContext<TData> : ValidationContext
     /// </summary>
     public new ValidationContext<TData> Push(string segment)
     {
+        var newPath = string.IsNullOrEmpty(Path)
+            ? segment
+            : PathCache.GetOrAdd(string.Concat(Path, ".", segment));
+
         return new ValidationContext<TData>(
-            string.IsNullOrEmpty(Path)
-                ? segment
-                : string.Concat(Path, ".", segment),
+            newPath,
             Data,
             TimeProvider,
             CancellationToken);
@@ -101,7 +123,10 @@ public record ValidationContext
     /// </summary>
     public ValidationContext Push(string segment)
     {
-        var newPath = string.IsNullOrEmpty(Path) ? segment : string.Concat(Path, ".", segment);
+        var newPath = string.IsNullOrEmpty(Path)
+            ? segment
+            : PathCache.GetOrAdd(string.Concat(Path, ".", segment));
+
         return new ValidationContext(newPath, TimeProvider, CancellationToken);
     }
 
