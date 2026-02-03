@@ -82,4 +82,19 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public DecimalContextSchema<TContext> If(
+        Func<decimal, TContext, bool> condition,
+        Func<DecimalContextSchema<TContext>, DecimalContextSchema<TContext>> configure)
+    {
+        var inner = configure(new DecimalContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<decimal, TContext>(condition, rule));
+        return this;
+    }
+
+    public DecimalContextSchema<TContext> If(
+        Func<decimal, bool> condition,
+        Func<DecimalContextSchema<TContext>, DecimalContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }

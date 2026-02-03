@@ -67,4 +67,19 @@ public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public GuidContextSchema<TContext> If(
+        Func<Guid, TContext, bool> condition,
+        Func<GuidContextSchema<TContext>, GuidContextSchema<TContext>> configure)
+    {
+        var inner = configure(new GuidContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<Guid, TContext>(condition, rule));
+        return this;
+    }
+
+    public GuidContextSchema<TContext> If(
+        Func<Guid, bool> condition,
+        Func<GuidContextSchema<TContext>, GuidContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }

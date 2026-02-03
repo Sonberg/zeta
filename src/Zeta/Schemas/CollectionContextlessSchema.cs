@@ -76,6 +76,16 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         return this;
     }
 
+    public CollectionContextlessSchema<TElement> If(
+        Func<ICollection<TElement>, bool> condition,
+        Func<CollectionContextlessSchema<TElement>, CollectionContextlessSchema<TElement>> configure)
+    {
+        var inner = configure(new CollectionContextlessSchema<TElement>(null, new ContextlessRuleEngine<ICollection<TElement>>()));
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<ICollection<TElement>>(condition, rule));
+        return this;
+    }
+
     public CollectionContextlessSchema<TElement> Each(ISchema<TElement> elementSchema)
     {
         ElementSchema = elementSchema;

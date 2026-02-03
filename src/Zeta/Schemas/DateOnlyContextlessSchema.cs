@@ -131,6 +131,16 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly>
         return this;
     }
 
+    public DateOnlyContextlessSchema If(
+        Func<DateOnly, bool> condition,
+        Func<DateOnlyContextlessSchema, DateOnlyContextlessSchema> configure)
+    {
+        var inner = configure(new DateOnlyContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<DateOnly>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware DateOnly schema with all rules from this schema.
     /// </summary>

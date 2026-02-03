@@ -97,6 +97,16 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly>
         return this;
     }
 
+    public TimeOnlyContextlessSchema If(
+        Func<TimeOnly, bool> condition,
+        Func<TimeOnlyContextlessSchema, TimeOnlyContextlessSchema> configure)
+    {
+        var inner = configure(new TimeOnlyContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<TimeOnly>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware TimeOnly schema with all rules from this schema.
     /// </summary>

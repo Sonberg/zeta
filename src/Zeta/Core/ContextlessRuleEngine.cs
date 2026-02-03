@@ -10,6 +10,8 @@ public sealed class ContextlessRuleEngine<T>
     private readonly List<IValidationRule<T>> _rules = [];
 
     public void Add(IValidationRule<T> rule) => _rules.Add(rule);
+
+    internal IReadOnlyList<IValidationRule<T>> GetRules() => _rules;
     
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext context)
     {
@@ -47,6 +49,8 @@ public sealed class ContextRuleEngine<T, TContext>
     private readonly List<IValidationRule<T, TContext>> _rules = [];
 
     public void Add(IValidationRule<T, TContext> rule) => _rules.Add(rule);
+
+    internal IReadOnlyList<IValidationRule<T, TContext>> GetRules() => _rules;
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext<TContext> context)
     {

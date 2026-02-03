@@ -53,6 +53,16 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
         return this;
     }
 
+    public GuidContextlessSchema If(
+        Func<Guid, bool> condition,
+        Func<GuidContextlessSchema, GuidContextlessSchema> configure)
+    {
+        var inner = configure(new GuidContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<Guid>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware Guid schema with all rules from this schema.
     /// </summary>

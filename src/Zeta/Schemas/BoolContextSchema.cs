@@ -63,4 +63,19 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public BoolContextSchema<TContext> If(
+        Func<bool, TContext, bool> condition,
+        Func<BoolContextSchema<TContext>, BoolContextSchema<TContext>> configure)
+    {
+        var inner = configure(new BoolContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<bool, TContext>(condition, rule));
+        return this;
+    }
+
+    public BoolContextSchema<TContext> If(
+        Func<bool, bool> condition,
+        Func<BoolContextSchema<TContext>, BoolContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }

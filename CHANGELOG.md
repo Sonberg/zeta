@@ -2,8 +2,11 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- Add `.If()` for guard-style conditional validation on all schema types (value, object, collection)
+- Add `.Switch()` for explicit branching with `.Case()` and `.Default()` on object schemas
+- Deprecate `.When()` in favor of `.If()` (elseBranch removed; use chained `.If()` or `.Switch()` instead)
 
-## 1.0.9
+## Version 1.0.9
 - Major invalid-path optimizations
 - Reduced allocations on successful validation (-39%)
 - Eliminated lambda and closure overhead in built-in rules

@@ -118,6 +118,16 @@ public sealed class StringContextlessSchema : ContextlessSchema<string>
         return this;
     }
 
+    public StringContextlessSchema If(
+        Func<string, bool> condition,
+        Func<StringContextlessSchema, StringContextlessSchema> configure)
+    {
+        var inner = configure(new StringContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<string>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware string schema with all rules from this schema.
     /// </summary>

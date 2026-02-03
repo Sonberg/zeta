@@ -88,6 +88,22 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         return Refine((val, _) => predicate(val), message, code);
     }
 
+    public CollectionContextSchema<TElement, TContext> If(
+        Func<ICollection<TElement>, TContext, bool> condition,
+        Func<CollectionContextSchema<TElement, TContext>, CollectionContextSchema<TElement, TContext>> configure)
+    {
+        var inner = configure(new CollectionContextSchema<TElement, TContext>(
+            (ISchema<TElement, TContext>?)null, new ContextRuleEngine<ICollection<TElement>, TContext>()));
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<ICollection<TElement>, TContext>(condition, rule));
+        return this;
+    }
+
+    public CollectionContextSchema<TElement, TContext> If(
+        Func<ICollection<TElement>, bool> condition,
+        Func<CollectionContextSchema<TElement, TContext>, CollectionContextSchema<TElement, TContext>> configure)
+        => If((val, _) => condition(val), configure);
+
     public CollectionContextSchema<TElement, TContext> Each(ISchema<TElement, TContext> elementSchema)
     {
         ElementSchema = elementSchema;

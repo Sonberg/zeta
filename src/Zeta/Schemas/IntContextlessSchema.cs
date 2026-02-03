@@ -44,6 +44,16 @@ public sealed class IntContextlessSchema : ContextlessSchema<int>
         return this;
     }
 
+    public IntContextlessSchema If(
+        Func<int, bool> condition,
+        Func<IntContextlessSchema, IntContextlessSchema> configure)
+    {
+        var inner = configure(new IntContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<int>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware int schema with all rules from this schema.
     /// </summary>

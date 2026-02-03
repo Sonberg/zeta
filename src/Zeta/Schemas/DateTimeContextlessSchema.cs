@@ -137,6 +137,16 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
         return this;
     }
 
+    public DateTimeContextlessSchema If(
+        Func<DateTime, bool> condition,
+        Func<DateTimeContextlessSchema, DateTimeContextlessSchema> configure)
+    {
+        var inner = configure(new DateTimeContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<DateTime>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware DateTime schema with all rules from this schema.
     /// </summary>

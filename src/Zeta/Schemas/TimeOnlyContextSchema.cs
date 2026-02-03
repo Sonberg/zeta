@@ -111,5 +111,20 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public TimeOnlyContextSchema<TContext> If(
+        Func<TimeOnly, TContext, bool> condition,
+        Func<TimeOnlyContextSchema<TContext>, TimeOnlyContextSchema<TContext>> configure)
+    {
+        var inner = configure(new TimeOnlyContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<TimeOnly, TContext>(condition, rule));
+        return this;
+    }
+
+    public TimeOnlyContextSchema<TContext> If(
+        Func<TimeOnly, bool> condition,
+        Func<TimeOnlyContextSchema<TContext>, TimeOnlyContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }
 #endif

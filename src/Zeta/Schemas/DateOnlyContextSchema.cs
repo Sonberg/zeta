@@ -145,5 +145,20 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public DateOnlyContextSchema<TContext> If(
+        Func<DateOnly, TContext, bool> condition,
+        Func<DateOnlyContextSchema<TContext>, DateOnlyContextSchema<TContext>> configure)
+    {
+        var inner = configure(new DateOnlyContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<DateOnly, TContext>(condition, rule));
+        return this;
+    }
+
+    public DateOnlyContextSchema<TContext> If(
+        Func<DateOnly, bool> condition,
+        Func<DateOnlyContextSchema<TContext>, DateOnlyContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }
 #endif

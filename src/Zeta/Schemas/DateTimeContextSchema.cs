@@ -151,4 +151,19 @@ public class DateTimeContextSchema<TContext> : ContextSchema<DateTime, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public DateTimeContextSchema<TContext> If(
+        Func<DateTime, TContext, bool> condition,
+        Func<DateTimeContextSchema<TContext>, DateTimeContextSchema<TContext>> configure)
+    {
+        var inner = configure(new DateTimeContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<DateTime, TContext>(condition, rule));
+        return this;
+    }
+
+    public DateTimeContextSchema<TContext> If(
+        Func<DateTime, bool> condition,
+        Func<DateTimeContextSchema<TContext>, DateTimeContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }

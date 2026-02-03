@@ -76,4 +76,19 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public DoubleContextSchema<TContext> If(
+        Func<double, TContext, bool> condition,
+        Func<DoubleContextSchema<TContext>, DoubleContextSchema<TContext>> configure)
+    {
+        var inner = configure(new DoubleContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<double, TContext>(condition, rule));
+        return this;
+    }
+
+    public DoubleContextSchema<TContext> If(
+        Func<double, bool> condition,
+        Func<DoubleContextSchema<TContext>, DoubleContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }

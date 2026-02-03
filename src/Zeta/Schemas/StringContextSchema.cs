@@ -130,4 +130,19 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext>
     {
         return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
+
+    public StringContextSchema<TContext> If(
+        Func<string, TContext, bool> condition,
+        Func<StringContextSchema<TContext>, StringContextSchema<TContext>> configure)
+    {
+        var inner = configure(new StringContextSchema<TContext>());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<string, TContext>(condition, rule));
+        return this;
+    }
+
+    public StringContextSchema<TContext> If(
+        Func<string, bool> condition,
+        Func<StringContextSchema<TContext>, StringContextSchema<TContext>> configure)
+        => If((val, _) => condition(val), configure);
 }

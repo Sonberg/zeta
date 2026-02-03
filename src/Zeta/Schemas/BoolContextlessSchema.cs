@@ -49,6 +49,16 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool>
         return this;
     }
 
+    public BoolContextlessSchema If(
+        Func<bool, bool> condition,
+        Func<BoolContextlessSchema, BoolContextlessSchema> configure)
+    {
+        var inner = configure(new BoolContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<bool>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware bool schema with all rules from this schema.
     /// </summary>

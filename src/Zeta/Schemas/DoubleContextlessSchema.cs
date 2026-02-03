@@ -62,6 +62,16 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double>
         return this;
     }
 
+    public DoubleContextlessSchema If(
+        Func<double, bool> condition,
+        Func<DoubleContextlessSchema, DoubleContextlessSchema> configure)
+    {
+        var inner = configure(new DoubleContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<double>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware double schema with all rules from this schema.
     /// </summary>

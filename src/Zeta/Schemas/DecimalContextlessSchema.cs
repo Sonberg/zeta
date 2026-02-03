@@ -68,6 +68,16 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal>
         return this;
     }
 
+    public DecimalContextlessSchema If(
+        Func<decimal, bool> condition,
+        Func<DecimalContextlessSchema, DecimalContextlessSchema> configure)
+    {
+        var inner = configure(new DecimalContextlessSchema());
+        foreach (var rule in inner.Rules.GetRules())
+            Use(new ConditionalRule<decimal>(condition, rule));
+        return this;
+    }
+
     /// <summary>
     /// Creates a context-aware decimal schema with all rules from this schema.
     /// </summary>
