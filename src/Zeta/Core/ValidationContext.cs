@@ -36,7 +36,7 @@ public record ValidationContext<TData> : ValidationContext
         return new ValidationContext<TData>(
             string.IsNullOrEmpty(Path)
                 ? segment
-                : $"{Path}.{segment}",
+                : string.Concat(Path, ".", segment),
             Data,
             TimeProvider,
             CancellationToken);
@@ -101,7 +101,7 @@ public record ValidationContext
     /// </summary>
     public ValidationContext Push(string segment)
     {
-        var newPath = string.IsNullOrEmpty(Path) ? segment : $"{Path}.{segment}";
+        var newPath = string.IsNullOrEmpty(Path) ? segment : string.Concat(Path, ".", segment);
         return new ValidationContext(newPath, TimeProvider, CancellationToken);
     }
 

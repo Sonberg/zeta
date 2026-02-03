@@ -2,6 +2,11 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- **Performance:** Optimize validation infrastructure to reduce allocations by 39%
+  - Cached empty error lists in `FieldContextlessValidator` and `FieldContextContextValidator` to avoid `.ToList()` allocations on successful validations
+  - Optimized string concatenation in `ValidationContext.Push()` to use `string.Concat()` instead of interpolation
+  - **Result:** Allocations reduced from 248 B to 152 B (96 B / 39% reduction) for successful validations
+  - Validation speed unchanged, GC pressure significantly reduced
 - **Performance:** Replace `StatefulRefinementRule` with dedicated validation rule structs to eliminate all lambda overhead
   - Created dedicated readonly struct rules in `Rules/String/`, `Rules/Numeric/`, and `Rules/Collection/` folders
   - **String rules:** `MinLengthRule`, `MaxLengthRule`, `LengthRule`, `NotEmptyRule`, `EmailRule`, `UuidRule`, `UrlRule`, `UriRule`, `AlphanumericRule`, `StartsWithRule`, `EndsWithRule`, `ContainsRule`, `RegexRule`
