@@ -2,13 +2,11 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
-- Fix array field overloads to correctly return `CollectionContextlessSchema<T>` instead of `ObjectContextlessSchema<T[]>` for inline array field builders
-- Refactor source generators into separate files for better maintainability:
-  - `SchemaMapping.cs` - Shared type-to-schema mappings
-  - `ObjectSchemaFieldGenerator.cs` - ObjectContextlessSchema field overloads
-  - `ObjectContextSchemaFieldGenerator.cs` - ObjectContextSchema field overloads
-  - `CollectionExtensionsGenerator.cs` - Collection .Each() extension methods
-  - `SchemaFactoryGenerator.cs` - Main orchestrator
+- Remove .When (Will be reimplemented as .If & .Switch in RFC 001)
+- Make .Each more stable by removing inline object builders (if caused stability issues)
+- .Each only support ISchema<T> or ISchema<T, TContext> (no inline builders)
+- Rename .Z.Object() to .Z.Schema() (RFC 002). To algin with C# language
+- Rename .Field() to .Property() (RFC 002). To algin with C# language
 
 ## Version 0.1.8
 - Add `.Each()` method for collection schemas to enable fluent element validation (RFC 003)

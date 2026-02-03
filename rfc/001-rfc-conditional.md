@@ -1,74 +1,216 @@
 # RFC 002
+
 ## Improve mental model around Conditional Validation
 
+---
 
-# If
-Rename "When" -> "If"
+## Motivation
 
-Can be added both on Object, Collections & Value types.
-Check then condition (Both context-aware and contextless version):
+Conditional validation is one of the most powerful parts of Zeta, but also one of the easiest places to lose clarity. The goal of this RFC is to:
 
-**If** true: Use thenBranch with original schema
+* Make conditional validation **easy to reason about**
+* Keep the API **composable and linear**
+* Clearly separate **guard-style conditions** from **branching logic**
+* Improve **LLM-friendliness** and predictability
 
-**else**: Use elseBranch with original schema
+---
 
-Conditional Validation**: Use `.If(...)` to create conditional branches based on the value or context:
+## Rename `When` → `If`
 
-### Contextless conditional
+Rename `.When(...)` to `.If(...)` to better align with common mental models and language.
 
-```csharp
- Z.Int()
-     .If(
-         condition: v => v >= 18,
-         thenBranch: s => s.Max(100),
-         elseBranch: s => s.Min(0).Max(17)
-     );
- 
- Z.Object<User>()
-     .If(
-         condition: v => v.HasEmail,
-         thenBranch: s => s.Property(x => x.Email).Email(),
-         elseBranch: s => s.Property(x => x.Email).Nullable()
-     );
- ```
+* `If` reads as a *guard*
+* It communicates intent clearly: *"apply these rules if the condition holds"*
 
-### Context-aware conditional
+`If` can be applied to:
 
- ```csharp
- Z.String()
-     .WithContext<MyContextType>()
-     .If(
-         condition: (v, ctx) => ctx.IsSpecialUser,
-         thenBranch: s => s.MinLength(10),
-         elseBranch: s => s.MinLength(5)
-     );
- 
+* Object schemas
+* Collection schemas
+* Value schemas
+
+---
+
+## `If` — Guard-style conditional validation
+
+### Core principle
+
+> `If` **does not branch the schema**.
+> It conditionally **augments** the existing schema.
+
+There is **no `elseBranch`**.
+
+This keeps schemas:
+
+* Linear
+* Composable
+* Easy to stack and refactor
+
+---
+
+### Semantics
+
+```text
+If condition is true  → apply the provided rules
+If condition is false → do nothing
 ```
 
-Add example for collection and object
+Multiple `If` calls can be chained to express more complex logic.
 
-# Switch
+---
 
-Use `.Switch(...)` to create multiple conditional branches based on the value or context:
+### Contextless `If`
 
 ```csharp
+Z.Int()
+    .If(v => v >= 18, s => s.Max(100))
+    .If(v => v < 18,  s => s.Min(0).Max(17));
+```
 
-Z .Collection<IAnimal>()
-.ForEach(x => x.Switch(s => 
+```csharp
+Z.Object<User>()
+    .If(
+        u => u.HasEmail,
+        s => s.Property(x => x.Email).Email()
+    )
+    .If(
+        u => !u.HasEmail,
+        s => s.Property(x => x.Email).Nullable()
+    );
+```
+
+---
+
+### Context-aware `If`
+
+```csharp
+Z.String()
+    .WithContext<MyContext>()
+    .If(
+        (value, ctx) => ctx.IsSpecialUser,
+        s => s.MinLength(10)
+    )
+    .If(
+        (value, ctx) => !ctx.IsSpecialUser,
+        s => s.MinLength(5)
+    );
+```
+
+---
+
+### `If` on collections
+
+```csharp
+Z.Collection<OrderItem>()
+    .If(
+        items => items.Count > 0,
+        s => s.MinLength(1)
+    );
+```
+
+---
+
+### Design rationale
+
+* Avoids hidden branching
+* Encourages explicit conditions
+* Plays well with fluent chaining
+* Easier for tooling and LLMs to reason about
+
+`If` answers the question:
+
+> *"Under what condition should these additional rules apply?"*
+
+---
+
+## `Switch` — Explicit branching
+
+When validation logic is **mutually exclusive**, use `.Switch(...)`.
+
+`Switch` is the **only API that introduces branching**.
+
+---
+
+### Goals of `Switch`
+
+* Express multi-branch conditional logic
+* Support contextless and context-aware conditions
+* Support pattern matching
+* Allow schema specialization per branch
+
+---
+
+### Example: value-based branching
+
+```csharp
+Z.Collection<IAnimal>()
+    .ForEach(x => x.Switch(s =>
         s.Case(
-        condition: (animal, ctx) => animal.Type == "Dog",
-        branch: dogSchema => dogSchema
-            .Field(a => a.BarkVolume, s => s.Min(0).Max(100))
-    )
-    .Case(
-        condition: (animal, ctx) => animal.Type == "Cat",
-        branch: catSchema => catSchema
-            .Field(a => a.ClawSharpness, s => s.Min(0).Max(10))
-    )
-    .Default(
-        defaultSchema => defaultSchema
-            .Field(a => a.Name, s => s.MinLength(1))
-    )
-));
-
+            condition: (animal, ctx) => animal.Type == "Dog",
+            branch: dog => dog
+                .Field(a => a.BarkVolume, v => v.Min(0).Max(100))
+        )
+        .Case(
+            condition: (animal, ctx) => animal.Type == "Cat",
+            branch: cat => cat
+                .Field(a => a.ClawSharpness, v => v.Min(0).Max(10))
+        )
+        .Default(
+            other => other
+                .Field(a => a.Name, v => v.MinLength(1))
+        )
+    ));
 ```
+
+---
+
+### Example: pattern-matching with typed schemas
+
+```csharp
+Z.Collection<IAnimal>()
+    .ForEach(x => x.Switch(s =>
+        s.Case(
+            condition: (animal, ctx) => animal is Dog,
+            branch: (ContextlessSchema<Dog> dog) => dog
+                .Field(a => a.BarkVolume, v => v.Min(0).Max(100))
+        )
+        .Case(
+            condition: (animal, ctx) => animal is Cat,
+            branch: (ContextlessSchema<Cat> cat) => cat
+                .Field(a => a.ClawSharpness, v => v.Min(0).Max(10))
+        )
+        .Default(
+            (ContextlessSchema<IAnimal> other) => other
+                .Field(a => a.Name, v => v.MinLength(1))
+        )
+    ));
+```
+
+---
+
+### Design rationale
+
+* Makes branching **explicit**
+* Avoids ambiguity between `If` and `else`
+* Maps naturally to pattern matching
+* Scales from simple `if/else` to complex decision trees
+
+`Switch` answers the question:
+
+> *"Which schema should apply for this value?"*
+
+---
+
+## Summary
+
+| API      | Purpose                                  |
+| -------- | ---------------------------------------- |
+| `If`     | Conditional **augmentation** of a schema |
+| `Switch` | Conditional **selection** of a schema    |
+
+Key decisions:
+
+* `If` has **no `elseBranch`**
+* Branching lives exclusively in `Switch`
+* Linear chains over nested conditionals
+
+This separation keeps Zeta powerful, predictable, and easy to reason about.
