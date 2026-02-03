@@ -1,6 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
-using Zeta.Validation;
+using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
@@ -13,15 +13,13 @@ public sealed class IntContextlessSchema : ContextlessSchema<int>
 
     public IntContextlessSchema Min(int min, string? message = null)
     {
-        Use(new RefinementRule<int>((val, exec) =>
-            NumericValidators.Min(val, min, exec.Path, message)));
+        Use(new MinIntRule(min, message));
         return this;
     }
 
     public IntContextlessSchema Max(int max, string? message = null)
     {
-        Use(new RefinementRule<int>((val, exec) =>
-            NumericValidators.Max(val, max, exec.Path, message)));
+        Use(new MaxIntRule(max, message));
         return this;
     }
 

@@ -1,6 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
-using Zeta.Validation;
+using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
@@ -15,15 +15,13 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext>
 
     public IntContextSchema<TContext> Min(int min, string? message = null)
     {
-        Use(new RefinementRule<int, TContext>((val, ctx) =>
-            NumericValidators.Min(val, min, ctx.Path, message)));
+        Use(new MinIntRule<TContext>(min, message));
         return this;
     }
 
     public IntContextSchema<TContext> Max(int max, string? message = null)
     {
-        Use(new RefinementRule<int, TContext>((val, ctx) =>
-            NumericValidators.Max(val, max, ctx.Path, message)));
+        Use(new MaxIntRule<TContext>(max, message));
         return this;
     }
 

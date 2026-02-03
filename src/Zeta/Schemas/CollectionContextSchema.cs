@@ -1,5 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
+using Zeta.Rules.Collection;
 
 namespace Zeta.Schemas;
 
@@ -51,34 +52,26 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
 
     public CollectionContextSchema<TElement, TContext> MinLength(int min, string? message = null)
     {
-        Use(new RefinementRule<ICollection<TElement>, TContext>((val, ctx) =>
-            val.Count >= min
-                ? null
-                : new ValidationError(ctx.Path, "min_length", message ?? $"Must have at least {min} items")));
+        Use(new MinLengthRule<TElement, TContext>(min, message));
         return this;
     }
 
     public CollectionContextSchema<TElement, TContext> MaxLength(int max, string? message = null)
     {
-        Use(new RefinementRule<ICollection<TElement>, TContext>((val, ctx) =>
-            val.Count <= max
-                ? null
-                : new ValidationError(ctx.Path, "max_length", message ?? $"Must have at most {max} items")));
+        Use(new MaxLengthRule<TElement, TContext>(max, message));
         return this;
     }
 
     public CollectionContextSchema<TElement, TContext> Length(int exact, string? message = null)
     {
-        Use(new RefinementRule<ICollection<TElement>, TContext>((val, ctx) =>
-            val.Count == exact
-                ? null
-                : new ValidationError(ctx.Path, "length", message ?? $"Must have exactly {exact} items")));
+        Use(new LengthRule<TElement, TContext>(exact, message));
         return this;
     }
 
     public CollectionContextSchema<TElement, TContext> NotEmpty(string? message = null)
     {
-        return MinLength(1, message ?? "Must not be empty");
+        Use(new NotEmptyRule<TElement, TContext>(message));
+        return this;
     }
 
     public CollectionContextSchema<TElement, TContext> Refine(Func<ICollection<TElement>, TContext, bool> predicate, string message, string code = "custom_error")

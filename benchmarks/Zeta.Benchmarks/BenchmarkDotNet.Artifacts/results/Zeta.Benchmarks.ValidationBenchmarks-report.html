@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Zeta.Benchmarks.ValidationBenchmarks-20260202-211355</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+Apple M2 Pro, 1 CPU, 12 logical and 12 physical cores
+.NET SDK 10.0.102
+  [Host]     : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method                  </th><th>Mean</th><th>Error</th><th>StdDev</th><th>Ratio</th><th>RatioSD</th><th>Rank</th><th>Gen0</th><th>Gen1</th><th>Allocated</th><th>Alloc Ratio</th>
+</tr>
+</thead><tbody><tr><td>FluentValidation_Valid</td><td>129.1 ns</td><td>0.92 ns</td><td>0.77 ns</td><td>0.40</td><td>0.00</td><td>1</td><td>0.0715</td><td>-</td><td>600 B</td><td>2.42</td>
+</tr><tr><td>FluentValidation_Valid_Async</td><td>227.9 ns</td><td>2.06 ns</td><td>1.82 ns</td><td>0.70</td><td>0.01</td><td>2</td><td>0.0801</td><td>-</td><td>672 B</td><td>2.71</td>
+</tr><tr><td>Zeta_Valid</td><td>325.8 ns</td><td>1.83 ns</td><td>1.62 ns</td><td>1.00</td><td>0.01</td><td>3</td><td>0.0296</td><td>-</td><td>248 B</td><td>1.00</td>
+</tr><tr><td>Zeta_Invalid</td><td>450.4 ns</td><td>4.37 ns</td><td>4.09 ns</td><td>1.38</td><td>0.01</td><td>4</td><td>0.1307</td><td>-</td><td>1096 B</td><td>4.42</td>
+</tr><tr><td>DataAnnotations_Valid</td><td>610.5 ns</td><td>3.61 ns</td><td>3.02 ns</td><td>1.87</td><td>0.01</td><td>5</td><td>0.2203</td><td>-</td><td>1848 B</td><td>7.45</td>
+</tr><tr><td>DataAnnotations_Invalid</td><td>964.8 ns</td><td>15.04 ns</td><td>22.04 ns</td><td>2.96</td><td>0.07</td><td>6</td><td>0.3185</td><td>0.0019</td><td>2672 B</td><td>10.77</td>
+</tr><tr><td>FluentValidation_Invalid</td><td>1,903.0 ns</td><td>16.17 ns</td><td>13.51 ns</td><td>5.84</td><td>0.05</td><td>7</td><td>0.9232</td><td>0.0095</td><td>7728 B</td><td>31.16</td>
+</tr><tr><td>FluentValidation_Invalid_Async</td><td>2,095.4 ns</td><td>12.21 ns</td><td>10.82 ns</td><td>6.43</td><td>0.04</td><td>8</td><td>0.9308</td><td>0.0076</td><td>7800 B</td><td>31.45</td>
+</tr></tbody></table>
+</body>
+</html>

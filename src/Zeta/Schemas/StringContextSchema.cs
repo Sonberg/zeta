@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Zeta.Core;
 using Zeta.Rules;
-using Zeta.Validation;
+using Zeta.Rules.String;
 
 namespace Zeta.Schemas;
 
@@ -16,85 +16,73 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext>
 
     public StringContextSchema<TContext> MinLength(int min, string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.MinLength(val, min, ctx.Path, message)));
+        Use(new MinLengthRule<TContext>(min, message));
         return this;
     }
 
     public StringContextSchema<TContext> MaxLength(int max, string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.MaxLength(val, max, ctx.Path, message)));
+        Use(new MaxLengthRule<TContext>(max, message));
         return this;
     }
 
     public StringContextSchema<TContext> Length(int exact, string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.Length(val, exact, ctx.Path, message)));
+        Use(new LengthRule<TContext>(exact, message));
         return this;
     }
 
     public StringContextSchema<TContext> NotEmpty(string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.NotEmpty(val, ctx.Path, message)));
+        Use(new NotEmptyRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Email(string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.Email(val, ctx.Path, message)));
+        Use(new EmailRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Uuid(string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.Uuid(val, ctx.Path, message)));
+        Use(new UuidRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Url(string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.Url(val, ctx.Path, message)));
+        Use(new UrlRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> Uri(UriKind kind = UriKind.Absolute, string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.ValidUri(val, kind, ctx.Path, message)));
+        Use(new UriRule<TContext>(kind, message));
         return this;
     }
 
     public StringContextSchema<TContext> Alphanumeric(string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.Alphanumeric(val, ctx.Path, message)));
+        Use(new AlphanumericRule<TContext>(message));
         return this;
     }
 
     public StringContextSchema<TContext> StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.StartsWith(val, prefix, comparison, ctx.Path, message)));
+        Use(new StartsWithRule<TContext>(prefix, comparison, message));
         return this;
     }
 
     public StringContextSchema<TContext> EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.EndsWith(val, suffix, comparison, ctx.Path, message)));
+        Use(new EndsWithRule<TContext>(suffix, comparison, message));
         return this;
     }
 
     public StringContextSchema<TContext> Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
     {
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.Contains(val, substring, comparison, ctx.Path, message)));
+        Use(new ContainsRule<TContext>(substring, comparison, message));
         return this;
     }
 
@@ -105,8 +93,7 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext>
             RegexOptions.Compiled,
             TimeSpan.FromSeconds(1));
 
-        Use(new RefinementRule<string, TContext>((val, ctx) =>
-            StringValidators.MatchesRegex(val, compiledRegex, ctx.Path, message, code)));
+        Use(new RegexRule<TContext>(compiledRegex, message, code));
         return this;
     }
 

@@ -1,6 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
-using Zeta.Validation;
+using Zeta.Rules.Collection;
 
 namespace Zeta.Schemas;
 
@@ -45,29 +45,25 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
 
     public CollectionContextlessSchema<TElement> MinLength(int min, string? message = null)
     {
-        Use(new RefinementRule<ICollection<TElement>>((val, exec) =>
-            CollectionValidators.MinLength(val, min, exec.Path, message)));
+        Use(new MinLengthRule<TElement>(min, message));
         return this;
     }
 
     public CollectionContextlessSchema<TElement> MaxLength(int max, string? message = null)
     {
-        Use(new RefinementRule<ICollection<TElement>>((val, exec) =>
-            CollectionValidators.MaxLength(val, max, exec.Path, message)));
+        Use(new MaxLengthRule<TElement>(max, message));
         return this;
     }
 
     public CollectionContextlessSchema<TElement> Length(int exact, string? message = null)
     {
-        Use(new RefinementRule<ICollection<TElement>>((val, exec) =>
-            CollectionValidators.Length(val, exact, exec.Path, message)));
+        Use(new LengthRule<TElement>(exact, message));
         return this;
     }
 
     public CollectionContextlessSchema<TElement> NotEmpty(string? message = null)
     {
-        Use(new RefinementRule<ICollection<TElement>>((val, exec) =>
-            CollectionValidators.NotEmpty(val, exec.Path, message)));
+        Use(new NotEmptyRule<TElement>(message));
         return this;
     }
 

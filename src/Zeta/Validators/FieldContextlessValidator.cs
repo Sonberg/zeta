@@ -4,6 +4,8 @@ namespace Zeta.Validators;
 
 internal sealed class FieldContextlessValidator<TInstance, TProperty> : IFieldContextlessValidator<TInstance>
 {
+    private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
+
     private readonly string _name;
     private readonly Func<TInstance, TProperty> _getter;
     private readonly ISchema<TProperty> _schema;
@@ -22,6 +24,6 @@ internal sealed class FieldContextlessValidator<TInstance, TProperty> : IFieldCo
         var value = _getter(instance);
         var fieldExecution = execution.Push(_name);
         var result = await _schema.ValidateAsync(value, fieldExecution);
-        return result.Errors.ToList();
+        return result.IsSuccess ? EmptyErrors : result.Errors.ToList();
     }
 }

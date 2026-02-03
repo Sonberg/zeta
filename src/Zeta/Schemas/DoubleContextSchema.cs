@@ -1,6 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
-using Zeta.Validation;
+using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
@@ -15,42 +15,31 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
 
     public DoubleContextSchema<TContext> Min(double min, string? message = null)
     {
-        Use(new RefinementRule<double, TContext>((val, ctx) =>
-            NumericValidators.Min(val, min, ctx.Path, message)));
+        Use(new MinDoubleRule<TContext>(min, message));
         return this;
     }
 
     public DoubleContextSchema<TContext> Max(double max, string? message = null)
     {
-        Use(new RefinementRule<double, TContext>((val, ctx) =>
-            NumericValidators.Max(val, max, ctx.Path, message)));
+        Use(new MaxDoubleRule<TContext>(max, message));
         return this;
     }
 
     public DoubleContextSchema<TContext> Positive(string? message = null)
     {
-        Use(new RefinementRule<double, TContext>((val, ctx) =>
-            val > 0
-                ? null
-                : new ValidationError(ctx.Path, "positive", message ?? "Must be positive")));
+        Use(new PositiveDoubleRule<TContext>(message));
         return this;
     }
 
     public DoubleContextSchema<TContext> Negative(string? message = null)
     {
-        Use(new RefinementRule<double, TContext>((val, ctx) =>
-            val < 0
-                ? null
-                : new ValidationError(ctx.Path, "negative", message ?? "Must be negative")));
+        Use(new NegativeDoubleRule<TContext>(message));
         return this;
     }
 
     public DoubleContextSchema<TContext> Finite(string? message = null)
     {
-        Use(new RefinementRule<double, TContext>((val, ctx) =>
-            !double.IsNaN(val) && !double.IsInfinity(val)
-                ? null
-                : new ValidationError(ctx.Path, "finite", message ?? "Must be a finite number")));
+        Use(new FiniteRule<TContext>(message));
         return this;
     }
 

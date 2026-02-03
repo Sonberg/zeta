@@ -1,6 +1,6 @@
 using Zeta.Core;
 using Zeta.Rules;
-using Zeta.Validation;
+using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
@@ -13,42 +13,31 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double>
 
     public DoubleContextlessSchema Min(double min, string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            NumericValidators.Min(val, min, exec.Path, message)));
+        Use(new MinDoubleRule(min, message));
         return this;
     }
 
     public DoubleContextlessSchema Max(double max, string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            NumericValidators.Max(val, max, exec.Path, message)));
+        Use(new MaxDoubleRule(max, message));
         return this;
     }
 
     public DoubleContextlessSchema Positive(string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            val > 0
-                ? null
-                : new ValidationError(exec.Path, "positive", message ?? "Must be positive")));
+        Use(new PositiveDoubleRule(message));
         return this;
     }
 
     public DoubleContextlessSchema Negative(string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            val < 0
-                ? null
-                : new ValidationError(exec.Path, "negative", message ?? "Must be negative")));
+        Use(new NegativeDoubleRule(message));
         return this;
     }
 
     public DoubleContextlessSchema Finite(string? message = null)
     {
-        Use(new RefinementRule<double>((val, exec) =>
-            !double.IsNaN(val) && !double.IsInfinity(val)
-                ? null
-                : new ValidationError(exec.Path, "finite", message ?? "Must be a finite number")));
+        Use(new FiniteRule(message));
         return this;
     }
 

@@ -2,6 +2,45 @@
 - Remove .When - Will be reimplemented
 
 ## Next release
+- **Testing:** Add comprehensive unit tests for all validation rules
+  - Added `StringRuleTests` with 57 tests covering all string validation rules
+  - Added `NumericRuleTests` with 54 tests covering int, double, and decimal rules
+  - Added `CollectionRuleTests` with 28 tests covering collection validation rules
+  - Tests verify correct behavior for valid inputs, invalid inputs, edge cases, and custom error messages
+  - Total test count increased from 379 to 518 tests (139 new tests)
+- **Refactoring:** Move all validation logic from static validator classes into rule structs
+  - Moved validation logic from `StringValidators`, `NumericValidators`, and `CollectionValidators` directly into rule implementations
+  - Each rule is now fully self-contained with its own validation logic
+  - Removed `Validation/` folder and all static validator classes
+  - **Benefits:** Simpler architecture, fewer indirections, easier to understand and maintain
+  - No performance impact - all tests pass with identical behavior
+- **Performance:** Optimize validation infrastructure to reduce allocations by 39%
+  - Cached empty error lists in `FieldContextlessValidator` and `FieldContextContextValidator` to avoid `.ToList()` allocations on successful validations
+  - Optimized string concatenation in `ValidationContext.Push()` to use `string.Concat()` instead of interpolation
+  - **Result:** Allocations reduced from 248 B to 152 B (96 B / 39% reduction) for successful validations
+  - Validation speed unchanged, GC pressure significantly reduced
+- **Performance:** Replace `StatefulRefinementRule` with dedicated validation rule structs to eliminate all lambda overhead
+  - Created dedicated readonly struct rules in `Rules/String/`, `Rules/Numeric/`, and `Rules/Collection/` folders
+  - **String rules:** `MinLengthRule`, `MaxLengthRule`, `LengthRule`, `NotEmptyRule`, `EmailRule`, `UuidRule`, `UrlRule`, `UriRule`, `AlphanumericRule`, `StartsWithRule`, `EndsWithRule`, `ContainsRule`, `RegexRule`
+  - **Numeric rules:** `MinIntRule`, `MaxIntRule`, `MinDoubleRule`, `MaxDoubleRule`, `MinDecimalRule`, `MaxDecimalRule`, `PositiveDoubleRule`, `PositiveDecimalRule`, `NegativeDoubleRule`, `NegativeDecimalRule`, `FiniteRule`, `PrecisionRule`, `MultipleOfRule`
+  - **Collection rules:** `MinLengthRule<T>`, `MaxLengthRule<T>`, `LengthRule<T>`, `NotEmptyRule<T>`
+  - Each rule implements `IValidationRule<T>` directly without delegates or tuples
+  - Updated all String, Int, Double, Decimal, and Collection schemas (both contextless and context-aware) to use dedicated rules
+  - **Benefits:** Zero lambda overhead, clearer types (`EmailRule` vs `StatefulRefinementRule<string, string?>`), better IDE support
+  - **Result:** Same zero-allocation performance with cleaner, more maintainable code
+  - `StatefulRefinementRule` remains available for user-defined custom rules
+- **Performance:** Eliminate closure allocations in built-in validation methods using stateful refinement rules
+  - Introduced `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` that use static lambdas with value-type state
+  - Updated String, Int, Double, Decimal, and Collection schemas (both contextless and context-aware)
+  - **Result:** Zero allocations during validation for built-in validators (benchmarks confirm 0 B allocated)
+  - User-provided `Refine()` predicates may still allocate (acceptable for backward compatibility)
+- Fix array field overloads to correctly return `CollectionContextlessSchema<T>` instead of `ObjectContextlessSchema<T[]>` for inline array field builders
+- Refactor source generators into separate files for better maintainability:
+  - `SchemaMapping.cs` - Shared type-to-schema mappings
+  - `ObjectSchemaFieldGenerator.cs` - ObjectContextlessSchema field overloads
+  - `ObjectContextSchemaFieldGenerator.cs` - ObjectContextSchema field overloads
+  - `CollectionExtensionsGenerator.cs` - Collection .Each() extension methods
+  - `SchemaFactoryGenerator.cs` - Main orchestrator
 - Remove .When (Will be reimplemented as .If & .Switch in RFC 001)
 - Make .Each more stable by removing inline object builders (if caused stability issues)
 - .Each only support ISchema<T> or ISchema<T, TContext> (no inline builders)
