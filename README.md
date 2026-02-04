@@ -14,17 +14,19 @@ var UserSchema = Z.Object<User>()
 
 var result = await UserSchema.ValidateAsync(user);
 
-result.Match(
-    success: user => Console.WriteLine($"Valid: {user.Email}"),
-    failure: errors => errors.ForEach(e => Console.WriteLine($"{e.Path}: {e.Message}"))
-);
+if(!result.IsSuccess)
+{
+    foreach(var error in result.Errors)
+    {
+        Console.WriteLine($"{error.Path}: {error.Message}");
+    }
+}
 ```
 
 ## Features
 
 - **Schema-first** - Define validation as reusable schema objects
 - **Async by default** - Every rule can be async, no separate sync/async paths
-- **Result pattern** - No exceptions for validation failures
 - **Composable** - Schemas are values that can be reused and combined
 - **Path-aware errors** - Errors include location (`user.address.street`, `items[0]`)
 - **ASP.NET Core native** - First-class support for Minimal APIs and Controllers
