@@ -6,13 +6,13 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating Guid values.
 /// </summary>
-public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
+public sealed class GuidContextlessSchema : ContextlessSchema<Guid?>
 {
     public GuidContextlessSchema() { }
 
     public GuidContextlessSchema NotEmpty(string? message = null)
     {
-        Use(new RefinementRule<Guid>((val, exec) =>
+        Use(new RefinementRule<Guid?>((val, exec) =>
             val != Guid.Empty
                 ? null
                 : new ValidationError(exec.Path, "not_empty", message ?? "GUID cannot be empty")));
@@ -21,7 +21,7 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
 
     public GuidContextlessSchema Version(int version, string? message = null)
     {
-        Use(new RefinementRule<Guid>((val, exec) =>
+        Use(new RefinementRule<Guid?>((val, exec) =>
         {
             var bytes = val.ToByteArray();
             var guidVersion = (bytes[7] >> 4) & 0x0F;
@@ -32,9 +32,9 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
         return this;
     }
 
-    public GuidContextlessSchema Refine(Func<Guid, bool> predicate, string message, string code = "custom_error")
+    public GuidContextlessSchema Refine(Func<Guid?, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<Guid>((val, exec) =>
+        Use(new RefinementRule<Guid?>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -42,11 +42,11 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
     }
 
     public GuidContextlessSchema RefineAsync(
-        Func<Guid, CancellationToken, ValueTask<bool>> predicate,
+        Func<Guid?, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {
-        Use(new RefinementRule<Guid>(async (val, exec) =>
+        Use(new RefinementRule<Guid?>(async (val, exec) =>
             await predicate(val, exec.CancellationToken)
                 ? null
                 : new ValidationError(exec.Path, code, message)));

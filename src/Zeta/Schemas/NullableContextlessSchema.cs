@@ -6,6 +6,7 @@ namespace Zeta.Schemas;
 /// A contextless schema that wraps another schema and allows null values.
 /// For reference types (classes).
 /// </summary>
+[Obsolete("This wrapper class is deprecated. Nullable schemas now use the IsNullable flag instead of wrappers. Use schema.Nullable() which sets the flag directly.", false)]
 public sealed class NullableContextlessSchema<T> : ContextlessSchema<T?> where T : class
 {
     private readonly ISchema<T> _inner;
@@ -37,6 +38,7 @@ public sealed class NullableContextlessSchema<T> : ContextlessSchema<T?> where T
 /// A contextless schema that wraps another schema and allows null values.
 /// For value types (structs).
 /// </summary>
+[Obsolete("This wrapper class is deprecated. Nullable schemas now use the IsNullable flag instead of wrappers. Use schema.Nullable() which sets the flag directly.", false)]
 public sealed class NullableValueContextlessSchema<T> : ContextlessSchema<T?> where T : struct
 {
     private readonly ISchema<T> _inner;

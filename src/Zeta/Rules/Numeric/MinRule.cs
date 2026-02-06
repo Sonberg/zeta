@@ -5,7 +5,7 @@ namespace Zeta.Rules.Numeric;
 /// <summary>
 /// Validates that an int value is greater than or equal to a minimum.
 /// </summary>
-public readonly struct MinIntRule : IValidationRule<int>
+public readonly struct MinIntRule : IValidationRule<int?>
 {
     private readonly int _min;
     private readonly string? _message;
@@ -16,9 +16,16 @@ public readonly struct MinIntRule : IValidationRule<int>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(int? value, ValidationContext context)
     {
-        var error = value >= _min
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
         return ValueTaskHelper.FromResult(error);
@@ -28,7 +35,7 @@ public readonly struct MinIntRule : IValidationRule<int>
 /// <summary>
 /// Context-aware version: Validates that an int value is greater than or equal to a minimum.
 /// </summary>
-public readonly struct MinIntRule<TContext> : IValidationRule<int, TContext>
+public readonly struct MinIntRule<TContext> : IValidationRule<int?, TContext>
 {
     private readonly int _min;
     private readonly string? _message;
@@ -39,9 +46,16 @@ public readonly struct MinIntRule<TContext> : IValidationRule<int, TContext>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(int? value, ValidationContext<TContext> context)
     {
-        var error = value >= _min
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
         return ValueTaskHelper.FromResult(error);
@@ -51,7 +65,7 @@ public readonly struct MinIntRule<TContext> : IValidationRule<int, TContext>
 /// <summary>
 /// Validates that a double value is greater than or equal to a minimum.
 /// </summary>
-public readonly struct MinDoubleRule : IValidationRule<double>
+public readonly struct MinDoubleRule : IValidationRule<double?>
 {
     private readonly double _min;
     private readonly string? _message;
@@ -62,9 +76,16 @@ public readonly struct MinDoubleRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double? value, ValidationContext context)
     {
-        var error = value >= _min
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
         return ValueTaskHelper.FromResult(error);
@@ -74,7 +95,7 @@ public readonly struct MinDoubleRule : IValidationRule<double>
 /// <summary>
 /// Context-aware version: Validates that a double value is greater than or equal to a minimum.
 /// </summary>
-public readonly struct MinDoubleRule<TContext> : IValidationRule<double, TContext>
+public readonly struct MinDoubleRule<TContext> : IValidationRule<double?, TContext>
 {
     private readonly double _min;
     private readonly string? _message;
@@ -85,9 +106,16 @@ public readonly struct MinDoubleRule<TContext> : IValidationRule<double, TContex
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(double? value, ValidationContext<TContext> context)
     {
-        var error = value >= _min
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
         return ValueTaskHelper.FromResult(error);
@@ -97,7 +125,7 @@ public readonly struct MinDoubleRule<TContext> : IValidationRule<double, TContex
 /// <summary>
 /// Validates that a decimal value is greater than or equal to a minimum.
 /// </summary>
-public readonly struct MinDecimalRule : IValidationRule<decimal>
+public readonly struct MinDecimalRule : IValidationRule<decimal?>
 {
     private readonly decimal _min;
     private readonly string? _message;
@@ -108,9 +136,16 @@ public readonly struct MinDecimalRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext context)
     {
-        var error = value >= _min
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
         return ValueTaskHelper.FromResult(error);
@@ -120,7 +155,7 @@ public readonly struct MinDecimalRule : IValidationRule<decimal>
 /// <summary>
 /// Context-aware version: Validates that a decimal value is greater than or equal to a minimum.
 /// </summary>
-public readonly struct MinDecimalRule<TContext> : IValidationRule<decimal, TContext>
+public readonly struct MinDecimalRule<TContext> : IValidationRule<decimal?, TContext>
 {
     private readonly decimal _min;
     private readonly string? _message;
@@ -131,9 +166,16 @@ public readonly struct MinDecimalRule<TContext> : IValidationRule<decimal, TCont
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext<TContext> context)
     {
-        var error = value >= _min
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value >= _min
             ? null
             : new ValidationError(context.Path, "min_value", _message ?? $"Must be at least {_min}");
         return ValueTaskHelper.FromResult(error);

@@ -5,7 +5,7 @@ namespace Zeta.Rules.Numeric;
 /// <summary>
 /// Validates that a double value is finite (not NaN or infinity).
 /// </summary>
-public readonly struct FiniteRule : IValidationRule<double>
+public readonly struct FiniteRule : IValidationRule<double?>
 {
     private readonly string? _message;
 
@@ -14,9 +14,16 @@ public readonly struct FiniteRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double? value, ValidationContext context)
     {
-        var error = !double.IsNaN(value) && !double.IsInfinity(value)
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = !double.IsNaN(value.Value) && !double.IsInfinity(value.Value)
             ? null
             : new ValidationError(context.Path, "finite", _message ?? "Must be a finite number");
         return ValueTaskHelper.FromResult(error);
@@ -26,7 +33,7 @@ public readonly struct FiniteRule : IValidationRule<double>
 /// <summary>
 /// Context-aware version: Validates that a double value is finite (not NaN or infinity).
 /// </summary>
-public readonly struct FiniteRule<TContext> : IValidationRule<double, TContext>
+public readonly struct FiniteRule<TContext> : IValidationRule<double?, TContext>
 {
     private readonly string? _message;
 
@@ -35,9 +42,16 @@ public readonly struct FiniteRule<TContext> : IValidationRule<double, TContext>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(double? value, ValidationContext<TContext> context)
     {
-        var error = !double.IsNaN(value) && !double.IsInfinity(value)
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = !double.IsNaN(value.Value) && !double.IsInfinity(value.Value)
             ? null
             : new ValidationError(context.Path, "finite", _message ?? "Must be a finite number");
         return ValueTaskHelper.FromResult(error);

@@ -6,14 +6,14 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating boolean values.
 /// </summary>
-public sealed class BoolContextlessSchema : ContextlessSchema<bool>
+public sealed class BoolContextlessSchema : ContextlessSchema<bool?>
 {
     public BoolContextlessSchema() { }
 
     public BoolContextlessSchema IsTrue(string? message = null)
     {
-        Use(new RefinementRule<bool>((val, exec) =>
-            val
+        Use(new RefinementRule<bool?>((val, exec) =>
+            val.HasValue && val.Value
                 ? null
                 : new ValidationError(exec.Path, "is_true", message ?? "Must be true")));
         return this;
@@ -21,16 +21,16 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool>
 
     public BoolContextlessSchema IsFalse(string? message = null)
     {
-        Use(new RefinementRule<bool>((val, exec) =>
-            !val
+        Use(new RefinementRule<bool?>((val, exec) =>
+            val.HasValue && !val.Value
                 ? null
                 : new ValidationError(exec.Path, "is_false", message ?? "Must be false")));
         return this;
     }
 
-    public BoolContextlessSchema Refine(Func<bool, bool> predicate, string message, string code = "custom_error")
+    public BoolContextlessSchema Refine(Func<bool?, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<bool>((val, exec) =>
+        Use(new RefinementRule<bool?>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -38,11 +38,11 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool>
     }
 
     public BoolContextlessSchema RefineAsync(
-        Func<bool, CancellationToken, ValueTask<bool>> predicate,
+        Func<bool?, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {
-        Use(new RefinementRule<bool>(async (val, exec) =>
+        Use(new RefinementRule<bool?>(async (val, exec) =>
             await predicate(val, exec.CancellationToken)
                 ? null
                 : new ValidationError(exec.Path, code, message)));

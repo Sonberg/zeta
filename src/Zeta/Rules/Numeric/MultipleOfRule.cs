@@ -5,7 +5,7 @@ namespace Zeta.Rules.Numeric;
 /// <summary>
 /// Validates that a decimal value is a multiple of a specified number.
 /// </summary>
-public readonly struct MultipleOfRule : IValidationRule<decimal>
+public readonly struct MultipleOfRule : IValidationRule<decimal?>
 {
     private readonly decimal _divisor;
     private readonly string? _message;
@@ -16,9 +16,16 @@ public readonly struct MultipleOfRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext context)
     {
-        var error = value % _divisor == 0
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value % _divisor == 0
             ? null
             : new ValidationError(context.Path, "multiple_of", _message ?? $"Must be a multiple of {_divisor}");
         return ValueTaskHelper.FromResult(error);
@@ -28,7 +35,7 @@ public readonly struct MultipleOfRule : IValidationRule<decimal>
 /// <summary>
 /// Context-aware version: Validates that a decimal value is a multiple of a specified number.
 /// </summary>
-public readonly struct MultipleOfRule<TContext> : IValidationRule<decimal, TContext>
+public readonly struct MultipleOfRule<TContext> : IValidationRule<decimal?, TContext>
 {
     private readonly decimal _divisor;
     private readonly string? _message;
@@ -39,9 +46,16 @@ public readonly struct MultipleOfRule<TContext> : IValidationRule<decimal, TCont
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext<TContext> context)
     {
-        var error = value % _divisor == 0
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value % _divisor == 0
             ? null
             : new ValidationError(context.Path, "multiple_of", _message ?? $"Must be a multiple of {_divisor}");
         return ValueTaskHelper.FromResult(error);

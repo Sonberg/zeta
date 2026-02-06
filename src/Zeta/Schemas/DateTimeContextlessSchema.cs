@@ -6,13 +6,13 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating DateTime values.
 /// </summary>
-public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
+public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime?>
 {
     public DateTimeContextlessSchema() { }
 
     public DateTimeContextlessSchema Min(DateTime min, string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             val >= min
                 ? null
                 : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -21,7 +21,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema Max(DateTime max, string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             val <= max
                 ? null
                 : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -30,7 +30,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema Past(string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             val < exec.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(exec.Path, "past", message ?? "Must be in the past")));
@@ -39,7 +39,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema Future(string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             val > exec.TimeProvider.GetUtcNow().UtcDateTime
                 ? null
                 : new ValidationError(exec.Path, "future", message ?? "Must be in the future")));
@@ -48,7 +48,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema Between(DateTime min, DateTime max, string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -57,7 +57,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema Weekday(string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
@@ -66,7 +66,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema Weekend(string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
@@ -75,10 +75,10 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema WithinDays(int days, string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
         {
             var now = exec.TimeProvider.GetUtcNow().UtcDateTime;
-            var diff = Math.Abs((val - now).TotalDays);
+            var diff = Math.Abs((val - now).Value.TotalDays);
             return diff <= days
                 ? null
                 : new ValidationError(exec.Path, "within_days", message ?? $"Must be within {days} days from now");
@@ -88,7 +88,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema MinAge(int years, string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
         {
             var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -103,7 +103,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
 
     public DateTimeContextlessSchema MaxAge(int years, string? message = null)
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
         {
             var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
             var age = today.Year - val.Year;
@@ -116,9 +116,9 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
         return this;
     }
 
-    public DateTimeContextlessSchema Refine(Func<DateTime, bool> predicate, string message, string code = "custom_error")
+    public DateTimeContextlessSchema Refine(Func<DateTime?, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<DateTime>((val, exec) =>
+        Use(new RefinementRule<DateTime?>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -126,11 +126,11 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
     }
 
     public DateTimeContextlessSchema RefineAsync(
-        Func<DateTime, CancellationToken, ValueTask<bool>> predicate,
+        Func<DateTime?, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {
-        Use(new RefinementRule<DateTime>(async (val, exec) =>
+        Use(new RefinementRule<DateTime?>(async (val, exec) =>
             await predicate(val, exec.CancellationToken)
                 ? null
                 : new ValidationError(exec.Path, code, message)));

@@ -7,11 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating decimal values.
 /// </summary>
-public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
+public class DecimalContextSchema<TContext> : ContextSchema<decimal?, TContext>
 {
     public DecimalContextSchema() { }
 
-    public DecimalContextSchema(ContextRuleEngine<decimal, TContext> rules) : base(rules) { }
+    public DecimalContextSchema(ContextRuleEngine<decimal?, TContext> rules) : base(rules) { }
 
     public DecimalContextSchema<TContext> Min(decimal min, string? message = null)
     {
@@ -49,26 +49,26 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
         return this;
     }
 
-    public DecimalContextSchema<TContext> Refine(Func<decimal, TContext, bool> predicate, string message, string code = "custom_error")
+    public DecimalContextSchema<TContext> Refine(Func<decimal?, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<decimal, TContext>((val, ctx) =>
+        Use(new RefinementRule<decimal?, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 
-    public DecimalContextSchema<TContext> Refine(Func<decimal, bool> predicate, string message, string code = "custom_error")
+    public DecimalContextSchema<TContext> Refine(Func<decimal?, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
     }
 
     public DecimalContextSchema<TContext> RefineAsync(
-        Func<decimal, TContext, CancellationToken, ValueTask<bool>> predicate,
+        Func<decimal?, TContext, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {
-        Use(new RefinementRule<decimal, TContext>(async (val, ctx) =>
+        Use(new RefinementRule<decimal?, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data, ctx.CancellationToken)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
@@ -76,7 +76,7 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext>
     }
 
     public DecimalContextSchema<TContext> RefineAsync(
-        Func<decimal, CancellationToken, ValueTask<bool>> predicate,
+        Func<decimal?, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {

@@ -1,7 +1,98 @@
 # Change log
 - Remove .When - Will be reimplemented
 
-## Next release
+## Next release (v2.0.0 - MAJOR BREAKING CHANGES)
+
+### ⚠️ BREAKING CHANGES: Nullable Value Type Handling
+
+**This release fundamentally changes how nullable value types work in Zeta. All numeric schemas now use nullable type parameters (int?, double?, etc.) with an IsNullable flag to control null validation.**
+
+#### Type System Changes
+- **ALL value type schemas now use nullable type parameters:**
+  - `IntContextlessSchema` changed from `ContextlessSchema<int>` to `ContextlessSchema<int?>`
+  - `DoubleContextlessSchema` changed from `ContextlessSchema<double>` to `ContextlessSchema<double?>`
+  - `DecimalContextlessSchema` changed from `ContextlessSchema<decimal>` to `ContextlessSchema<decimal?>`
+  - `BoolContextlessSchema` changed from `ContextlessSchema<bool>` to `ContextlessSchema<bool?>`
+  - `GuidContextlessSchema` changed from `ContextlessSchema<Guid>` to `ContextlessSchema<Guid?>`
+  - `DateTimeContextlessSchema` changed from `ContextlessSchema<DateTime>` to `ContextlessSchema<DateTime?>`
+  - `DateOnlyContextlessSchema` changed from `ContextlessSchema<DateOnly>` to `ContextlessSchema<DateOnly?>`
+  - `TimeOnlyContextlessSchema` changed from `ContextlessSchema<TimeOnly>` to `ContextlessSchema<TimeOnly?>`
+  - Same changes apply to all context-aware variants
+
+#### Return Type Changes
+- `Z.Int()` now returns `ISchema<int?>` instead of `ISchema<int>`
+- `Z.Double()` now returns `ISchema<double?>` instead of `ISchema<double>`
+- All numeric factory methods follow the same pattern
+- **User code with explicit type declarations will break** and must be updated
+
+#### API Changes
+- `.Nullable()` and `.Optional()` extensions now **set the IsNullable flag** instead of creating wrapper classes
+- Wrapper classes (`NullableValueContextlessSchema<T>`, `NullableValueContextSchema<T, TContext>`, etc.) are **marked [Obsolete]**
+- Schemas are non-nullable by default (IsNullable = false)
+- Calling `.Nullable()` sets IsNullable = true and returns the same schema instance
+
+#### Null Validation Behavior
+- By default, null values return a "required" validation error
+- After calling `.Nullable()`, null values pass validation without running inner rules
+- Base classes (`ContextlessSchema<T>`, `ContextSchema<T, TContext>`) now check IsNullable flag in ValidateAsync
+
+#### Migration Guide
+
+**Before (v1.x):**
+```csharp
+// Explicit types
+ISchema<int> schema = Z.Int().Min(5);
+Result<int> result = await schema.ValidateAsync(42);
+int value = result.Value;  // int
+
+// Nullable
+var nullableSchema = Z.Int().Nullable();  // Returns wrapper class
+```
+
+**After (v2.0.0):**
+```csharp
+// Explicit types - MUST use nullable
+ISchema<int?> schema = Z.Int().Min(5);
+Result<int?> result = await schema.ValidateAsync(42);
+int? value = result.Value;  // int?
+
+// If you know it's valid, unwrap:
+if (result.IsSuccess && result.Value.HasValue)
+{
+    int actualValue = result.Value.Value;
+}
+
+// Nullable - same API, different implementation
+var nullableSchema = Z.Int().Nullable();  // Sets flag, returns same instance
+```
+
+**Type inference still works (recommended):**
+```csharp
+// No explicit types - code continues to work
+var schema = Z.Int().Min(5);
+var result = await schema.ValidateAsync(42);
+```
+
+### Internal Changes
+- Added `IsNullable` protected field to `ContextlessSchema<T>` and `ContextSchema<T, TContext>`
+- Added `MarkAsNullable()` public method to base schema classes
+- All numeric validation rules now accept nullable types with defensive null checking
+- Updated all schema methods (Refine, RefineAsync, IsTrue, IsFalse, etc.) to handle nullable types
+
+### Known Issues (Work In Progress)
+- Source generators not yet updated to handle nullable type parameters
+- Some conditional builder methods need updates for type parameter compatibility
+- Test suite requires updates for new type system
+- Sample applications need migration
+
+### Notes
+This is a **major breaking change** that affects all code using explicit type declarations for numeric schemas. Code using type inference should continue to work with minimal changes. This change enables better null handling semantics and eliminates the need for wrapper classes.
+
+---
+
+### Other Changes in This Release
+- Fix context factory exceptions propagating as unformatted HTTP 500; now returns a root-level validation error instead
+- Fix null values on required fields crashing rules instead of returning a "required" validation error; schemas now check `IsNullable` flag to distinguish required vs optional
 
 ## 1.0.9
 - Major invalid-path optimizations

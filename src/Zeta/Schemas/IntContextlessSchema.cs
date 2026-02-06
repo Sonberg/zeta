@@ -7,7 +7,7 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating integer values.
 /// </summary>
-public sealed class IntContextlessSchema : ContextlessSchema<int>
+public sealed class IntContextlessSchema : ContextlessSchema<int?>
 {
     public IntContextlessSchema() { }
 
@@ -23,9 +23,9 @@ public sealed class IntContextlessSchema : ContextlessSchema<int>
         return this;
     }
 
-    public IntContextlessSchema Refine(Func<int, bool> predicate, string message, string code = "custom_error")
+    public IntContextlessSchema Refine(Func<int?, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<int>((val, exec) =>
+        Use(new RefinementRule<int?>((val, exec) =>
             predicate(val)
                 ? null
                 : new ValidationError(exec.Path, code, message)));
@@ -33,11 +33,11 @@ public sealed class IntContextlessSchema : ContextlessSchema<int>
     }
 
     public IntContextlessSchema RefineAsync(
-        Func<int, CancellationToken, ValueTask<bool>> predicate,
+        Func<int?, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {
-        Use(new RefinementRule<int>(async (val, exec) =>
+        Use(new RefinementRule<int?>(async (val, exec) =>
             await predicate(val, exec.CancellationToken)
                 ? null
                 : new ValidationError(exec.Path, code, message)));

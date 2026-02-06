@@ -7,15 +7,15 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating DateOnly values.
 /// </summary>
-public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
+public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly?, TContext>
 {
     public DateOnlyContextSchema() { }
 
-    public DateOnlyContextSchema(ContextRuleEngine<DateOnly, TContext> rules) : base(rules) { }
+    public DateOnlyContextSchema(ContextRuleEngine<DateOnly?, TContext> rules) : base(rules) { }
 
     public DateOnlyContextSchema<TContext> Min(DateOnly min, string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
             val >= min
                 ? null
                 : new ValidationError(ctx.Path, "min_date", message ?? $"Must be at or after {min:O}")));
@@ -24,7 +24,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> Max(DateOnly max, string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
             val <= max
                 ? null
                 : new ValidationError(ctx.Path, "max_date", message ?? $"Must be at or before {max:O}")));
@@ -33,7 +33,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> Past(string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
@@ -45,7 +45,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> Future(string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
@@ -57,7 +57,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> Between(DateOnly min, DateOnly max, string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(ctx.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
@@ -66,7 +66,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> Weekday(string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(ctx.Path, "weekday", message ?? "Must be a weekday")));
@@ -75,7 +75,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> Weekend(string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(ctx.Path, "weekend", message ?? "Must be a weekend")));
@@ -84,7 +84,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> MinAge(int years, string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -99,7 +99,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
 
     public DateOnlyContextSchema<TContext> MaxAge(int years, string? message = null)
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
         {
             var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -112,26 +112,26 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
         return this;
     }
 
-    public DateOnlyContextSchema<TContext> Refine(Func<DateOnly, TContext, bool> predicate, string message, string code = "custom_error")
+    public DateOnlyContextSchema<TContext> Refine(Func<DateOnly?, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 
-    public DateOnlyContextSchema<TContext> Refine(Func<DateOnly, bool> predicate, string message, string code = "custom_error")
+    public DateOnlyContextSchema<TContext> Refine(Func<DateOnly?, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
     }
 
     public DateOnlyContextSchema<TContext> RefineAsync(
-        Func<DateOnly, TContext, CancellationToken, ValueTask<bool>> predicate,
+        Func<DateOnly?, TContext, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {
-        Use(new RefinementRule<DateOnly, TContext>(async (val, ctx) =>
+        Use(new RefinementRule<DateOnly?, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data, ctx.CancellationToken)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
@@ -139,7 +139,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
     }
 
     public DateOnlyContextSchema<TContext> RefineAsync(
-        Func<DateOnly, CancellationToken, ValueTask<bool>> predicate,
+        Func<DateOnly?, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {

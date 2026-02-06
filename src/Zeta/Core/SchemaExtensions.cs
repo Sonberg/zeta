@@ -24,7 +24,7 @@ public static class SchemaExtensions
     // ==================== String Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this string schema that accepts null values.
+    /// Marks this string schema as nullable, allowing null values to pass validation.
     /// </summary>
     public static NullableContextSchema<string, TContext> Nullable<TContext>(this StringContextSchema<TContext> schema)
     {
@@ -32,7 +32,7 @@ public static class SchemaExtensions
     }
 
     /// <summary>
-    /// Creates a nullable version of this string schema that accepts null values.
+    /// Marks this string schema as nullable, allowing null values to pass validation.
     /// </summary>
     public static NullableContextlessSchema<string> Nullable(this StringContextlessSchema schema)
     {
@@ -40,13 +40,13 @@ public static class SchemaExtensions
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
     public static NullableContextSchema<string, TContext> Optional<TContext>(this StringContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
     public static NullableContextlessSchema<string> Optional(this StringContextlessSchema schema)
         => schema.Nullable();
@@ -54,97 +54,103 @@ public static class SchemaExtensions
     // ==================== Int Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this int schema that accepts null values.
+    /// Marks this int schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<int, TContext> Nullable<TContext>(this IntContextSchema<TContext> schema)
+    public static IntContextSchema<TContext> Nullable<TContext>(this IntContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<int, TContext>(schema);
+        schema.MarkAsNullable();
+        return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this int schema that accepts null values.
+    /// Marks this int schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<int> Nullable(this IntContextlessSchema schema)
+    public static IntContextlessSchema Nullable(this IntContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<int>(schema);
+        schema.MarkAsNullable();
+        return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<int, TContext> Optional<TContext>(this IntContextSchema<TContext> schema)
+    public static IntContextSchema<TContext> Optional<TContext>(this IntContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<int> Optional(this IntContextlessSchema schema)
+    public static IntContextlessSchema Optional(this IntContextlessSchema schema)
         => schema.Nullable();
 
     // ==================== Double Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this double schema that accepts null values.
+    /// Marks this double schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<double, TContext> Nullable<TContext>(this DoubleContextSchema<TContext> schema)
+    public static DoubleContextSchema<TContext> Nullable<TContext>(this DoubleContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<double, TContext>(schema);
+        schema.MarkAsNullable();
+        return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this double schema that accepts null values.
+    /// Marks this double schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<double> Nullable(this DoubleContextlessSchema schema)
+    public static DoubleContextlessSchema Nullable(this DoubleContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<double>(schema);
+        schema.MarkAsNullable();
+        return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<double, TContext> Optional<TContext>(this DoubleContextSchema<TContext> schema)
+    public static DoubleContextSchema<TContext> Optional<TContext>(this DoubleContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<double> Optional(this DoubleContextlessSchema schema)
+    public static DoubleContextlessSchema Optional(this DoubleContextlessSchema schema)
         => schema.Nullable();
 
     // ==================== Decimal Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this decimal schema that accepts null values.
+    /// Marks this decimal schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<decimal, TContext> Nullable<TContext>(this DecimalContextSchema<TContext> schema)
+    public static DecimalContextSchema<TContext> Nullable<TContext>(this DecimalContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<decimal, TContext>(schema);
+        schema.MarkAsNullable();
+        return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this decimal schema that accepts null values.
+    /// Marks this decimal schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<decimal> Nullable(this DecimalContextlessSchema schema)
+    public static DecimalContextlessSchema Nullable(this DecimalContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<decimal>(schema);
+        schema.MarkAsNullable();
+        return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<decimal, TContext> Optional<TContext>(this DecimalContextSchema<TContext> schema)
+    public static DecimalContextSchema<TContext> Optional<TContext>(this DecimalContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<decimal> Optional(this DecimalContextlessSchema schema)
+    public static DecimalContextlessSchema Optional(this DecimalContextlessSchema schema)
         => schema.Nullable();
 
     // ==================== Object Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this object schema that accepts null values.
+    /// Marks this object schema as nullable, allowing null values to pass validation.
     /// </summary>
     public static NullableContextSchema<T, TContext> Nullable<T, TContext>(this ObjectContextSchema<T, TContext> schema) where T : class
     {
@@ -152,7 +158,7 @@ public static class SchemaExtensions
     }
 
     /// <summary>
-    /// Creates a nullable version of this object schema that accepts null values.
+    /// Marks this object schema as nullable, allowing null values to pass validation.
     /// </summary>
     public static NullableContextlessSchema<T> Nullable<T>(this ObjectContextlessSchema<T> schema) where T : class
     {
@@ -160,13 +166,13 @@ public static class SchemaExtensions
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
     public static NullableContextSchema<T, TContext> Optional<T, TContext>(this ObjectContextSchema<T, TContext> schema) where T : class
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
     public static NullableContextlessSchema<T> Optional<T>(this ObjectContextlessSchema<T> schema) where T : class
         => schema.Nullable();
@@ -174,7 +180,7 @@ public static class SchemaExtensions
     // ==================== Array Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this array schema that accepts null values.
+    /// Marks this array schema as nullable, allowing null values to pass validation.
     /// </summary>
     public static NullableContextSchema<ICollection<TElement>, TContext> Nullable<TElement, TContext>(this CollectionContextSchema<TElement, TContext> schema)
     {
@@ -182,7 +188,7 @@ public static class SchemaExtensions
     }
 
     /// <summary>
-    /// Creates a nullable version of this collection schema that accepts null values.
+    /// Marks this collection schema as nullable, allowing null values to pass validation.
     /// </summary>
     public static NullableContextlessSchema<ICollection<TElement>> Nullable<TElement>(this CollectionContextlessSchema<TElement> schema)
     {
@@ -190,13 +196,13 @@ public static class SchemaExtensions
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
     public static NullableContextSchema<ICollection<TElement>, TContext> Optional<TElement, TContext>(this CollectionContextSchema<TElement, TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
     public static NullableContextlessSchema<ICollection<TElement>> Optional<TElement>(this CollectionContextlessSchema<TElement> schema)
         => schema.Nullable();
@@ -204,153 +210,153 @@ public static class SchemaExtensions
     // ==================== DateTime Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this DateTime schema that accepts null values.
+    /// Marks this DateTime schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<DateTime, TContext> Nullable<TContext>(this DateTimeContextSchema<TContext> schema)
+    public static DateTimeContextSchema<TContext> Nullable<TContext>(this DateTimeContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<DateTime, TContext>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this DateTime schema that accepts null values.
+    /// Marks this DateTime schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<DateTime> Nullable(this DateTimeContextlessSchema schema)
+    public static DateTimeContextlessSchema Nullable(this DateTimeContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<DateTime>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<DateTime, TContext> Optional<TContext>(this DateTimeContextSchema<TContext> schema)
+    public static DateTimeContextSchema<TContext> Optional<TContext>(this DateTimeContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<DateTime> Optional(this DateTimeContextlessSchema schema)
+    public static DateTimeContextlessSchema Optional(this DateTimeContextlessSchema schema)
         => schema.Nullable();
 
 #if !NETSTANDARD2_0
     // ==================== DateOnly Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this DateOnly schema that accepts null values.
+    /// Marks this DateOnly schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<DateOnly, TContext> Nullable<TContext>(this DateOnlyContextSchema<TContext> schema)
+    public static DateOnlyContextSchema<TContext> Nullable<TContext>(this DateOnlyContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<DateOnly, TContext>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this DateOnly schema that accepts null values.
+    /// Marks this DateOnly schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<DateOnly> Nullable(this DateOnlyContextlessSchema schema)
+    public static DateOnlyContextlessSchema Nullable(this DateOnlyContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<DateOnly>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<DateOnly, TContext> Optional<TContext>(this DateOnlyContextSchema<TContext> schema)
+    public static DateOnlyContextSchema<TContext> Optional<TContext>(this DateOnlyContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<DateOnly> Optional(this DateOnlyContextlessSchema schema)
+    public static DateOnlyContextlessSchema Optional(this DateOnlyContextlessSchema schema)
         => schema.Nullable();
 
     // ==================== TimeOnly Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this TimeOnly schema that accepts null values.
+    /// Marks this TimeOnly schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<TimeOnly, TContext> Nullable<TContext>(this TimeOnlyContextSchema<TContext> schema)
+    public static TimeOnlyContextSchema<TContext> Nullable<TContext>(this TimeOnlyContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<TimeOnly, TContext>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this TimeOnly schema that accepts null values.
+    /// Marks this TimeOnly schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<TimeOnly> Nullable(this TimeOnlyContextlessSchema schema)
+    public static TimeOnlyContextlessSchema Nullable(this TimeOnlyContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<TimeOnly>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<TimeOnly, TContext> Optional<TContext>(this TimeOnlyContextSchema<TContext> schema)
+    public static TimeOnlyContextSchema<TContext> Optional<TContext>(this TimeOnlyContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<TimeOnly> Optional(this TimeOnlyContextlessSchema schema)
+    public static TimeOnlyContextlessSchema Optional(this TimeOnlyContextlessSchema schema)
         => schema.Nullable();
 #endif
 
     // ==================== Guid Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this Guid schema that accepts null values.
+    /// Marks this Guid schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<Guid, TContext> Nullable<TContext>(this GuidContextSchema<TContext> schema)
+    public static GuidContextSchema<TContext> Nullable<TContext>(this GuidContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<Guid, TContext>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this Guid schema that accepts null values.
+    /// Marks this Guid schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<Guid> Nullable(this GuidContextlessSchema schema)
+    public static GuidContextlessSchema Nullable(this GuidContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<Guid>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<Guid, TContext> Optional<TContext>(this GuidContextSchema<TContext> schema)
+    public static GuidContextSchema<TContext> Optional<TContext>(this GuidContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<Guid> Optional(this GuidContextlessSchema schema)
+    public static GuidContextlessSchema Optional(this GuidContextlessSchema schema)
         => schema.Nullable();
 
     // ==================== Bool Schema ====================
 
     /// <summary>
-    /// Creates a nullable version of this bool schema that accepts null values.
+    /// Marks this bool schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<bool, TContext> Nullable<TContext>(this BoolContextSchema<TContext> schema)
+    public static BoolContextSchema<TContext> Nullable<TContext>(this BoolContextSchema<TContext> schema)
     {
-        return new NullableValueContextSchema<bool, TContext>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates a nullable version of this bool schema that accepts null values.
+    /// Marks this bool schema as nullable, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<bool> Nullable(this BoolContextlessSchema schema)
+    public static BoolContextlessSchema Nullable(this BoolContextlessSchema schema)
     {
-        return new NullableValueContextlessSchema<bool>(schema);
+        schema.MarkAsNullable(); return schema;
     }
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextSchema<bool, TContext> Optional<TContext>(this BoolContextSchema<TContext> schema)
+    public static BoolContextSchema<TContext> Optional<TContext>(this BoolContextSchema<TContext> schema)
         => schema.Nullable();
 
     /// <summary>
-    /// Creates an optional version of this schema that skips validation when null.
+    /// Marks this schema as optional, allowing null values to pass validation.
     /// </summary>
-    public static NullableValueContextlessSchema<bool> Optional(this BoolContextlessSchema schema)
+    public static BoolContextlessSchema Optional(this BoolContextlessSchema schema)
         => schema.Nullable();
 
     // ==================== Implicit Promotion Extensions ====================

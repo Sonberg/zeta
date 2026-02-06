@@ -5,7 +5,7 @@ namespace Zeta.Rules.Numeric;
 /// <summary>
 /// Validates that an int value is less than or equal to a maximum.
 /// </summary>
-public readonly struct MaxIntRule : IValidationRule<int>
+public readonly struct MaxIntRule : IValidationRule<int?>
 {
     private readonly int _max;
     private readonly string? _message;
@@ -16,9 +16,16 @@ public readonly struct MaxIntRule : IValidationRule<int>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(int? value, ValidationContext context)
     {
-        var error = value <= _max
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
         return ValueTaskHelper.FromResult(error);
@@ -28,7 +35,7 @@ public readonly struct MaxIntRule : IValidationRule<int>
 /// <summary>
 /// Context-aware version: Validates that an int value is less than or equal to a maximum.
 /// </summary>
-public readonly struct MaxIntRule<TContext> : IValidationRule<int, TContext>
+public readonly struct MaxIntRule<TContext> : IValidationRule<int?, TContext>
 {
     private readonly int _max;
     private readonly string? _message;
@@ -39,9 +46,16 @@ public readonly struct MaxIntRule<TContext> : IValidationRule<int, TContext>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(int? value, ValidationContext<TContext> context)
     {
-        var error = value <= _max
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
         return ValueTaskHelper.FromResult(error);
@@ -51,7 +65,7 @@ public readonly struct MaxIntRule<TContext> : IValidationRule<int, TContext>
 /// <summary>
 /// Validates that a double value is less than or equal to a maximum.
 /// </summary>
-public readonly struct MaxDoubleRule : IValidationRule<double>
+public readonly struct MaxDoubleRule : IValidationRule<double?>
 {
     private readonly double _max;
     private readonly string? _message;
@@ -62,9 +76,16 @@ public readonly struct MaxDoubleRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double? value, ValidationContext context)
     {
-        var error = value <= _max
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
         return ValueTaskHelper.FromResult(error);
@@ -74,7 +95,7 @@ public readonly struct MaxDoubleRule : IValidationRule<double>
 /// <summary>
 /// Context-aware version: Validates that a double value is less than or equal to a maximum.
 /// </summary>
-public readonly struct MaxDoubleRule<TContext> : IValidationRule<double, TContext>
+public readonly struct MaxDoubleRule<TContext> : IValidationRule<double?, TContext>
 {
     private readonly double _max;
     private readonly string? _message;
@@ -85,9 +106,16 @@ public readonly struct MaxDoubleRule<TContext> : IValidationRule<double, TContex
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(double? value, ValidationContext<TContext> context)
     {
-        var error = value <= _max
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
         return ValueTaskHelper.FromResult(error);
@@ -97,7 +125,7 @@ public readonly struct MaxDoubleRule<TContext> : IValidationRule<double, TContex
 /// <summary>
 /// Validates that a decimal value is less than or equal to a maximum.
 /// </summary>
-public readonly struct MaxDecimalRule : IValidationRule<decimal>
+public readonly struct MaxDecimalRule : IValidationRule<decimal?>
 {
     private readonly decimal _max;
     private readonly string? _message;
@@ -108,9 +136,16 @@ public readonly struct MaxDecimalRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext context)
     {
-        var error = value <= _max
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
         return ValueTaskHelper.FromResult(error);
@@ -120,7 +155,7 @@ public readonly struct MaxDecimalRule : IValidationRule<decimal>
 /// <summary>
 /// Context-aware version: Validates that a decimal value is less than or equal to a maximum.
 /// </summary>
-public readonly struct MaxDecimalRule<TContext> : IValidationRule<decimal, TContext>
+public readonly struct MaxDecimalRule<TContext> : IValidationRule<decimal?, TContext>
 {
     private readonly decimal _max;
     private readonly string? _message;
@@ -131,9 +166,16 @@ public readonly struct MaxDecimalRule<TContext> : IValidationRule<decimal, TCont
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext<TContext> context)
     {
-        var error = value <= _max
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = value.Value <= _max
             ? null
             : new ValidationError(context.Path, "max_value", _message ?? $"Must be at most {_max}");
         return ValueTaskHelper.FromResult(error);

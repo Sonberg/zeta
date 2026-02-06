@@ -7,11 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating double values.
 /// </summary>
-public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
+public class DoubleContextSchema<TContext> : ContextSchema<double?, TContext>
 {
     public DoubleContextSchema() { }
 
-    public DoubleContextSchema(ContextRuleEngine<double, TContext> rules) : base(rules) { }
+    public DoubleContextSchema(ContextRuleEngine<double?, TContext> rules) : base(rules) { }
 
     public DoubleContextSchema<TContext> Min(double min, string? message = null)
     {
@@ -43,26 +43,26 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
         return this;
     }
 
-    public DoubleContextSchema<TContext> Refine(Func<double, TContext, bool> predicate, string message, string code = "custom_error")
+    public DoubleContextSchema<TContext> Refine(Func<double?, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<double, TContext>((val, ctx) =>
+        Use(new RefinementRule<double?, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
         return this;
     }
 
-    public DoubleContextSchema<TContext> Refine(Func<double, bool> predicate, string message, string code = "custom_error")
+    public DoubleContextSchema<TContext> Refine(Func<double?, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
     }
 
     public DoubleContextSchema<TContext> RefineAsync(
-        Func<double, TContext, CancellationToken, ValueTask<bool>> predicate,
+        Func<double?, TContext, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {
-        Use(new RefinementRule<double, TContext>(async (val, ctx) =>
+        Use(new RefinementRule<double?, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data, ctx.CancellationToken)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
@@ -70,7 +70,7 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext>
     }
 
     public DoubleContextSchema<TContext> RefineAsync(
-        Func<double, CancellationToken, ValueTask<bool>> predicate,
+        Func<double?, CancellationToken, ValueTask<bool>> predicate,
         string message,
         string code = "custom_error")
     {

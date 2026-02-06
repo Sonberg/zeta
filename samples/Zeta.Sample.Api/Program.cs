@@ -141,5 +141,10 @@ app.MapPost("/api/minimal/orders/delivery", (ScheduleDeliveryRequest request) =>
 app.MapControllers();
 app.Run();
 
+var schema = Z.Object<Test>()
+    .Field(x => x.FooBar, x => x.Min(5).Max(10));
+
+public record Test(int? FooBar);
+
 // Required for WebApplicationFactory in integration tests
 public partial class Program;

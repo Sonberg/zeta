@@ -5,7 +5,7 @@ namespace Zeta.Rules.Numeric;
 /// <summary>
 /// Validates that a decimal value has at most the specified number of decimal places.
 /// </summary>
-public readonly struct PrecisionRule : IValidationRule<decimal>
+public readonly struct PrecisionRule : IValidationRule<decimal?>
 {
     private readonly int _decimals;
     private readonly string? _message;
@@ -16,9 +16,16 @@ public readonly struct PrecisionRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext context)
     {
-        var error = GetDecimalPlaces(value) <= _decimals
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = GetDecimalPlaces(value.Value) <= _decimals
             ? null
             : new ValidationError(context.Path, "precision", _message ?? $"Must have at most {_decimals} decimal places");
         return ValueTaskHelper.FromResult(error);
@@ -42,7 +49,7 @@ public readonly struct PrecisionRule : IValidationRule<decimal>
 /// <summary>
 /// Context-aware version: Validates that a decimal value has at most the specified number of decimal places.
 /// </summary>
-public readonly struct PrecisionRule<TContext> : IValidationRule<decimal, TContext>
+public readonly struct PrecisionRule<TContext> : IValidationRule<decimal?, TContext>
 {
     private readonly int _decimals;
     private readonly string? _message;
@@ -53,9 +60,16 @@ public readonly struct PrecisionRule<TContext> : IValidationRule<decimal, TConte
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal? value, ValidationContext<TContext> context)
     {
-        var error = GetDecimalPlaces(value) <= _decimals
+        // Defensive null check - base schema should have already validated this
+        if (!value.HasValue)
+        {
+            return ValueTaskHelper.FromResult<ValidationError?>(
+                new ValidationError(context.Path, "required", "This field is required."));
+        }
+
+        var error = GetDecimalPlaces(value.Value) <= _decimals
             ? null
             : new ValidationError(context.Path, "precision", _message ?? $"Must have at most {_decimals} decimal places");
         return ValueTaskHelper.FromResult(error);
