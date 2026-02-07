@@ -6,9 +6,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating DateTime values.
 /// </summary>
-public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
+public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime, DateTimeContextlessSchema>
 {
-    public DateTimeContextlessSchema() { }
+    internal DateTimeContextlessSchema()
+    {
+    }
 
     public DateTimeContextlessSchema Min(DateTime min, string? message = null)
     {
@@ -116,30 +118,8 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime>
         return this;
     }
 
-    public DateTimeContextlessSchema Refine(Func<DateTime, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<DateTime>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public DateTimeContextlessSchema RefineAsync(
-        Func<DateTime, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<DateTime>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware DateTime schema with all rules from this schema.
     /// </summary>
-    public DateTimeContextSchema<TContext> WithContext<TContext>()
-        => new DateTimeContextSchema<TContext>(Rules.ToContext<TContext>());
+    public DateTimeContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
 }

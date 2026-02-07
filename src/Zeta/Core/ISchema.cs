@@ -4,12 +4,12 @@ namespace Zeta;
 /// Defines a context-aware schema that can validate a value of type <typeparamref name="T"/>
 /// with context <typeparamref name="TContext"/>.
 /// </summary>
-public interface ISchema<T, TContext>
+public interface ISchema<in T, TContext>
 {
     /// <summary>
     /// Validates the given value asynchronously with context.
     /// </summary>
-    ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context);
+    ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context);
 }
 
 /// <summary>
@@ -21,5 +21,5 @@ public interface ISchema<T>
     /// <summary>
     /// Validates the given value asynchronously without context.
     /// </summary>
-    ValueTask<Result<T>> ValidateAsync(T value, ValidationContext context);
+    ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext context);
 }

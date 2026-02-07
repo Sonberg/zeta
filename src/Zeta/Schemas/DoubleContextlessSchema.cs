@@ -7,9 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating double values.
 /// </summary>
-public sealed class DoubleContextlessSchema : ContextlessSchema<double>
+public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleContextlessSchema>
 {
-    public DoubleContextlessSchema() { }
+    internal DoubleContextlessSchema()
+    {
+    }
 
     public DoubleContextlessSchema Min(double min, string? message = null)
     {
@@ -41,30 +43,8 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double>
         return this;
     }
 
-    public DoubleContextlessSchema Refine(Func<double, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<double>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public DoubleContextlessSchema RefineAsync(
-        Func<double, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<double>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware double schema with all rules from this schema.
     /// </summary>
-    public DoubleContextSchema<TContext> WithContext<TContext>()
-        => new DoubleContextSchema<TContext>(Rules.ToContext<TContext>());
+    public DoubleContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
 }

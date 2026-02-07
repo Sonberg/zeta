@@ -7,7 +7,7 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating DateOnly values.
 /// </summary>
-public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly>
+public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, DateOnlyContextlessSchema>
 {
     public DateOnlyContextlessSchema() { }
 

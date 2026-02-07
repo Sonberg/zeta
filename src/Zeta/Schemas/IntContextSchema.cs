@@ -7,11 +7,9 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating integer values.
 /// </summary>
-public class IntContextSchema<TContext> : ContextSchema<int, TContext>
+public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContextSchema<TContext>>
 {
-    public IntContextSchema() { }
-
-    public IntContextSchema(ContextRuleEngine<int, TContext> rules) : base(rules) { }
+    internal IntContextSchema(ContextRuleEngine<int, TContext> rules) : base(rules) { }
 
     public IntContextSchema<TContext> Min(int min, string? message = null)
     {
@@ -23,39 +21,5 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext>
     {
         Use(new MaxIntRule<TContext>(max, message));
         return this;
-    }
-
-    public IntContextSchema<TContext> Refine(Func<int, TContext, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<int, TContext>((val, ctx) =>
-            predicate(val, ctx.Data)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public IntContextSchema<TContext> Refine(Func<int, bool> predicate, string message, string code = "custom_error")
-    {
-        return Refine((val, _) => predicate(val), message, code);
-    }
-
-    public IntContextSchema<TContext> RefineAsync(
-        Func<int, TContext, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<int, TContext>(async (val, ctx) =>
-            await predicate(val, ctx.Data, ctx.CancellationToken)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public IntContextSchema<TContext> RefineAsync(
-        Func<int, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
 }

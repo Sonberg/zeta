@@ -7,9 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating decimal values.
 /// </summary>
-public sealed class DecimalContextlessSchema : ContextlessSchema<decimal>
+public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, DecimalContextlessSchema>
 {
-    public DecimalContextlessSchema() { }
+    internal DecimalContextlessSchema()
+    {
+    }
 
     public DecimalContextlessSchema Min(decimal min, string? message = null)
     {
@@ -47,30 +49,8 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal>
         return this;
     }
 
-    public DecimalContextlessSchema Refine(Func<decimal, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<decimal>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public DecimalContextlessSchema RefineAsync(
-        Func<decimal, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<decimal>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware decimal schema with all rules from this schema.
     /// </summary>
-    public DecimalContextSchema<TContext> WithContext<TContext>()
-        => new DecimalContextSchema<TContext>(Rules.ToContext<TContext>());
+    public DecimalContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
 }

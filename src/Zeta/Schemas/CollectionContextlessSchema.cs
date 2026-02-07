@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Rules;
 using Zeta.Rules.Collection;
 
 namespace Zeta.Schemas;
@@ -7,8 +6,13 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating collections where each element is validated by an inner schema.
 /// </summary>
-public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<ICollection<TElement>>
+public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<ICollection<TElement>, CollectionContextlessSchema<TElement>>
 {
+    internal CollectionContextlessSchema()
+    {
+        // TODO: All schema constructors should be internal
+    }
+
     private ISchema<TElement>? ElementSchema { get; set; }
 
     public CollectionContextlessSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules)
@@ -67,25 +71,10 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         return this;
     }
 
-    public CollectionContextlessSchema<TElement> Refine(Func<ICollection<TElement>, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<ICollection<TElement>>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     public CollectionContextlessSchema<TElement> Each(ISchema<TElement> elementSchema)
     {
         ElementSchema = elementSchema;
-
         return this;
-    }
-    
-    public CollectionContextSchema<TElement, TContext> Each<TContext>(ISchema<TElement, TContext> elementSchema)
-    {
-        return new CollectionContextSchema<TElement, TContext>(ElementSchema, Rules);
     }
 
     /// <summary>

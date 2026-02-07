@@ -9,12 +9,12 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating object values.
 /// </summary>
-public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContext> where T : class
+public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContext, ObjectContextSchema<T, TContext>> where T : class
 {
     private readonly List<IFieldContextValidator<T, TContext>> _fields;
     private readonly List<IConditionalBranch<T, TContext>> _conditionals;
 
-    public ObjectContextSchema() : this(new ContextRuleEngine<T, TContext>(), [], [])
+    internal ObjectContextSchema() : this(new ContextRuleEngine<T, TContext>(), [], [])
     {
     }
 
@@ -106,37 +106,22 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     /// <summary>
     /// Conditionally validates fields based on a context-aware predicate.
     /// </summary>
-    public ObjectContextSchema<T, TContext> When(
-        Func<T, TContext, bool> condition,
-        Action<ConditionalBuilder<T, TContext>> thenBranch,
-        Action<ConditionalBuilder<T, TContext>>? elseBranch = null)
-    {
-        var thenBuilder = new ConditionalBuilder<T, TContext>();
-        thenBranch(thenBuilder);
-
-        ConditionalBuilder<T, TContext>? elseBuilder = null;
-        if (elseBranch != null)
-        {
-            elseBuilder = new ConditionalBuilder<T, TContext>();
-            elseBranch(elseBuilder);
-        }
-
-        _conditionals.Add(new ContextAwareConditionalBranch<T, TContext>(condition, thenBuilder, elseBuilder));
-        return this;
-    }
-
-    public ObjectContextSchema<T, TContext> Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<T, TContext>((val, ctx) =>
-            predicate(val, ctx.Data)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public ObjectContextSchema<T, TContext> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
-    {
-        return Refine((val, _) => predicate(val), message, code);
-    }
-
+    // public ObjectContextSchema<T, TContext> When(
+    //     Func<T, TContext, bool> condition,
+    //     Action<ConditionalBuilder<T, TContext>> thenBranch,
+    //     Action<ConditionalBuilder<T, TContext>>? elseBranch = null)
+    // {
+    //     var thenBuilder = new ConditionalBuilder<T, TContext>();
+    //     thenBranch(thenBuilder);
+    //
+    //     ConditionalBuilder<T, TContext>? elseBuilder = null;
+    //     if (elseBranch != null)
+    //     {
+    //         elseBuilder = new ConditionalBuilder<T, TContext>();
+    //         elseBranch(elseBuilder);
+    //     }
+    //
+    //     _conditionals.Add(new ContextAwareConditionalBranch<T, TContext>(condition, thenBuilder, elseBuilder));
+    //     return this;
+    // }
 }

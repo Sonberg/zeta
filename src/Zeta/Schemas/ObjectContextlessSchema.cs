@@ -10,12 +10,12 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating object values.
 /// </summary>
-public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T> where T : class
+public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, ObjectContextlessSchema<T>> where T : class
 {
     private readonly List<IFieldContextlessValidator<T>> _fields;
     private readonly List<IContextlessConditionalBranch<T>> _conditionals;
 
-    public ObjectContextlessSchema() : this(new ContextlessRuleEngine<T>(), [], [])
+    internal ObjectContextlessSchema() : this(new ContextlessRuleEngine<T>(), [], [])
     {
     }
 
@@ -101,15 +101,6 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T> wh
     //     _conditionals.Add(new ContextlessConditionalBranch<T>(condition, thenBuilder, elseBuilder));
     //     return this;
     // }
-
-    public ObjectContextlessSchema<T> Refine(Func<T, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<T>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
 
     /// <summary>
     /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.

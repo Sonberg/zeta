@@ -6,11 +6,9 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating boolean values.
 /// </summary>
-public class BoolContextSchema<TContext> : ContextSchema<bool, TContext>
+public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolContextSchema<TContext>>
 {
-    public BoolContextSchema() { }
-
-    public BoolContextSchema(ContextRuleEngine<bool, TContext> rules) : base(rules) { }
+    internal BoolContextSchema(ContextRuleEngine<bool, TContext> rules) : base(rules) { }
 
     public BoolContextSchema<TContext> IsTrue(string? message = null)
     {
