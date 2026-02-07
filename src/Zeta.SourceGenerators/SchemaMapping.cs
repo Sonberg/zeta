@@ -5,7 +5,7 @@ namespace Zeta.SourceGenerators;
 /// </summary>
 internal static class SchemaMapping
 {
-    internal record Mapping(string Type, string SchemaClass, string FactoryMethod);
+    internal record Mapping(string Type, string SchemaClass, string FactoryMethod, bool IsValueType);
 
     /// <summary>
     /// Core primitive types that have schema implementations.
@@ -13,13 +13,13 @@ internal static class SchemaMapping
     /// </summary>
     internal static readonly Mapping[] PrimitiveMappings =
     {
-        new("string", "StringContextlessSchema", "Z.String"),
-        new("int", "IntContextlessSchema", "Z.Int"),
-        new("double", "DoubleContextlessSchema", "Z.Double"),
-        new("decimal", "DecimalContextlessSchema", "Z.Decimal"),
-        new("bool", "BoolContextlessSchema", "Z.Bool"),
-        new("System.Guid", "GuidContextlessSchema", "Z.Guid"),
-        new("System.DateTime", "DateTimeContextlessSchema", "Z.DateTime")
+        new("string", "StringContextlessSchema", "Z.String", false),
+        new("int", "IntContextlessSchema", "Z.Int", true),
+        new("double", "DoubleContextlessSchema", "Z.Double", true),
+        new("decimal", "DecimalContextlessSchema", "Z.Decimal", true),
+        new("bool", "BoolContextlessSchema", "Z.Bool", true),
+        new("System.Guid", "GuidContextlessSchema", "Z.Guid", true),
+        new("System.DateTime", "DateTimeContextlessSchema", "Z.DateTime", true)
     };
 
     /// <summary>
@@ -28,7 +28,7 @@ internal static class SchemaMapping
     /// </summary>
     internal static readonly Mapping[] ModernNetMappings =
     {
-        new("DateOnly", "DateOnlyContextlessSchema", "Z.DateOnly"),
-        new("TimeOnly", "TimeOnlyContextlessSchema", "Z.TimeOnly")
+        new("DateOnly", "DateOnlyContextlessSchema", "Z.DateOnly", true),
+        new("TimeOnly", "TimeOnlyContextlessSchema", "Z.TimeOnly", true)
     };
 }
