@@ -49,17 +49,20 @@ internal static class ObjectContextSchemaFieldGenerator
     {
         foreach (var mapping in SchemaMapping.PrimitiveMappings)
         {
+            var selectorType = mapping.IsValueType ? mapping.Type : $"{mapping.Type}?";
+            var getterExpr = mapping.IsValueType ? "getter" : "instance => getter(instance)!";
+
             sb.AppendLine($$"""
                                 /// <summary>
                                 /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties.
                                 /// </summary>
                                 public ObjectContextSchema<T, TContext> Field(
-                                    Expression<Func<T, {{mapping.Type}}>> propertySelector,
+                                    Expression<Func<T, {{selectorType}}>> propertySelector,
                                     Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
                                 {
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
+                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, schema({{mapping.FactoryMethod}}())));
                                     return this;
                                 }
 
@@ -67,13 +70,13 @@ internal static class ObjectContextSchemaFieldGenerator
                                 /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties (contextless builder).
                                 /// </summary>
                                 public ObjectContextSchema<T, TContext> Field(
-                                    Expression<Func<T, {{mapping.Type}}>> propertySelector,
+                                    Expression<Func<T, {{selectorType}}>> propertySelector,
                                     Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
                                 {
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
                                     var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, configuredSchema.WithContext<TContext>()));
                                     return this;
                                 }
 

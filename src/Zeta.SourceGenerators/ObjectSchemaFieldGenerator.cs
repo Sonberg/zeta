@@ -43,17 +43,20 @@ internal static class ObjectSchemaFieldGenerator
     {
         foreach (var mapping in SchemaMapping.PrimitiveMappings)
         {
+            var selectorType = mapping.IsValueType ? mapping.Type : $"{mapping.Type}?";
+            var getterExpr = mapping.IsValueType ? "getter" : "instance => getter(instance)!";
+
             sb.AppendLine($$"""
                                 /// <summary>
                                 /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties.
                                 /// </summary>
                                 public ObjectContextlessSchema<T> Field(
-                                    Expression<Func<T, {{mapping.Type}}>> propertySelector,
+                                    Expression<Func<T, {{selectorType}}>> propertySelector,
                                     Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
+                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, {{getterExpr}}, schema({{mapping.FactoryMethod}}())));
                                     return this;
                                 }
 
