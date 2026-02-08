@@ -24,11 +24,11 @@ internal static class ObjectSchemaFieldGenerator
         sb.AppendLine("{");
 
         GeneratePrimitiveFieldOverloads(sb);
-        GenerateNullableValueTypeInlineBuilderOverloads(sb);
-        GenerateNullableValueTypePrebuiltSchemaOverloads(sb);
+        // GenerateNullableValueTypeInlineBuilderOverloads(sb);
+        // GenerateNullableValueTypePrebuiltSchemaOverloads(sb);
         GenerateDateOnlyTimeOnlyOverloads(sb);
-        GenerateNullableModernNetInlineBuilderOverloads(sb);
-        GenerateNullableModernNetPrebuiltSchemaOverloads(sb);
+        // GenerateNullableModernNetInlineBuilderOverloads(sb);
+        // GenerateNullableModernNetPrebuiltSchemaOverloads(sb);
         GenerateNestedObjectOverload(sb);
         GenerateListCollectionOverloads(sb);
         GenerateArrayCollectionOverloads(sb);

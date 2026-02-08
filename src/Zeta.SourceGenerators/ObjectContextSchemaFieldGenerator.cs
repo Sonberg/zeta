@@ -24,15 +24,15 @@ internal static class ObjectContextSchemaFieldGenerator
         sb.AppendLine("{");
 
         GeneratePrimitiveFieldOverloads(sb);
-        GenerateNullableValueTypeContextlessBuilderOverloads(sb);
-        GenerateNullableValueTypeContextAwareBuilderOverloads(sb);
-        GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(sb);
-        GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(sb);
+        // GenerateNullableValueTypeContextlessBuilderOverloads(sb);
+        // GenerateNullableValueTypeContextAwareBuilderOverloads(sb);
+        // GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(sb);
+        // GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(sb);
         GenerateDateOnlyTimeOnlyOverloads(sb);
-        GenerateNullableModernNetContextlessBuilderOverloads(sb);
-        GenerateNullableModernNetContextAwareBuilderOverloads(sb);
-        GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(sb);
-        GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(sb);
+        // GenerateNullableModernNetContextlessBuilderOverloads(sb);
+        // GenerateNullableModernNetContextAwareBuilderOverloads(sb);
+        // GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(sb);
+        // GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(sb);
         GenerateNestedObjectOverload(sb);
         GenerateListCollectionOverloads(sb);
         GenerateArrayCollectionOverloads(sb);
@@ -57,7 +57,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                 /// </summary>
                                 public ObjectContextSchema<T, TContext> Field(
                                     Expression<Func<T, {{mapping.Type}}>> propertySelector,
-                                    Func<{{mapping.SchemaClass}}, ContextSchema<{{mapping.Type}}, TContext>> schema)
+                                    Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
                                 {
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
@@ -110,6 +110,7 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableValueTypeContextAwareBuilderOverloads(StringBuilder sb)
     {
+        return;
         foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
@@ -119,7 +120,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                 /// </summary>
                                 public ObjectContextSchema<T, TContext> Field(
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                    Func<{{mapping.SchemaClass}}, ContextSchema<{{mapping.Type}}, TContext>> schema)
+                                    Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
                                 {
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
@@ -135,6 +136,7 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(StringBuilder sb)
     {
+        return;
         foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
@@ -159,6 +161,7 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(StringBuilder sb)
     {
+        return;
         foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
@@ -192,7 +195,7 @@ internal static class ObjectContextSchemaFieldGenerator
                             /// </summary>
                             public ObjectContextSchema<T, TContext> Field(
                                 Expression<Func<T, {{mapping.Type}}>> propertySelector,
-                                Func<{{mapping.SchemaClass}}, ContextSchema<{{mapping.Type}}, TContext>> schema)
+                                Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
                             {
                                 var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
@@ -221,6 +224,7 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableModernNetContextlessBuilderOverloads(StringBuilder sb)
     {
+            return;
         sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
@@ -248,6 +252,7 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableModernNetContextAwareBuilderOverloads(StringBuilder sb)
     {
+        return;
         sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
@@ -258,7 +263,7 @@ internal static class ObjectContextSchemaFieldGenerator
                             /// </summary>
                             public ObjectContextSchema<T, TContext> Field(
                                 Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                Func<{{mapping.SchemaClass}}, ContextSchema<{{mapping.Type}}, TContext>> schema)
+                                Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
                             {
                                 var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
@@ -275,6 +280,7 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(StringBuilder sb)
     {
+        return;
         sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
@@ -301,6 +307,7 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(StringBuilder sb)
     {
+        return;
         sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {

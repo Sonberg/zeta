@@ -24,7 +24,6 @@ internal static class CollectionExtensionsGenerator
 
         GenerateContextlessExtensions(sb);
         GenerateContextAwareExtensions(sb);
-        GenerateHelperMethods(sb);
 
         sb.AppendLine("}");
         return sb.ToString();
@@ -160,29 +159,5 @@ internal static class CollectionExtensionsGenerator
 
                       """);
                       
-    }
-
-    private static void GenerateHelperMethods(StringBuilder sb)
-    {
-        sb.AppendLine("""
-                          // Internal helper methods to access Rules
-                          internal static ContextlessRuleEngine<System.Collections.Generic.ICollection<TElement>> GetRules<TElement>(
-                              this CollectionContextlessSchema<TElement> schema)
-                          {
-                              // Access the protected Rules property through reflection
-                              var rulesProperty = typeof(ContextlessSchema<System.Collections.Generic.ICollection<TElement>>)
-                                  .GetProperty("Rules", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                              return (ContextlessRuleEngine<System.Collections.Generic.ICollection<TElement>>)rulesProperty!.GetValue(schema)!;
-                          }
-
-                          internal static ContextRuleEngine<System.Collections.Generic.ICollection<TElement>, TContext> GetRules<TElement, TContext>(
-                              this CollectionContextSchema<TElement, TContext> schema)
-                          {
-                              // Access the protected Rules property through reflection
-                              var rulesProperty = typeof(ContextSchema<System.Collections.Generic.ICollection<TElement>, TContext>)
-                                  .GetProperty("Rules", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                              return (ContextRuleEngine<System.Collections.Generic.ICollection<TElement>, TContext>)rulesProperty!.GetValue(schema)!;
-                          }
-                      """);
     }
 }

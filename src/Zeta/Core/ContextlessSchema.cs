@@ -6,7 +6,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
 {
     protected ContextlessRuleEngine<T> Rules { get; }
 
-    protected bool AllowNull { get; private set; }
+    private bool AllowNull { get; set; }
 
     protected ContextlessSchema() : this(new ContextlessRuleEngine<T>())
     {
@@ -41,6 +41,11 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
     protected void Use(IValidationRule<T> rule)
     {
         Rules.Add(rule);
+    }
+
+    internal ContextlessRuleEngine<T> GetRules()
+    {
+        return Rules;
     }
 
     public TSchema Nullable()

@@ -9,7 +9,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 {
     protected ContextRuleEngine<T, TContext> Rules { get; }
 
-    protected bool AllowNull { get; private set; }
+    private bool AllowNull { get; set; }
 
     protected ContextSchema() : this(new ContextRuleEngine<T, TContext>())
     {
@@ -39,6 +39,11 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
     protected void Use(IValidationRule<T, TContext> rule)
     {
         Rules.Add(rule);
+    }
+    
+    internal ContextRuleEngine<T, TContext> GetRules()
+    {
+        return Rules;
     }
 
     public TSchema Nullable()

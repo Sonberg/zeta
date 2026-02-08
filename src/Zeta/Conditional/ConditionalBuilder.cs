@@ -57,16 +57,7 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     {
         return Field(propertySelector, schemaBuilder(Z.Int()));
     }
-
-    /// <summary>
-    /// Validates a nullable int property using an inline schema builder.
-    /// </summary>
-    public ConditionalBuilder<T, TContext> Select(
-        Expression<Func<T, int?>> propertySelector,
-        Func<IntContextlessSchema, IntContextlessSchema> schemaBuilder)
-    {
-        return Field(propertySelector, schemaBuilder(Z.Int()).Nullable());
-    }
+    
 
     /// <summary>
     /// Validates a double property using an inline schema builder.
@@ -79,16 +70,6 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
     }
 
     /// <summary>
-    /// Validates a nullable double property using an inline schema builder.
-    /// </summary>
-    public ConditionalBuilder<T, TContext> Select(
-        Expression<Func<T, double?>> propertySelector,
-        Func<DoubleContextlessSchema, DoubleContextlessSchema> schemaBuilder)
-    {
-        return Field(propertySelector, schemaBuilder(Z.Double()).Nullable());
-    }
-
-    /// <summary>
     /// Validates a decimal property using an inline schema builder.
     /// </summary>
     public ConditionalBuilder<T, TContext> Select(
@@ -96,15 +77,5 @@ public sealed class ConditionalBuilder<T, TContext> where T : class
         Func<DecimalContextlessSchema, DecimalContextlessSchema> schemaBuilder)
     {
         return Field(propertySelector, schemaBuilder(Z.Decimal()));
-    }
-
-    /// <summary>
-    /// Validates a nullable decimal property using an inline schema builder.
-    /// </summary>
-    public ConditionalBuilder<T, TContext> Select(
-        Expression<Func<T, decimal?>> propertySelector,
-        Func<DecimalContextlessSchema, DecimalContextlessSchema> schemaBuilder)
-    {
-        return Field(propertySelector, schemaBuilder(Z.Decimal()).Nullable());
     }
 }
