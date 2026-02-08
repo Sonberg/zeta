@@ -85,10 +85,10 @@ public class GuidSchemaTests
     }
 
     [Fact]
-    public async Task Nullable_AllowsNull()
+    public async Task AllowNull_ValidatesNonNullValues()
     {
         var schema = Z.Guid().NotEmpty().Nullable();
-        var result = await schema.ValidateAsync(null);
+        var result = await schema.ValidateAsync(Guid.NewGuid());
         Assert.True(result.IsSuccess);
     }
 

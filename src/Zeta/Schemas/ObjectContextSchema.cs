@@ -33,8 +33,15 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         _conditionals = conditionals.Select(c => (IConditionalBranch<T, TContext>)new ContextlessConditionalBranchAdapter<T, TContext>(c)).ToList();
     }
 
-    public override async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
+        if (value is null)
+        {
+            return IsNullAllowed
+                ? Result.Success()
+                : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+        }
+
         List<ValidationError>? errors = null;
 
         var ruleErrors = await Rules.ExecuteAsync(value, context);

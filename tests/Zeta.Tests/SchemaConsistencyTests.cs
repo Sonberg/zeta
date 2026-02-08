@@ -126,8 +126,8 @@ public class SchemaConsistencyTests
     [Fact]
     public void AllContextlessSchemas_HaveWithContextMethod()
     {
-        var assembly = typeof(ContextlessSchema<>).Assembly;
-        var contextlessSchemaType = typeof(ContextlessSchema<>);
+        var assembly = typeof(ContextlessSchema<,>).Assembly;
+        var contextlessSchemaType = typeof(ContextlessSchema<,>);
 
         var contextlessSchemaTypes = assembly.GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface && t.IsPublic)
@@ -162,8 +162,8 @@ public class SchemaConsistencyTests
     [Fact]
     public void AllContextlessSchemas_WithContextReturnsTypedSchema()
     {
-        var assembly = typeof(ContextlessSchema<>).Assembly;
-        var contextlessSchemaType = typeof(ContextlessSchema<>);
+        var assembly = typeof(ContextlessSchema<,>).Assembly;
+        var contextlessSchemaType = typeof(ContextlessSchema<,>);
 
         var contextlessSchemaTypes = assembly.GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface && t.IsPublic)
@@ -218,7 +218,7 @@ public class SchemaConsistencyTests
     /// </summary>
     private static IReadOnlyList<PrimitiveSchemaInfo> DiscoverPrimitiveSchemaTypes()
     {
-        var assembly = typeof(ContextlessSchema<>).Assembly;
+        var assembly = typeof(ContextlessSchema<,>).Assembly;
         var results = new List<PrimitiveSchemaInfo>();
 
         // Container types that should not have Field overloads (they use generic Field<TProperty>)
@@ -273,7 +273,7 @@ public class SchemaConsistencyTests
     [Fact]
     public void AllPrimitiveSchemas_HaveMatchingContextAndContextlessPairs()
     {
-        var assembly = typeof(ContextlessSchema<>).Assembly;
+        var assembly = typeof(ContextlessSchema<,>).Assembly;
         var excludedPrefixes = new[] { "Object", "Array", "List", "Nullable" };
 
         var contextlessTypes = assembly.GetTypes()

@@ -34,8 +34,15 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return ValidateAsync(value, ValidationContext.Empty);
     }
 
-    public override async ValueTask<Result<T>> ValidateAsync(T value, ValidationContext execution)
+    public override async ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext execution)
     {
+        if (value is null)
+        {
+            return IsNullAllowed
+                ? Result<T>.Success(value!)
+                : Result<T>.Failure(new ValidationError(execution.Path, "null_value", "Value cannot be null"));
+        }
+
         List<ValidationError>? errors = null;
 
         // Validate rules

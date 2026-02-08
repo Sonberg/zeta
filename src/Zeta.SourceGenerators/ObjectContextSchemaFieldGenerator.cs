@@ -24,15 +24,13 @@ internal static class ObjectContextSchemaFieldGenerator
         sb.AppendLine("{");
 
         GeneratePrimitiveFieldOverloads(sb);
-        // GenerateNullableValueTypeContextlessBuilderOverloads(sb);
-        // GenerateNullableValueTypeContextAwareBuilderOverloads(sb);
-        // GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(sb);
-        // GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(sb);
+        GenerateNullableValueTypeContextlessBuilderOverloads(sb);
+        GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(sb);
+        GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(sb);
         GenerateDateOnlyTimeOnlyOverloads(sb);
-        // GenerateNullableModernNetContextlessBuilderOverloads(sb);
-        // GenerateNullableModernNetContextAwareBuilderOverloads(sb);
-        // GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(sb);
-        // GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(sb);
+        GenerateNullableModernNetContextlessBuilderOverloads(sb);
+        GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(sb);
+        GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(sb);
         GenerateNestedObjectOverload(sb);
         GenerateListCollectionOverloads(sb);
         GenerateArrayCollectionOverloads(sb);
@@ -90,7 +88,7 @@ internal static class ObjectContextSchemaFieldGenerator
             sb.AppendLine($$"""
                                 /// <summary>
                                 /// Adds a field validator for nullable {{mapping.Type}}? properties with contextless fluent schema builder.
-                                /// The non-nullable schema is automatically wrapped with .Nullable() and promoted to context-aware.
+                                /// Null values skip validation. Non-null values are validated by the configured schema.
                                 /// </summary>
                                 public ObjectContextSchema<T, TContext> Field(
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -98,35 +96,8 @@ internal static class ObjectContextSchemaFieldGenerator
                                 {
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                    var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                    var nullableSchema = configuredSchema.Nullable();
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema.WithContext<TContext>()));
-                                    return this;
-                                }
-
-                            """);
-        }
-    }
-
-    private static void GenerateNullableValueTypeContextAwareBuilderOverloads(StringBuilder sb)
-    {
-        return;
-        foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
-        {
-            sb.AppendLine($$"""
-                                /// <summary>
-                                /// Adds a field validator for nullable {{mapping.Type}}? properties with context-aware fluent schema builder.
-                                /// The non-nullable schema is automatically wrapped with NullableValueContextSchema.
-                                /// </summary>
-                                public ObjectContextSchema<T, TContext> Field(
-                                    Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                    Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
-                                {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                    var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                    var nullableSchema = new NullableValueContextSchema<{{mapping.Type}}, TContext>(configuredSchema);
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema));
+                                    var inner = new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema({{mapping.FactoryMethod}}()), instance => !getter(instance).HasValue);
+                                    _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
                                     return this;
                                 }
 
@@ -136,13 +107,12 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(StringBuilder sb)
     {
-        return;
         foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
                                 /// <summary>
                                 /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built contextless schema.
-                                /// The non-nullable schema is automatically wrapped with .Nullable() and promoted to context-aware.
+                                /// Null values skip validation. Non-null values are validated by the provided schema.
                                 /// </summary>
                                 public ObjectContextSchema<T, TContext> Field(
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -150,8 +120,8 @@ internal static class ObjectContextSchemaFieldGenerator
                                 {
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                    var nullableSchema = new NullableValueContextlessSchema<{{mapping.Type}}>(schema);
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema.WithContext<TContext>()));
+                                    var inner = new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue);
+                                    _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
                                     return this;
                                 }
 
@@ -161,13 +131,12 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(StringBuilder sb)
     {
-        return;
         foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
                                 /// <summary>
                                 /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built context-aware schema.
-                                /// The non-nullable schema is automatically wrapped with .Nullable().
+                                /// Null values skip validation. Non-null values are validated by the provided schema.
                                 /// </summary>
                                 public ObjectContextSchema<T, TContext> Field(
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -175,8 +144,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                 {
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                    var nullableSchema = new NullableValueContextSchema<{{mapping.Type}}, TContext>(schema);
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema));
+                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue));
                                     return this;
                                 }
 
@@ -224,14 +192,13 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableModernNetContextlessBuilderOverloads(StringBuilder sb)
     {
-            return;
         sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
                             /// <summary>
                             /// Adds a field validator for nullable {{mapping.Type}}? properties with contextless fluent schema builder.
-                            /// The non-nullable schema is automatically wrapped with .Nullable() and promoted to context-aware.
+                            /// Null values skip validation. Non-null values are validated by the configured schema.
                             /// </summary>
                             public ObjectContextSchema<T, TContext> Field(
                                 Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -239,37 +206,8 @@ internal static class ObjectContextSchemaFieldGenerator
                             {
                                 var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                var nullableSchema = configuredSchema.Nullable();
-                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema.WithContext<TContext>()));
-                                return this;
-                            }
-
-                        """);
-        }
-        sb.AppendLine("#endif");
-    }
-
-    private static void GenerateNullableModernNetContextAwareBuilderOverloads(StringBuilder sb)
-    {
-        return;
-        sb.AppendLine("#if !NETSTANDARD2_0");
-        foreach (var mapping in SchemaMapping.ModernNetMappings)
-        {
-            sb.AppendLine($$"""
-                            /// <summary>
-                            /// Adds a field validator for nullable {{mapping.Type}}? properties with context-aware fluent schema builder.
-                            /// The non-nullable schema is automatically wrapped with NullableValueContextSchema.
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                var nullableSchema = new NullableValueContextSchema<{{mapping.Type}}, TContext>(configuredSchema);
-                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema));
+                                var inner = new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema({{mapping.FactoryMethod}}()), instance => !getter(instance).HasValue);
+                                _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
                                 return this;
                             }
 
@@ -280,14 +218,13 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(StringBuilder sb)
     {
-        return;
         sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
                             /// <summary>
                             /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built contextless schema.
-                            /// The non-nullable schema is automatically wrapped with .Nullable() and promoted to context-aware.
+                            /// Null values skip validation. Non-null values are validated by the provided schema.
                             /// </summary>
                             public ObjectContextSchema<T, TContext> Field(
                                 Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -295,8 +232,8 @@ internal static class ObjectContextSchemaFieldGenerator
                             {
                                 var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                var nullableSchema = new NullableValueContextlessSchema<{{mapping.Type}}>(schema);
-                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema.WithContext<TContext>()));
+                                var inner = new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue);
+                                _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
                                 return this;
                             }
 
@@ -307,14 +244,13 @@ internal static class ObjectContextSchemaFieldGenerator
 
     private static void GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(StringBuilder sb)
     {
-        return;
         sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
                             /// <summary>
                             /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built context-aware schema.
-                            /// The non-nullable schema is automatically wrapped with .Nullable().
+                            /// Null values skip validation. Non-null values are validated by the provided schema.
                             /// </summary>
                             public ObjectContextSchema<T, TContext> Field(
                                 Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -322,8 +258,7 @@ internal static class ObjectContextSchemaFieldGenerator
                             {
                                 var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                var nullableSchema = new NullableValueContextSchema<{{mapping.Type}}, TContext>(schema);
-                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}?, TContext>(propertyName, getter, nullableSchema));
+                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue));
                                 return this;
                             }
 

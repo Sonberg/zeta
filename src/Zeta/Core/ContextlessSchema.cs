@@ -6,7 +6,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
 {
     protected ContextlessRuleEngine<T> Rules { get; }
 
-    private bool AllowNull { get; set; }
+    internal bool IsNullAllowed { get; private set; }
 
     protected ContextlessSchema() : this(new ContextlessRuleEngine<T>())
     {
@@ -26,7 +26,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
     {
         if (value is null)
         {
-            return AllowNull
+            return IsNullAllowed
                 ? Result<T>.Success(value!)
                 : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
         }
@@ -50,7 +50,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
 
     public TSchema Nullable()
     {
-        AllowNull = true;
+        IsNullAllowed = true;
         return this as TSchema ?? throw new InvalidOperationException();
     }
 

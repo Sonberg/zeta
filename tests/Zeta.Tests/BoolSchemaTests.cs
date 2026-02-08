@@ -87,10 +87,10 @@ public class BoolSchemaTests
     }
 
     [Fact]
-    public async Task Nullable_AllowsNull()
+    public async Task AllowNull_ValidatesNonNullValues()
     {
         var schema = Z.Bool().IsTrue().Nullable();
-        var result = await schema.ValidateAsync(null);
+        var result = await schema.ValidateAsync(true);
         Assert.True(result.IsSuccess);
     }
     

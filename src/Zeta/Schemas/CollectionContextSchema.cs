@@ -23,8 +23,15 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
             : null;
     }
 
-    public override async ValueTask<Result> ValidateAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
     {
+        if (value is null)
+        {
+            return IsNullAllowed
+                ? Result.Success()
+                : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+        }
+
         var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element if element schema is provided

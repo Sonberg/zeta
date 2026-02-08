@@ -32,7 +32,7 @@ public sealed class ContextlessConditionalBuilder<T> where T : class
 
     /// <summary>
     /// Validates a string property using an inline schema builder.
-    /// For nullable strings, call .Nullable() on the schema: s => s.MinLength(1).Nullable()
+    /// For nullable strings, call .AllowNull() on the schema: s => s.MinLength(1).AllowNull()
     /// </summary>
     public ContextlessConditionalBuilder<T> Select(
         Expression<Func<T, string?>> propertySelector,

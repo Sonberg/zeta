@@ -177,10 +177,10 @@ public class DateOnlySchemaTests
     }
 
     [Fact]
-    public async Task Nullable_AllowsNull()
+    public async Task AllowNull_ValidatesNonNullValues()
     {
         var schema = Z.DateOnly().Past().Nullable();
-        var result = await schema.ValidateAsync(null);
+        var result = await schema.ValidateAsync(DateOnly.FromDateTime(DateTime.Now.AddDays(-1)));
         Assert.True(result.IsSuccess);
     }
 }

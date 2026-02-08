@@ -24,11 +24,11 @@ internal static class ObjectSchemaFieldGenerator
         sb.AppendLine("{");
 
         GeneratePrimitiveFieldOverloads(sb);
-        // GenerateNullableValueTypeInlineBuilderOverloads(sb);
-        // GenerateNullableValueTypePrebuiltSchemaOverloads(sb);
+        GenerateNullableValueTypeInlineBuilderOverloads(sb);
+        GenerateNullableValueTypePrebuiltSchemaOverloads(sb);
         GenerateDateOnlyTimeOnlyOverloads(sb);
-        // GenerateNullableModernNetInlineBuilderOverloads(sb);
-        // GenerateNullableModernNetPrebuiltSchemaOverloads(sb);
+        GenerateNullableModernNetInlineBuilderOverloads(sb);
+        GenerateNullableModernNetPrebuiltSchemaOverloads(sb);
         GenerateNestedObjectOverload(sb);
         GenerateListCollectionOverloads(sb);
         GenerateArrayCollectionOverloads(sb);
@@ -68,7 +68,7 @@ internal static class ObjectSchemaFieldGenerator
             sb.AppendLine($$"""
                                 /// <summary>
                                 /// Adds a field validator for nullable {{mapping.Type}}? properties with fluent schema builder.
-                                /// The non-nullable schema is automatically wrapped with .Nullable().
+                                /// Null values skip validation. Non-null values are validated by the configured schema.
                                 /// </summary>
                                 public ObjectContextlessSchema<T> Field(
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -76,9 +76,7 @@ internal static class ObjectSchemaFieldGenerator
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                    var nullableSchema = configuredSchema.Nullable();
-                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}?>(propertyName, getter, nullableSchema));
+                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema({{mapping.FactoryMethod}}()), instance => !getter(instance).HasValue));
                                     return this;
                                 }
 
@@ -93,7 +91,7 @@ internal static class ObjectSchemaFieldGenerator
             sb.AppendLine($$"""
                                 /// <summary>
                                 /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built schema.
-                                /// The non-nullable schema is automatically wrapped with .Nullable().
+                                /// Null values skip validation. Non-null values are validated by the provided schema.
                                 /// </summary>
                                 public ObjectContextlessSchema<T> Field(
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -101,8 +99,7 @@ internal static class ObjectSchemaFieldGenerator
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    var nullableSchema = new NullableValueContextlessSchema<{{mapping.Type}}>(schema);
-                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}?>(propertyName, getter, nullableSchema));
+                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue));
                                     return this;
                                 }
 
@@ -142,7 +139,7 @@ internal static class ObjectSchemaFieldGenerator
             sb.AppendLine($$"""
                             /// <summary>
                             /// Adds a field validator for nullable {{mapping.Type}}? properties with fluent schema builder.
-                            /// The non-nullable schema is automatically wrapped with .Nullable().
+                            /// Null values skip validation. Non-null values are validated by the configured schema.
                             /// </summary>
                             public ObjectContextlessSchema<T> Field(
                                 Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -150,9 +147,7 @@ internal static class ObjectSchemaFieldGenerator
                             {
                                 var propertyName = GetPropertyName(propertySelector);
                                 var getter = CreateGetter(propertySelector);
-                                var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                var nullableSchema = configuredSchema.Nullable();
-                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}?>(propertyName, getter, nullableSchema));
+                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema({{mapping.FactoryMethod}}()), instance => !getter(instance).HasValue));
                                 return this;
                             }
 
@@ -169,7 +164,7 @@ internal static class ObjectSchemaFieldGenerator
             sb.AppendLine($$"""
                             /// <summary>
                             /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built schema.
-                            /// The non-nullable schema is automatically wrapped with .Nullable().
+                            /// Null values skip validation. Non-null values are validated by the provided schema.
                             /// </summary>
                             public ObjectContextlessSchema<T> Field(
                                 Expression<Func<T, {{mapping.Type}}?>> propertySelector,
@@ -177,8 +172,7 @@ internal static class ObjectSchemaFieldGenerator
                             {
                                 var propertyName = GetPropertyName(propertySelector);
                                 var getter = CreateGetter(propertySelector);
-                                var nullableSchema = new NullableValueContextlessSchema<{{mapping.Type}}>(schema);
-                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}?>(propertyName, getter, nullableSchema));
+                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue));
                                 return this;
                             }
 

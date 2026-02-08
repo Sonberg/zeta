@@ -9,7 +9,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 {
     protected ContextRuleEngine<T, TContext> Rules { get; }
 
-    private bool AllowNull { get; set; }
+    internal bool IsNullAllowed { get; private set; }
 
     protected ContextSchema() : this(new ContextRuleEngine<T, TContext>())
     {
@@ -24,7 +24,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
     {
         if (value is null)
         {
-            return AllowNull
+            return IsNullAllowed
                 ? Result.Success()
                 : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
         }
@@ -48,7 +48,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     public TSchema Nullable()
     {
-        AllowNull = true;
+        IsNullAllowed = true;
         return this as TSchema ?? throw new InvalidOperationException();
     }
 

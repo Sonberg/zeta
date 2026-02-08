@@ -20,8 +20,15 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         ElementSchema = elementSchema;
     }
 
-    public override async ValueTask<Result<ICollection<TElement>>> ValidateAsync(ICollection<TElement> value, ValidationContext context)
+    public override async ValueTask<Result<ICollection<TElement>>> ValidateAsync(ICollection<TElement>? value, ValidationContext context)
     {
+        if (value is null)
+        {
+            return IsNullAllowed
+                ? Result<ICollection<TElement>>.Success(value!)
+                : Result<ICollection<TElement>>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+        }
+
         var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element if element schema is provided
