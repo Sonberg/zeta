@@ -70,6 +70,15 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         return this as TSchema ?? throw new InvalidOperationException();
     }
 
+    public TSchema RefineAsync(Func<T, TContext, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
+    {
+        Use(new RefinementRule<T, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.Data, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this as TSchema ?? throw new InvalidOperationException();
+    }
+
     public TSchema Refine(Func<T, bool> predicate, string message, string code = "custom_error")
     {
         return Refine((val, _) => predicate(val), message, code);
@@ -77,6 +86,19 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     public TSchema RefineAsync(Func<T, ValueTask<bool>> predicate, string message, string code = "custom_error")
     {
-        return RefineAsync(async (val, _) => await predicate(val), message, code);
+        Use(new RefinementRule<T, TContext>(async (val, ctx) =>
+            await predicate(val)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this as TSchema ?? throw new InvalidOperationException();
+    }
+
+    public TSchema RefineAsync(Func<T, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
+    {
+        Use(new RefinementRule<T, TContext>(async (val, ctx) =>
+            await predicate(val, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this as TSchema ?? throw new InvalidOperationException();
     }
 }

@@ -71,4 +71,13 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
                 : new ValidationError(ctx.Path, code, message)));
         return this as TSchema ?? throw new InvalidOperationException();
     }
+
+    public TSchema RefineAsync(Func<T, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
+    {
+        Use(new RefinementRule<T>(async (val, ctx) =>
+            await predicate(val, ctx.CancellationToken)
+                ? null
+                : new ValidationError(ctx.Path, code, message)));
+        return this as TSchema ?? throw new InvalidOperationException();
+    }
 }
