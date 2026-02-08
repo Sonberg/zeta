@@ -5,18 +5,23 @@
 
 ### Added
 
-- **Auto-wrapping for nullable value type fields**: You can now use nullable value type properties (e.g., `int?`, `double?`, `decimal?`, `bool?`, `Guid?`, `DateTime?`, `DateOnly?`, `TimeOnly?`) directly with non-nullable schemas in `.Field()` methods. The schema is automatically wrapped with `.Nullable()`.
+- **Nullable value type fields**: Nullable value type properties (`int?`, `double?`, `decimal?`, `bool?`, `Guid?`, `DateTime?`, `DateOnly?`, `TimeOnly?`) work directly in `.Field()` methods. Null values skip validation automatically — no need to call `.Nullable()`.
 
   ```csharp
-  public record User(int Id, int? Age, decimal? Balance);
+  public record User(int Id, int? Age, decimal? Balance, string? Bio);
 
   var schema = Z.Object<User>()
       .Field(x => x.Id, s => s.Min(1))
-      .Field(x => x.Age, s => s.Min(0).Max(120))        // Auto-wraps with .Nullable()
-      .Field(x => x.Balance, Z.Decimal().Positive());   // Auto-wraps with .Nullable()
+      .Field(x => x.Age, s => s.Min(0).Max(120))        // null skips validation
+      .Field(x => x.Balance, Z.Decimal().Positive())     // null skips validation
+      .Field(x => x.Bio, s => s.MaxLength(500));         // string? needs .Nullable() on schema if null should pass
   ```
 
-  This works with both inline builders and pre-built schemas, and applies to both contextless and context-aware schemas.
+  Works with both inline builders and pre-built schemas, for contextless and context-aware schemas.
+
+- **Null checks in ObjectSchema and CollectionSchema**: `ValidateAsync` overrides now check for null at the top, returning a `null_value` error unless `.Nullable()` is called on the schema.
+
+- **Nullable reference type field support**: `string?` properties no longer produce nullable warnings when used with inline field builders.
 
 ## 1.0.9
 - Major invalid-path optimizations

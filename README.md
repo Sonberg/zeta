@@ -126,18 +126,27 @@ Z.Bool()
 
 ### Nullable (Optional Fields)
 
-All schemas are required by default. Use `.Nullable()` to make fields optional:
+All schemas are required by default. Use `.Nullable()` to allow null values:
 
 ```csharp
 Z.String().Nullable()           // Allows null strings
-Z.Int().Nullable()              // Allows null ints (int?)
+Z.Int().Nullable()              // Allows null ints
 Z.Object<Address>().Nullable()  // Allows null objects
-
-// In object schemas
-Z.Object<User>()
-    .Field(u => u.MiddleName, Z.String().Nullable())  // Optional field
-    .Field(u => u.Age, Z.Int().Min(0).Nullable())     // Optional with validation
 ```
+
+**Nullable value type fields** (`int?`, `double?`, etc.) are handled automatically in object schemas — null values skip validation, non-null values are validated. No need to call `.Nullable()`:
+
+```csharp
+public record User(string Name, int? Age, decimal? Balance, string? Bio);
+
+Z.Object<User>()
+    .Field(u => u.Name, s => s.MinLength(2))
+    .Field(u => u.Age, s => s.Min(0).Max(120))          // int? — null skips validation
+    .Field(u => u.Balance, s => s.Positive().Precision(2)) // decimal? — null skips validation
+    .Field(u => u.Bio, s => s.MaxLength(500).Nullable())   // string? — call .Nullable() to allow null
+```
+
+For nullable reference types (`string?`), call `.Nullable()` on the schema if null should be a valid value.
 
 ### Object
 

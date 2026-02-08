@@ -65,7 +65,7 @@ All schemas are created via the static `Z` class entry point as contextless sche
 - `Z.String()` returns `StringSchema` which implements `ISchema<string>`
 - Use `.WithContext<TContext>()` to promote to context-aware when needed
 
-Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `ArraySchema`, `ListSchema`, `NullableSchema`
+Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `CollectionSchema`
 
 ### Key Patterns
 
@@ -81,6 +81,12 @@ Z.Object<User>()
     .Field(u => u.Email, s => s.Email().MinLength(5))  // Error path: "email"
     .Field(u => u.Age, s => s.Min(18).Max(100))
     .Field(u => u.Price, s => s.Positive().Precision(2))
+
+// Nullable value types — null skips validation automatically
+Z.Object<User>()
+    .Field(u => u.OptionalAge, s => s.Min(0).Max(120))     // int? — null OK
+    .Field(u => u.OptionalBalance, s => s.Positive())        // decimal? — null OK
+    .Field(u => u.Bio, s => s.MaxLength(500).Nullable())     // string? — call .Nullable()
 
 // Supported types: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
 
@@ -143,17 +149,18 @@ Z.String()
 
 1. **Async by default** - All validation uses `ValueTask<Result<T>>`, no separate sync paths
 2. **No exceptions for control flow** - Validation failures return `Result<T>.Failure()`, never throw
-3. **Required by default** - Use `.Nullable()` extension to make optional
+3. **Required by default** - Use `.Nullable()` to allow null values. Nullable value type fields (`int?`, etc.) in object schemas automatically skip validation when null
 4. **Path-aware errors** - Errors include full path: `"items[0].name"`, `"address.street"`
 5. **Error aggregation** - Collects all errors, no short-circuiting
 
 ## Known Behaviors
 
-### Nullable vs Optional
-- `.Nullable()` and `.Optional()` are functionally equivalent
-- `.Nullable()` = "null is a valid value"
-- `.Optional()` = "field may be omitted" (clearer intent for PATCH)
-- Both skip inner validation when value is null
+### Nullable Handling
+- `.Nullable()` on any schema makes null a valid value (skips inner validation when null)
+- **Nullable value type fields** (`int?`, `double?`, `decimal?`, `bool?`, `Guid?`, `DateTime?`, `DateOnly?`, `TimeOnly?`): Null values automatically skip validation. No `.Nullable()` needed. Non-null values are validated normally.
+- **Nullable reference type fields** (`string?`): Null flows through to the schema's `ValidateAsync`. Call `.Nullable()` on the schema if null should pass.
+- `ISchema<T>` type parameter is always non-nullable (`ISchema<int>`, never `ISchema<int?>`)
+- Field validators bridge the gap for value types via an `isNull` predicate (source-generated)
 
 ### Validation Order
 ObjectSchema validates in order: Fields → Conditionals (`.When()`) → Rules (`.Refine()`)
@@ -163,6 +170,8 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 
 ### Required Semantics
 - Fields are required (non-null) by default
+- Exception: nullable value type fields (`int?`, etc.) — null skips validation automatically
+- `.Nullable()` on a schema allows null to pass validation
 - `.Require()` in conditionals = not null check
 - `.NotEmpty()` on strings = not whitespace
 
