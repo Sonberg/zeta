@@ -46,5 +46,10 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     /// <summary>
     /// Creates a context-aware double schema with all rules from this schema.
     /// </summary>
-    public DoubleContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public DoubleContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new DoubleContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

@@ -121,5 +121,10 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime, Date
     /// <summary>
     /// Creates a context-aware DateTime schema with all rules from this schema.
     /// </summary>
-    public DateTimeContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public DateTimeContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new DateTimeContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

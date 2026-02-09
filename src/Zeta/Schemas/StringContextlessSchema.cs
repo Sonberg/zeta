@@ -100,5 +100,10 @@ public sealed class StringContextlessSchema : ContextlessSchema<string, StringCo
     /// <summary>
     /// Creates a context-aware string schema with all rules from this schema.
     /// </summary>
-    public StringContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public StringContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new StringContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

@@ -33,5 +33,10 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     /// <summary>
     /// Creates a context-aware bool schema with all rules from this schema.
     /// </summary>
-    public BoolContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public BoolContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new BoolContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

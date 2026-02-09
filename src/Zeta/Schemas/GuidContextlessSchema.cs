@@ -37,5 +37,10 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextl
     /// <summary>
     /// Creates a context-aware Guid schema with all rules from this schema.
     /// </summary>
-    public GuidContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public GuidContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new GuidContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

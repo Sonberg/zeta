@@ -79,6 +79,11 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, Time
     /// <summary>
     /// Creates a context-aware TimeOnly schema with all rules from this schema.
     /// </summary>
-    public TimeOnlyContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public TimeOnlyContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new TimeOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }
 #endif

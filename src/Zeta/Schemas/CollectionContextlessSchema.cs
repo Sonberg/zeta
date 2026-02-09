@@ -87,5 +87,10 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
     /// Creates a context-aware array schema with all rules from this schema.
     /// The element schema is adapted to work in the context-aware environment.
     /// </summary>
-    public CollectionContextSchema<TElement, TContext> WithContext<TContext>() => new(ElementSchema, Rules);
+    public CollectionContextSchema<TElement, TContext> WithContext<TContext>()
+    {
+        var schema = new CollectionContextSchema<TElement, TContext>(ElementSchema, Rules);
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

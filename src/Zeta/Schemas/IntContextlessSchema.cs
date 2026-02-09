@@ -28,5 +28,10 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     /// <summary>
     /// Creates a context-aware int schema with all rules from this schema.
     /// </summary>
-    public IntContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public IntContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new IntContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

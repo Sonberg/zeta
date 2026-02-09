@@ -52,5 +52,10 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     /// <summary>
     /// Creates a context-aware decimal schema with all rules from this schema.
     /// </summary>
-    public DecimalContextSchema<TContext> WithContext<TContext>() => new(Rules.ToContext<TContext>());
+    public DecimalContextSchema<TContext> WithContext<TContext>()
+    {
+        var schema = new DecimalContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

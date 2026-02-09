@@ -399,7 +399,7 @@ public class ObjectSchemaNullableFieldTests
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, null));
         Assert.True(result.IsSuccess);
     }
-
+    
     [Fact]
     public async Task Field_NullableTimeOnly_InlineBuilder_ValidValue_Succeeds()
     {
@@ -725,7 +725,7 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_NullValue_Succeeds()
     {
-        var intSchema = Z.Int().Min(10).WithContext<UserContext>().Nullable();
+        var intSchema = Z.Int().Nullable().Min(10).WithContext<UserContext>();
         var schema = Z.Object<TestModel>()
             .WithContext<UserContext>()
             .Field(x => x.NullableInt, intSchema);
