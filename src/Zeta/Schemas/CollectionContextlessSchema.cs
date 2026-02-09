@@ -83,10 +83,11 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         ElementSchema = elementSchema;
         return this;
     }
-
+    
     /// <summary>
     /// Creates a context-aware array schema with all rules from this schema.
     /// The element schema is adapted to work in the context-aware environment.
     /// </summary>
     public CollectionContextSchema<TElement, TContext> WithContext<TContext>() => new(ElementSchema, Rules);
 }
+

@@ -30,10 +30,8 @@ internal static class ObjectSchemaFieldGenerator
         GenerateNullableModernNetInlineBuilderOverloads(sb);
         GenerateNullableModernNetPrebuiltSchemaOverloads(sb);
         GenerateNestedObjectOverload(sb);
-        GenerateListCollectionOverloads(sb);
-        GenerateArrayCollectionOverloads(sb);
-        GenerateGenericArrayOverload(sb);
-        GenerateGenericListOverload(sb);
+        GenerateCollectionOverloads(sb);
+        GenerateGenericCollectionOverloads(sb);
 
         sb.AppendLine("}");
         return sb.ToString();
@@ -79,7 +77,7 @@ internal static class ObjectSchemaFieldGenerator
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema({{mapping.FactoryMethod}}()), instance => !getter(instance).HasValue));
+                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema({{mapping.FactoryMethod}}())));
                                     return this;
                                 }
 
@@ -102,7 +100,7 @@ internal static class ObjectSchemaFieldGenerator
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue));
+                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema));
                                     return this;
                                 }
 
@@ -150,7 +148,7 @@ internal static class ObjectSchemaFieldGenerator
                             {
                                 var propertyName = GetPropertyName(propertySelector);
                                 var getter = CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema({{mapping.FactoryMethod}}()), instance => !getter(instance).HasValue));
+                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema({{mapping.FactoryMethod}}())));
                                 return this;
                             }
 
@@ -175,7 +173,7 @@ internal static class ObjectSchemaFieldGenerator
                             {
                                 var propertyName = GetPropertyName(propertySelector);
                                 var getter = CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance)!.Value, schema, instance => !getter(instance).HasValue));
+                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema));
                                 return this;
                             }
 
@@ -204,93 +202,58 @@ internal static class ObjectSchemaFieldGenerator
                       """);
     }
 
-    private static void GenerateListCollectionOverloads(StringBuilder sb)
+    private static void GenerateCollectionOverloads(StringBuilder sb)
     {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings)
+        foreach (var collectionPattern in SchemaMapping.Collections)
         {
-            var typeForXml = mapping.Type.Replace("<", "&lt;").Replace(">", "&gt;");
+            foreach (var mapping in SchemaMapping.PrimitiveMappings)
+            {
+                var collectionType = string.Format(collectionPattern, mapping.Type);
+                var collectionTypeXml = collectionType.Replace("<", "&lt;").Replace(">", "&gt;");
+
+                sb.AppendLine($$"""
+
+                                    /// <summary>
+                                    /// Adds a field validator with fluent schema builder for {{collectionTypeXml}} properties.
+                                    /// </summary>
+                                    public ObjectContextlessSchema<T> Field(
+                                        Expression<Func<T, {{collectionType}}>> propertySelector,
+                                        Func<CollectionContextlessSchema<{{mapping.Type}}>, CollectionContextlessSchema<{{mapping.Type}}>> schema)
+                                    {
+                                        var propertyName = GetPropertyName(propertySelector);
+                                        var getter = CreateGetter(propertySelector);
+                                        var collectionSchema = Z.Collection<{{mapping.Type}}>();
+                                        _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>>(propertyName, getter, schema(collectionSchema)));
+                                        return this;
+                                    }
+                                """);
+            }
+        }
+    }
+
+    private static void GenerateGenericCollectionOverloads(StringBuilder sb)
+    {
+        foreach (var collectionPattern in SchemaMapping.Collections)
+        {
+            var collectionType = string.Format(collectionPattern, "TElement");
+
             sb.AppendLine($$"""
 
                                 /// <summary>
-                                /// Adds a field validator with fluent schema builder for List&lt;{{typeForXml}}&gt; properties.
+                                /// Adds a field validator with fluent schema builder for {{collectionType}} properties.
                                 /// </summary>
-                                public ObjectContextlessSchema<T> Field(
-                                    Expression<Func<T, System.Collections.Generic.List<{{mapping.Type}}>>> propertySelector,
-                                    Func<CollectionContextlessSchema<{{mapping.Type}}>, CollectionContextlessSchema<{{mapping.Type}}>> schema)
+                                public ObjectContextlessSchema<T> Field<TElement>(
+                                    Expression<Func<T, {{collectionType}}>> propertySelector,
+                                    Func<CollectionContextlessSchema<TElement>, CollectionContextlessSchema<TElement>> schema)
+                                    where TElement : class
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    var collectionSchema = Z.Collection<{{mapping.Type}}>();
-                                    _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>>(propertyName, getter, schema(collectionSchema)));
+                                    var collectionSchema = Z.Collection<TElement>();
+                                    _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<TElement>>(propertyName, getter, schema(collectionSchema)));
                                     return this;
                                 }
                             """);
         }
-    }
-
-    private static void GenerateArrayCollectionOverloads(StringBuilder sb)
-    {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings)
-        {
-            var typeForXml = mapping.Type.Replace("<", "&lt;").Replace(">", "&gt;");
-            sb.AppendLine($$"""
-
-                                /// <summary>
-                                /// Adds a field validator with fluent schema builder for {{typeForXml}}[] properties.
-                                /// </summary>
-                                public ObjectContextlessSchema<T> Field(
-                                    Expression<Func<T, {{mapping.Type}}[]>> propertySelector,
-                                    Func<CollectionContextlessSchema<{{mapping.Type}}>, CollectionContextlessSchema<{{mapping.Type}}>> schema)
-                                {
-                                    var propertyName = GetPropertyName(propertySelector);
-                                    var getter = CreateGetter(propertySelector);
-                                    var collectionSchema = Z.Collection<{{mapping.Type}}>();
-                                    _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>>(propertyName, getter, schema(collectionSchema)));
-                                    return this;
-                                }
-                            """);
-        }
-    }
-
-    private static void GenerateGenericArrayOverload(StringBuilder sb)
-    {
-        sb.AppendLine("""
-
-                          /// <summary>
-                          /// Adds a field validator with fluent schema builder for TElement[] array properties.
-                          /// </summary>
-                          public ObjectContextlessSchema<T> Field<TElement>(
-                              Expression<Func<T, TElement[]>> propertySelector,
-                              Func<CollectionContextlessSchema<TElement>, CollectionContextlessSchema<TElement>> schema)
-                              where TElement : class
-                          {
-                              var propertyName = GetPropertyName(propertySelector);
-                              var getter = CreateGetter(propertySelector);
-                              var collectionSchema = Z.Collection<TElement>();
-                              _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<TElement>>(propertyName, getter, schema(collectionSchema)));
-                              return this;
-                          }
-                      """);
-    }
-
-    private static void GenerateGenericListOverload(StringBuilder sb)
-    {
-        sb.AppendLine("""
-
-                          /// <summary>
-                          /// Adds a field validator with fluent schema builder for List<TElement> properties.
-                          /// </summary>
-                          public ObjectContextlessSchema<T> Field<TElement>(
-                              Expression<Func<T, System.Collections.Generic.List<TElement>>> propertySelector,
-                              Func<CollectionContextlessSchema<TElement>, CollectionContextlessSchema<TElement>> schema)
-                              where TElement : class
-                          {
-                              var propertyName = GetPropertyName(propertySelector);
-                              var getter = CreateGetter(propertySelector);
-                              var collectionSchema = Z.Collection<TElement>();
-                              _fields.Add(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<TElement>>(propertyName, getter, schema(collectionSchema)));
-                              return this;
-                          }
-                      """);
     }
 }

@@ -15,7 +15,7 @@ public class UserRequestExampleTest
     {
         var schema = Z.Object<FooBar>()
             .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, x => x.Min(1));
+            .Field(x => x.Bar, x => x.Min(1).Nullable());
 
         var result = await schema.ValidateAsync(new FooBar(50, null));
         Assert.True(result.IsSuccess);
@@ -49,7 +49,7 @@ public class UserRequestExampleTest
     {
         var schema = Z.Object<FooBar>()
             .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, Z.Int().Min(1));
+            .Field(x => x.Bar, Z.Int().Nullable().Min(1));
 
         var result = await schema.ValidateAsync(new FooBar(50, null));
         Assert.True(result.IsSuccess);
