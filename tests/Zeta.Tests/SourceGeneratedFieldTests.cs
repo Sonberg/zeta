@@ -20,6 +20,8 @@ public class SourceGeneratedFieldTests
         public bool IsActive { get; init; }
         public Guid Id { get; init; }
         public DateTime CreatedAt { get; init; }
+        public DateOnly BirthDate { get; init; }
+        public TimeOnly WakeUpTime { get; init; }
         public List<string> Roles { get; init; } = [];
         public TestUserAddress Address { get; init; } = new();
     }
@@ -218,6 +220,86 @@ public class SourceGeneratedFieldTests
         };
         var result2 = await schema.ValidateAsync(invalidUser, context);
         Assert.False(result2.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Field_BoolWithFluentBuilder_Works()
+    {
+        var schema = Z.Object<TestUser>()
+            .Field(u => u.IsActive, s => s.IsTrue());
+
+        var validUser = new TestUser { IsActive = true };
+        var result = await schema.ValidateAsync(validUser);
+        Assert.True(result.IsSuccess);
+
+        var invalidUser = new TestUser { IsActive = false };
+        var result2 = await schema.ValidateAsync(invalidUser);
+        Assert.False(result2.IsSuccess);
+        Assert.Contains(result2.Errors, e => e.Code == "is_true");
+    }
+
+    [Fact]
+    public async Task Field_GuidWithFluentBuilder_Works()
+    {
+        var schema = Z.Object<TestUser>()
+            .Field(u => u.Id, s => s.NotEmpty());
+
+        var validUser = new TestUser { Id = Guid.NewGuid() };
+        var result = await schema.ValidateAsync(validUser);
+        Assert.True(result.IsSuccess);
+
+        var invalidUser = new TestUser { Id = Guid.Empty };
+        var result2 = await schema.ValidateAsync(invalidUser);
+        Assert.False(result2.IsSuccess);
+        Assert.Contains(result2.Errors, e => e.Code == "not_empty");
+    }
+
+    [Fact]
+    public async Task Field_DateTimeWithFluentBuilder_Works()
+    {
+        var schema = Z.Object<TestUser>()
+            .Field(u => u.CreatedAt, s => s.Past());
+
+        var validUser = new TestUser { CreatedAt = DateTime.UtcNow.AddDays(-1) };
+        var result = await schema.ValidateAsync(validUser);
+        Assert.True(result.IsSuccess);
+
+        var invalidUser = new TestUser { CreatedAt = DateTime.UtcNow.AddDays(1) };
+        var result2 = await schema.ValidateAsync(invalidUser);
+        Assert.False(result2.IsSuccess);
+        Assert.Contains(result2.Errors, e => e.Code == "past");
+    }
+
+    [Fact]
+    public async Task Field_DateOnlyWithFluentBuilder_Works()
+    {
+        var schema = Z.Object<TestUser>()
+            .Field(u => u.BirthDate, s => s.Past());
+
+        var validUser = new TestUser { BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)) };
+        var result = await schema.ValidateAsync(validUser);
+        Assert.True(result.IsSuccess);
+
+        var invalidUser = new TestUser { BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)) };
+        var result2 = await schema.ValidateAsync(invalidUser);
+        Assert.False(result2.IsSuccess);
+        Assert.Contains(result2.Errors, e => e.Code == "past");
+    }
+
+    [Fact]
+    public async Task Field_TimeOnlyWithFluentBuilder_Works()
+    {
+        var schema = Z.Object<TestUser>()
+            .Field(u => u.WakeUpTime, s => s.Morning());
+
+        var validUser = new TestUser { WakeUpTime = new TimeOnly(8, 0) };
+        var result = await schema.ValidateAsync(validUser);
+        Assert.True(result.IsSuccess);
+
+        var invalidUser = new TestUser { WakeUpTime = new TimeOnly(14, 0) };
+        var result2 = await schema.ValidateAsync(invalidUser);
+        Assert.False(result2.IsSuccess);
+        Assert.Contains(result2.Errors, e => e.Code == "morning");
     }
 
     private class TestContext
