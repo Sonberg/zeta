@@ -3,6 +3,10 @@
 
 ## Next release
 
+### Fixed
+
+- **Nullable value type field error path**: Fixed `NullableFieldContextlessValidator` using the parent path instead of the field-pushed path for `null_value` errors, causing incorrect error paths (e.g., `""` instead of `"nullableInt"`).
+
 ### Added
 
 - **Nullable value type fields**: Nullable value type properties (`int?`, `double?`, `decimal?`, `bool?`, `Guid?`, `DateTime?`, `DateOnly?`, `TimeOnly?`) work directly in `.Field()` methods. Null values skip validation automatically — no need to call `.Nullable()`.

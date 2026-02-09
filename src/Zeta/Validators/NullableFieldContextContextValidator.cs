@@ -2,7 +2,8 @@ namespace Zeta.Validators;
 
 /// <summary>
 /// Field validator for nullable value type properties in context-aware schemas.
-/// Null values skip validation automatically. Non-null values are unwrapped and validated.
+/// When AllowNull is true (via .Nullable()), null values pass validation. Otherwise, null produces a "null_value" error.
+/// Non-null values are unwrapped and validated by the inner schema.
 /// </summary>
 internal sealed class NullableFieldContextContextValidator<TInstance, TProperty, TContext> : IFieldContextValidator<TInstance, TContext>
     where TProperty : struct

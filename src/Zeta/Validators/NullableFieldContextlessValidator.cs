@@ -2,7 +2,8 @@ namespace Zeta.Validators;
 
 /// <summary>
 /// Field validator for nullable value type properties in contextless schemas.
-/// Null values skip validation automatically. Non-null values are unwrapped and validated.
+/// When AllowNull is true (via .Nullable()), null values pass validation. Otherwise, null produces a "null_value" error.
+/// Non-null values are unwrapped and validated by the inner schema.
 /// </summary>
 internal sealed class NullableFieldContextlessValidator<TInstance, TProperty> : IFieldContextlessValidator<TInstance>
     where TProperty : struct
@@ -31,7 +32,7 @@ internal sealed class NullableFieldContextlessValidator<TInstance, TProperty> : 
         {
             return _schema.AllowNull
                 ? EmptyErrors
-                : [new ValidationError(context.Path, "null_value", $"{_name} cannot be null")];
+                : [new ValidationError(fieldExecution.Path, "null_value", $"{_name} cannot be null")];
         }
 
         var result = await _schema.ValidateAsync(value.Value, fieldExecution);
