@@ -1,5 +1,3 @@
-using Zeta.Core;
-
 namespace Zeta.Schemas;
 
 /// <summary>
@@ -15,7 +13,9 @@ internal sealed class SchemaAdapter<T, TContext> : ISchema<T, TContext>
         _inner = inner;
     }
 
-    public async ValueTask<Result> ValidateAsync(T value, ValidationContext<TContext> context)
+    public bool AllowNull => _inner.AllowNull;
+
+    public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         var result = await _inner.ValidateAsync(value, context);
         return result.IsSuccess

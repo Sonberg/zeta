@@ -10,7 +10,6 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
 {
     internal CollectionContextlessSchema()
     {
-        // TODO: All schema constructors should be internal
     }
 
     private ISchema<TElement>? ElementSchema { get; set; }
@@ -24,7 +23,7 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
     {
         if (value is null)
         {
-            return IsNullAllowed
+            return AllowNull
                 ? Result<ICollection<TElement>>.Success(value!)
                 : Result<ICollection<TElement>>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
         }
@@ -83,11 +82,10 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         ElementSchema = elementSchema;
         return this;
     }
-    
+
     /// <summary>
     /// Creates a context-aware array schema with all rules from this schema.
     /// The element schema is adapted to work in the context-aware environment.
     /// </summary>
     public CollectionContextSchema<TElement, TContext> WithContext<TContext>() => new(ElementSchema, Rules);
 }
-

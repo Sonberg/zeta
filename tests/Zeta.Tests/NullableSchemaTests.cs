@@ -276,7 +276,7 @@ public class NullableSchemaTests
     {
         var schema = Z.Object<UserProfile>()
             .Field(u => u.Name, Z.String().MinLength(1))
-            .Field(u => u.Age, Z.Int().Min(0))
+            .Field(u => u.Age, Z.Int().Min(0).Nullable())
             .Field(u => u.Bio, Z.String().MaxLength(500).Nullable());
 
         var profile = new UserProfile("John", null, null);

@@ -37,7 +37,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     {
         if (value is null)
         {
-            return IsNullAllowed
+            return AllowNull
                 ? Result.Success()
                 : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
         }

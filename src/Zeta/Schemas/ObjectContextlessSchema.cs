@@ -1,8 +1,6 @@
 using System.Linq.Expressions;
-using System.Reflection;
 using Zeta.Conditional;
 using Zeta.Core;
-using Zeta.Rules;
 using Zeta.Validators;
 
 namespace Zeta.Schemas;
@@ -38,7 +36,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     {
         if (value is null)
         {
-            return IsNullAllowed
+            return AllowNull
                 ? Result<T>.Success(value!)
                 : Result<T>.Failure(new ValidationError(execution.Path, "null_value", "Value cannot be null"));
         }

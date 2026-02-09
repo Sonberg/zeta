@@ -6,6 +6,8 @@ namespace Zeta;
 /// </summary>
 public interface ISchema<in T, TContext>
 {
+    internal bool AllowNull { get; }
+    
     /// <summary>
     /// Validates the given value asynchronously with context.
     /// </summary>
@@ -18,6 +20,8 @@ public interface ISchema<in T, TContext>
 /// </summary>
 public interface ISchema<T>
 {
+    bool AllowNull { get; }
+    
     /// <summary>
     /// Validates the given value asynchronously without context.
     /// </summary>

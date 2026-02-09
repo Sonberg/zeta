@@ -77,7 +77,7 @@ internal static class ObjectSchemaFieldGenerator
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema({{mapping.FactoryMethod}}())));
+                                    _fields.Add(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
                                     return this;
                                 }
 
@@ -100,7 +100,7 @@ internal static class ObjectSchemaFieldGenerator
                                 {
                                     var propertyName = GetPropertyName(propertySelector);
                                     var getter = CreateGetter(propertySelector);
-                                    _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema));
+                                    _fields.Add(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema));
                                     return this;
                                 }
 
@@ -148,7 +148,7 @@ internal static class ObjectSchemaFieldGenerator
                             {
                                 var propertyName = GetPropertyName(propertySelector);
                                 var getter = CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema({{mapping.FactoryMethod}}())));
+                                _fields.Add(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
                                 return this;
                             }
 
@@ -173,7 +173,7 @@ internal static class ObjectSchemaFieldGenerator
                             {
                                 var propertyName = GetPropertyName(propertySelector);
                                 var getter = CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, instance => getter(instance), schema));
+                                _fields.Add(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema));
                                 return this;
                             }
 

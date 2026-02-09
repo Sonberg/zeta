@@ -27,7 +27,7 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
     {
         if (value is null)
         {
-            return IsNullAllowed
+            return AllowNull
                 ? Result.Success()
                 : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
         }

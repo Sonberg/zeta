@@ -5,9 +5,9 @@ namespace Zeta.Core;
 public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema : ContextlessSchema<T, TSchema>
 {
     protected ContextlessRuleEngine<T> Rules { get; }
-
-    internal bool IsNullAllowed { get; private set; }
-
+    
+    public bool AllowNull { get; private set; }
+    
     protected ContextlessSchema() : this(new ContextlessRuleEngine<T>())
     {
     }
@@ -21,12 +21,12 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
     {
         return ValidateAsync(value, ValidationContext.Empty);
     }
-
+    
     public virtual async ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext context)
     {
         if (value is null)
         {
-            return IsNullAllowed
+            return AllowNull
                 ? Result<T>.Success(value!)
                 : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
         }
@@ -34,7 +34,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         var errors = await Rules.ExecuteAsync(value!, context);
 
         return errors == null
-            ? Result<T>.Success(value!)
+            ? Result<T>.Success(value)
             : Result<T>.Failure(errors);
     }
 
@@ -50,7 +50,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
 
     public TSchema Nullable()
     {
-        IsNullAllowed = true;
+        AllowNull = true;
         return this as TSchema ?? throw new InvalidOperationException();
     }
 
