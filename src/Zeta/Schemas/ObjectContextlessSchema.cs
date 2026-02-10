@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Zeta.Adapters;
 using Zeta.Conditional;
 using Zeta.Core;
 using Zeta.Validators;
@@ -77,12 +78,13 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
     public ObjectContextlessSchema<T> Field<TProperty>(
-        Expression<Func<T, TProperty>> propertySelector,
+        Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
     {
         var propertyName = GetPropertyName(propertySelector);
         var getter = CreateGetter(propertySelector);
-        _fields.Add(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema));
+        var wrapper = NullableAdapterFactory.CreateContextlessWrapper(schema);
+        _fields.Add(new FieldContextlessValidator<T, TProperty?>(propertyName, getter, wrapper));
         return this;
     }
     

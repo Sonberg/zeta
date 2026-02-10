@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using Zeta.Adapters;
 using Zeta.Schemas;
 
 namespace Zeta;
@@ -28,9 +30,63 @@ public static class SchemaExtensions
     /// </summary>
     public static ObjectContextSchema<T, TContext> Field<T, TProperty, TContext>(
         this ObjectContextlessSchema<T> schema,
-        System.Linq.Expressions.Expression<Func<T, TProperty>> propertySelector,
+        Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty, TContext> fieldSchema) where T : class
     {
         return schema.WithContext<TContext>().Field(propertySelector, fieldSchema);
+    }
+
+    // ==================== Nullability Adaption Extensions ====================
+
+    /// <summary>
+    /// Defines a field validation for a nullable reference type property using a non-nullable contextless schema.
+    /// </summary>
+    public static ObjectContextSchema<T, TContext> Field<T, TContext, TProperty>(
+        this ObjectContextSchema<T, TContext> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : class
+    {
+        return schema.Field(propertySelector, new NullableReferenceContextAdapter<TProperty, TContext>(fieldSchema));
+    }
+
+    /// <summary>
+    /// Defines a field validation for a nullable value type property using a non-nullable contextless schema.
+    /// </summary>
+    public static ObjectContextSchema<T, TContext> Field<T, TContext, TProperty>(
+        this ObjectContextSchema<T, TContext> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : struct
+    {
+        return schema.Field(propertySelector, new NullableStructContextAdapter<TProperty, TContext>(fieldSchema));
+    }
+
+    /// <summary>
+    /// Defines a field validation for a nullable reference type property using a non-nullable schema.
+    /// </summary>
+    public static ObjectContextlessSchema<T> Field<T, TProperty>(
+        this ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : class
+    {
+         return schema.Field(propertySelector, new NullableReferenceContextlessAdapter<TProperty>(fieldSchema));
+    }
+
+     /// <summary>
+     /// Defines a field validation for a nullable value type property using a non-nullable schema.
+     /// </summary>
+     public static ObjectContextlessSchema<T> Field<T, TProperty>(
+        this ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : struct
+    {
+         return schema.Field(propertySelector, new NullableStructContextlessAdapter<TProperty>(fieldSchema));
     }
 }
