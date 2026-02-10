@@ -110,9 +110,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     //     return this;
     // }
 
-    /// <summary>
-    /// Conditionally validates fields based on a context-aware predicate.
-    /// </summary>
     // public ObjectContextSchema<T, TContext> When(
     //     Func<T, TContext, bool> condition,
     //     Action<ConditionalBuilder<T, TContext>> thenBranch,

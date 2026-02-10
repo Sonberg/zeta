@@ -20,6 +20,9 @@ public interface ISchema<in T, TContext>
 /// </summary>
 public interface ISchema<T>
 {
+    /// <summary>
+    /// Gets a value indicating whether null values are allowed by this schema.
+    /// </summary>
     bool AllowNull { get; }
     
     /// <summary>

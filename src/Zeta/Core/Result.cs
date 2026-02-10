@@ -10,8 +10,14 @@ public record Result
 {
     private readonly IReadOnlyList<ValidationError>? _errors;
 
+    /// <summary>
+    /// Gets a value indicating whether the validation succeeded.
+    /// </summary>
     public bool IsSuccess { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the validation failed.
+    /// </summary>
     public bool IsFailure => !IsSuccess;
 
     private static readonly Result SuccessValue = new();
@@ -21,12 +27,19 @@ public record Result
     /// </summary>
     public IReadOnlyList<ValidationError> Errors => _errors ?? [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Result"/> class representing a successful validation.
+    /// </summary>
     public Result()
     {
         IsSuccess = true;
         _errors = null;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Result"/> class representing a failed validation.
+    /// </summary>
+    /// <param name="errors">The validation errors.</param>
     protected Result(IReadOnlyList<ValidationError> errors)
     {
         IsSuccess = false;
@@ -178,8 +191,16 @@ public record Result<T> : Result
 /// </summary>
 public sealed class ValidationException : Exception
 {
+    /// <summary>
+    /// Gets the validation errors that caused the exception.
+    /// </summary>
     public IReadOnlyList<ValidationError> Errors { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationException"/> class.
+    /// </summary>
+    /// <param name="message">The error message.</param>
+    /// <param name="errors">The validation errors.</param>
     public ValidationException(string message, IReadOnlyList<ValidationError> errors) : base(message)
     {
         Errors = errors;
