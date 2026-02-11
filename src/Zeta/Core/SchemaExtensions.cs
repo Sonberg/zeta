@@ -18,7 +18,7 @@ public static class SchemaExtensions
             : Result<T>.Failure(result.Errors);
     }
 
-    public static async ValueTask<Result<T>> ValidateAsync<T>(this ISchema<T> schema, T value)
+    public static async ValueTask<Result<T>> ValidateAsync<T>(this ISchema<T> schema, T? value) where T : class
     {
         return await schema.ValidateAsync(value, ValidationContext.Empty);
     }
