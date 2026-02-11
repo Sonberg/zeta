@@ -12,6 +12,8 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime, Date
     {
     }
 
+    protected override DateTimeContextlessSchema CreateInstance() => new();
+
     public DateTimeContextlessSchema Min(DateTime min, string? message = null)
     {
         Use(new RefinementRule<DateTime>((val, exec) =>
@@ -125,6 +127,7 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime, Date
     {
         var schema = new DateTimeContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

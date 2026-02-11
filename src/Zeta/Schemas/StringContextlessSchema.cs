@@ -14,6 +14,8 @@ public sealed class StringContextlessSchema : ContextlessSchema<string, StringCo
     {
     }
 
+    protected override StringContextlessSchema CreateInstance() => new();
+
     public StringContextlessSchema MinLength(int min, string? message = null)
     {
         Use(new MinLengthRule(min, message));
@@ -104,6 +106,7 @@ public sealed class StringContextlessSchema : ContextlessSchema<string, StringCo
     {
         var schema = new StringContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

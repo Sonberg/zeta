@@ -10,9 +10,13 @@ namespace Zeta.Schemas;
 /// </summary>
 public class StringContextSchema<TContext> : ContextSchema<string, TContext, StringContextSchema<TContext>>
 {
+    internal StringContextSchema() { }
+
     internal StringContextSchema(ContextRuleEngine<string, TContext> rules) : base(rules)
     {
     }
+
+    protected override StringContextSchema<TContext> CreateInstance() => new();
 
     public StringContextSchema<TContext> MinLength(int min, string? message = null)
     {

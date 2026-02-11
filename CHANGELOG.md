@@ -3,6 +3,14 @@
 
 ## Next release
 
+### Added
+
+- **`.If()` guard-style conditional validation**: Added `.If(predicate, configure)` to all schema types (value, object, collection) for guard-style conditional validation without else branches. Supports chaining multiple `.If()` guards, nesting, and context promotion via `.WithContext()`. Context-aware schemas support both value-only `If(v => ..., ...)` and value+context `If((v, ctx) => ..., ...)` predicates.
+
+### Removed
+
+- Deleted old `Conditional/` infrastructure (unused `ConditionalBuilder`, `ConditionalBranch`, etc.)
+
 ## 0.1.10
 
 ### Tests

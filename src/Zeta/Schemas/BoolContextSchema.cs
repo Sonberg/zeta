@@ -8,7 +8,11 @@ namespace Zeta.Schemas;
 /// </summary>
 public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolContextSchema<TContext>>
 {
+    internal BoolContextSchema() { }
+
     internal BoolContextSchema(ContextRuleEngine<bool, TContext> rules) : base(rules) { }
+
+    protected override BoolContextSchema<TContext> CreateInstance() => new();
 
     public BoolContextSchema<TContext> IsTrue(string? message = null)
     {

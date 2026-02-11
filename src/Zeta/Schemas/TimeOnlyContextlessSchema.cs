@@ -11,6 +11,8 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, Time
 {
     internal TimeOnlyContextlessSchema() { }
 
+    protected override TimeOnlyContextlessSchema CreateInstance() => new();
+
     public TimeOnlyContextlessSchema Min(TimeOnly min, string? message = null)
     {
         Use(new RefinementRule<TimeOnly>((val, exec) =>
@@ -83,6 +85,7 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, Time
     {
         var schema = new TimeOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

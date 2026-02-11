@@ -13,6 +13,8 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     {
     }
 
+    protected override IntContextlessSchema CreateInstance() => new();
+
     public IntContextlessSchema Min(int min, string? message = null)
     {
         Use(new MinIntRule(min, message));
@@ -32,6 +34,7 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     {
         var schema = new IntContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

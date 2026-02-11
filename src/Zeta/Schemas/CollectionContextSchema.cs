@@ -11,6 +11,10 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
 {
     private ISchema<TElement, TContext>? ElementSchema { get; set; }
 
+    internal CollectionContextSchema() { }
+
+    protected override CollectionContextSchema<TElement, TContext> CreateInstance() => new();
+
     public CollectionContextSchema(ISchema<TElement, TContext>? elementSchema, ContextRuleEngine<ICollection<TElement>, TContext> rules) : base(rules)
     {
         ElementSchema = elementSchema;
@@ -50,6 +54,14 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
 
                 index++;
             }
+        }
+
+        // Validate conditionals
+        var conditionalErrors = await ExecuteConditionalsAsync(value, context);
+        if (conditionalErrors != null)
+        {
+            errors ??= [];
+            errors.AddRange(conditionalErrors);
         }
 
         return errors == null

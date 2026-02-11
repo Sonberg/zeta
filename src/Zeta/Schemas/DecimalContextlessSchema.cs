@@ -13,6 +13,8 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     {
     }
 
+    protected override DecimalContextlessSchema CreateInstance() => new();
+
     public DecimalContextlessSchema Min(decimal min, string? message = null)
     {
         Use(new MinDecimalRule(min, message));
@@ -56,6 +58,7 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     {
         var schema = new DecimalContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

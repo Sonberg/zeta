@@ -13,6 +13,8 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     {
     }
 
+    protected override DoubleContextlessSchema CreateInstance() => new();
+
     public DoubleContextlessSchema Min(double min, string? message = null)
     {
         Use(new MinDoubleRule(min, message));
@@ -50,6 +52,7 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     {
         var schema = new DoubleContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

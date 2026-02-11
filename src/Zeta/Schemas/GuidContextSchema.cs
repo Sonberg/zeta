@@ -8,9 +8,13 @@ namespace Zeta.Schemas;
 /// </summary>
 public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext, GuidContextSchema<TContext>>
 {
+    internal GuidContextSchema() { }
+
     internal GuidContextSchema(ContextRuleEngine<Guid, TContext> rules) : base(rules)
     {
     }
+
+    protected override GuidContextSchema<TContext> CreateInstance() => new();
 
     public GuidContextSchema<TContext> NotEmpty(string? message = null)
     {

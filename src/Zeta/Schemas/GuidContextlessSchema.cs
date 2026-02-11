@@ -12,6 +12,8 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextl
     {
     }
 
+    protected override GuidContextlessSchema CreateInstance() => new();
+
     public GuidContextlessSchema NotEmpty(string? message = null)
     {
         Use(new RefinementRule<Guid>((val, exec) =>
@@ -41,6 +43,7 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextl
     {
         var schema = new GuidContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

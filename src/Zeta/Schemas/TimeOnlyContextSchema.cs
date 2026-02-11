@@ -9,9 +9,13 @@ namespace Zeta.Schemas;
 /// </summary>
 public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext, TimeOnlyContextSchema<TContext>>
 {
+    internal TimeOnlyContextSchema() { }
+
     internal TimeOnlyContextSchema(ContextRuleEngine<TimeOnly, TContext> rules) : base(rules)
     {
     }
+
+    protected override TimeOnlyContextSchema<TContext> CreateInstance() => new();
 
     public TimeOnlyContextSchema<TContext> Min(TimeOnly min, string? message = null)
     {

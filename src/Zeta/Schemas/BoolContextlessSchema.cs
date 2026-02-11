@@ -12,6 +12,8 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     {
     }
 
+    protected override BoolContextlessSchema CreateInstance() => new();
+
     public BoolContextlessSchema IsTrue(string? message = null)
     {
         Use(new RefinementRule<bool>((val, exec) =>
@@ -37,6 +39,7 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     {
         var schema = new BoolContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }
