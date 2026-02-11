@@ -3,7 +3,7 @@
 
 ## Next release
 
-## 1.0.10
+## 0.0.10
 
 ### Tests
 
@@ -39,7 +39,7 @@
 
 - **Nullable value type field validators**: Added `NullableFieldContextlessValidator` and `NullableFieldContextContextValidator` with `where TProperty : struct` constraint, properly handling `Nullable<TProperty>` getters. Null values skip validation; non-null values are unwrapped and validated. Fixes CS0266 in all generated nullable value type field overloads.
 
-## 1.0.9
+## 0.0.9
 - Major invalid-path optimizations
 - Reduced allocations on successful validation (-39%)
 - Eliminated lambda and closure overhead in built-in rules
