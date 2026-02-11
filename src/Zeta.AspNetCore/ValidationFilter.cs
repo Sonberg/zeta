@@ -10,11 +10,21 @@ public class ContextlessValidationFilter<T> : IEndpointFilter
 {
     private readonly ISchema<T> _schema;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContextlessValidationFilter{T}"/> class.
+    /// </summary>
+    /// <param name="schema">The schema to use for validation.</param>
     public ContextlessValidationFilter(ISchema<T> schema)
     {
         _schema = schema;
     }
 
+    /// <summary>
+    /// Validates the request argument and returns a validation problem if validation fails.
+    /// </summary>
+    /// <param name="context">The endpoint filter invocation context.</param>
+    /// <param name="next">The next filter in the pipeline.</param>
+    /// <returns>A validation problem result if validation fails, otherwise the result from the next filter.</returns>
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var argument = context.Arguments.OfType<T>().FirstOrDefault();
@@ -48,12 +58,23 @@ public class ValidationFilter<T, TContext> : IEndpointFilter
     private readonly ISchema<T, TContext> _schema;
     private readonly IValidationContextFactory<T, TContext>? _factory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationFilter{T, TContext}"/> class.
+    /// </summary>
+    /// <param name="schema">The schema to use for validation.</param>
+    /// <param name="factory">Optional context factory. If not provided, will be resolved from DI.</param>
     public ValidationFilter(ISchema<T, TContext> schema, IValidationContextFactory<T, TContext>? factory = null)
     {
         _schema = schema;
         _factory = factory;
     }
 
+    /// <summary>
+    /// Validates the request argument with context and returns a validation problem if validation fails.
+    /// </summary>
+    /// <param name="context">The endpoint filter invocation context.</param>
+    /// <param name="next">The next filter in the pipeline.</param>
+    /// <returns>A validation problem result if validation fails, otherwise the result from the next filter.</returns>
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var argument = context.Arguments.OfType<T>().FirstOrDefault();

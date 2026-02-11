@@ -3,6 +3,40 @@
 
 ## Next release
 
+### Tests
+
+- **Expanded schema-level test coverage**: Added 26 new tests covering gaps in `DoubleSchema.Negative()`, `DecimalSchema.Max()`/`Negative()`, `StringSchema.MaxLength()`/`Regex()`/`NotEmpty()`/`RefineAsync()`/custom messages, `CollectionSchema.Length(exact)`, `GuidSchema.Version()` failure case, and source-generated `Field()` builders for `bool`, `Guid`, `DateTime`, `DateOnly`, and `TimeOnly` types.
+
+### Fixed
+
+- **InvalidCastException with non-nullable value type pre-built schemas**: Fixed `InvalidCastException` when passing a pre-built schema (e.g., `Z.Int().Min(0)`) to `.Field()` for non-nullable value type properties (`int`, `double`, `decimal`, `bool`, `Guid`, `DateTime`, `DateOnly`, `TimeOnly`). Previously, these fell through to the generic `Field<TProperty>` method which incorrectly attempted nullable wrapping. Added generated overloads for `ISchema<T>` on non-nullable value type properties.
+
+- **Nullable value type field error path**: Fixed `NullableFieldContextlessValidator` using the parent path instead of the field-pushed path for `null_value` errors, causing incorrect error paths (e.g., `""` instead of `"nullableInt"`).
+
+- **AllowNull not transferred by WithContext()**: `.Nullable()` called before `.WithContext<TContext>()` now correctly carries over to the context-aware schema. Previously, `AllowNull` was lost during context promotion, causing null values to be rejected even when `.Nullable()` was set. Fixed for all schema types (String, Int, Double, Decimal, Bool, Guid, DateTime, DateOnly, TimeOnly, Collection, Object).
+
+### Added
+
+- **Nullable value type fields**: Nullable value type properties (`int?`, `double?`, `decimal?`, `bool?`, `Guid?`, `DateTime?`, `DateOnly?`, `TimeOnly?`) work directly in `.Field()` methods. Null values skip validation automatically — no need to call `.Nullable()`.
+
+  ```csharp
+  public record User(int Id, int? Age, decimal? Balance, string? Bio);
+
+  var schema = Z.Object<User>()
+      .Field(x => x.Id, s => s.Min(1))
+      .Field(x => x.Age, s => s.Min(0).Max(120))        // null skips validation
+      .Field(x => x.Balance, Z.Decimal().Positive())     // null skips validation
+      .Field(x => x.Bio, s => s.MaxLength(500));         // string? needs .Nullable() on schema if null should pass
+  ```
+
+  Works with both inline builders and pre-built schemas, for contextless and context-aware schemas.
+
+- **Null checks in ObjectSchema and CollectionSchema**: `ValidateAsync` overrides now check for null at the top, returning a `null_value` error unless `.Nullable()` is called on the schema.
+
+- **Nullable reference type field support**: `string?` properties no longer produce nullable warnings when used with inline field builders.
+
+- **Nullable value type field validators**: Added `NullableFieldContextlessValidator` and `NullableFieldContextContextValidator` with `where TProperty : struct` constraint, properly handling `Nullable<TProperty>` getters. Null values skip validation; non-null values are unwrapped and validated. Fixes CS0266 in all generated nullable value type field overloads.
+
 ## 1.0.9
 - Major invalid-path optimizations
 - Reduced allocations on successful validation (-39%)

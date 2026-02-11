@@ -7,7 +7,7 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating DateOnly values.
 /// </summary>
-public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly>
+public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, DateOnlyContextlessSchema>
 {
     public DateOnlyContextlessSchema() { }
 
@@ -110,31 +110,14 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly>
         return this;
     }
 
-    public DateOnlyContextlessSchema Refine(Func<DateOnly, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public DateOnlyContextlessSchema RefineAsync(
-        Func<DateOnly, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<DateOnly>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware DateOnly schema with all rules from this schema.
     /// </summary>
     public DateOnlyContextSchema<TContext> WithContext<TContext>()
-        => new(Rules.ToContext<TContext>());
+    {
+        var schema = new DateOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }
 #endif

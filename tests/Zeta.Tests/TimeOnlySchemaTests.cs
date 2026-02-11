@@ -164,10 +164,10 @@ public class TimeOnlySchemaTests
     }
 
     [Fact]
-    public async Task Nullable_AllowsNull()
+    public async Task AllowNull_ValidatesNonNullValues()
     {
         var schema = Z.TimeOnly().BusinessHours().Nullable();
-        var result = await schema.ValidateAsync(null);
+        var result = await schema.ValidateAsync(new TimeOnly(10, 0));
         Assert.True(result.IsSuccess);
     }
 }

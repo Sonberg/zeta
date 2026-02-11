@@ -7,9 +7,9 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating TimeOnly values.
 /// </summary>
-public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly>
+public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, TimeOnlyContextlessSchema>
 {
-    public TimeOnlyContextlessSchema() { }
+    internal TimeOnlyContextlessSchema() { }
 
     public TimeOnlyContextlessSchema Min(TimeOnly min, string? message = null)
     {
@@ -76,31 +76,14 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly>
         return this;
     }
 
-    public TimeOnlyContextlessSchema Refine(Func<TimeOnly, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<TimeOnly>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public TimeOnlyContextlessSchema RefineAsync(
-        Func<TimeOnly, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<TimeOnly>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware TimeOnly schema with all rules from this schema.
     /// </summary>
     public TimeOnlyContextSchema<TContext> WithContext<TContext>()
-        => new TimeOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
+    {
+        var schema = new TimeOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }
 #endif

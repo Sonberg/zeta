@@ -43,12 +43,18 @@ public sealed class ZetaValidator : IZetaValidator
     private readonly IServiceProvider _services;
     private readonly TimeProvider _timeProvider;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ZetaValidator"/> class.
+    /// </summary>
+    /// <param name="services">The service provider for resolving dependencies.</param>
+    /// <param name="timeProvider">Optional time provider for validation context. Defaults to <see cref="TimeProvider.System"/>.</param>
     public ZetaValidator(IServiceProvider services, TimeProvider? timeProvider = null)
     {
         _services = services;
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
+    /// <inheritdoc />
     public ValueTask<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default)
     {
         var schema = _services.GetService(typeof(ISchema<T>)) as ISchema<T>
@@ -57,11 +63,13 @@ public sealed class ZetaValidator : IZetaValidator
         return ValidateAsync(value, schema, ct);
     }
 
+    /// <inheritdoc />
     public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default)
     {
         return schema.ValidateAsync(value, new ValidationContext(_timeProvider, ct));
     }
 
+    /// <inheritdoc />
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
     {
         var schema = _services.GetService(typeof(ISchema<T, TContext>)) as ISchema<T, TContext>
@@ -70,6 +78,7 @@ public sealed class ZetaValidator : IZetaValidator
         return await ValidateAsync(value, schema, ct);
     }
 
+    /// <inheritdoc />
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default)
     {
         if (_services.GetService(typeof(IValidationContextFactory<T, TContext>)) is IValidationContextFactory<T, TContext> factory)
@@ -82,6 +91,7 @@ public sealed class ZetaValidator : IZetaValidator
             $"Register a factory or use a schema without context.");
     }
 
+    /// <inheritdoc />
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(
         T value,
         ISchema<T, TContext> schema,

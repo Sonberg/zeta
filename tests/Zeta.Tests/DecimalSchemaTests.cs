@@ -21,6 +21,42 @@ public class DecimalSchemaTests
     }
 
     [Fact]
+    public async Task Max_Valid_ReturnsSuccess()
+    {
+        var schema = Z.Decimal().Max(100.0m);
+        var result = await schema.ValidateAsync(100.0m);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Max_Invalid_ReturnsFailure()
+    {
+        var schema = Z.Decimal().Max(100.0m);
+        var result = await schema.ValidateAsync(100.1m);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "max_value");
+    }
+
+    [Fact]
+    public async Task Negative_Valid_ReturnsSuccess()
+    {
+        var schema = Z.Decimal().Negative();
+        var result = await schema.ValidateAsync(-0.01m);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Negative_Invalid_ReturnsFailure()
+    {
+        var schema = Z.Decimal().Negative();
+        var result = await schema.ValidateAsync(0m);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "negative");
+    }
+
+    [Fact]
     public async Task Precision_Valid_ReturnsSuccess()
     {
         var schema = Z.Decimal().Precision(2);

@@ -31,6 +31,18 @@ public class GuidSchemaTests
     }
 
     [Fact]
+    public async Task Version_V4_Invalid_ReturnsFailure()
+    {
+        var schema = Z.Guid().Version(4);
+        // Construct a non-V4 GUID (version nibble is in the 7th byte, high nibble)
+        var nonV4Guid = Guid.Parse("550e8400-e29b-11d4-a716-446655440000"); // Version 1
+        var result = await schema.ValidateAsync(nonV4Guid);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "version");
+    }
+
+    [Fact]
     public async Task Refine_Valid_ReturnsSuccess()
     {
         var allowedGuids = new HashSet<Guid>
@@ -85,10 +97,10 @@ public class GuidSchemaTests
     }
 
     [Fact]
-    public async Task Nullable_AllowsNull()
+    public async Task AllowNull_ValidatesNonNullValues()
     {
         var schema = Z.Guid().NotEmpty().Nullable();
-        var result = await schema.ValidateAsync(null);
+        var result = await schema.ValidateAsync(Guid.NewGuid());
         Assert.True(result.IsSuccess);
     }
 

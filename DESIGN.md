@@ -426,15 +426,15 @@ Zeta/
 
 ### v0.2
 - [ ] Transforms: `.Transform(s => s.Trim())`
-- [ ] Collection schemas: `Z.Array()`, `Z.List()`
-- [ ] Nullable/Optional modifiers
+- [x] Collection schemas: `Z.Collection<T>()` with `.Each()` for element validation
+- [x] Nullable/Optional: `.Nullable()` on schemas, auto-wrapping for nullable value type fields in object schemas
 
 ### v0.3
 - [ ] Union types
-- [ ] Dependent field validation (`.When()`)
+- [x] Dependent field validation (`.When()`) — contextless implemented, context-aware pending
 - [ ] OpenAPI integration
 
 ### v1.0
 - [ ] Localization support
-- [ ] Source generators for performance
+- [x] Source generators for Field overloads and collection extensions
 - [ ] Full documentation

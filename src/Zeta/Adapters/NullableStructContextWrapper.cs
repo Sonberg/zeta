@@ -1,0 +1,32 @@
+namespace Zeta.Adapters;
+
+/// <summary>
+/// Wraps a context-aware ISchema&lt;T, TContext&gt; to be used as ISchema&lt;T?, TContext&gt; for value types.
+/// </summary>
+internal sealed class NullableStructContextWrapper<T, TContext> : ISchema<T?, TContext>
+    where T : struct
+{
+    private readonly ISchema<T, TContext> _inner;
+
+    public NullableStructContextWrapper(ISchema<T, TContext> inner)
+    {
+        _inner = inner;
+    }
+
+    public bool AllowNull => _inner.AllowNull;
+
+    public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
+    {
+        if (value is null)
+        {
+            return AllowNull 
+                ? Result.Success() 
+                : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+        }
+
+        var result = await _inner.ValidateAsync(value.Value, context);
+        return result.IsSuccess
+            ? Result.Success()
+            : Result.Failure(result.Errors);
+    }
+}

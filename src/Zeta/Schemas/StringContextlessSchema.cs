@@ -8,9 +8,9 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating string values.
 /// </summary>
-public sealed class StringContextlessSchema : ContextlessSchema<string>
+public sealed class StringContextlessSchema : ContextlessSchema<string, StringContextlessSchema>
 {
-    public StringContextlessSchema()
+    internal StringContextlessSchema()
     {
     }
 
@@ -97,30 +97,13 @@ public sealed class StringContextlessSchema : ContextlessSchema<string>
         return this;
     }
 
-    public StringContextlessSchema Refine(Func<string, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<string>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public StringContextlessSchema RefineAsync(
-        Func<string, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<string>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware string schema with all rules from this schema.
     /// </summary>
     public StringContextSchema<TContext> WithContext<TContext>()
-        => new(Rules.ToContext<TContext>());
+    {
+        var schema = new StringContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

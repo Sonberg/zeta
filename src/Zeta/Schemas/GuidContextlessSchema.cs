@@ -6,9 +6,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating Guid values.
 /// </summary>
-public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
+public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextlessSchema>
 {
-    public GuidContextlessSchema() { }
+    internal GuidContextlessSchema()
+    {
+    }
 
     public GuidContextlessSchema NotEmpty(string? message = null)
     {
@@ -32,30 +34,13 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid>
         return this;
     }
 
-    public GuidContextlessSchema Refine(Func<Guid, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<Guid>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public GuidContextlessSchema RefineAsync(
-        Func<Guid, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<Guid>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware Guid schema with all rules from this schema.
     /// </summary>
     public GuidContextSchema<TContext> WithContext<TContext>()
-        => new GuidContextSchema<TContext>(Rules.ToContext<TContext>());
+    {
+        var schema = new GuidContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

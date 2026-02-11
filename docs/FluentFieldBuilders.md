@@ -207,15 +207,36 @@ var userSchema = Z.Object<User>()
 
 ## Nullable Fields
 
-Fluent builders work with nullable types:
+### Nullable Value Types (`int?`, `double?`, etc.)
+
+Nullable value type properties work directly — null values skip validation, non-null values are validated. No `.Nullable()` needed:
 
 ```csharp
 Z.Object<User>()
-    .Field(u => u.MiddleName, s => s.MinLength(1).MaxLength(50).Nullable())
-    .Field(u => u.Age, s => s.Min(0).Max(120).Nullable());
+    .Field(u => u.Age, s => s.Min(0).Max(120))              // int? — null skips validation
+    .Field(u => u.Balance, s => s.Positive().Precision(2))   // decimal? — null skips validation
+    .Field(u => u.BirthDate, s => s.Past().MinAge(18));      // DateTime? — null skips validation
 ```
 
-**Note**: Call `.Nullable()` at the end of the fluent chain.
+This works with both inline builders and pre-built schemas:
+
+```csharp
+var ageSchema = Z.Int().Min(0).Max(120);
+Z.Object<User>()
+    .Field(u => u.Age, ageSchema);  // int? — null skips validation
+```
+
+### Nullable Reference Types (`string?`)
+
+For nullable reference types, call `.Nullable()` on the schema if null should be a valid value:
+
+```csharp
+Z.Object<User>()
+    .Field(u => u.MiddleName, s => s.MinLength(1).MaxLength(50).Nullable())  // string? — .Nullable() allows null
+    .Field(u => u.Bio, s => s.MaxLength(500).Nullable());                    // string? — .Nullable() allows null
+```
+
+Without `.Nullable()`, a null `string?` field produces a `null_value` validation error.
 
 ---
 
@@ -253,17 +274,15 @@ var schema = Z.Object<CreateUserRequest>()
     .Field(u => u.Age, s => s
         .Min(18)
         .Max(120))
-    .Field(u => u.Salary, s => s
+    .Field(u => u.Salary, s => s              // decimal? — null skips validation
         .Positive()
-        .Precision(2)
-        .Nullable())
+        .Precision(2))
     .Field(u => u.BirthDate, s => s
         .Past()
         .MinAge(18))
-    .Field(u => u.ReferralCode, s => s
+    .Field(u => u.ReferralCode, s => s       // Guid? — null skips validation
         .NotEmpty()
-        .Version(4)
-        .Nullable());
+        .Version(4));
 ```
 
 ---

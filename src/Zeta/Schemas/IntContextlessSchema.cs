@@ -7,9 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating integer values.
 /// </summary>
-public sealed class IntContextlessSchema : ContextlessSchema<int>
+public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextlessSchema>
 {
-    public IntContextlessSchema() { }
+    internal IntContextlessSchema()
+    {
+    }
 
     public IntContextlessSchema Min(int min, string? message = null)
     {
@@ -23,30 +25,13 @@ public sealed class IntContextlessSchema : ContextlessSchema<int>
         return this;
     }
 
-    public IntContextlessSchema Refine(Func<int, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<int>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
-    public IntContextlessSchema RefineAsync(
-        Func<int, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<int>(async (val, exec) =>
-            await predicate(val, exec.CancellationToken)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     /// <summary>
     /// Creates a context-aware int schema with all rules from this schema.
     /// </summary>
     public IntContextSchema<TContext> WithContext<TContext>()
-        => new IntContextSchema<TContext>(Rules.ToContext<TContext>());
+    {
+        var schema = new IntContextSchema<TContext>(Rules.ToContext<TContext>());
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

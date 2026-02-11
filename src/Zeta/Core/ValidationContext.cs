@@ -31,6 +31,12 @@ public record ValidationContext<TData> : ValidationContext
     /// </summary>
     public TData Data { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationContext{TData}"/> class.
+    /// </summary>
+    /// <param name="data">The shared context data.</param>
+    /// <param name="timeProvider">Optional time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     public ValidationContext(
         TData data,
         TimeProvider? timeProvider = null,
@@ -108,6 +114,12 @@ public record ValidationContext
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationContext"/> class with an optional path.
+    /// </summary>
+    /// <param name="path">The validation path.</param>
+    /// <param name="timeProvider">Optional time provider.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     protected ValidationContext(
         string? path = null,
         TimeProvider? timeProvider = null,

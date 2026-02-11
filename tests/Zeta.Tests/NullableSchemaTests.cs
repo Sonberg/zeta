@@ -37,20 +37,10 @@ public class NullableSchemaTests
         Assert.Contains(result.Errors, e => e.Code == "min_length");
     }
 
-    // ==================== Int Schema Nullable ====================
+    // ==================== Int Schema AllowNull (non-null values) ====================
 
     [Fact]
-    public async Task NullableInt_NullValue_ReturnsSuccess()
-    {
-        var schema = Z.Int().Min(0).Nullable();
-        var result = await schema.ValidateAsync(null);
-
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Value);
-    }
-
-    [Fact]
-    public async Task NullableInt_ValidValue_ReturnsSuccess()
+    public async Task AllowNullInt_ValidValue_ReturnsSuccess()
     {
         var schema = Z.Int().Min(0).Nullable();
         var result = await schema.ValidateAsync(42);
@@ -60,7 +50,7 @@ public class NullableSchemaTests
     }
 
     [Fact]
-    public async Task NullableInt_InvalidValue_ReturnsFailure()
+    public async Task AllowNullInt_InvalidValue_ReturnsFailure()
     {
         var schema = Z.Int().Min(0).Nullable();
         var result = await schema.ValidateAsync(-1);
@@ -69,20 +59,10 @@ public class NullableSchemaTests
         Assert.Contains(result.Errors, e => e.Code == "min_value");
     }
 
-    // ==================== Double Schema Nullable ====================
+    // ==================== Double Schema AllowNull (non-null values) ====================
 
     [Fact]
-    public async Task NullableDouble_NullValue_ReturnsSuccess()
-    {
-        var schema = Z.Double().Positive().Nullable();
-        var result = await schema.ValidateAsync(null);
-
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Value);
-    }
-
-    [Fact]
-    public async Task NullableDouble_ValidValue_ReturnsSuccess()
+    public async Task AllowNullDouble_ValidValue_ReturnsSuccess()
     {
         var schema = Z.Double().Positive().Nullable();
         var result = await schema.ValidateAsync(3.14);
@@ -92,7 +72,7 @@ public class NullableSchemaTests
     }
 
     [Fact]
-    public async Task NullableDouble_InvalidValue_ReturnsFailure()
+    public async Task AllowNullDouble_InvalidValue_ReturnsFailure()
     {
         var schema = Z.Double().Positive().Nullable();
         var result = await schema.ValidateAsync(-1.0);
@@ -101,20 +81,10 @@ public class NullableSchemaTests
         Assert.Contains(result.Errors, e => e.Code == "positive");
     }
 
-    // ==================== Decimal Schema Nullable ====================
+    // ==================== Decimal Schema AllowNull (non-null values) ====================
 
     [Fact]
-    public async Task NullableDecimal_NullValue_ReturnsSuccess()
-    {
-        var schema = Z.Decimal().Min(0m).Nullable();
-        var result = await schema.ValidateAsync(null);
-
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Value);
-    }
-
-    [Fact]
-    public async Task NullableDecimal_ValidValue_ReturnsSuccess()
+    public async Task AllowNullDecimal_ValidValue_ReturnsSuccess()
     {
         var schema = Z.Decimal().Min(0m).Nullable();
         var result = await schema.ValidateAsync(99.99m);
@@ -124,7 +94,7 @@ public class NullableSchemaTests
     }
 
     [Fact]
-    public async Task NullableDecimal_InvalidValue_ReturnsFailure()
+    public async Task AllowNullDecimal_InvalidValue_ReturnsFailure()
     {
         var schema = Z.Decimal().Min(0m).Nullable();
         var result = await schema.ValidateAsync(-10m);
@@ -250,11 +220,11 @@ public class NullableSchemaTests
     record LimitContext(int MaxValue);
 
     [Fact]
-    public async Task NullableWithContext_NullValue_ReturnsSuccess()
+    public async Task NullableWithContext_StringNullValue_ReturnsSuccess()
     {
-        var schema = Z.Int()
+        var schema = Z.String()
             .WithContext<LimitContext>()
-            .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds limit")
+            .Refine((val, _) => val.Length <= 10, "Too long")
             .Nullable();
 
         var context = new ValidationContext<LimitContext>(new LimitContext(100));
@@ -320,7 +290,7 @@ public class NullableSchemaTests
     {
         var schema = Z.Object<UserProfile>()
             .Field(u => u.Name, Z.String().MinLength(1))
-            .Field(u => u.Age, Z.Int().Min(0).Nullable())
+            .Field(u => u.Age, Z.Int().Min(0))
             .Field(u => u.Bio, Z.String().MaxLength(500).Nullable());
 
         var profile = new UserProfile("John", 30, "Hello world");
@@ -334,7 +304,7 @@ public class NullableSchemaTests
     {
         var schema = Z.Object<UserProfile>()
             .Field(u => u.Name, Z.String().MinLength(1))
-            .Field(u => u.Age, Z.Int().Min(0).Nullable())
+            .Field(u => u.Age, Z.Int().Min(0))
             .Field(u => u.Bio, Z.String().MaxLength(10).Nullable());
 
         var profile = new UserProfile("John", -5, "This bio is way too long");

@@ -7,7 +7,7 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating arrays where each element is validated by an inner schema.
 /// </summary>
-public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollection<TElement>, TContext>
+public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollection<TElement>, TContext, CollectionContextSchema<TElement, TContext>>
 {
     private ISchema<TElement, TContext>? ElementSchema { get; set; }
 
@@ -23,8 +23,15 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
             : null;
     }
 
-    public override async ValueTask<Result> ValidateAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+    public override async ValueTask<Result> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
     {
+        if (value is null)
+        {
+            return AllowNull
+                ? Result.Success()
+                : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+        }
+
         var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element if element schema is provided
@@ -74,24 +81,9 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         return this;
     }
 
-    public CollectionContextSchema<TElement, TContext> Refine(Func<ICollection<TElement>, TContext, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<ICollection<TElement>, TContext>((val, ctx) =>
-            predicate(val, ctx.Data)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public CollectionContextSchema<TElement, TContext> Refine(Func<ICollection<TElement>, bool> predicate, string message, string code = "custom_error")
-    {
-        return Refine((val, _) => predicate(val), message, code);
-    }
-
     public CollectionContextSchema<TElement, TContext> Each(ISchema<TElement, TContext> elementSchema)
     {
         ElementSchema = elementSchema;
-
         return this;
     }
 }

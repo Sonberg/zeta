@@ -1,10 +1,8 @@
-using Zeta.Core;
-
 namespace Zeta.Validators;
 
 internal sealed class FieldContextlessValidator<TInstance, TProperty> : IFieldContextlessValidator<TInstance>
 {
-    private static readonly IReadOnlyList<ValidationError> EmptyErrors = Array.Empty<ValidationError>();
+    private static readonly IReadOnlyList<ValidationError> EmptyErrors = [];
 
     private readonly string _name;
     private readonly Func<TInstance, TProperty> _getter;

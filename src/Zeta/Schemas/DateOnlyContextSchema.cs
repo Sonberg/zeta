@@ -7,11 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating DateOnly values.
 /// </summary>
-public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
+public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext, DateOnlyContextSchema<TContext>>
 {
-    public DateOnlyContextSchema() { }
-
-    public DateOnlyContextSchema(ContextRuleEngine<DateOnly, TContext> rules) : base(rules) { }
+    internal DateOnlyContextSchema(ContextRuleEngine<DateOnly, TContext> rules) : base(rules)
+    {
+    }
 
     public DateOnlyContextSchema<TContext> Min(DateOnly min, string? message = null)
     {
@@ -110,40 +110,6 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext>
                 : new ValidationError(ctx.Path, "max_age", message ?? $"Must be at most {years} years old");
         }));
         return this;
-    }
-
-    public DateOnlyContextSchema<TContext> Refine(Func<DateOnly, TContext, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<DateOnly, TContext>((val, ctx) =>
-            predicate(val, ctx.Data)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public DateOnlyContextSchema<TContext> Refine(Func<DateOnly, bool> predicate, string message, string code = "custom_error")
-    {
-        return Refine((val, _) => predicate(val), message, code);
-    }
-
-    public DateOnlyContextSchema<TContext> RefineAsync(
-        Func<DateOnly, TContext, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<DateOnly, TContext>(async (val, ctx) =>
-            await predicate(val, ctx.Data, ctx.CancellationToken)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public DateOnlyContextSchema<TContext> RefineAsync(
-        Func<DateOnly, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
 }
 #endif

@@ -206,5 +206,117 @@ public class StringSchemaTests
         Assert.False((await schema.ValidateAsync("hello world")).IsSuccess);
     }
 
+    [Fact]
+    public async Task MaxLength_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().MaxLength(5);
+        var result = await schema.ValidateAsync("hello");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task MaxLength_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().MaxLength(5);
+        var result = await schema.ValidateAsync("hello world");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "max_length");
+    }
+
+    [Fact]
+    public async Task Regex_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().Regex(@"^\d{3}-\d{4}$");
+        var result = await schema.ValidateAsync("123-4567");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Regex_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().Regex(@"^\d{3}-\d{4}$");
+        var result = await schema.ValidateAsync("abc-defg");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "regex");
+    }
+
+    [Fact]
+    public async Task NotEmpty_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().NotEmpty();
+        var result = await schema.ValidateAsync("hello");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task NotEmpty_WhitespaceOnly_ReturnsFailure()
+    {
+        var schema = Z.String().NotEmpty();
+        var result = await schema.ValidateAsync("   ");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "required");
+    }
+
+    [Fact]
+    public async Task NotEmpty_EmptyString_ReturnsFailure()
+    {
+        var schema = Z.String().NotEmpty();
+        var result = await schema.ValidateAsync("");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "required");
+    }
+
+    [Fact]
+    public async Task RefineAsync_Valid_ReturnsSuccess()
+    {
+        var schema = Z.String().RefineAsync(
+            val => new ValueTask<bool>(val.Length > 3),
+            "Must be longer than 3");
+
+        var result = await schema.ValidateAsync("hello");
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task RefineAsync_Invalid_ReturnsFailure()
+    {
+        var schema = Z.String().RefineAsync(
+            val => new ValueTask<bool>(val.Length > 3),
+            "Must be longer than 3");
+
+        var result = await schema.ValidateAsync("hi");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Message == "Must be longer than 3");
+    }
+
+    [Fact]
+    public async Task RefineAsync_WithCancellationToken_Works()
+    {
+        var schema = Z.String().RefineAsync(
+            (val, ct) => new ValueTask<bool>(val.Length > 3),
+            "Must be longer than 3");
+
+        var result = await schema.ValidateAsync("hello");
+        Assert.True(result.IsSuccess);
+
+        var result2 = await schema.ValidateAsync("hi");
+        Assert.False(result2.IsSuccess);
+    }
+
+    [Fact]
+    public async Task MinLength_CustomMessage_ReturnsCustomMessage()
+    {
+        var schema = Z.String().MinLength(5, "At least 5 chars please");
+        var result = await schema.ValidateAsync("hi");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Message == "At least 5 chars please");
+    }
+
     public record TestContext(string MagicWord);
 }

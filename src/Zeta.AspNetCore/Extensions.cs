@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Zeta.AspNetCore;
 
+
+/// <summary>
+/// Extension methods for integrating Zeta validation with ASP.NET Core Minimal APIs and MVC.
+/// </summary>
 public static class ZetaExtensions
 {
     /// <summary>

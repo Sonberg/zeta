@@ -515,6 +515,34 @@ public class CollectionSchemaTests
         Assert.Equal("min_length", result.Errors[0].Code);
     }
 
+    [Fact]
+    public async Task Array_Length_Valid_ReturnsSuccess()
+    {
+        var schema = Z.Collection<string>().Length(3);
+        var result = await schema.ValidateAsync(["a", "b", "c"]);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Array_Length_TooFew_ReturnsFailure()
+    {
+        var schema = Z.Collection<string>().Length(3);
+        var result = await schema.ValidateAsync(["a", "b"]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "length");
+    }
+
+    [Fact]
+    public async Task Array_Length_TooMany_ReturnsFailure()
+    {
+        var schema = Z.Collection<string>().Length(3);
+        var result = await schema.ValidateAsync(["a", "b", "c", "d"]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "length");
+    }
+
     record UserWithRoles(List<string> Roles);
 
     record OrderItem(Guid ProductId, int Quantity);

@@ -7,11 +7,11 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A context-aware schema for validating TimeOnly values.
 /// </summary>
-public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
+public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext, TimeOnlyContextSchema<TContext>>
 {
-    public TimeOnlyContextSchema() { }
-
-    public TimeOnlyContextSchema(ContextRuleEngine<TimeOnly, TContext> rules) : base(rules) { }
+    internal TimeOnlyContextSchema(ContextRuleEngine<TimeOnly, TContext> rules) : base(rules)
+    {
+    }
 
     public TimeOnlyContextSchema<TContext> Min(TimeOnly min, string? message = null)
     {
@@ -76,40 +76,6 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext>
                 ? null
                 : new ValidationError(ctx.Path, "evening", message ?? "Must be in the evening (after 18:00)")));
         return this;
-    }
-
-    public TimeOnlyContextSchema<TContext> Refine(Func<TimeOnly, TContext, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<TimeOnly, TContext>((val, ctx) =>
-            predicate(val, ctx.Data)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public TimeOnlyContextSchema<TContext> Refine(Func<TimeOnly, bool> predicate, string message, string code = "custom_error")
-    {
-        return Refine((val, _) => predicate(val), message, code);
-    }
-
-    public TimeOnlyContextSchema<TContext> RefineAsync(
-        Func<TimeOnly, TContext, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        Use(new RefinementRule<TimeOnly, TContext>(async (val, ctx) =>
-            await predicate(val, ctx.Data, ctx.CancellationToken)
-                ? null
-                : new ValidationError(ctx.Path, code, message)));
-        return this;
-    }
-
-    public TimeOnlyContextSchema<TContext> RefineAsync(
-        Func<TimeOnly, CancellationToken, ValueTask<bool>> predicate,
-        string message,
-        string code = "custom_error")
-    {
-        return RefineAsync((val, _, ct) => predicate(val, ct), message, code);
     }
 }
 #endif

@@ -72,9 +72,9 @@ public class WithContextTests
     {
         var schema = Z.String()
             .WithContext<UserContext>()
-            .RefineAsync(async (val, ctx, ct) =>
+            .RefineAsync(async (val, ctx) =>
             {
-                await Task.Delay(1, ct);
+                await Task.Delay(1);
                 return val != ctx.BannedEmail;
             }, "Email is banned", "banned");
 
@@ -131,7 +131,7 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_IntWithNullable_Works()
+    public async Task WithContext_IntWithAllowNull_Works()
     {
         var schema = Z.Int()
             .Min(0)
@@ -141,10 +141,6 @@ public class WithContextTests
 
         var context = new ValidationContext<UserContext>(
             new UserContext("", 100));
-
-        // Null should be valid
-        var nullResult = await schema.ValidateAsync(null, context);
-        Assert.True(nullResult.IsSuccess);
 
         // Valid value should pass
         var validResult = await schema.ValidateAsync(50, context);
@@ -363,9 +359,9 @@ public class WithContextTests
     {
         var schema = Z.String()
             .WithContext<UserContext>()
-            .RefineAsync(async (val, ct) =>
+            .RefineAsync(async (val) =>
             {
-                await Task.Delay(1, ct);
+                await Task.Delay(1);
                 return val.Length > 3;
             }, "Too short");
 

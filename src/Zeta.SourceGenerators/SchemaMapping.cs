@@ -5,7 +5,7 @@ namespace Zeta.SourceGenerators;
 /// </summary>
 internal static class SchemaMapping
 {
-    internal record Mapping(string Type, string SchemaClass, string FactoryMethod);
+    internal record Mapping(string Type, string SchemaClass, string ContextSchemaClass, string FactoryMethod, bool IsValueType);
 
     /// <summary>
     /// Core primitive types that have schema implementations.
@@ -13,13 +13,10 @@ internal static class SchemaMapping
     /// </summary>
     internal static readonly Mapping[] PrimitiveMappings =
     {
-        new("string", "StringContextlessSchema", "Z.String"),
-        new("int", "IntContextlessSchema", "Z.Int"),
-        new("double", "DoubleContextlessSchema", "Z.Double"),
-        new("decimal", "DecimalContextlessSchema", "Z.Decimal"),
-        new("bool", "BoolContextlessSchema", "Z.Bool"),
-        new("System.Guid", "GuidContextlessSchema", "Z.Guid"),
-        new("System.DateTime", "DateTimeContextlessSchema", "Z.DateTime")
+        new("string", "StringContextlessSchema", "StringContextSchema", "Z.String", false), new("int", "IntContextlessSchema", "IntContextSchema", "Z.Int", true),
+        new("double", "DoubleContextlessSchema", "DoubleContextSchema", "Z.Double", true), new("decimal", "DecimalContextlessSchema", "DecimalContextSchema", "Z.Decimal", true),
+        new("bool", "BoolContextlessSchema", "BoolContextSchema", "Z.Bool", true), new("System.Guid", "GuidContextlessSchema", "GuidContextSchema", "Z.Guid", true),
+        new("System.DateTime", "DateTimeContextlessSchema", "DateTimeContextSchema", "Z.DateTime", true)
     };
 
     /// <summary>
@@ -28,7 +25,13 @@ internal static class SchemaMapping
     /// </summary>
     internal static readonly Mapping[] ModernNetMappings =
     {
-        new("DateOnly", "DateOnlyContextlessSchema", "Z.DateOnly"),
-        new("TimeOnly", "TimeOnlyContextlessSchema", "Z.TimeOnly")
+        new("DateOnly", "DateOnlyContextlessSchema", "DateOnlyContextSchema", "Z.DateOnly", true), new("TimeOnly", "TimeOnlyContextlessSchema", "TimeOnlyContextSchema", "Z.TimeOnly", true)
     };
+
+    internal static readonly string[] Collections =
+    [
+        "{0}[]",
+        "System.Collections.Generic.List<{0}>",
+        "System.Collections.Generic.ICollection<{0}>"
+    ];
 }

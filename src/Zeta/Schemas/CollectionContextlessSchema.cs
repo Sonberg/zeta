@@ -1,5 +1,4 @@
 using Zeta.Core;
-using Zeta.Rules;
 using Zeta.Rules.Collection;
 
 namespace Zeta.Schemas;
@@ -7,8 +6,12 @@ namespace Zeta.Schemas;
 /// <summary>
 /// A contextless schema for validating collections where each element is validated by an inner schema.
 /// </summary>
-public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<ICollection<TElement>>
+public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<ICollection<TElement>, CollectionContextlessSchema<TElement>>
 {
+    internal CollectionContextlessSchema()
+    {
+    }
+
     private ISchema<TElement>? ElementSchema { get; set; }
 
     public CollectionContextlessSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules)
@@ -16,8 +19,15 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         ElementSchema = elementSchema;
     }
 
-    public override async ValueTask<Result<ICollection<TElement>>> ValidateAsync(ICollection<TElement> value, ValidationContext context)
+    public override async ValueTask<Result<ICollection<TElement>>> ValidateAsync(ICollection<TElement>? value, ValidationContext context)
     {
+        if (value is null)
+        {
+            return AllowNull
+                ? Result<ICollection<TElement>>.Success(value!)
+                : Result<ICollection<TElement>>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+        }
+
         var errors = await Rules.ExecuteAsync(value, context);
 
         // Validate each element if element schema is provided
@@ -67,30 +77,20 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         return this;
     }
 
-    public CollectionContextlessSchema<TElement> Refine(Func<ICollection<TElement>, bool> predicate, string message, string code = "custom_error")
-    {
-        Use(new RefinementRule<ICollection<TElement>>((val, exec) =>
-            predicate(val)
-                ? null
-                : new ValidationError(exec.Path, code, message)));
-        return this;
-    }
-
     public CollectionContextlessSchema<TElement> Each(ISchema<TElement> elementSchema)
     {
         ElementSchema = elementSchema;
-
         return this;
-    }
-    
-    public CollectionContextSchema<TElement, TContext> Each<TContext>(ISchema<TElement, TContext> elementSchema)
-    {
-        return new CollectionContextSchema<TElement, TContext>(ElementSchema, Rules);
     }
 
     /// <summary>
     /// Creates a context-aware array schema with all rules from this schema.
     /// The element schema is adapted to work in the context-aware environment.
     /// </summary>
-    public CollectionContextSchema<TElement, TContext> WithContext<TContext>() => new(ElementSchema, Rules);
+    public CollectionContextSchema<TElement, TContext> WithContext<TContext>()
+    {
+        var schema = new CollectionContextSchema<TElement, TContext>(ElementSchema, Rules);
+        if (AllowNull) schema.Nullable();
+        return schema;
+    }
 }

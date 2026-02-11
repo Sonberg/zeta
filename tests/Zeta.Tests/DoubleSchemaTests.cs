@@ -57,6 +57,24 @@ public class DoubleSchemaTests
     }
 
     [Fact]
+    public async Task Negative_Valid_ReturnsSuccess()
+    {
+        var schema = Z.Double().Negative();
+        var result = await schema.ValidateAsync(-0.001);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Negative_Invalid_ReturnsFailure()
+    {
+        var schema = Z.Double().Negative();
+        var result = await schema.ValidateAsync(0.0);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "negative");
+    }
+
+    [Fact]
     public async Task Finite_Valid_ReturnsSuccess()
     {
         var schema = Z.Double().Finite();

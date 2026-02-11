@@ -3,6 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Zeta.AspNetCore;
 
+
+/// <summary>
+/// Extension methods for registering Zeta validation services with dependency injection.
+/// </summary>
 public static class DependencyInjectionExtensions
 {
     /// <summary>
