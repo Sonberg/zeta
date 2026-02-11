@@ -141,5 +141,15 @@ app.MapPost("/api/minimal/orders/delivery", (ScheduleDeliveryRequest request) =>
 app.MapControllers();
 app.Run();
 
+var schema = Z.Object<IAnimal>()
+    .If(x => x is Dog, c => c.As<Dog>()
+        .Field(x => x.WoofVolum, x => x.Min(0).Max(100)));
+
+public record Dog(int? WoofVolum) : IAnimal;
+
+public record Cat(int? ClawSharpness) : IAnimal;
+
+public interface IAnimal;
+
 // Required for WebApplicationFactory in integration tests
 public partial class Program;
