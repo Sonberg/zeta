@@ -16,8 +16,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, string?>> propertySelector,
         Func<StringContextlessSchema, StringContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, string>(propertyName, instance => getter(instance)!, schema(Z.String())));
         return this;
     }
@@ -29,8 +29,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, int>> propertySelector,
         Func<IntContextlessSchema, IntContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, int>(propertyName, getter, schema(Z.Int())));
         return this;
     }
@@ -42,8 +42,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, double>> propertySelector,
         Func<DoubleContextlessSchema, DoubleContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, double>(propertyName, getter, schema(Z.Double())));
         return this;
     }
@@ -55,8 +55,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, decimal>> propertySelector,
         Func<DecimalContextlessSchema, DecimalContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, decimal>(propertyName, getter, schema(Z.Decimal())));
         return this;
     }
@@ -68,8 +68,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, bool>> propertySelector,
         Func<BoolContextlessSchema, BoolContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, bool>(propertyName, getter, schema(Z.Bool())));
         return this;
     }
@@ -81,8 +81,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.Guid>> propertySelector,
         Func<GuidContextlessSchema, GuidContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, System.Guid>(propertyName, getter, schema(Z.Guid())));
         return this;
     }
@@ -94,8 +94,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.DateTime>> propertySelector,
         Func<DateTimeContextlessSchema, DateTimeContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, System.DateTime>(propertyName, getter, schema(Z.DateTime())));
         return this;
     }
@@ -107,8 +107,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, int>> propertySelector,
         ISchema<int> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, int>(propertyName, getter, schema));
         return this;
     }
@@ -120,8 +120,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, double>> propertySelector,
         ISchema<double> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, double>(propertyName, getter, schema));
         return this;
     }
@@ -133,8 +133,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, decimal>> propertySelector,
         ISchema<decimal> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, decimal>(propertyName, getter, schema));
         return this;
     }
@@ -146,8 +146,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, bool>> propertySelector,
         ISchema<bool> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, bool>(propertyName, getter, schema));
         return this;
     }
@@ -159,8 +159,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.Guid>> propertySelector,
         ISchema<System.Guid> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, System.Guid>(propertyName, getter, schema));
         return this;
     }
@@ -172,8 +172,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.DateTime>> propertySelector,
         ISchema<System.DateTime> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, System.DateTime>(propertyName, getter, schema));
         return this;
     }
@@ -186,8 +186,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, int?>> propertySelector,
         Func<IntContextlessSchema, IntContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, int>(propertyName, getter, schema(Z.Int())));
         return this;
     }
@@ -200,8 +200,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, double?>> propertySelector,
         Func<DoubleContextlessSchema, DoubleContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, double>(propertyName, getter, schema(Z.Double())));
         return this;
     }
@@ -214,8 +214,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, decimal?>> propertySelector,
         Func<DecimalContextlessSchema, DecimalContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, decimal>(propertyName, getter, schema(Z.Decimal())));
         return this;
     }
@@ -228,8 +228,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, bool?>> propertySelector,
         Func<BoolContextlessSchema, BoolContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, bool>(propertyName, getter, schema(Z.Bool())));
         return this;
     }
@@ -242,8 +242,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.Guid?>> propertySelector,
         Func<GuidContextlessSchema, GuidContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, System.Guid>(propertyName, getter, schema(Z.Guid())));
         return this;
     }
@@ -256,8 +256,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.DateTime?>> propertySelector,
         Func<DateTimeContextlessSchema, DateTimeContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, System.DateTime>(propertyName, getter, schema(Z.DateTime())));
         return this;
     }
@@ -270,8 +270,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, int?>> propertySelector,
         ISchema<int> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, int>(propertyName, getter, schema));
         return this;
     }
@@ -284,8 +284,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, double?>> propertySelector,
         ISchema<double> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, double>(propertyName, getter, schema));
         return this;
     }
@@ -298,8 +298,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, decimal?>> propertySelector,
         ISchema<decimal> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, decimal>(propertyName, getter, schema));
         return this;
     }
@@ -312,8 +312,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, bool?>> propertySelector,
         ISchema<bool> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, bool>(propertyName, getter, schema));
         return this;
     }
@@ -326,8 +326,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.Guid?>> propertySelector,
         ISchema<System.Guid> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, System.Guid>(propertyName, getter, schema));
         return this;
     }
@@ -340,8 +340,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, System.DateTime?>> propertySelector,
         ISchema<System.DateTime> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, System.DateTime>(propertyName, getter, schema));
         return this;
     }
@@ -354,8 +354,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, DateOnly>> propertySelector,
         Func<DateOnlyContextlessSchema, DateOnlyContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, DateOnly>(propertyName, getter, schema(Z.DateOnly())));
         return this;
     }
@@ -367,14 +367,12 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, TimeOnly>> propertySelector,
         Func<TimeOnlyContextlessSchema, TimeOnlyContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema(Z.TimeOnly())));
         return this;
     }
 
-#endif
-#if !NETSTANDARD2_0
     /// <summary>
     /// Adds a field validator for non-nullable DateOnly properties with a pre-built schema.
     /// </summary>
@@ -382,8 +380,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, DateOnly>> propertySelector,
         ISchema<DateOnly> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, DateOnly>(propertyName, getter, schema));
         return this;
     }
@@ -395,14 +393,12 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, TimeOnly>> propertySelector,
         ISchema<TimeOnly> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new FieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema));
         return this;
     }
 
-#endif
-#if !NETSTANDARD2_0
     /// <summary>
     /// Adds a field validator for nullable DateOnly? properties with fluent schema builder.
     /// Null values skip validation. Non-null values are validated by the configured schema.
@@ -411,8 +407,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, DateOnly?>> propertySelector,
         Func<DateOnlyContextlessSchema, DateOnlyContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, DateOnly>(propertyName, getter, schema(Z.DateOnly())));
         return this;
     }
@@ -425,14 +421,12 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, TimeOnly?>> propertySelector,
         Func<TimeOnlyContextlessSchema, TimeOnlyContextlessSchema> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema(Z.TimeOnly())));
         return this;
     }
 
-#endif
-#if !NETSTANDARD2_0
     /// <summary>
     /// Adds a field validator for nullable DateOnly? properties with a pre-built schema.
     /// Null values skip validation. Non-null values are validated by the provided schema.
@@ -441,8 +435,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, DateOnly?>> propertySelector,
         ISchema<DateOnly> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, DateOnly>(propertyName, getter, schema));
         return this;
     }
@@ -455,8 +449,8 @@ public partial class ObjectContextlessSchema<T>
         Expression<Func<T, TimeOnly?>> propertySelector,
         ISchema<TimeOnly> schema)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var getter = CreateGetter(propertySelector);
+                    var propertyName = GetPropertyName(propertySelector);
+                var getter = CreateGetter(propertySelector);
         _fields.Add(new NullableFieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema));
         return this;
     }

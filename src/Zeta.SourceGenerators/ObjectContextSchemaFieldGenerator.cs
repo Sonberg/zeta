@@ -8,6 +8,11 @@ namespace Zeta.SourceGenerators;
 /// </summary>
 internal static class ObjectContextSchemaFieldGenerator
 {
+    private const string PropertyPreamble = """
+                            var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                            var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+            """;
+
     public static string Generate()
     {
         var sb = new StringBuilder();
@@ -23,31 +28,31 @@ internal static class ObjectContextSchemaFieldGenerator
         sb.AppendLine("public partial class ObjectContextSchema<T, TContext>");
         sb.AppendLine("{");
 
-        GeneratePrimitiveFieldOverloads(sb);
-        GenerateNonNullableValueTypePrebuiltContextlessSchemaOverloads(sb);
-        GenerateNonNullableValueTypePrebuiltContextAwareSchemaOverloads(sb);
-        GenerateNullableValueTypeContextlessBuilderOverloads(sb);
-        GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(sb);
-        GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(sb);
-        GenerateDateOnlyTimeOnlyOverloads(sb);
-        GenerateNonNullableModernNetPrebuiltContextlessSchemaOverloads(sb);
-        GenerateNonNullableModernNetPrebuiltContextAwareSchemaOverloads(sb);
-        GenerateNullableModernNetContextlessBuilderOverloads(sb);
-        GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(sb);
-        GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(sb);
-        GenerateNestedObjectOverload(sb);
+        GenerateMappingGroup(sb, SchemaMapping.PrimitiveMappings, conditional: false);
+        GenerateMappingGroup(sb, SchemaMapping.ModernNetMappings, conditional: true);
+        GenerateNestedObjectOverloads(sb);
         GenerateCollectionOverloads(sb);
         GenerateGenericCollectionOverloads(sb);
-        GenerateGenericCollectionContextlessOverloads(sb);
-        GenerateCollectionContextlessOverloads(sb);
 
         sb.AppendLine("}");
         return sb.ToString();
     }
 
-    private static void GeneratePrimitiveFieldOverloads(StringBuilder sb)
+    private static void GenerateMappingGroup(StringBuilder sb, SchemaMapping.Mapping[] mappings, bool conditional)
     {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings)
+        if (conditional) sb.AppendLine("#if !NETSTANDARD2_0");
+        GenerateInlineBuilderOverloads(sb, mappings);
+        GenerateNonNullablePrebuiltContextlessOverloads(sb, mappings);
+        GenerateNonNullablePrebuiltContextAwareOverloads(sb, mappings);
+        GenerateNullableInlineBuilderOverloads(sb, mappings);
+        GenerateNullablePrebuiltContextlessOverloads(sb, mappings);
+        GenerateNullablePrebuiltContextAwareOverloads(sb, mappings);
+        if (conditional) sb.AppendLine("#endif");
+    }
+
+    private static void GenerateInlineBuilderOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)
+    {
+        foreach (var mapping in mappings)
         {
             var selectorType = mapping.IsValueType ? mapping.Type : $"{mapping.Type}?";
             var getterExpr = mapping.IsValueType ? "getter" : "instance => getter(instance)!";
@@ -60,8 +65,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Expression<Func<T, {{selectorType}}>> propertySelector,
                                     Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
                                 {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                {{PropertyPreamble}}
                                     _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, schema({{mapping.FactoryMethod}}())));
                                     return this;
                                 }
@@ -73,8 +77,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Expression<Func<T, {{selectorType}}>> propertySelector,
                                     Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
                                 {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                {{PropertyPreamble}}
                                     var configuredSchema = schema({{mapping.FactoryMethod}}());
                                     _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, configuredSchema.WithContext<TContext>()));
                                     return this;
@@ -84,9 +87,9 @@ internal static class ObjectContextSchemaFieldGenerator
         }
     }
 
-    private static void GenerateNonNullableValueTypePrebuiltContextlessSchemaOverloads(StringBuilder sb)
+    private static void GenerateNonNullablePrebuiltContextlessOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)
     {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
+        foreach (var mapping in mappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
                                 /// <summary>
@@ -96,8 +99,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Expression<Func<T, {{mapping.Type}}>> propertySelector,
                                     ISchema<{{mapping.Type}}> schema)
                                 {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                {{PropertyPreamble}}
                                     _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(
                                         new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema)));
                                     return this;
@@ -107,9 +109,9 @@ internal static class ObjectContextSchemaFieldGenerator
         }
     }
 
-    private static void GenerateNonNullableValueTypePrebuiltContextAwareSchemaOverloads(StringBuilder sb)
+    private static void GenerateNonNullablePrebuiltContextAwareOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)
     {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
+        foreach (var mapping in mappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
                                 /// <summary>
@@ -119,8 +121,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Expression<Func<T, {{mapping.Type}}>> propertySelector,
                                     ISchema<{{mapping.Type}}, TContext> schema)
                                 {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                {{PropertyPreamble}}
                                     _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
                                     return this;
                                 }
@@ -129,9 +130,9 @@ internal static class ObjectContextSchemaFieldGenerator
         }
     }
 
-    private static void GenerateNullableValueTypeContextlessBuilderOverloads(StringBuilder sb)
+    private static void GenerateNullableInlineBuilderOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)
     {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
+        foreach (var mapping in mappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
                                 /// <summary>
@@ -142,8 +143,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
                                     Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
                                 {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                {{PropertyPreamble}}
                                     var inner = new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}()));
                                     _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
                                     return this;
@@ -153,9 +153,9 @@ internal static class ObjectContextSchemaFieldGenerator
         }
     }
 
-    private static void GenerateNullableValueTypePrebuiltContextlessSchemaOverloads(StringBuilder sb)
+    private static void GenerateNullablePrebuiltContextlessOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)
     {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
+        foreach (var mapping in mappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
                                 /// <summary>
@@ -166,8 +166,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
                                     ISchema<{{mapping.Type}}> schema)
                                 {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                {{PropertyPreamble}}
                                     var inner = new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema);
                                     _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
                                     return this;
@@ -177,9 +176,9 @@ internal static class ObjectContextSchemaFieldGenerator
         }
     }
 
-    private static void GenerateNullableValueTypePrebuiltContextAwareSchemaOverloads(StringBuilder sb)
+    private static void GenerateNullablePrebuiltContextAwareOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)
     {
-        foreach (var mapping in SchemaMapping.PrimitiveMappings.Where(m => m.IsValueType))
+        foreach (var mapping in mappings.Where(m => m.IsValueType))
         {
             sb.AppendLine($$"""
                                 /// <summary>
@@ -190,8 +189,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Expression<Func<T, {{mapping.Type}}?>> propertySelector,
                                     ISchema<{{mapping.Type}}, TContext> schema)
                                 {
-                                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                    var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                {{PropertyPreamble}}
                                     _fields.Add(new NullableFieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
                                     return this;
                                 }
@@ -200,171 +198,7 @@ internal static class ObjectContextSchemaFieldGenerator
         }
     }
 
-    private static void GenerateDateOnlyTimeOnlyOverloads(StringBuilder sb)
-    {
-        sb.AppendLine("#if !NETSTANDARD2_0");
-        foreach (var mapping in SchemaMapping.ModernNetMappings)
-        {
-            sb.AppendLine($$"""
-                            /// <summary>
-                            /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties.
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}>> propertySelector,
-                                Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
-                                return this;
-                            }
-
-                            /// <summary>
-                            /// Adds a field validator with fluent schema builder for {{mapping.Type}} properties (contextless builder).
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}>> propertySelector,
-                                Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
-                                return this;
-                            }
-
-                        """);
-        }
-        sb.AppendLine("#endif");
-    }
-
-    private static void GenerateNonNullableModernNetPrebuiltContextlessSchemaOverloads(StringBuilder sb)
-    {
-        sb.AppendLine("#if !NETSTANDARD2_0");
-        foreach (var mapping in SchemaMapping.ModernNetMappings)
-        {
-            sb.AppendLine($$"""
-                            /// <summary>
-                            /// Adds a field validator for non-nullable {{mapping.Type}} properties with a pre-built contextless schema.
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}>> propertySelector,
-                                ISchema<{{mapping.Type}}> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(
-                                    new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema)));
-                                return this;
-                            }
-
-                        """);
-        }
-        sb.AppendLine("#endif");
-    }
-
-    private static void GenerateNonNullableModernNetPrebuiltContextAwareSchemaOverloads(StringBuilder sb)
-    {
-        sb.AppendLine("#if !NETSTANDARD2_0");
-        foreach (var mapping in SchemaMapping.ModernNetMappings)
-        {
-            sb.AppendLine($$"""
-                            /// <summary>
-                            /// Adds a field validator for non-nullable {{mapping.Type}} properties with a pre-built context-aware schema.
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}>> propertySelector,
-                                ISchema<{{mapping.Type}}, TContext> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
-                                return this;
-                            }
-
-                        """);
-        }
-        sb.AppendLine("#endif");
-    }
-
-    private static void GenerateNullableModernNetContextlessBuilderOverloads(StringBuilder sb)
-    {
-        sb.AppendLine("#if !NETSTANDARD2_0");
-        foreach (var mapping in SchemaMapping.ModernNetMappings)
-        {
-            sb.AppendLine($$"""
-                            /// <summary>
-                            /// Adds a field validator for nullable {{mapping.Type}}? properties with contextless fluent schema builder.
-                            /// Null values skip validation. Non-null values are validated by the configured schema.
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                var inner = new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}()));
-                                _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
-                                return this;
-                            }
-
-                        """);
-        }
-        sb.AppendLine("#endif");
-    }
-
-    private static void GenerateNullableModernNetPrebuiltContextlessSchemaOverloads(StringBuilder sb)
-    {
-        sb.AppendLine("#if !NETSTANDARD2_0");
-        foreach (var mapping in SchemaMapping.ModernNetMappings)
-        {
-            sb.AppendLine($$"""
-                            /// <summary>
-                            /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built contextless schema.
-                            /// Null values skip validation. Non-null values are validated by the provided schema.
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                ISchema<{{mapping.Type}}> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                var inner = new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema);
-                                _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
-                                return this;
-                            }
-
-                        """);
-        }
-        sb.AppendLine("#endif");
-    }
-
-    private static void GenerateNullableModernNetPrebuiltContextAwareSchemaOverloads(StringBuilder sb)
-    {
-        sb.AppendLine("#if !NETSTANDARD2_0");
-        foreach (var mapping in SchemaMapping.ModernNetMappings)
-        {
-            sb.AppendLine($$"""
-                            /// <summary>
-                            /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built context-aware schema.
-                            /// Null values skip validation. Non-null values are validated by the provided schema.
-                            /// </summary>
-                            public ObjectContextSchema<T, TContext> Field(
-                                Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                ISchema<{{mapping.Type}}, TContext> schema)
-                            {
-                                var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                _fields.Add(new NullableFieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
-                                return this;
-                            }
-
-                        """);
-        }
-        sb.AppendLine("#endif");
-    }
-
-    private static void GenerateNestedObjectOverload(StringBuilder sb)
+    private static void GenerateNestedObjectOverloads(StringBuilder sb)
     {
         sb.AppendLine("""
 
@@ -423,6 +257,21 @@ internal static class ObjectContextSchemaFieldGenerator
                                         _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, schema(collectionSchema)));
                                         return this;
                                     }
+
+                                    /// <summary>
+                                    /// Adds a field validator with fluent schema builder for {{collectionTypeXml}} properties (contextless builder).
+                                    /// </summary>
+                                    public ObjectContextSchema<T, TContext> Field(
+                                        Expression<Func<T, {{collectionType}}>> propertySelector,
+                                        Func<CollectionContextlessSchema<{{mapping.Type}}>, CollectionContextlessSchema<{{mapping.Type}}>> schema)
+                                    {
+                                        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                                        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+                                        var collectionSchema = Z.Collection<{{mapping.Type}}>();
+                                        var configuredSchema = schema(collectionSchema);
+                                        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+                                        return this;
+                                    }
                                 """);
             }
         }
@@ -450,17 +299,6 @@ internal static class ObjectContextSchemaFieldGenerator
                                     _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, schema(collectionSchema)));
                                     return this;
                                 }
-                            """);
-        }
-    }
-
-    private static void GenerateGenericCollectionContextlessOverloads(StringBuilder sb)
-    {
-        foreach (var collectionPattern in SchemaMapping.Collections)
-        {
-            var collectionType = string.Format(collectionPattern, "TElement");
-
-            sb.AppendLine($$"""
 
                                 /// <summary>
                                 /// Adds a field validator with fluent schema builder for {{collectionType}} properties (contextless builder).
@@ -478,36 +316,6 @@ internal static class ObjectContextSchemaFieldGenerator
                                     return this;
                                 }
                             """);
-        }
-    }
-
-    private static void GenerateCollectionContextlessOverloads(StringBuilder sb)
-    {
-        foreach (var collectionPattern in SchemaMapping.Collections)
-        {
-            foreach (var mapping in SchemaMapping.PrimitiveMappings)
-            {
-                var collectionType = string.Format(collectionPattern, mapping.Type);
-                var collectionTypeXml = collectionType.Replace("<", "&lt;").Replace(">", "&gt;");
-
-                sb.AppendLine($$"""
-
-                                    /// <summary>
-                                    /// Adds a field validator with fluent schema builder for {{collectionTypeXml}} properties (contextless builder).
-                                    /// </summary>
-                                    public ObjectContextSchema<T, TContext> Field(
-                                        Expression<Func<T, {{collectionType}}>> propertySelector,
-                                        Func<CollectionContextlessSchema<{{mapping.Type}}>, CollectionContextlessSchema<{{mapping.Type}}>> schema)
-                                    {
-                                        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-                                        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                                        var collectionSchema = Z.Collection<{{mapping.Type}}>();
-                                        var configuredSchema = schema(collectionSchema);
-                                        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
-                                        return this;
-                                    }
-                                """);
-            }
         }
     }
 }
