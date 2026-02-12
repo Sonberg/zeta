@@ -11,6 +11,7 @@ namespace Zeta.Schemas;
 public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, ObjectContextlessSchema<T>> where T : class
 {
     private readonly List<IFieldContextlessValidator<T>> _fields;
+    private ITypeAssertion<T>? _typeAssertion;
 
     internal ObjectContextlessSchema() : this(new ContextlessRuleEngine<T>(), [])
     {
@@ -25,10 +26,19 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
 
     protected override ObjectContextlessSchema<T> CreateInstance() => new();
 
-    public ValueTask<Result<T>> ValidateAsync(T value)
+    /// <summary>
+    /// Asserts that the value is of the derived type <typeparamref name="TDerived"/>,
+    /// enabling type-narrowed field validation for polymorphic types.
+    /// </summary>
+    public ObjectContextlessSchema<TDerived> As<TDerived>() where TDerived : class, T
     {
-        return ValidateAsync(value, ValidationContext.Empty);
+        var schema = new ObjectContextlessSchema<TDerived>();
+        _typeAssertion = new ContextlessTypeAssertion<T, TDerived>(schema);
+        return schema;
     }
+
+    internal void SetTypeAssertion(ITypeAssertion<T>? assertion) => _typeAssertion = assertion;
+
 
     public override async ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext execution)
     {
@@ -59,6 +69,17 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
             errors.AddRange(fieldErrors);
         }
 
+        // Validate type assertion
+        if (_typeAssertion != null)
+        {
+            var assertionErrors = await _typeAssertion.ValidateAsync(value, execution);
+            if (assertionErrors.Count > 0)
+            {
+                errors ??= [];
+                errors.AddRange(assertionErrors);
+            }
+        }
+
         // Validate conditionals
         var conditionalErrors = await ExecuteConditionalsAsync(value, execution);
         if (conditionalErrors != null)
@@ -82,7 +103,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         _fields.Add(new FieldContextlessValidator<T, TProperty?>(propertyName, getter, wrapper));
         return this;
     }
-    
+
     // public ObjectContextlessSchema<T> Field(
     //     Expression<Func<T, ICollection<int?>?>> propertySelector,
     //     ISchema<ICollection<int?>?> schema)
@@ -104,6 +125,8 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         var schema = new ObjectContextSchema<T, TContext>(Rules, _fields);
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
+        if (_typeAssertion != null)
+            schema.SetTypeAssertion(_typeAssertion.ToContext<TContext>());
         return schema;
     }
 
