@@ -12,6 +12,7 @@ namespace Zeta.Schemas;
 public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContext, ObjectContextSchema<T, TContext>> where T : class
 {
     private readonly List<IFieldContextValidator<T, TContext>> _fields;
+    private ITypeAssertion<T, TContext>? _typeAssertion;
 
     internal ObjectContextSchema() : this(new ContextRuleEngine<T, TContext>(), [])
     {
@@ -30,6 +31,35 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     }
 
     protected override ObjectContextSchema<T, TContext> CreateInstance() => new();
+
+    /// <summary>
+    /// Asserts that the value is of the derived type <typeparamref name="TDerived"/>,
+    /// enabling type-narrowed field validation for polymorphic types.
+    /// </summary>
+    public ObjectContextSchema<TDerived, TContext> As<TDerived>() where TDerived : class, T
+    {
+        var schema = new ObjectContextSchema<TDerived, TContext>();
+        _typeAssertion = new ContextAwareTypeAssertion<T, TDerived, TContext>(schema);
+        return schema;
+    }
+
+    /// <summary>
+    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/>
+    /// when the value is an instance of that type. Combines type checking with type-narrowed validation.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TDerived>(
+        Action<ObjectContextSchema<TDerived, TContext>> configure) where TDerived : class, T
+    {
+        return If(
+            value => value is TDerived,
+            conditional =>
+            {
+                var derived = conditional.As<TDerived>();
+                configure(derived);
+            });
+    }
+
+    internal void SetTypeAssertion(ITypeAssertion<T, TContext>? assertion) => _typeAssertion = assertion;
 
     public override async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
@@ -55,6 +85,17 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
             if (fieldErrors.Count <= 0) continue;
             errors ??= [];
             errors.AddRange(fieldErrors);
+        }
+
+        // Validate type assertion
+        if (_typeAssertion != null)
+        {
+            var assertionErrors = await _typeAssertion.ValidateAsync(value, context);
+            if (assertionErrors.Count > 0)
+            {
+                errors ??= [];
+                errors.AddRange(assertionErrors);
+            }
         }
 
         var conditionalErrors = await ExecuteConditionalsAsync(value, context);
