@@ -174,4 +174,84 @@ public class TypeAssertionTests
         var cat = await schema.ValidateAsync(new Cat(5), ctx);
         Assert.True(cat.IsSuccess);
     }
+
+    // --- .If<TDerived>() generic overload tests ---
+
+    [Fact]
+    public async Task IfGeneric_TypeMatches_ValidatesFields()
+    {
+        var schema = Z.Object<IAnimal>()
+            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+
+        var result = await schema.ValidateAsync(new Dog(50));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task IfGeneric_ConditionFalse_Skips()
+    {
+        var schema = Z.Object<IAnimal>()
+            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+
+        var result = await schema.ValidateAsync(new Cat(5));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task IfGeneric_FieldValidationFails_ReportsError()
+    {
+        var schema = Z.Object<IAnimal>()
+            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+
+        var result = await schema.ValidateAsync(new Dog(150));
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Path == "woofVolume" && e.Code == "max_value");
+    }
+
+    [Fact]
+    public async Task IfGeneric_ContextAware_ValidatesFields()
+    {
+        var schema = Z.Object<IAnimal>()
+            .WithContext<StrictContext>()
+            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+
+        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+
+        var validDog = await schema.ValidateAsync(new Dog(50), ctx);
+        Assert.True(validDog.IsSuccess);
+
+        var invalidDog = await schema.ValidateAsync(new Dog(150), ctx);
+        Assert.False(invalidDog.IsSuccess);
+
+        var cat = await schema.ValidateAsync(new Cat(5), ctx);
+        Assert.True(cat.IsSuccess);
+    }
+
+    [Fact]
+    public async Task IfGeneric_MultipleBranches_ValidatesCorrectBranch()
+    {
+        var schema = Z.Object<IAnimal>()
+            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
+            .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+
+        // Valid dog
+        var validDog = await schema.ValidateAsync(new Dog(50));
+        Assert.True(validDog.IsSuccess);
+
+        // Invalid dog
+        var invalidDog = await schema.ValidateAsync(new Dog(150));
+        Assert.False(invalidDog.IsSuccess);
+
+        // Valid cat
+        var validCat = await schema.ValidateAsync(new Cat(5));
+        Assert.True(validCat.IsSuccess);
+
+        // Invalid cat
+        var invalidCat = await schema.ValidateAsync(new Cat(20));
+        Assert.False(invalidCat.IsSuccess);
+        Assert.Contains(invalidCat.Errors, e => e.Path == "clawSharpness" && e.Code == "max_value");
+    }
 }

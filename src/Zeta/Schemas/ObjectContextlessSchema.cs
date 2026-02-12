@@ -37,6 +37,22 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return schema;
     }
 
+    /// <summary>
+    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/>
+    /// when the value is an instance of that type. Combines type checking with type-narrowed validation.
+    /// </summary>
+    public ObjectContextlessSchema<T> If<TDerived>(
+        Action<ObjectContextlessSchema<TDerived>> configure) where TDerived : class, T
+    {
+        return If(
+            value => value is TDerived,
+            conditional =>
+            {
+                var derived = conditional.As<TDerived>();
+                configure(derived);
+            });
+    }
+
     internal void SetTypeAssertion(ITypeAssertion<T>? assertion) => _typeAssertion = assertion;
 
 

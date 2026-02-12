@@ -43,6 +43,22 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return schema;
     }
 
+    /// <summary>
+    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/>
+    /// when the value is an instance of that type. Combines type checking with type-narrowed validation.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TDerived>(
+        Action<ObjectContextSchema<TDerived, TContext>> configure) where TDerived : class, T
+    {
+        return If(
+            value => value is TDerived,
+            conditional =>
+            {
+                var derived = conditional.As<TDerived>();
+                configure(derived);
+            });
+    }
+
     internal void SetTypeAssertion(ITypeAssertion<T, TContext>? assertion) => _typeAssertion = assertion;
 
     public override async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
