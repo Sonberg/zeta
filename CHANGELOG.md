@@ -14,6 +14,7 @@
 - **Support for additional runtimes**
   - Zeta now supports .NET 6, 7, 8, and 10 (in addition to .NET Standard 2.0), allowing users to take advantage of the latest C# features and performance improvements while maintaining broad compatibility.
   - Zeta.AspNetCore integration package now targets .NET 8, 9 and 10, enabling seamless validation in ASP.NET Core applications across all supported runtimes.
+
 ### Removed
 
 - Deleted old `Conditional/` infrastructure (unused `ConditionalBuilder`, `ConditionalBranch`, etc.)
