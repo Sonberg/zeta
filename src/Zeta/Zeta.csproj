@@ -1,50 +1,50 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net10.0;net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
 
-    <!-- NuGet Package Metadata -->
-    <PackageId>Zeta</PackageId>
-    <Title>Zeta</Title>
-    <Description>A composable, type-safe, async-first validation framework for .NET inspired by Zod.</Description>
-    <Authors>Zeta Contributors</Authors>
-    <PackageTags>validation;schema;async;zod;fluent;result-pattern</PackageTags>
-    <PackageProjectUrl>https://github.com/sonberg/zeta</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/sonberg/zeta</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Copyright>Copyright (c) 2025 Zeta Contributors</Copyright>
+        <!-- NuGet Package Metadata -->
+        <PackageId>Zeta</PackageId>
+        <Title>Zeta</Title>
+        <Description>A composable, type-safe, async-first validation framework for .NET inspired by Zod.</Description>
+        <Authors>Zeta Contributors</Authors>
+        <PackageTags>validation;schema;async;zod;fluent;result-pattern</PackageTags>
+        <PackageProjectUrl>https://github.com/sonberg/zeta</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/sonberg/zeta</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Copyright>Copyright (c) 2025 Zeta Contributors</Copyright>
 
-    <!-- Build Settings -->
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <NoWarn>CS1591</NoWarn>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
-  </PropertyGroup>
+        <!-- Build Settings -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <NoWarn>CS1591</NoWarn>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+    </PropertyGroup>
 
-  <!-- .NET Standard 2.0 polyfills -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Bcl.TimeProvider" Version="8.0.0" />
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-  </ItemGroup>
+    <!-- .NET Standard 2.0 polyfills -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4"/>
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0"/>
+        <PackageReference Include="Microsoft.Bcl.TimeProvider" Version="8.0.0"/>
+        <PackageReference Include="System.Memory" Version="4.5.5"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="/" />
-    <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="../../README.md" Pack="true" PackagePath="/"/>
+        <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs"/>
+    </ItemGroup>
 
-  <!-- Source Generator Reference -->
-  <ItemGroup>
-    <ProjectReference Include="../Zeta.SourceGenerators/Zeta.SourceGenerators.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
-  </ItemGroup>
+    <!-- Source Generator Reference -->
+    <ItemGroup>
+        <ProjectReference Include="../Zeta.SourceGenerators/Zeta.SourceGenerators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
+    </ItemGroup>
 
 </Project>
