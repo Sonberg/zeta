@@ -175,16 +175,26 @@ Z.Object<User>()
 
 ## Context-Aware Conditionals
 
-Use context in `.When()` conditions:
+Use context in `.If()` conditions:
 
 ```csharp
 Z.Object<User>()
-    .Field(u => u.Password, Z.String().MinLength(8))
-    .WithContext<User, SecurityContext>()
-    .When(
-        (user, ctx) => ctx.RequireStrongPassword,
-        then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
-    );
+    .Field(u => u.Password, s => s.MinLength(8))
+    .WithContext<SecurityContext>()
+    .If((user, ctx) => ctx.RequireStrongPassword, s => s
+        .Field(u => u.Password, p => p.MinLength(12).MaxLength(100)));
+```
+
+`.If()` supports both value-only and value+context predicates:
+
+```csharp
+// Value-only predicate (no context needed)
+.If(user => user.Type == "admin", s => s
+    .Field(u => u.Name, n => n.MinLength(5)))
+
+// Value + context predicate
+.If((user, ctx) => ctx.IsStrictMode, s => s
+    .Field(u => u.Email, e => e.MinLength(10)))
 ```
 
 ---
