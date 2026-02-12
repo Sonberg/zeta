@@ -9,9 +9,13 @@ namespace Zeta.Schemas;
 /// </summary>
 public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext, DecimalContextSchema<TContext>>
 {
+    internal DecimalContextSchema() { }
+
     internal DecimalContextSchema(ContextRuleEngine<decimal, TContext> rules) : base(rules)
     {
     }
+
+    protected override DecimalContextSchema<TContext> CreateInstance() => new();
 
     public DecimalContextSchema<TContext> Min(decimal min, string? message = null)
     {

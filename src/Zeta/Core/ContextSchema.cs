@@ -2,6 +2,71 @@ using Zeta.Rules;
 
 namespace Zeta.Core;
 
+internal interface ISchemaConditional<T, TContext>
+{
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context);
+}
+
+internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
+{
+    private readonly Func<T, bool> _predicate;
+    private readonly ISchema<T> _schema;
+
+    public ContextlessSchemaConditional(Func<T, bool> predicate, ISchema<T> schema)
+    {
+        _predicate = predicate;
+        _schema = schema;
+    }
+
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
+    {
+        if (!_predicate(value)) return [];
+
+        var result = await _schema.ValidateAsync(value, context);
+        return result.IsFailure ? result.Errors : [];
+    }
+}
+
+internal sealed class ContextAwareSchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
+{
+    private readonly Func<T, TContext, bool> _predicate;
+    private readonly ISchema<T, TContext> _schema;
+
+    public ContextAwareSchemaConditional(Func<T, TContext, bool> predicate, ISchema<T, TContext> schema)
+    {
+        _predicate = predicate;
+        _schema = schema;
+    }
+
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
+    {
+        if (!_predicate(value, context.Data)) return [];
+
+        var result = await _schema.ValidateAsync(value, context);
+        return result.IsFailure ? result.Errors : [];
+    }
+}
+
+internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
+{
+    private readonly Func<T, bool> _predicate;
+    private readonly ISchema<T, TContext> _schema;
+
+    public ValueOnlySchemaConditional(Func<T, bool> predicate, ISchema<T, TContext> schema)
+    {
+        _predicate = predicate;
+        _schema = schema;
+    }
+
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
+    {
+        if (!_predicate(value)) return [];
+
+        var result = await _schema.ValidateAsync(value, context);
+        return result.IsFailure ? result.Errors : [];
+    }
+}
+
 /// <summary>
 /// Base class for context-aware schemas.
 /// </summary>
@@ -11,6 +76,8 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     public bool AllowNull { get; private set; }
 
+    private List<ISchemaConditional<T, TContext>>? _conditionals;
+
     protected ContextSchema() : this(new ContextRuleEngine<T, TContext>())
     {
     }
@@ -19,6 +86,8 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
     {
         Rules = rules;
     }
+
+    protected abstract TSchema CreateInstance();
 
     public virtual async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
@@ -30,6 +99,13 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         }
 
         var errors = await Rules.ExecuteAsync(value, context);
+
+        var conditionalErrors = await ExecuteConditionalsAsync(value, context);
+        if (conditionalErrors != null)
+        {
+            errors ??= [];
+            errors.AddRange(conditionalErrors);
+        }
 
         return errors == null
             ? Result.Success()
@@ -100,5 +176,52 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
         return this as TSchema ?? throw new InvalidOperationException();
+    }
+
+    public TSchema If(Func<T, bool> predicate, Action<TSchema> configure)
+    {
+        var schema = CreateInstance();
+        configure(schema);
+        _conditionals ??= [];
+        _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
+        return (TSchema)this;
+    }
+
+    public TSchema If(Func<T, TContext, bool> predicate, Action<TSchema> configure)
+    {
+        var schema = CreateInstance();
+        configure(schema);
+        _conditionals ??= [];
+        _conditionals.Add(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
+        return (TSchema)this;
+    }
+
+    internal void TransferContextlessConditionals(IReadOnlyList<(Func<T, bool>, ISchema<T>)>? conditionals)
+    {
+        if (conditionals == null) return;
+
+        _conditionals ??= [];
+        foreach (var (predicate, schema) in conditionals)
+        {
+            _conditionals.Add(new ContextlessSchemaConditional<T, TContext>(predicate, schema));
+        }
+    }
+
+    protected async ValueTask<List<ValidationError>?> ExecuteConditionalsAsync(T value, ValidationContext<TContext> context)
+    {
+        if (_conditionals == null) return null;
+
+        List<ValidationError>? errors = null;
+
+        foreach (var conditional in _conditionals)
+        {
+            var conditionalErrors = await conditional.ValidateAsync(value, context);
+            if (conditionalErrors.Count <= 0) continue;
+
+            errors ??= [];
+            errors.AddRange(conditionalErrors);
+        }
+
+        return errors;
     }
 }

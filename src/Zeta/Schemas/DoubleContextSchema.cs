@@ -8,9 +8,13 @@ namespace Zeta.Schemas;
 /// </summary>
 public class DoubleContextSchema<TContext> : ContextSchema<double, TContext, DoubleContextSchema<TContext>>
 {
+    internal DoubleContextSchema() { }
+
     internal DoubleContextSchema(ContextRuleEngine<double, TContext> rules) : base(rules)
     {
     }
+
+    protected override DoubleContextSchema<TContext> CreateInstance() => new();
 
     public DoubleContextSchema<TContext> Min(double min, string? message = null)
     {

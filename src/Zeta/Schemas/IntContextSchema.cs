@@ -9,7 +9,11 @@ namespace Zeta.Schemas;
 /// </summary>
 public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContextSchema<TContext>>
 {
+    internal IntContextSchema() { }
+
     internal IntContextSchema(ContextRuleEngine<int, TContext> rules) : base(rules) { }
+
+    protected override IntContextSchema<TContext> CreateInstance() => new();
 
     public IntContextSchema<TContext> Min(int min, string? message = null)
     {

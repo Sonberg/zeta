@@ -9,9 +9,13 @@ namespace Zeta.Schemas;
 /// </summary>
 public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext, DateOnlyContextSchema<TContext>>
 {
+    internal DateOnlyContextSchema() { }
+
     internal DateOnlyContextSchema(ContextRuleEngine<DateOnly, TContext> rules) : base(rules)
     {
     }
+
+    protected override DateOnlyContextSchema<TContext> CreateInstance() => new();
 
     public DateOnlyContextSchema<TContext> Min(DateOnly min, string? message = null)
     {

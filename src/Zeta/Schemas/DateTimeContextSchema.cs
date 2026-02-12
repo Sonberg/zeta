@@ -8,9 +8,13 @@ namespace Zeta.Schemas;
 /// </summary>
 public class DateTimeContextSchema<TContext> : ContextSchema<DateTime, TContext, DateTimeContextSchema<TContext>>
 {
+    internal DateTimeContextSchema() { }
+
     internal DateTimeContextSchema(ContextRuleEngine<DateTime, TContext> rules) : base(rules)
     {
     }
+
+    protected override DateTimeContextSchema<TContext> CreateInstance() => new();
 
     public DateTimeContextSchema<TContext> Min(DateTime min, string? message = null)
     {

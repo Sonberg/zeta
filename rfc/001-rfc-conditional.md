@@ -143,7 +143,7 @@ When validation logic is **mutually exclusive**, use `.Switch(...)`.
 
 ```csharp
 Z.Collection<IAnimal>()
-    .ForEach(x => x.Switch(s =>
+    .Each(x => x.Switch(s =>
         s.Case(
             condition: (animal, ctx) => animal.Type == "Dog",
             branch: dog => dog
@@ -167,7 +167,7 @@ Z.Collection<IAnimal>()
 
 ```csharp
 Z.Collection<IAnimal>()
-    .ForEach(x => x.Switch(s =>
+    .Each(x => x.Switch(s =>
         s.Case(
             condition: (animal, ctx) => animal is Dog,
             branch: (ContextlessSchema<Dog> dog) => dog

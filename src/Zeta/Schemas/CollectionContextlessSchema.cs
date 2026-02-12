@@ -12,6 +12,8 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
     {
     }
 
+    protected override CollectionContextlessSchema<TElement> CreateInstance() => new();
+
     private ISchema<TElement>? ElementSchema { get; set; }
 
     public CollectionContextlessSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules)
@@ -46,6 +48,14 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
 
                 index++;
             }
+        }
+
+        // Validate conditionals
+        var conditionalErrors = await ExecuteConditionalsAsync(value, context);
+        if (conditionalErrors != null)
+        {
+            errors ??= [];
+            errors.AddRange(conditionalErrors);
         }
 
         return errors == null
@@ -91,6 +101,7 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
     {
         var schema = new CollectionContextSchema<TElement, TContext>(ElementSchema, Rules);
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }

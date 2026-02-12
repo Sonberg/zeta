@@ -11,6 +11,8 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
 {
     public DateOnlyContextlessSchema() { }
 
+    protected override DateOnlyContextlessSchema CreateInstance() => new();
+
     public DateOnlyContextlessSchema Min(DateOnly min, string? message = null)
     {
         Use(new RefinementRule<DateOnly>((val, exec) =>
@@ -117,6 +119,7 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
     {
         var schema = new DateOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
+        schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 }
