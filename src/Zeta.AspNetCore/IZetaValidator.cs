@@ -16,23 +16,10 @@ public interface IZetaValidator
     ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default);
 
     /// <summary>
-    /// Validates a value with context using a schema resolved from DI.
-    /// </summary>
-    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default);
-
-    /// <summary>
     /// Validates a value with context using the provided schema.
+    /// Uses the schema's built-in factory delegate to create context data.
     /// </summary>
     ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default);
-
-    /// <summary>
-    /// Validates a value with context using the provided schema and factory.
-    /// </summary>
-    public ValueTask<Result<T>> ValidateAsync<T, TContext>(
-        T value,
-        ISchema<T, TContext> schema,
-        IValidationContextFactory<T, TContext> factory,
-        CancellationToken ct = default);
 }
 
 /// <summary>
@@ -70,39 +57,17 @@ public sealed class ZetaValidator : IZetaValidator
     }
 
     /// <inheritdoc />
-    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
-    {
-        var schema = _services.GetService(typeof(ISchema<T, TContext>)) as ISchema<T, TContext>
-                     ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI.");
-
-        return await ValidateAsync(value, schema, ct);
-    }
-
-    /// <inheritdoc />
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default)
     {
-        if (_services.GetService(typeof(IValidationContextFactory<T, TContext>)) is IValidationContextFactory<T, TContext> factory)
+        if (schema is IContextFactorySchema<T, TContext> { ContextFactory: { } factory })
         {
-            return await ValidateAsync(value, schema, factory, ct);
+            var contextData = await factory(value, _services, ct);
+            var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _timeProvider, ct));
+            return result.IsSuccess ? Result<T>.Success(value) : Result<T>.Failure(result.Errors);
         }
 
         throw new InvalidOperationException(
-            $"No IValidationContextFactory<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI. " +
-            $"Register a factory or use a schema without context.");
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(
-        T value,
-        ISchema<T, TContext> schema,
-        IValidationContextFactory<T, TContext> factory,
-        CancellationToken ct = default)
-    {
-        var contextData = await factory.CreateAsync(value, ct);
-        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _timeProvider, ct));
-
-        return result.IsSuccess
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(result.Errors);
+            $"No context factory for {typeof(T).Name}/{typeof(TContext).Name}. " +
+            $"Provide a factory via .Using<TContext>(factory).");
     }
 }

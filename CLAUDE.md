@@ -63,7 +63,7 @@ Shared validation logic used by both contextless and context-aware schemas:
 ### Schema Types (src/Zeta/Schemas/)
 All schemas are created via the static `Z` class entry point as contextless schemas:
 - `Z.String()` returns `StringSchema` which implements `ISchema<string>`
-- Use `.WithContext<TContext>()` to promote to context-aware when needed
+- Use `.Using<TContext>()` to promote to context-aware when needed
 
 Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `CollectionSchema`
 
@@ -119,15 +119,24 @@ Z.Collection(orderItemSchema)  // Pass element schema for complex types
     .MinLength(1)
 ```
 
-**Context Promotion**: Use `.WithContext<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:
+**Context Promotion**: Use `.Using<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:
 ```csharp
 Z.String()
     .Email()
     .MinLength(5)
-    .WithContext<UserContext>()  // Email and MinLength rules are preserved
+    .Using<UserContext>()  // Email and MinLength rules are preserved
     .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned")
     .RefineAsync(async (email, ctx, ct) =>
         !await ctx.Repo.EmailExistsAsync(email, ct), "Email exists");
+```
+
+**Context Factory Delegate**: Use `.Using<TContext>(factory)` to embed context creation directly on the schema:
+```csharp
+Z.Object<CreateOrderRequest>()
+    .Using<OrderContext>(async (value, sp, ct) => new OrderContext {
+        HasAccess = await sp.GetRequiredService<IPermissionService>().CheckAccessAsync(value.CustomerId, ct)
+    })
+    .Field(x => x.CustomerId, x => x.NotEmpty())
 ```
 
 **Async Refinement**: Context-aware schemas support `RefineAsync` for async validation with access to context data and CancellationToken.
@@ -143,7 +152,7 @@ Z.String()
 - `IZetaValidator` - Injectable service for manual validation in controllers
 - `ContextlessValidationFilter<T>` - Minimal API endpoint filter for contextless schemas
 - `ValidationFilter<T, TContext>` - Minimal API endpoint filter for context-aware schemas
-- `IValidationContextFactory<TInput, TContext>` - Async context loading before validation (scanned from assemblies via `AddZeta(assembly)`)
+- Context creation is handled by inline factory delegates on schemas via `.Using<TContext>(factory)`
 
 ## Design Principles
 
@@ -178,12 +187,14 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 ### Context Promotion
 - Schemas are always created contextless via `Z.String()`, `Z.Int()`, etc.
 - Contextless `Refine()` uses `Func<T, bool>` (single argument)
-- Use `.WithContext<TContext>()` to create a context-aware schema
-- `.WithContext<TContext>()` is an **instance method** on each schema class (e.g., `StringSchema.WithContext<TContext>()`)
-- **Rules, fields, and conditionals are automatically transferred** when calling `.WithContext()`
-- For ObjectSchema: `.WithContext<TContext>()` requires only the context type parameter (T is already known)
-- After calling `.WithContext()`, use context-aware `Refine((val, ctx) => ...)` with two arguments
-- `.WithContext()` returns typed schemas: `StringSchema<TContext>`, `IntSchema<TContext>`, `ObjectSchema<T, TContext>`, etc.
+- Use `.Using<TContext>()` to create a context-aware schema
+- Use `.Using<TContext>(factory)` to also embed a factory delegate for creating context data
+- `.Using<TContext>()` is an **instance method** on each schema class (e.g., `StringSchema.Using<TContext>()`)
+- **Rules, fields, and conditionals are automatically transferred** when calling `.Using()`
+- For ObjectSchema: `.Using<TContext>()` requires only the context type parameter (T is already known)
+- After calling `.Using()`, use context-aware `Refine((val, ctx) => ...)` with two arguments
+- `.Using()` returns typed schemas: `StringSchema<TContext>`, `IntSchema<TContext>`, `ObjectSchema<T, TContext>`, etc.
+- Factory delegate signature: `Func<T, IServiceProvider, CancellationToken, Task<TContext>>`
 
 ### Interface Separation
 - `ISchema<T>` and `ISchema<T, TContext>` are completely separate interfaces (no inheritance relationship)

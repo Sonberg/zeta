@@ -3,13 +3,25 @@
 
 ## Next release
 
+### Breaking
+
+- **Renamed `.WithContext<TContext>()` to `.Using<TContext>()`** on all contextless schema types. The new name better communicates the intent of promoting a schema to context-aware validation.
+
+- **Removed `IValidationContextFactory<TInput, TContext>`** — context factories are now inline delegates passed directly to `.Using<TContext>(factory)` instead of separate classes registered via DI assembly scanning. This simplifies the API and eliminates the need for factory classes and assembly scanning.
+
+- **`AddZeta(Assembly[])` is now obsolete** — use `AddZeta()` without parameters. Assembly scanning for context factories is no longer needed.
+
 ### Added
+
+- **`.Using<TContext>(factory)` with inline factory delegate**: Context-aware schemas now accept an optional `Func<T, IServiceProvider, CancellationToken, Task<TContext>>` factory delegate that is stored on the schema and used automatically by the ASP.NET Core integration to create context data before validation.
+
+- **`IContextFactorySchema<T, TContext>` interface**: New interface on `ContextSchema` base class providing access to the schema's built-in factory delegate for cross-assembly usage.
 
 - **`.As<T>()` type assertion for polymorphic validation**: Added `.As<TDerived>()` to `ObjectSchema` (both contextless and context-aware) for runtime type narrowing during validation. When the value matches `TDerived`, validation continues with a type-narrowed schema; otherwise emits a `type_mismatch` error. Composes naturally with `.If()` for safe polymorphic validation. Type assertions are preserved through `.WithContext()` promotion (RFC 004).
 
 - **`.If<TDerived>()` overload for concise polymorphic validation**: Added `.If<TDerived>(configure)` to `ObjectSchema` (both contextless and context-aware). Combines type checking with `.As<TDerived>()` in a single call: `Z.Object<IAnimal>().If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))`.
 
-- **`.If()` guard-style conditional validation**: Added `.If(predicate, configure)` to all schema types (value, object, collection) for guard-style conditional validation without else branches. Supports chaining multiple `.If()` guards, nesting, and context promotion via `.WithContext()`. Context-aware schemas support both value-only `If(v => ..., ...)` and value+context `If((v, ctx) => ..., ...)` predicates.
+- **`.If()` guard-style conditional validation**: Added `.If(predicate, configure)` to all schema types (value, object, collection) for guard-style conditional validation without else branches. Supports chaining multiple `.If()` guards, nesting, and context promotion via `.Using()`. Context-aware schemas support both value-only `If(v => ..., ...)` and value+context `If((v, ctx) => ..., ...)` predicates.
 
 - **Support for additional runtimes**
   - Zeta now supports .NET 6, 7, 8, and 10 (in addition to .NET Standard 2.0), allowing users to take advantage of the latest C# features and performance improvements while maintaining broad compatibility.

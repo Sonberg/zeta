@@ -74,7 +74,7 @@ public class TypeAssertionTests
     public async Task As_ContextAware_TypeMatches_Succeeds()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
         schema.As<Dog>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -87,7 +87,7 @@ public class TypeAssertionTests
     public async Task As_ContextAware_TypeMismatch_ReturnsError()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
         schema.As<Dog>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -102,7 +102,7 @@ public class TypeAssertionTests
     {
         var contextless = Z.Object<IAnimal>();
         contextless.As<Dog>();
-        var schema = contextless.WithContext<StrictContext>();
+        var schema = contextless.Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
 
@@ -156,7 +156,7 @@ public class TypeAssertionTests
     public async Task As_WithIf_ContextAware_ValidatesFieldsWithContext()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If(x => x is Dog, c => c.As<Dog>()
                 .Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
@@ -215,7 +215,7 @@ public class TypeAssertionTests
     public async Task IfGeneric_ContextAware_ValidatesFields()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));

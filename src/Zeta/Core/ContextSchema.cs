@@ -70,11 +70,13 @@ internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaCondition
 /// <summary>
 /// Base class for context-aware schemas.
 /// </summary>
-public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext> where TSchema : ContextSchema<T, TContext, TSchema>
+public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>, IContextFactorySchema<T, TContext> where TSchema : ContextSchema<T, TContext, TSchema>
 {
     protected ContextRuleEngine<T, TContext> Rules { get; }
 
     public bool AllowNull { get; private set; }
+
+    public Func<T, IServiceProvider, CancellationToken, Task<TContext>>? ContextFactory { get; private set; }
 
     private List<ISchemaConditional<T, TContext>>? _conditionals;
 
@@ -127,6 +129,9 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         AllowNull = true;
         return this as TSchema ?? throw new InvalidOperationException();
     }
+
+    internal void SetContextFactory(Func<T, IServiceProvider, CancellationToken, Task<TContext>> factory)
+        => ContextFactory = factory;
 
     public TSchema Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
     {

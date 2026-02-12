@@ -54,11 +54,22 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     /// <summary>
     /// Creates a context-aware decimal schema with all rules from this schema.
     /// </summary>
-    public DecimalContextSchema<TContext> WithContext<TContext>()
+    public DecimalContextSchema<TContext> Using<TContext>()
     {
         var schema = new DecimalContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware decimal schema with a factory delegate for creating context data.
+    /// </summary>
+    public DecimalContextSchema<TContext> Using<TContext>(
+        Func<decimal, IServiceProvider, CancellationToken, Task<TContext>> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory(factory);
         return schema;
     }
 }

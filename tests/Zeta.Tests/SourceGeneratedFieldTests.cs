@@ -195,11 +195,11 @@ public class SourceGeneratedFieldTests
     }
 
     [Fact]
-    public async Task Field_WithContextPromotion_Works()
+    public async Task Field_WithUsingPromotion_Works()
     {
         var schema = Z.Object<TestUser>()
             .Field(u => u.Name, s => s.MinLength(3))
-            .WithContext<TestContext>()
+            .Using<TestContext>()
             .Refine((user, ctx) => user.Name != ctx.MagicWord, "Name cannot be magic word");
 
         var context = Z.Context(new TestContext

@@ -8,12 +8,23 @@ Console.WriteLine("Hello, World!");
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddZeta(typeof(UserRegistrationRequest).Assembly);
+builder.Services.AddZeta();
 builder.Services.AddScoped<IUserRepository, FakeUserRepository>();
 builder.Services.AddScoped<IFeatureFlags, FakeFeatureFlags>();
 
 var schema = Z.Object<UserRegistrationRequest>()
-    .WithContext<UserRegistrationContext>()
+    .Using<UserRegistrationContext>(async (value, sp, ct) =>
+    {
+        var userRepository = sp.GetRequiredService<IUserRepository>();
+        var featureFlags = sp.GetRequiredService<IFeatureFlags>();
+
+        var allowCreationTask = featureFlags.IsEnabledAsync("AllowUserCreation", ct);
+        var userExistsTask = userRepository.UserExistsAsync(value.Email, ct);
+
+        await Task.WhenAll(allowCreationTask, userExistsTask);
+
+        return new UserRegistrationContext(allowCreationTask.Result, userExistsTask.Result);
+    })
     .Field(x => x.FirstName, x => x.MinLength(2).MaxLength(50).Alphanumeric())
     .Field(x => x.LastName, x => x.MinLength(2).Alphanumeric())
     .Field(x => x.Email, x => x.Email())
@@ -40,23 +51,6 @@ public record UserRegistrationRequest(string FirstName, string LastName, string 
 
 // Injected into validation
 public record UserRegistrationContext(bool AllowCreation, bool Exists);
-
-// Registered with builder.Services.AddZeta()
-public class UserRegistrationContextFactory(
-    IUserRepository userRepository,
-    IFeatureFlags featureFlags)
-    : IValidationContextFactory<UserRegistrationRequest, UserRegistrationContext>
-{
-    public async Task<UserRegistrationContext> CreateAsync(UserRegistrationRequest input, CancellationToken ct)
-    {
-        var allowCreationTask = featureFlags.IsEnabledAsync("AllowUserCreation", ct);
-        var userExistsTask = userRepository.UserExistsAsync(input.Password, ct);
-
-        await Task.WhenAll(allowCreationTask, userExistsTask);
-
-        return new UserRegistrationContext(allowCreationTask.Result, userExistsTask.Result);
-    }
-}
 
 
 // Fakes

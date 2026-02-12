@@ -56,17 +56,14 @@ public class ContextlessValidationFilter<T> : IEndpointFilter
 public class ValidationFilter<T, TContext> : IEndpointFilter
 {
     private readonly ISchema<T, TContext> _schema;
-    private readonly IValidationContextFactory<T, TContext>? _factory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ValidationFilter{T, TContext}"/> class.
     /// </summary>
     /// <param name="schema">The schema to use for validation.</param>
-    /// <param name="factory">Optional context factory. If not provided, will be resolved from DI.</param>
-    public ValidationFilter(ISchema<T, TContext> schema, IValidationContextFactory<T, TContext>? factory = null)
+    public ValidationFilter(ISchema<T, TContext> schema)
     {
         _schema = schema;
-        _factory = factory;
     }
 
     /// <summary>
@@ -85,9 +82,7 @@ public class ValidationFilter<T, TContext> : IEndpointFilter
         }
 
         var validator = context.HttpContext.RequestServices.GetRequiredService<IZetaValidator>();
-        var result = _factory is not null
-            ? await validator.ValidateAsync(argument, _schema, _factory, context.HttpContext.RequestAborted)
-            : await validator.ValidateAsync(argument, _schema, context.HttpContext.RequestAborted);
+        var result = await validator.ValidateAsync(argument, _schema, context.HttpContext.RequestAborted);
 
         if (!result.IsFailure) return await next(context);
 

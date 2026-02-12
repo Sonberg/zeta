@@ -643,7 +643,7 @@ public class ObjectSchemaNullableFieldTests
     {
         var schema = Z.Object<TestModel>()
             .Field(x => x.NullableInt, s => s.Nullable().Min(10).Max(100))
-            .WithContext<UserContext>();
+            .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
@@ -659,7 +659,7 @@ public class ObjectSchemaNullableFieldTests
     {
         var schema = Z.Object<TestModel>()
             .Field(x => x.NullableInt, s => s.Min(10).Max(100))
-            .WithContext<UserContext>();
+            .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, 50, null, null, null, null, null
@@ -675,7 +675,7 @@ public class ObjectSchemaNullableFieldTests
     {
         var schema = Z.Object<TestModel>()
             .Field(x => x.NullableInt, s => s.Min(10).Max(100))
-            .WithContext<UserContext>();
+            .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, 5, null, null, null, null, null
@@ -692,7 +692,7 @@ public class ObjectSchemaNullableFieldTests
     {
         var schema = Z.Object<TestModel>()
             .Field(x => x.NullableInt, s => s.Min(10).Max(100))
-            .WithContext<UserContext>();
+            .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
@@ -707,9 +707,9 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_NullWithoutNullable_Fails()
     {
-        var intSchema = Z.Int().Min(10).WithContext<UserContext>();
+        var intSchema = Z.Int().Min(10).Using<UserContext>();
         var schema = Z.Object<TestModel>()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Field(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));
@@ -725,9 +725,9 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_NullValue_Succeeds()
     {
-        var intSchema = Z.Int().Nullable().Min(10).WithContext<UserContext>();
+        var intSchema = Z.Int().Nullable().Min(10).Using<UserContext>();
         var schema = Z.Object<TestModel>()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Field(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));
@@ -742,9 +742,9 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_ValidValue_Succeeds()
     {
-        var intSchema = Z.Int().Min(10).WithContext<UserContext>();
+        var intSchema = Z.Int().Min(10).Using<UserContext>();
         var schema = Z.Object<TestModel>()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Field(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));
@@ -759,9 +759,9 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_InvalidValue_Fails()
     {
-        var intSchema = Z.Int().Min(10).WithContext<UserContext>();
+        var intSchema = Z.Int().Min(10).Using<UserContext>();
         var schema = Z.Object<TestModel>()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Field(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));

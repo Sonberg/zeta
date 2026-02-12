@@ -107,7 +107,7 @@ public class IfConditionalTests
     public async Task ContextAware_ValueOnlyPredicate()
     {
         var schema = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If(v => v.Length > 0, s => s.MinLength(3));
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -129,7 +129,7 @@ public class IfConditionalTests
     public async Task ContextAware_ValueAndContextPredicate()
     {
         var schema = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 
         var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -153,7 +153,7 @@ public class IfConditionalTests
     {
         var schema = Z.String()
             .If(v => v.StartsWith("A"), s => s.MinLength(5))
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
 
@@ -176,7 +176,7 @@ public class IfConditionalTests
         var schema = Z.Object<User>()
             .If(u => u.Type == "admin", s => s
                 .Field(u => u.Name, n => n.MinLength(5)))
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
 

@@ -136,13 +136,24 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.
     /// </summary>
     /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
-    public ObjectContextSchema<T, TContext> WithContext<TContext>()
+    public ObjectContextSchema<T, TContext> Using<TContext>()
     {
         var schema = new ObjectContextSchema<T, TContext>(Rules, _fields);
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
         if (_typeAssertion != null)
             schema.SetTypeAssertion(_typeAssertion.ToContext<TContext>());
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware object schema with a factory delegate for creating context data.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Using<TContext>(
+        Func<T, IServiceProvider, CancellationToken, Task<TContext>> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory(factory);
         return schema;
     }
 

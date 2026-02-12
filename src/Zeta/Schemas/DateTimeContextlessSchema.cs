@@ -123,11 +123,22 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime, Date
     /// <summary>
     /// Creates a context-aware DateTime schema with all rules from this schema.
     /// </summary>
-    public DateTimeContextSchema<TContext> WithContext<TContext>()
+    public DateTimeContextSchema<TContext> Using<TContext>()
     {
         var schema = new DateTimeContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware DateTime schema with a factory delegate for creating context data.
+    /// </summary>
+    public DateTimeContextSchema<TContext> Using<TContext>(
+        Func<DateTime, IServiceProvider, CancellationToken, Task<TContext>> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory(factory);
         return schema;
     }
 }

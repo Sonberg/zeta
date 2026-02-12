@@ -3,16 +3,16 @@ using Zeta.Schemas;
 
 namespace Zeta.Tests;
 
-public class WithContextTests
+public class UsingTests
 {
     private record UserContext(string BannedEmail, int MaxValue);
 
     [Fact]
-    public async Task WithContext_BasicRefine_Works()
+    public async Task Using_BasicRefine_Works()
     {
         var schema = Z.String()
             .Email()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((email, ctx) => email != ctx.BannedEmail, "Email is banned", "banned_email");
 
         var context = new UserContext("banned@example.com", 100);
@@ -28,13 +28,13 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_RulesTransfer_FromContextlessToContextAware()
+    public async Task Using_RulesTransfer_FromContextlessToContextAware()
     {
-        // Rules TRANSFER when calling WithContext() - they can be added before
+        // Rules TRANSFER when calling Using() - they can be added before
         var schema = Z.String()
             .Email()
             .MinLength(10)
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((email, ctx) => email != ctx.BannedEmail, "Email is banned");
 
         var context = new UserContext("banned@example.com", 100);
@@ -51,10 +51,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_MultipleRefines_AllRun()
+    public async Task Using_MultipleRefines_AllRun()
     {
         var schema = Z.String()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => val != ctx.BannedEmail, "Email is banned", "banned")
             .Refine((val, ctx) => val.Length <= ctx.MaxValue, "Too long", "too_long");
 
@@ -68,10 +68,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_AsyncRefine_Works()
+    public async Task Using_AsyncRefine_Works()
     {
         var schema = Z.String()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .RefineAsync(async (val, ctx) =>
             {
                 await Task.Delay(1);
@@ -89,11 +89,11 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_IntSchema_Works()
+    public async Task Using_IntSchema_Works()
     {
         var schema = Z.Int()
             .Min(0)
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds maximum");
 
         var context = new UserContext("", 100);
@@ -106,11 +106,11 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_WithNullable_Works()
+    public async Task Using_WithNullable_Works()
     {
         var schema = Z.String()
             .Email()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => val != ctx.BannedEmail, "Email is banned")
             .Nullable();
 
@@ -131,11 +131,11 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_IntWithAllowNull_Works()
+    public async Task Using_IntWithAllowNull_Works()
     {
         var schema = Z.Int()
             .Min(0)
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds maximum")
             .Nullable();
 
@@ -152,11 +152,11 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_InObjectSchema_Works()
+    public async Task Using_InObjectSchema_Works()
     {
         var userSchema = Z.Object<User>()
             .Field(u => u.Email, Z.String().Email())
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned", "banned_email");
 
         var context = new UserContext("banned@example.com", 100);
@@ -172,10 +172,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_ErrorPath_IncludesPath()
+    public async Task Using_ErrorPath_IncludesPath()
     {
         var schema = Z.String()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => val != ctx.BannedEmail, "Banned");
         
         var context = new ValidationContext<UserContext>(
@@ -187,11 +187,11 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_DecimalSchema_Works()
+    public async Task Using_DecimalSchema_Works()
     {
         var schema = Z.Decimal()
             .Min(0m)
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds maximum");
 
         var context = new UserContext("", 100);
@@ -204,10 +204,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_BoolSchema_Works()
+    public async Task Using_BoolSchema_Works()
     {
         var schema = Z.Bool()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => ctx.MaxValue > 0 || !val, "Cannot be true when max is 0");
 
         var context = new UserContext("", 0);
@@ -220,10 +220,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_DoubleSchema_Works()
+    public async Task Using_DoubleSchema_Works()
     {
         var schema = Z.Double()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds maximum");
 
         var context = new UserContext("", 100);
@@ -236,13 +236,13 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_GuidSchema_Works()
+    public async Task Using_GuidSchema_Works()
     {
         var bannedId = Guid.NewGuid();
         var context = new GuidContext(bannedId);
 
         var schema = Z.Guid()
-            .WithContext<GuidContext>()
+            .Using<GuidContext>()
             .Refine((val, ctx) => val != ctx.BannedId, "ID is banned");
 
         var validResult = await schema.ValidateAsync(Guid.NewGuid(), context);
@@ -253,12 +253,12 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_DateTimeSchema_Works()
+    public async Task Using_DateTimeSchema_Works()
     {
         var context = new DateContext(DateTime.Now.AddDays(1));
 
         var schema = Z.DateTime()
-            .WithContext<DateContext>()
+            .Using<DateContext>()
             .Refine((val, ctx) => val < ctx.MaxDate, "Date too late");
 
         var validResult = await schema.ValidateAsync(DateTime.Now, context);
@@ -269,13 +269,13 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_ObjectSchema_Works()
+    public async Task Using_ObjectSchema_Works()
     {
         var innerSchema = Z.Object<User>()
             .Field(u => u.Email, Z.String().Email());
 
         var schema = innerSchema
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned");
 
         var context = new UserContext("banned@example.com", 100);
@@ -288,11 +288,11 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_ArraySchema_Works()
+    public async Task Using_ArraySchema_Works()
     {
         var schema = Z.Collection<int>()
             .MinLength(0)
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((arr, ctx) => arr.Count <= ctx.MaxValue, "Too many items");
 
         var context = new UserContext("", 3);
@@ -305,10 +305,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_ListSchema_Works()
+    public async Task Using_ListSchema_Works()
     {
         var schema = Z.Collection<string>()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((list, ctx) => list.Count <= ctx.MaxValue, "Too many items");
 
         var context = new UserContext("", 2);
@@ -330,10 +330,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_RefineWithoutContext_Works()
+    public async Task Using_RefineWithoutContext_Works()
     {
         var schema = Z.String()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine(val => val.Length > 3, "Too short")
             .Refine((val, ctx) => val != ctx.BannedEmail, "Email is banned");
 
@@ -355,10 +355,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_RefineAsyncWithoutContext_Works()
+    public async Task Using_RefineAsyncWithoutContext_Works()
     {
         var schema = Z.String()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .RefineAsync(async (val) =>
             {
                 await Task.Delay(1);
@@ -375,11 +375,11 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_FieldAfterWithContext_Works()
+    public async Task Using_FieldAfterUsing_Works()
     {
         // Can add fields after WithContext
         var schema = Z.Object<User>()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Field(u => u.Email, Z.String().Email())
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned");
 
@@ -400,13 +400,13 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_FieldsTransferFromContextless()
+    public async Task Using_FieldsTransferFromContextless()
     {
-        // Fields TRANSFER when calling WithContext() - they can be added before
+        // Fields TRANSFER when calling Using() - they can be added before
         var schema = Z.Object<Person>()
             .Field(p => p.Name, Z.String().MinLength(2))
             .Field(p => p.Age, Z.Int().Min(0))
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((person, ctx) => person.Age <= ctx.MaxValue, "Age exceeds maximum");
 
         var context = new UserContext("", 50);
@@ -431,10 +431,10 @@ public class WithContextTests
     }
 
     [Fact]
-    public async Task WithContext_WhenAfterWithContext_Works()
+    public async Task Using_WhenAfterUsing_Works()
     {
         var schema = Z.Object<Order>()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Field(o => o.Total, Z.Decimal().Min(0));
             // .When(
             //     o => o.Total > 100,
@@ -461,6 +461,46 @@ public class WithContextTests
     private record Person(string Name, int Age);
 
     private record Order(decimal Total, string? DiscountCode);
+
+    [Fact]
+    public void Using_WithFactory_StoresFactoryOnSchema()
+    {
+        Func<string, IServiceProvider, CancellationToken, Task<UserContext>> factory =
+            (value, sp, ct) => Task.FromResult(new UserContext("", 100));
+
+        var schema = Z.String()
+            .Using(factory);
+
+        var factorySchema = schema as IContextFactorySchema<string, UserContext>;
+        Assert.NotNull(factorySchema);
+        Assert.NotNull(factorySchema.ContextFactory);
+        Assert.Same(factory, factorySchema.ContextFactory);
+    }
+
+    [Fact]
+    public void Using_WithoutFactory_ContextFactoryIsNull()
+    {
+        var schema = Z.String()
+            .Using<UserContext>();
+
+        var factorySchema = schema as IContextFactorySchema<string, UserContext>;
+        Assert.NotNull(factorySchema);
+        Assert.Null(factorySchema.ContextFactory);
+    }
+
+    [Fact]
+    public void Using_ObjectSchema_WithFactory_StoresFactory()
+    {
+        Func<User, IServiceProvider, CancellationToken, Task<UserContext>> factory =
+            (value, sp, ct) => Task.FromResult(new UserContext(value.Email, 100));
+
+        var schema = Z.Object<User>()
+            .Using(factory);
+
+        var factorySchema = schema as IContextFactorySchema<User, UserContext>;
+        Assert.NotNull(factorySchema);
+        Assert.NotNull(factorySchema.ContextFactory);
+    }
 
     private record GuidContext(Guid BannedId);
 

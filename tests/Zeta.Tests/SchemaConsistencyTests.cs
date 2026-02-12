@@ -10,109 +10,109 @@ namespace Zeta.Tests;
 public class SchemaConsistencyTests
 {
     [Fact]
-    public void WithContext_StringSchema_ReturnsTypedContextAwareSchema()
+    public void Using_StringSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.String();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<StringContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_IntSchema_ReturnsTypedContextAwareSchema()
+    public void Using_IntSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Int();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<IntContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_DoubleSchema_ReturnsTypedContextAwareSchema()
+    public void Using_DoubleSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Double();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<DoubleContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_DecimalSchema_ReturnsTypedContextAwareSchema()
+    public void Using_DecimalSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Decimal();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<DecimalContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_BoolSchema_ReturnsTypedContextAwareSchema()
+    public void Using_BoolSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Bool();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<BoolContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_GuidSchema_ReturnsTypedContextAwareSchema()
+    public void Using_GuidSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Guid();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<GuidContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_DateTimeSchema_ReturnsTypedContextAwareSchema()
+    public void Using_DateTimeSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.DateTime();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<DateTimeContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_DateOnlySchema_ReturnsTypedContextAwareSchema()
+    public void Using_DateOnlySchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.DateOnly();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<DateOnlyContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_TimeOnlySchema_ReturnsTypedContextAwareSchema()
+    public void Using_TimeOnlySchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.TimeOnly();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<TimeOnlyContextSchema<object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_ObjectSchema_ReturnsTypedContextAwareSchema()
+    public void Using_ObjectSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Object<TestClass>();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<ObjectContextSchema<TestClass, object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_ArraySchema_ReturnsTypedContextAwareSchema()
+    public void Using_ArraySchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Collection<int>();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<CollectionContextSchema<int, object>>(contextAware);
     }
 
     [Fact]
-    public void WithContext_ListSchema_ReturnsTypedContextAwareSchema()
+    public void Using_ListSchema_ReturnsTypedContextAwareSchema()
     {
         var contextless = Z.Collection<string>();
-        var contextAware = contextless.WithContext<object>();
+        var contextAware = contextless.Using<object>();
 
         Assert.IsType<CollectionContextSchema<string, object>>(contextAware);
     }
@@ -120,11 +120,11 @@ public class SchemaConsistencyTests
     private class TestClass { }
 
     /// <summary>
-    /// Ensures all non-abstract classes inheriting from ContextlessSchema have a WithContext method.
+    /// Ensures all non-abstract classes inheriting from ContextlessSchema have a Using method.
     /// This enforces the pattern since we can't use an abstract method due to return type constraints.
     /// </summary>
     [Fact]
-    public void AllContextlessSchemas_HaveWithContextMethod()
+    public void AllContextlessSchemas_HaveUsingMethod()
     {
         var assembly = typeof(ContextlessSchema<,>).Assembly;
         var contextlessSchemaType = typeof(ContextlessSchema<,>);
@@ -134,33 +134,33 @@ public class SchemaConsistencyTests
             .Where(t => IsSubclassOfGeneric(t, contextlessSchemaType))
             .ToList();
 
-        var missingWithContext = new List<Type>();
+        var missingUsing = new List<Type>();
 
         foreach (var type in contextlessSchemaTypes)
         {
-            // Look for a public generic method named "WithContext" with one type parameter
-            var withContextMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .FirstOrDefault(m => m.Name == "WithContext"
+            // Look for a public generic method named "Using" with one type parameter
+            var usingMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(m => m.Name == "Using"
                     && m.IsGenericMethod
                     && m.GetGenericArguments().Length == 1);
 
-            if (withContextMethod == null)
+            if (usingMethod == null)
             {
-                missingWithContext.Add(type);
+                missingUsing.Add(type);
             }
         }
 
         Assert.True(
-            missingWithContext.Count == 0,
-            $"The following ContextlessSchema types are missing a WithContext<TContext>() method:\n" +
-            string.Join("\n", missingWithContext.Select(t => $"  - {t.FullName}")));
+            missingUsing.Count == 0,
+            $"The following ContextlessSchema types are missing a Using<TContext>() method:\n" +
+            string.Join("\n", missingUsing.Select(t => $"  - {t.FullName}")));
     }
 
     /// <summary>
-    /// Ensures WithContext methods return context-aware schema types (not just ISchema).
+    /// Ensures Using methods return context-aware schema types (not just ISchema).
     /// </summary>
     [Fact]
-    public void AllContextlessSchemas_WithContextReturnsTypedSchema()
+    public void AllContextlessSchemas_UsingReturnsTypedSchema()
     {
         var assembly = typeof(ContextlessSchema<,>).Assembly;
         var contextlessSchemaType = typeof(ContextlessSchema<,>);
@@ -174,14 +174,14 @@ public class SchemaConsistencyTests
 
         foreach (var type in contextlessSchemaTypes)
         {
-            var withContextMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .FirstOrDefault(m => m.Name == "WithContext"
+            var usingMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(m => m.Name == "Using"
                     && m.IsGenericMethod
                     && m.GetGenericArguments().Length == 1);
 
-            if (withContextMethod == null) continue;
+            if (usingMethod == null) continue;
 
-            var returnType = withContextMethod.ReturnType;
+            var returnType = usingMethod.ReturnType;
 
             // Check if return type is an interface (ISchema<T, TContext>)
             // We want concrete types like StringSchema<TContext>, not ISchema<string, TContext>
@@ -194,7 +194,7 @@ public class SchemaConsistencyTests
 
         Assert.True(
             returnsInterfaceOnly.Count == 0,
-            $"The following ContextlessSchema types have WithContext<TContext>() returning an interface instead of a typed schema:\n" +
+            $"The following ContextlessSchema types have Using<TContext>() returning an interface instead of a typed schema:\n" +
             string.Join("\n", returnsInterfaceOnly.Select(x => $"  - {x.SchemaType.Name} returns {x.ReturnType.Name}")));
     }
 
@@ -466,7 +466,7 @@ public class SchemaConsistencyTests
         var excludedMethods = new HashSet<string>
         {
             "ValidateAsync",
-            "WithContext",
+            "Using",
             "Use",
             "GetType",
             "ToString",

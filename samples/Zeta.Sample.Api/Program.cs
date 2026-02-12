@@ -11,9 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 // Register Zeta validation services
-// - Registers IZetaValidator for manual validation in controllers
-// - Scans assembly for IValidationContextFactory implementations and registers them
-builder.Services.AddZeta(typeof(Program).Assembly);
+builder.Services.AddZeta();
 
 // Register controllers
 builder.Services.AddControllers();

@@ -44,7 +44,7 @@ internal sealed class ContextlessTypeAssertion<T, TDerived> : ITypeAssertion<T>
     }
 
     public ITypeAssertion<T, TContext> ToContext<TContext>()
-        => new ContextAwareTypeAssertion<T, TDerived, TContext>(_schema.WithContext<TContext>());
+        => new ContextAwareTypeAssertion<T, TDerived, TContext>(_schema.Using<TContext>());
 }
 
 internal sealed class ContextAwareTypeAssertion<T, TDerived, TContext> : ITypeAssertion<T, TContext>
