@@ -207,6 +207,12 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         }
     }
 
+    internal void AddConditional(Func<T, bool> predicate, ISchema<T, TContext> schema)
+    {
+        _conditionals ??= [];
+        _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
+    }
+
     protected async ValueTask<List<ValidationError>?> ExecuteConditionalsAsync(T value, ValidationContext<TContext> context)
     {
         if (_conditionals == null) return null;
