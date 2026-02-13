@@ -5,6 +5,8 @@ namespace Zeta.Core;
 internal interface ISchemaConditional<T, TContext>
 {
     ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context);
+
+    IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories();
 }
 
 internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
@@ -24,6 +26,11 @@ internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditi
 
         var result = await _schema.ValidateAsync(value, context);
         return result.IsFailure ? result.Errors : [];
+    }
+
+    public IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    {
+        return [];
     }
 }
 
@@ -45,6 +52,11 @@ internal sealed class ContextAwareSchemaConditional<T, TContext> : ISchemaCondit
         var result = await _schema.ValidateAsync(value, context);
         return result.IsFailure ? result.Errors : [];
     }
+
+    public IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    {
+        return _schema.GetContextFactories();
+    }
 }
 
 internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
@@ -64,6 +76,11 @@ internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaCondition
 
         var result = await _schema.ValidateAsync(value, context);
         return result.IsFailure ? result.Errors : [];
+    }
+
+    public IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    {
+        return _schema.GetContextFactories();
     }
 }
 
@@ -132,6 +149,28 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     internal void SetContextFactory(Func<T, IServiceProvider, CancellationToken, Task<TContext>> factory)
         => ContextFactory = factory;
+
+    IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> ISchema<T, TContext>.GetContextFactories()
+    {
+        return GetContextFactoriesCore();
+    }
+
+    protected virtual IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactoriesCore()
+    {
+        if (ContextFactory is not null)
+        {
+            yield return ContextFactory;
+        }
+
+        if (_conditionals == null) yield break;
+        foreach (var conditional in _conditionals)
+        {
+            foreach (var factory in conditional.GetContextFactories())
+            {
+                yield return factory;
+            }
+        }
+    }
 
     public TSchema Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
     {

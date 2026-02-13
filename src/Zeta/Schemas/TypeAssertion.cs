@@ -20,6 +20,8 @@ internal interface ITypeAssertion<T>
 internal interface ITypeAssertion<T, TContext>
 {
     ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context);
+
+    IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories();
 }
 
 internal sealed class ContextlessTypeAssertion<T, TDerived> : ITypeAssertion<T>
@@ -66,5 +68,22 @@ internal sealed class ContextAwareTypeAssertion<T, TDerived, TContext> : ITypeAs
 
         var result = await _schema.ValidateAsync(derived, context);
         return result.IsFailure ? result.Errors : [];
+    }
+
+    public IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    {
+        foreach (var derivedFactory in ((ISchema<TDerived, TContext>)_schema).GetContextFactories())
+        {
+            yield return (value, services, ct) =>
+            {
+                if (value is not TDerived derived)
+                {
+                    throw new InvalidOperationException(
+                        $"Factory for '{typeof(TDerived).Name}' cannot create context for '{value?.GetType().Name ?? "null"}'.");
+                }
+
+                return derivedFactory(derived, services, ct);
+            };
+        }
     }
 }

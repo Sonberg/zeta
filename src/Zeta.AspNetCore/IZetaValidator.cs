@@ -59,11 +59,21 @@ public sealed class ZetaValidator : IZetaValidator
     /// <inheritdoc />
     public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default)
     {
-        if (schema is IContextFactorySchema<T, TContext> { ContextFactory: { } factory })
+        var factory = ResolveContextFactory(schema);
+        var contextData = await factory(value, _services, ct);
+        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _timeProvider, ct));
+        return result.IsSuccess ? Result<T>.Success(value) : Result<T>.Failure(result.Errors);
+    }
+
+    private static Func<T, IServiceProvider, CancellationToken, Task<TContext>> ResolveContextFactory<T, TContext>(ISchema<T, TContext> schema)
+    {
+        var factories = schema.GetContextFactories().ToList();
+        if (factories.Count == 1) return factories[0];
+        if (factories.Count > 1)
         {
-            var contextData = await factory(value, _services, ct);
-            var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _timeProvider, ct));
-            return result.IsSuccess ? Result<T>.Success(value) : Result<T>.Failure(result.Errors);
+            throw new InvalidOperationException(
+                $"Multiple context factories for {typeof(T).Name}/{typeof(TContext).Name} were found in the schema tree. " +
+                "Define exactly one factory via .Using<TContext>(factory).");
         }
 
         throw new InvalidOperationException(

@@ -15,6 +15,23 @@ internal sealed class NullableStructContextWrapper<T, TContext> : ISchema<T?, TC
 
     public bool AllowNull => _inner.AllowNull;
 
+    IEnumerable<Func<T?, IServiceProvider, CancellationToken, Task<TContext>>> ISchema<T?, TContext>.GetContextFactories()
+    {
+        foreach (var factory in _inner.GetContextFactories())
+        {
+            yield return (value, services, ct) =>
+            {
+                if (!value.HasValue)
+                {
+                    throw new InvalidOperationException(
+                        $"Factory for '{typeof(T).Name}' cannot create context for null.");
+                }
+
+                return factory(value.Value, services, ct);
+            };
+        }
+    }
+
     public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (value is null)

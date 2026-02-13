@@ -8,6 +8,8 @@ public interface ISchema<in T, TContext>
 {
     internal bool AllowNull { get; }
 
+    internal IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories();
+
     /// <summary>
     /// Validates the given value asynchronously with context.
     /// </summary>

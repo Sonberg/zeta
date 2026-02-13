@@ -53,6 +53,21 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
             });
     }
 
+    /// <summary>
+    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/>
+    /// and promotes the root schema to context-aware using the returned derived schema.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TDerived, TContext>(
+        Func<ObjectContextlessSchema<TDerived>, ObjectContextSchema<TDerived, TContext>> configure) where TDerived : class, T
+    {
+        var configuredDerivedSchema = configure(new ObjectContextlessSchema<TDerived>());
+        var schema = Using<TContext>();
+        return schema.If(
+            value => value is TDerived,
+            conditional => conditional.SetTypeAssertion(
+                new ContextAwareTypeAssertion<T, TDerived, TContext>(configuredDerivedSchema)));
+    }
+
     internal void SetTypeAssertion(ITypeAssertion<T>? assertion) => _typeAssertion = assertion;
 
 

@@ -15,6 +15,11 @@ internal sealed class SchemaAdapter<T, TContext> : ISchema<T, TContext>
 
     public bool AllowNull => _inner.AllowNull;
 
+    IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> ISchema<T, TContext>.GetContextFactories()
+    {
+        return [];
+    }
+
     public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         var result = await _inner.ValidateAsync(value, context);
