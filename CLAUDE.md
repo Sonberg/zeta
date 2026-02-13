@@ -247,4 +247,5 @@ public StringSchema<TContext> Foo(...)
 ```
 
 ### After changes
-Add a section in CHANGELOG.md below "Next release". Versions are managed with tags in git
+- Then adding schema features all features should support fluent builder for primativ types. And accepts ISchema<T> and ISchema<T, TContext> for object fields. If context aware schema is provided, the full schema must be context aware too.
+- Add a section in CHANGELOG.md below "Next release". Versions are managed with tags in git

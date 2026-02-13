@@ -261,7 +261,7 @@ public class TypeAssertionTests
         ISchema<IAnimal, StrictContext> schema = Z.Object<IAnimal>()
             .If<Dog, StrictContext>(dog => dog
                 .Field(x => x.WoofVolume, x => x.Min(0).Max(100))
-                .WithContext<StrictContext>()
+                .Using<StrictContext>()
                 .Refine((_, ctx) => ctx.IsStrict, "Strict context required for dogs"))
             .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 
