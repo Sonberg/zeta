@@ -211,30 +211,44 @@ See the [Collections guide](docs/Collections.md) for advanced patterns including
 
 ### Conditional Validation
 
-Use `.When()` for dependent field validation:
+Use `.If()` for guard-style conditional validation on any schema type:
 
 ```csharp
+// Object schemas — conditional field validation
 Z.Object<Order>()
-    .Field(o => o.PaymentMethod, Z.String())
-    .Field(o => o.CardNumber, Z.String().Nullable())
-    .Field(o => o.BankAccount, Z.String().Nullable())
-    .When(
-        o => o.PaymentMethod == "card",
-        then: c => c.Require(o => o.CardNumber),    // CardNumber required when paying by card
-        @else: c => c.Require(o => o.BankAccount)  // BankAccount required otherwise
-    );
+    .Field(o => o.PaymentMethod, s => s.NotEmpty())
+    .If(o => o.PaymentMethod == "card", s => s
+        .Field(o => o.CardNumber, n => n.MinLength(16)))
+    .If(o => o.PaymentMethod == "bank", s => s
+        .Field(o => o.BankAccount, n => n.MinLength(10)));
+
+// Value schemas — apply rules only when predicate matches
+Z.Int()
+    .If(v => v >= 18, s => s.Max(65));
+
+// Multiple guards and nesting
+Z.Int()
+    .If(v => v >= 0, s => s
+        .If(v => v >= 18, inner => inner.Max(100)));
+
+// Context-aware: value+context predicates
+Z.String()
+    .WithContext<SecurityContext>()
+    .If((v, ctx) => ctx.RequireStrongPassword, s => s.MinLength(12));
 ```
 
-Use `.Select()` for inline schema building within conditionals:
+### Polymorphic Validation
+
+Use `.If<TDerived>()` for type-narrowed validation on polymorphic types:
 
 ```csharp
-Z.Object<User>()
-    .Field(u => u.Password, Z.String().Nullable())
-    .Field(u => u.RequiresStrongPassword, Z.Bool())
-    .When(
-        u => u.RequiresStrongPassword,
-        then: c => c.Select(u => u.Password, s => s.MinLength(12).MaxLength(100))
-    );
+Z.Object<IAnimal>()
+    .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
+    .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+
+// Or explicitly with .As<TDerived>()
+var schema = Z.Object<IAnimal>();
+schema.As<Dog>();  // Fails with type_mismatch if not a Dog
 ```
 
 ## Result Pattern
@@ -460,6 +474,7 @@ public record ValidationError(
 | `business_hours` / `morning` / `afternoon` / `evening` | Time constraints |
 | `not_empty` / `version` | GUID validation |
 | `is_true` / `is_false` | Boolean constraints |
+| `type_mismatch` | Type assertion failed (`.As<T>()`) |
 | `custom_error` | Custom refinement failed |
 
 ## Benchmarks

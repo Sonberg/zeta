@@ -254,4 +254,29 @@ public class TypeAssertionTests
         Assert.False(invalidCat.IsSuccess);
         Assert.Contains(invalidCat.Errors, e => e.Path == "clawSharpness" && e.Code == "max_value");
     }
+
+    [Fact]
+    public async Task IfGeneric_ContextfulDerivedBranch_PromotesRootSchema()
+    {
+        ISchema<IAnimal, StrictContext> schema = Z.Object<IAnimal>()
+            .If<Dog, StrictContext>(dog => dog
+                .Field(x => x.WoofVolume, x => x.Min(0).Max(100))
+                .WithContext<StrictContext>()
+                .Refine((_, ctx) => ctx.IsStrict, "Strict context required for dogs"))
+            .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+
+        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+
+        var strictDog = await schema.ValidateAsync(new Dog(50), strictCtx);
+        Assert.True(strictDog.IsSuccess);
+
+        var lenientDog = await schema.ValidateAsync(new Dog(50), lenientCtx);
+        Assert.False(lenientDog.IsSuccess);
+        Assert.Contains(lenientDog.Errors, e => e.Message == "Strict context required for dogs");
+
+        var invalidCat = await schema.ValidateAsync(new Cat(20), strictCtx);
+        Assert.False(invalidCat.IsSuccess);
+        Assert.Contains(invalidCat.Errors, e => e.Path == "clawSharpness" && e.Code == "max_value");
+    }
 }

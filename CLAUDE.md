@@ -143,10 +143,43 @@ Z.Object<CreateOrderRequest>()
 
 **Schema Bridging**: `SchemaAdapter<T, TContext>` wraps contextless `ISchema<T>` for use in context-aware object schemas.
 
-**Conditional Validation**: `.When()` on ObjectSchema enables dependent field validation via `ConditionalBuilder`:
-- `.Require(x => x.Field)` - Ensures field is not null
-- `.Field(x => x.Field, schema)` - Validates field with a schema
-- `.Select(x => x.Field, s => s.MinLength(3))` - Inline schema builder for string, int, double, decimal types
+**Conditional Validation**: `.If()` on all schema types enables guard-style conditional validation:
+```csharp
+// Value schemas — apply rules only when predicate matches
+Z.Int()
+    .If(v => v >= 18, s => s.Max(65));
+
+// Object schemas — conditional field validation
+Z.Object<User>()
+    .If(u => u.Type == "admin", s => s
+        .Field(u => u.Name, n => n.MinLength(5)));
+
+// Collection schemas — conditional collection rules
+Z.Collection<string>()
+    .If(items => items.Count > 0, s => s.MinLength(2));
+
+// Multiple guards and nesting
+Z.Int()
+    .If(v => v >= 0, s => s
+        .If(v => v >= 18, inner => inner.Max(100)));
+
+// Context-aware: value-only or value+context predicates
+Z.String()
+    .WithContext<StrictContext>()
+    .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
+```
+
+**Type Assertions**: `.As<TDerived>()` on ObjectSchema enables polymorphic type narrowing. `.If<TDerived>()` combines type checking with `.As()`:
+```csharp
+// Explicit: type assertion with .As()
+var schema = Z.Object<IAnimal>();
+schema.As<Dog>();  // Fails with type_mismatch if not a Dog
+
+// Concise: .If<TDerived>() combines is-check + As in one call
+Z.Object<IAnimal>()
+    .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
+    .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+```
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)
 - `IZetaValidator` - Injectable service for manual validation in controllers
@@ -172,7 +205,7 @@ Z.Object<CreateOrderRequest>()
 - Field validators bridge the gap for value types via an `isNull` predicate (source-generated)
 
 ### Validation Order
-ObjectSchema validates in order: Fields → Conditionals (`.When()`) → Rules (`.Refine()`)
+ObjectSchema validates in order: Fields → Type Assertions (`.As()`) → Conditionals (`.If()`) → Rules (`.Refine()`)
 
 ### Context Factory Failures
 Factory exceptions propagate as HTTP 500, not validation errors. Handle soft failures by returning a context that causes validation to fail.
@@ -181,7 +214,6 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 - Fields are required (non-null) by default
 - Exception: nullable value type fields (`int?`, etc.) — null skips validation automatically
 - `.Nullable()` on a schema allows null to pass validation
-- `.Require()` in conditionals = not null check
 - `.NotEmpty()` on strings = not whitespace
 
 ### Context Promotion
