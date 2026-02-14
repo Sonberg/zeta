@@ -18,14 +18,17 @@ internal sealed class TypeNarrowingSchemaAdapter<TBase, TDerived, TContext> : IS
         {
             yield return (value, sp, ct) =>
             {
-                if (value is not TDerived derived)
+                if (value is TDerived derived)
                 {
-                    throw new InvalidOperationException(
-                        $"Value is of type '{typeof(TBase).Name}', not {typeof(TDerived).Name}.");
+                    return factory(derived, sp, ct);
                 }
 
-
-                return factory(derived, sp, ct);
+                // If value is not TDerived, we can't use this factory.
+                // In a polymorphic scenario where this is the only factory, this will fail.
+                // This is expected if the context is only available/meaningful for TDerived.
+                throw new InvalidOperationException(
+                    $"Context factory for {typeof(TDerived).Name} was called with a value of type {value?.GetType().Name ?? "null"}, which is not {typeof(TDerived).Name}. " +
+                    "Ensure a root context factory is provided or all branches handle their required context.");
             };
         }
     }
