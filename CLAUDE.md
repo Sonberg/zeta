@@ -165,20 +165,20 @@ Z.Int()
 
 // Context-aware: value-only or value+context predicates
 Z.String()
-    .WithContext<StrictContext>()
+    .Using<StrictContext>()
     .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 ```
 
-**Type Assertions**: `.As<TDerived>()` on ObjectSchema enables polymorphic type narrowing. `.If<TDerived>()` combines type checking with `.As()`:
+**Type Assertions**: `.As<TDerived>()` on ObjectSchema enables polymorphic type narrowing. Use `.If(predicate, ...)` with `.As<TDerived>()` for type-specific branches:
 ```csharp
 // Explicit: type assertion with .As()
 var schema = Z.Object<IAnimal>();
 schema.As<Dog>();  // Fails with type_mismatch if not a Dog
 
-// Concise: .If<TDerived>() combines is-check + As in one call
+// Type-narrowed conditional branches
 Z.Object<IAnimal>()
-    .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
-    .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+    .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
+    .If(x => x is Cat, cat => cat.As<Cat>().Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 ```
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)
@@ -226,7 +226,7 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 - For ObjectSchema: `.Using<TContext>()` requires only the context type parameter (T is already known)
 - After calling `.Using()`, use context-aware `Refine((val, ctx) => ...)` with two arguments
 - `.Using()` returns typed schemas: `StringSchema<TContext>`, `IntSchema<TContext>`, `ObjectSchema<T, TContext>`, etc.
-- Factory delegate signature: `Func<T, IServiceProvider, CancellationToken, Task<TContext>>`
+- Factory delegate signature: `Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>`
 
 ### Interface Separation
 - `ISchema<T>` and `ISchema<T, TContext>` are completely separate interfaces (no inheritance relationship)

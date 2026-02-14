@@ -138,11 +138,11 @@ public sealed record RegisterUserCommand(
 {
     public static ISchema<RegisterUserCommand> Schema =
         Z.Object<RegisterUserCommand>()
-            .WithContext<RegisterUserCommand, UserContext>()
+            .Using<UserContext>()
             .Field(x => x.Email,
                 Z.String()
                     .Email()
-                    .WithContext<UserContext>()
+                    .Using<UserContext>()
                     .Refine((_, ctx) => !ctx.EmailExists, "Email already taken")
             )
             .Field(x => x.Password, Z.String().MinLength(8));
@@ -152,31 +152,16 @@ public sealed record RegisterUserCommand(
 ### Context Factory
 
 ```csharp
-public sealed class UserContextFactory
-    : IValidationContextFactory<RegisterUserCommand, UserContext>
-{
-    private readonly IUserRepository _repo;
-
-    public UserContextFactory(IUserRepository repo)
-    {
-        _repo = repo;
-    }
-
-    public async Task<UserContext> CreateAsync(
-        RegisterUserCommand input,
-        CancellationToken ct)
-    {
-        return new UserContext(
-            EmailExists: await _repo.EmailExistsAsync(input.Email, ct)
-        );
-    }
-}
-```
-
-Register factories via assembly scanning:
-
-```csharp
-services.AddZeta(typeof(Program).Assembly);
+public static readonly ISchema<RegisterUserCommand, UserContext> ContextAwareSchema =
+    Z.Object<RegisterUserCommand>()
+        .Using<UserContext>(async (input, sp, ct) =>
+        {
+            var repo = sp.GetRequiredService<IUserRepository>();
+            return new UserContext(
+                EmailExists: await repo.EmailExistsAsync(input.Email, ct)
+            );
+        })
+        .Field(x => x.Email, s => s.Email());
 ```
 
 ---

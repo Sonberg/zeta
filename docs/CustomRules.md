@@ -32,7 +32,7 @@ When using context-aware schemas, refinements can access the context:
 
 ```csharp
 Z.String()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .Refine(
         (value, ctx) => !ctx.BannedEmails.Contains(value),
         message: "Email is banned",
@@ -44,7 +44,7 @@ You can mix context-free and context-aware refinements:
 
 ```csharp
 Z.String()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .Refine(s => s.Length >= 3, "Too short")              // No context
     .Refine((s, ctx) => s != ctx.Reserved, "Reserved");   // With context
 ```
@@ -58,7 +58,7 @@ Use `RefineAsync` for async validation with context:
 ```csharp
 Z.String()
     .Email()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .RefineAsync(
         async (email, ctx, ct) => !await ctx.Repo.EmailExistsAsync(email, ct),
         message: "Email already registered",
@@ -71,7 +71,7 @@ You can combine sync and async refinements:
 ```csharp
 Z.String()
     .Email()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .Refine((email, ctx) => !ctx.BannedDomains.Any(d => email.EndsWith(d)),
         "Domain not allowed")
     .RefineAsync(async (email, ctx, ct) =>
@@ -83,7 +83,7 @@ Z.String()
 
 ```csharp
 Z.String()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .RefineAsync(async (value, ct) =>
         await SomeExternalValidationAsync(value, ct),
         "External validation failed");
@@ -166,7 +166,7 @@ public sealed class UniqueEmailRule<TContext> : IValidationRule<string, TContext
 
 // Usage
 Z.String()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .Use(new UniqueEmailRule<UserContext>());
 ```
 
@@ -327,7 +327,7 @@ public static class StringContextSchemaExtensions
 // Usage
 Z.String()
     .Email()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .UniqueEmail();
 ```
 

@@ -195,7 +195,7 @@ public async Task Email_AlreadyExists_ReturnsError()
 {
     var schema = Z.String()
         .Email()
-        .WithContext<UserContext>()
+        .Using<UserContext>()
         .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
 
     var context = new UserContext(EmailExists: true);
@@ -211,7 +211,7 @@ public async Task Email_NotExists_Succeeds()
 {
     var schema = Z.String()
         .Email()
-        .WithContext<UserContext>()
+        .Using<UserContext>()
         .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
 
     var context = new UserContext(EmailExists: false);

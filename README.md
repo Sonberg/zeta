@@ -233,18 +233,18 @@ Z.Int()
 
 // Context-aware: value+context predicates
 Z.String()
-    .WithContext<SecurityContext>()
+    .Using<SecurityContext>()
     .If((v, ctx) => ctx.RequireStrongPassword, s => s.MinLength(12));
 ```
 
 ### Polymorphic Validation
 
-Use `.If<TDerived>()` for type-narrowed validation on polymorphic types:
+Use `.If(predicate, ...)` with `.As<TDerived>()` for type-narrowed validation on polymorphic types:
 
 ```csharp
 Z.Object<IAnimal>()
-    .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
-    .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+    .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
+    .If(x => x is Cat, cat => cat.As<Cat>().Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 
 // Or explicitly with .As<TDerived>()
 var schema = Z.Object<IAnimal>();
@@ -393,7 +393,7 @@ For async validation with context:
 ```csharp
 Z.String()
     .Email()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .RefineAsync(
         async (email, ctx, ct) => !await _repo.EmailExistsAsync(email, ct),
         message: "Email already taken",
@@ -411,35 +411,23 @@ For async data loading before validation (e.g., checking database):
 // Define context
 public record UserContext(bool EmailExists);
 
-// Factory to load context
-public class UserContextFactory : IValidationContextFactory<User, UserContext>
-{
-    private readonly IUserRepository _repo;
-
-    public UserContextFactory(IUserRepository repo) => _repo = repo;
-
-    public async Task<UserContext> CreateAsync(User input, IServiceProvider services, CancellationToken ct)
-    {
-        return new UserContext(EmailExists: await _repo.EmailExistsAsync(input.Email, ct));
-    }
-}
-
-// Use in schema with .WithContext()
 var UserSchema = Z.Object<User>()
     .Field(u => u.Name, s => s.MinLength(3))
-    .WithContext<User, UserContext>()
+    .Using<UserContext>(async (input, sp, ct) =>
+    {
+        var repo = sp.GetRequiredService<IUserRepository>();
+        var exists = await repo.EmailExistsAsync(input.Email, ct);
+        return new UserContext(EmailExists: exists);
+    })
     .Field(u => u.Email, s => s.Email())  // Fluent builders still work
     // For context-aware validation, use pre-built schemas
     .Field(u => u.Username,
         Z.String()
             .MinLength(3)
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .RefineAsync(async (username, ctx, ct) =>
                 !await ctx.Repo.UsernameExistsAsync(username, ct),
                 "Username already taken"));
-
-// Register
-builder.Services.AddZeta(typeof(Program).Assembly);
 ```
 
 See the [Validation Context guide](docs/ValidationContext.md) for more details.
