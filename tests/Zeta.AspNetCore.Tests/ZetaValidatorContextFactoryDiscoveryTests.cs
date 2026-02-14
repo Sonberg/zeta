@@ -27,8 +27,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
 
         var schema = Z.Object<Dog>()
             .Using<DogContext>()
-            .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context")
-            .If(_ => true, _ => { });
+            .If(_ => true, _ => _);
 
         SetFactoryOnConditionalSchema(
             schema,
@@ -53,8 +52,8 @@ public class ZetaValidatorContextFactoryDiscoveryTests
 
         var schema = Z.Object<Dog>()
             .Using<DogContext>()
-            .If(_ => true, _ => { })
-            .If(_ => true, _ => { });
+            .If(_ => true, _ => _)
+            .If(_ => true, _ => _);
 
         SetFactoryOnConditionalSchema(
             schema,
@@ -87,7 +86,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
                 .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
                 .Using<DogContext>((_, _, _) => Task.FromResult(new DogContext(false)))
                 .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context"))
-            .If<Cat>(x => x.Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
+            .If(x => x is Cat, x => x.As<Cat>().Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
 
         var result = await validator.ValidateAsync<IAnimal, DogContext>(new Dog("Rex", 50), schema);
 
@@ -109,13 +108,23 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         }
 
         var conditional = conditionals.Cast<object>().ElementAt(conditionalIndex);
-        var nestedSchemaField = FindField(conditional.GetType(), "_schema")
-            ?? throw new InvalidOperationException("Could not locate nested conditional schema.");
+        var nestedSchemaField = FindField(conditional.GetType(), "_schema") 
+            ?? FindField(conditional.GetType(), "Item2") // Handle ValueTuple in ContextlessSchema
+            ?? throw new InvalidOperationException($"Could not locate nested conditional schema on type {conditional.GetType().Name}.");
+            
         var nestedSchema = nestedSchemaField.GetValue(conditional)
             ?? throw new InvalidOperationException("Conditional schema is null.");
 
+        // Penetrate adapters if necessary
+        while (nestedSchema.GetType().Name.Contains("Adapter"))
+        {
+            var innerField = FindField(nestedSchema.GetType(), "_inner") ?? FindField(nestedSchema.GetType(), "_schema");
+            if (innerField == null) break;
+            nestedSchema = innerField.GetValue(nestedSchema) ?? nestedSchema;
+        }
+
         var setFactoryMethod = nestedSchema.GetType().GetMethod("SetContextFactory", BindingFlags.Instance | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("Could not locate SetContextFactory method.");
+            ?? throw new InvalidOperationException($"Could not locate SetContextFactory method on type {nestedSchema.GetType().Name}.");
         setFactoryMethod.Invoke(nestedSchema, [factory]);
     }
 

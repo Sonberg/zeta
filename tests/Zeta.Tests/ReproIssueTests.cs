@@ -27,14 +27,14 @@ public class ReproIssueTests
         var scope = provider.CreateScope();
         var zeta = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
-        // Testing if both TDerived and TContext can be inferred
+        // Testing if both TTarget and TContext can be inferred from the return type of the Func
         var schema = Z.Object<IAnimal>()
             .Field(x => x.Name, n => n.MinLength(3))
-            .If((ObjectContextlessSchema<Dog> x) => x
+            .If(x => x is Dog, x => x.As<Dog>()
                 .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
                 .Using<CatContext>(async (_, _, _) => new CatContext(false))
                 .Refine((_, ctx) => ctx.Value, "Dog context value must be true"))
-            .If<Cat>(x => x.Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
+            .If(x => x is Cat, x => x.As<Cat>().Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
 
         // Verify promotion
         Assert.IsType<ObjectContextSchema<IAnimal, CatContext>>(schema);

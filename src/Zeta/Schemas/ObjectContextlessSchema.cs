@@ -38,22 +38,6 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
     /// <summary>
-    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/>
-    /// when the value is an instance of that type. Combines type checking with type-narrowed validation.
-    /// </summary>
-    public ObjectContextlessSchema<T> If<TDerived>(
-        Action<ObjectContextlessSchema<TDerived>> configure) where TDerived : class, T
-    {
-        return If(
-            value => value is TDerived,
-            conditional =>
-            {
-                var derived = conditional.As<TDerived>();
-                configure(derived);
-            });
-    }
-
-    /// <summary>
     /// Adds a conditional branch and promotes the root object schema to context-aware when
     /// the conditional builder returns a context-aware schema.
     /// </summary>
@@ -61,15 +45,58 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         Func<T, bool> predicate,
         Func<ObjectContextlessSchema<T>, ObjectContextSchema<T, TContext>> configure)
     {
-        var conditional = configure(Z.Object<T>());
+        return If<T, TContext>(predicate, configure);
+    }
+
+    /// <summary>
+    /// Adds a conditional branch and promotes the root object schema to context-aware when
+    /// the conditional builder returns a context-aware schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TTarget, TContext>(
+        Func<T, bool> predicate,
+        Func<ObjectContextlessSchema<T>, ObjectContextSchema<TTarget, TContext>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<T>());
         var promoted = Using<TContext>();
-        promoted.AddConditional(predicate, conditional);
+        promoted.AddConditional(
+            predicate,
+            new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(branchSchema));
+        return promoted;
+    }
+    
+    [Obsolete]
+    public ObjectContextSchema<T, TContext> If<TTarget, TContext>(
+        Func<ObjectContextlessSchema<T>, ObjectContextSchema<TTarget, TContext>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<T>());
+        var promoted = Using<TContext>();
+        promoted.AddConditional(
+            x => x is TTarget,
+            new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(branchSchema));
         return promoted;
     }
     
     /// <summary>
+    /// Adds a conditional branch to the object schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
+    /// </summary>
+    public ObjectContextlessSchema<T> If<TTarget>(
+        Func<T, bool> predicate,
+        Func<ObjectContextlessSchema<T>, ObjectContextlessSchema<TTarget>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<T>());
+        AddConditional(predicate, new TypeNarrowingContextlessSchemaAdapter<T, TTarget>(branchSchema));
+        return this;
+    }
+
+    /// <summary>
     /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/> and promotes
     /// the full schema to context-aware when the configured derived schema uses context.
+    /// Types are automatically inferred from the return value of the configure lambda.
     /// </summary>
     public ObjectContextSchema<T, TContext> If<TDerived, TContext>(
         Func<ObjectContextlessSchema<TDerived>, ObjectContextSchema<TDerived, TContext>> configure) where TDerived : class, T

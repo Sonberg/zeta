@@ -222,19 +222,17 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         return this as TSchema ?? throw new InvalidOperationException();
     }
 
-    public TSchema If(Func<T, bool> predicate, Action<TSchema> configure)
+    public TSchema If(Func<T, bool> predicate, Func<TSchema, TSchema> configure)
     {
-        var schema = CreateInstance();
-        configure(schema);
+        var schema = configure(CreateInstance());
         _conditionals ??= [];
         _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
         return (TSchema)this;
     }
 
-    public TSchema If(Func<T, TContext, bool> predicate, Action<TSchema> configure)
+    public TSchema If(Func<T, TContext, bool> predicate, Func<TSchema, TSchema> configure)
     {
-        var schema = CreateInstance();
-        configure(schema);
+        var schema = configure(CreateInstance());
         _conditionals ??= [];
         _conditionals.Add(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
         return (TSchema)this;
