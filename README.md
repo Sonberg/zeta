@@ -239,16 +239,19 @@ Z.String()
 
 ### Polymorphic Validation
 
-Use `.If(predicate, ...)` with `.As<TDerived>()` for type-narrowed validation on polymorphic types:
+Use branch schemas with `.If(predicate, schema)` or `.WhenType<TDerived>(...)`:
 
 ```csharp
-Z.Object<IAnimal>()
-    .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
-    .If(x => x is Cat, cat => cat.As<Cat>().Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+var dogSchema = Z.Object<Dog>()
+    .Field(x => x.BarkVolume, x => x.Min(0).Max(100));
 
-// Or explicitly with .As<TDerived>()
-var schema = Z.Object<IAnimal>();
-schema.As<Dog>();  // Fails with type_mismatch if not a Dog
+var schema = Z.Object<IAnimal>()
+    .If(x => x is Dog, dogSchema)
+    .WhenType<Cat>(cat => cat
+        .Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+
+// Explicit type assertion is still available
+Z.Object<IAnimal>().As<Dog>();  // Fails with type_mismatch if not a Dog
 ```
 
 ## Result Pattern
@@ -344,6 +347,15 @@ public class UsersController : ControllerBase
 }
 ```
 
+Configure execution context using a builder function:
+
+```csharp
+var result = await _validator.ValidateAsync(
+    user,
+    UserSchema,
+    b => b.WithCancellation(ct).WithTimeProvider(fakeTimeProvider));
+```
+
 ### Result Extensions
 
 ```csharp
@@ -369,21 +381,20 @@ Z.String()
     )
 ```
 
-### Custom Rule Class
+### Reusable Custom Logic
 
 ```csharp
-public sealed class StartsWithUpperRule : IValidationRule<string>
+public static class StringSchemaExtensions
 {
-    public ValidationError? Validate(string value, ValidationExecutionContext execution)
-    {
-        return char.IsUpper(value[0])
-            ? null
-            : new ValidationError(execution.Path, "starts_upper", "Must start with uppercase");
-    }
+    public static StringContextlessSchema StartsWithUpper(this StringContextlessSchema schema)
+        => schema.Refine(
+            value => value.Length > 0 && char.IsUpper(value[0]),
+            "Must start with uppercase",
+            "starts_upper");
 }
 
 // Usage
-Z.String().Use(new StartsWithUpperRule())
+Z.String().StartsWithUpper();
 ```
 
 ### Async Refinement
@@ -446,7 +457,7 @@ public record ValidationError(
 
 | Code | Meaning |
 |------|---------|
-| `required` | Value is null/missing |
+| `null_value` | Value is null but schema is non-nullable |
 | `min_length` / `max_length` | Length constraints |
 | `length` | Not exact length |
 | `min_value` / `max_value` | Value constraints |
@@ -462,6 +473,7 @@ public record ValidationError(
 | `business_hours` / `morning` / `afternoon` / `evening` | Time constraints |
 | `not_empty` / `version` | GUID validation |
 | `is_true` / `is_false` | Boolean constraints |
+| `null_value` | Value is null but schema is non-nullable |
 | `type_mismatch` | Type assertion failed (`.As<T>()`) |
 | `custom_error` | Custom refinement failed |
 

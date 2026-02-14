@@ -36,7 +36,7 @@ public sealed record CreateUserCommand(
     int Age
 ) : IRequest<Result<User>>, IZetaValidation<CreateUserCommand>
 {
-    public static ISchema<CreateUserCommand> Schema =
+    public static ISchema<CreateUserCommand> Schema { get; } =
         Z.Object<CreateUserCommand>()
             .Field(x => x.Email, Z.String().Email())
             .Field(x => x.Age, Z.Int().Min(18));
@@ -136,9 +136,15 @@ public sealed record RegisterUserCommand(
     string Password
 ) : IRequest<Result<User>>, IZetaValidation<RegisterUserCommand>
 {
-    public static ISchema<RegisterUserCommand> Schema =
+    public static ISchema<RegisterUserCommand> Schema { get; } =
         Z.Object<RegisterUserCommand>()
-            .Using<UserContext>()
+            .Using<UserContext>(async (input, sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IUserRepository>();
+                return new UserContext(
+                    EmailExists: await repo.EmailExistsAsync(input.Email, ct)
+                );
+            })
             .Field(x => x.Email,
                 Z.String()
                     .Email()
@@ -147,21 +153,6 @@ public sealed record RegisterUserCommand(
             )
             .Field(x => x.Password, Z.String().MinLength(8));
 }
-```
-
-### Context Factory
-
-```csharp
-public static readonly ISchema<RegisterUserCommand, UserContext> ContextAwareSchema =
-    Z.Object<RegisterUserCommand>()
-        .Using<UserContext>(async (input, sp, ct) =>
-        {
-            var repo = sp.GetRequiredService<IUserRepository>();
-            return new UserContext(
-                EmailExists: await repo.EmailExistsAsync(input.Email, ct)
-            );
-        })
-        .Field(x => x.Email, s => s.Email());
 ```
 
 ---

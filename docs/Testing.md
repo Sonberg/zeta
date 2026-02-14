@@ -45,7 +45,7 @@ The `FakeTimeProvider` class from `Microsoft.Extensions.TimeProvider.Testing` al
 
 ```csharp
 using Microsoft.Extensions.Time.Testing;
-using Zeta.Core;
+using Zeta;
 
 [Fact]
 public async Task MinAge_WithFakeTime_ValidatesCorrectly()
@@ -53,7 +53,7 @@ public async Task MinAge_WithFakeTime_ValidatesCorrectly()
     // Arrange - "now" is June 15, 2024
     var fakeTime = new FakeTimeProvider(
         new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-    var context = new ValidationExecutionContext(timeProvider: fakeTime);
+    var context = new ValidationContext(timeProvider: fakeTime);
     var schema = Z.DateTime().MinAge(18);
 
     // Someone born June 16, 2006 is not yet 18 on June 15, 2024
@@ -68,7 +68,7 @@ public async Task MinAge_WithFakeTime_ValidatesCorrectly()
 
     // Advance time by 1 day - now they're 18
     fakeTime.Advance(TimeSpan.FromDays(1));
-    var newContext = new ValidationExecutionContext(timeProvider: fakeTime);
+    var newContext = new ValidationContext(timeProvider: fakeTime);
 
     var result2 = await schema.ValidateAsync(birthDate, newContext);
     Assert.True(result2.IsSuccess);
@@ -83,7 +83,7 @@ public async Task Future_DateInPast_Fails()
 {
     var fakeTime = new FakeTimeProvider(
         new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-    var context = new ValidationExecutionContext(timeProvider: fakeTime);
+    var context = new ValidationContext(timeProvider: fakeTime);
     var schema = Z.DateTime().Future();
 
     var pastDate = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -99,7 +99,7 @@ public async Task WithinDays_OutsideRange_Fails()
 {
     var fakeTime = new FakeTimeProvider(
         new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
-    var context = new ValidationExecutionContext(timeProvider: fakeTime);
+    var context = new ValidationContext(timeProvider: fakeTime);
     var schema = Z.DateTime().WithinDays(7);
 
     var farDate = new DateTime(2024, 1, 15, 0, 0, 0, DateTimeKind.Utc);
@@ -130,20 +130,29 @@ public async Task CreateUser_UnderageUser_ReturnsValidationError()
     services.AddScoped<IZetaValidator, ZetaValidator>();
     var serviceProvider = services.BuildServiceProvider();
 
-    var validator = serviceProvider.GetRequiredService<IZetaValidator>();
+var validator = serviceProvider.GetRequiredService<IZetaValidator>();
     var schema = Z.Object<UserRequest>()
         .Field(x => x.Email, Z.String().Email())
         .Field(x => x.BirthDate, Z.DateTime().MinAge(18));
 
     var request = new UserRequest("test@example.com", new DateTime(2010, 1, 1));
 
-    // Act
-    var result = await validator.ValidateAsync(request, schema);
+// Act
+var result = await validator.ValidateAsync(request, schema);
 
     // Assert
-    Assert.True(result.IsFailure);
-    Assert.Contains(result.Errors, e => e.Code == "min_age");
+Assert.True(result.IsFailure);
+Assert.Contains(result.Errors, e => e.Code == "min_age");
 }
+```
+
+You can also override execution options per call:
+
+```csharp
+var result = await validator.ValidateAsync(
+    request,
+    schema,
+    b => b.WithTimeProvider(fakeTime).WithCancellation(ct));
 ```
 
 ---
@@ -224,42 +233,38 @@ public async Task Email_NotExists_Succeeds()
 
 ---
 
-## Testing Custom Rules
+## Testing Custom Refinements
 
-Test custom rule classes in isolation:
+Test custom logic through schema results:
 
 ```csharp
-public sealed class StartsWithUpperRule : IValidationRule<string>
+[Fact]
+public async Task StartsWithUpper_LowerCase_ReturnsError()
 {
-    public ValidationError? Validate(string value, ValidationExecutionContext execution)
-    {
-        return char.IsUpper(value[0])
-            ? null
-            : new ValidationError(execution.Path, "starts_upper", "Must start with uppercase");
-    }
+    var schema = Z.String()
+        .Refine(
+            value => value.Length > 0 && char.IsUpper(value[0]),
+            "Must start with uppercase",
+            "starts_upper");
+
+    var result = await schema.ValidateAsync("hello");
+
+    Assert.True(result.IsFailure);
+    Assert.Contains(result.Errors, e => e.Code == "starts_upper");
 }
 
 [Fact]
-public void StartsWithUpperRule_LowerCase_ReturnsError()
+public async Task StartsWithUpper_UpperCase_Succeeds()
 {
-    var rule = new StartsWithUpperRule();
-    var execution = new ValidationExecutionContext();
+    var schema = Z.String()
+        .Refine(
+            value => value.Length > 0 && char.IsUpper(value[0]),
+            "Must start with uppercase",
+            "starts_upper");
 
-    var error = rule.Validate("hello", execution);
+    var result = await schema.ValidateAsync("Hello");
 
-    Assert.NotNull(error);
-    Assert.Equal("starts_upper", error.Code);
-}
-
-[Fact]
-public void StartsWithUpperRule_UpperCase_ReturnsNull()
-{
-    var rule = new StartsWithUpperRule();
-    var execution = new ValidationExecutionContext();
-
-    var error = rule.Validate("Hello", execution);
-
-    Assert.Null(error);
+    Assert.True(result.IsSuccess);
 }
 ```
 

@@ -47,9 +47,8 @@ dotnet run --project samples/Zeta.Sample.Api
 - `ValidationContext` - Contains path tracking, CancellationToken & TimeProvider
 
 ### Rule System (src/Zeta/Rules/)
-- `IValidationRule<T>` - Context-free sync validation rule using `ValidationExecutionContext`
-- `IValidationRule<T, TContext>` - Context-aware sync validation rule using `ValidationContext<TContext>`
-- `IAsyncValidationRule<T>` / `IAsyncValidationRule<T, TContext>` - Async variants
+- `IValidationRule<T>` - Context-free async validation rule using `ValidationContext`
+- `IValidationRule<T, TContext>` - Context-aware async validation rule using `ValidationContext<TContext>`
 - `RuleEngine<T>` - Executes context-free rules for contextless schemas
 - `ContextRuleEngine<T, TContext>` - Executes context-aware rules
 - `DelegateValidationRule<T>` / `DelegateValidationRule<T, TContext>` - Delegate wrappers for inline rules
@@ -169,16 +168,15 @@ Z.String()
     .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 ```
 
-**Type Assertions**: `.As<TDerived>()` on ObjectSchema enables polymorphic type narrowing. Use `.If(predicate, ...)` with `.As<TDerived>()` for type-specific branches:
+**Type Assertions**: `.As<TDerived>()` on Object schemas enables explicit type narrowing. Prefer branch schemas with `.If(predicate, schema)` or `.WhenType<TDerived>(...)`:
 ```csharp
-// Explicit: type assertion with .As()
-var schema = Z.Object<IAnimal>();
-schema.As<Dog>();  // Fails with type_mismatch if not a Dog
+var dogSchema = Z.Object<Dog>()
+    .Field(x => x.BarkVolume, x => x.Min(0).Max(100));
 
-// Type-narrowed conditional branches
 Z.Object<IAnimal>()
-    .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
-    .If(x => x is Cat, cat => cat.As<Cat>().Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+    .If(x => x is Dog, dogSchema)
+    .WhenType<Cat>(cat => cat
+        .Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 ```
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)
@@ -186,6 +184,7 @@ Z.Object<IAnimal>()
 - `ContextlessValidationFilter<T>` - Minimal API endpoint filter for contextless schemas
 - `ValidationFilter<T, TContext>` - Minimal API endpoint filter for context-aware schemas
 - Context creation is handled by inline factory delegates on schemas via `.Using<TContext>(factory)`
+- `IZetaValidator.ValidateAsync(...)` supports a builder function overload: `Func<ValidationContextBuilder, ValidationContextBuilder>`
 
 ## Design Principles
 

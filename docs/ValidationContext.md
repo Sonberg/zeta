@@ -205,11 +205,23 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(User user, CancellationToken ct)
     {
-        var result = await _validator.ValidateAsync(user, UserSchema, ct);
+        var result = await _validator.ValidateAsync(
+            user,
+            UserSchema,
+            b => b.WithCancellation(ct));
 
         return result.ToActionResult(valid => Ok(new { Message = "Created" }));
     }
 }
+```
+
+You can also customize `TimeProvider` (or any other builder option):
+
+```csharp
+var result = await _validator.ValidateAsync(
+    user,
+    UserSchema,
+    b => b.WithCancellation(ct).WithTimeProvider(fakeTimeProvider));
 ```
 
 ---
