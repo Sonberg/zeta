@@ -47,9 +47,8 @@ dotnet run --project samples/Zeta.Sample.Api
 - `ValidationContext` - Contains path tracking, CancellationToken & TimeProvider
 
 ### Rule System (src/Zeta/Rules/)
-- `IValidationRule<T>` - Context-free sync validation rule using `ValidationExecutionContext`
-- `IValidationRule<T, TContext>` - Context-aware sync validation rule using `ValidationContext<TContext>`
-- `IAsyncValidationRule<T>` / `IAsyncValidationRule<T, TContext>` - Async variants
+- `IValidationRule<T>` - Context-free async validation rule using `ValidationContext`
+- `IValidationRule<T, TContext>` - Context-aware async validation rule using `ValidationContext<TContext>`
 - `RuleEngine<T>` - Executes context-free rules for contextless schemas
 - `ContextRuleEngine<T, TContext>` - Executes context-aware rules
 - `DelegateValidationRule<T>` / `DelegateValidationRule<T, TContext>` - Delegate wrappers for inline rules
@@ -63,7 +62,7 @@ Shared validation logic used by both contextless and context-aware schemas:
 ### Schema Types (src/Zeta/Schemas/)
 All schemas are created via the static `Z` class entry point as contextless schemas:
 - `Z.String()` returns `StringSchema` which implements `ISchema<string>`
-- Use `.WithContext<TContext>()` to promote to context-aware when needed
+- Use `.Using<TContext>()` to promote to context-aware when needed
 
 Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `CollectionSchema`
 
@@ -119,15 +118,24 @@ Z.Collection(orderItemSchema)  // Pass element schema for complex types
     .MinLength(1)
 ```
 
-**Context Promotion**: Use `.WithContext<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:
+**Context Promotion**: Use `.Using<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:
 ```csharp
 Z.String()
     .Email()
     .MinLength(5)
-    .WithContext<UserContext>()  // Email and MinLength rules are preserved
+    .Using<UserContext>()  // Email and MinLength rules are preserved
     .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned")
     .RefineAsync(async (email, ctx, ct) =>
         !await ctx.Repo.EmailExistsAsync(email, ct), "Email exists");
+```
+
+**Context Factory Delegate**: Use `.Using<TContext>(factory)` to embed context creation directly on the schema:
+```csharp
+Z.Object<CreateOrderRequest>()
+    .Using<OrderContext>(async (value, sp, ct) => new OrderContext {
+        HasAccess = await sp.GetRequiredService<IPermissionService>().CheckAccessAsync(value.CustomerId, ct)
+    })
+    .Field(x => x.CustomerId, x => x.NotEmpty())
 ```
 
 **Async Refinement**: Context-aware schemas support `RefineAsync` for async validation with access to context data and CancellationToken.
@@ -156,27 +164,27 @@ Z.Int()
 
 // Context-aware: value-only or value+context predicates
 Z.String()
-    .WithContext<StrictContext>()
+    .Using<StrictContext>()
     .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 ```
 
-**Type Assertions**: `.As<TDerived>()` on ObjectSchema enables polymorphic type narrowing. `.If<TDerived>()` combines type checking with `.As()`:
+**Type Assertions**: `.As<TDerived>()` on Object schemas enables explicit type narrowing. Prefer branch schemas with `.If(predicate, schema)` or `.WhenType<TDerived>(...)`:
 ```csharp
-// Explicit: type assertion with .As()
-var schema = Z.Object<IAnimal>();
-schema.As<Dog>();  // Fails with type_mismatch if not a Dog
+var dogSchema = Z.Object<Dog>()
+    .Field(x => x.BarkVolume, x => x.Min(0).Max(100));
 
-// Concise: .If<TDerived>() combines is-check + As in one call
 Z.Object<IAnimal>()
-    .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
-    .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+    .If(x => x is Dog, dogSchema)
+    .WhenType<Cat>(cat => cat
+        .Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 ```
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)
 - `IZetaValidator` - Injectable service for manual validation in controllers
 - `ContextlessValidationFilter<T>` - Minimal API endpoint filter for contextless schemas
 - `ValidationFilter<T, TContext>` - Minimal API endpoint filter for context-aware schemas
-- `IValidationContextFactory<TInput, TContext>` - Async context loading before validation (scanned from assemblies via `AddZeta(assembly)`)
+- Context creation is handled by inline factory delegates on schemas via `.Using<TContext>(factory)`
+- `IZetaValidator.ValidateAsync(...)` supports a builder function overload: `Func<ValidationContextBuilder, ValidationContextBuilder>`
 
 ## Design Principles
 
@@ -210,12 +218,14 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 ### Context Promotion
 - Schemas are always created contextless via `Z.String()`, `Z.Int()`, etc.
 - Contextless `Refine()` uses `Func<T, bool>` (single argument)
-- Use `.WithContext<TContext>()` to create a context-aware schema
-- `.WithContext<TContext>()` is an **instance method** on each schema class (e.g., `StringSchema.WithContext<TContext>()`)
-- **Rules, fields, conditionals, and type assertions are automatically transferred** when calling `.WithContext()`
-- For ObjectSchema: `.WithContext<TContext>()` requires only the context type parameter (T is already known)
-- After calling `.WithContext()`, use context-aware `Refine((val, ctx) => ...)` with two arguments
-- `.WithContext()` returns typed schemas: `StringSchema<TContext>`, `IntSchema<TContext>`, `ObjectSchema<T, TContext>`, etc.
+- Use `.Using<TContext>()` to create a context-aware schema
+- Use `.Using<TContext>(factory)` to also embed a factory delegate for creating context data
+- `.Using<TContext>()` is an **instance method** on each schema class (e.g., `StringSchema.Using<TContext>()`)
+- **Rules, fields, and conditionals are automatically transferred** when calling `.Using()`
+- For ObjectSchema: `.Using<TContext>()` requires only the context type parameter (T is already known)
+- After calling `.Using()`, use context-aware `Refine((val, ctx) => ...)` with two arguments
+- `.Using()` returns typed schemas: `StringSchema<TContext>`, `IntSchema<TContext>`, `ObjectSchema<T, TContext>`, etc.
+- Factory delegate signature: `Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>`
 
 ### Interface Separation
 - `ISchema<T>` and `ISchema<T, TContext>` are completely separate interfaces (no inheritance relationship)
@@ -236,4 +246,5 @@ public StringSchema<TContext> Foo(...)
 ```
 
 ### After changes
-Add a section in CHANGELOG.md below "Next release". Versions are managed with tags in git
+- Then adding schema features all features should support fluent builder for primativ types. And accepts ISchema<T> and ISchema<T, TContext> for object fields. If context aware schema is provided, the full schema must be context aware too.
+- Add a section in CHANGELOG.md below "Next release". Versions are managed with tags in git

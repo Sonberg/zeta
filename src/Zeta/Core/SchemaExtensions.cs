@@ -33,7 +33,7 @@ public static class SchemaExtensions
         Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty, TContext> fieldSchema) where T : class
     {
-        return schema.WithContext<TContext>().Field(propertySelector, fieldSchema);
+        return schema.Using<TContext>().Field(propertySelector, fieldSchema);
     }
 
     // ==================== Nullability Adaption Extensions ====================

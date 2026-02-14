@@ -45,7 +45,7 @@ public class StringSchemaTests
     {
         // Setup schema that requires a "MagicWord" from context
         var schema = Z.String()
-            .WithContext<TestContext>()
+            .Using<TestContext>()
             .Refine((val, ctx) => val == ctx.MagicWord, "Wrong magic word");
 
         var context = new TestContext("Abracadabra");

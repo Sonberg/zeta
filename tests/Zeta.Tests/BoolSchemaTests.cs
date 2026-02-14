@@ -71,7 +71,7 @@ public class BoolSchemaTests
     public async Task ContextRefine_UsesContextData()
     {
         var schema = Z.Bool()
-            .WithContext<FeatureFlags>()
+            .Using<FeatureFlags>()
             .Refine((val, ctx) => !ctx.RequireTrue || val, "Feature flag requires true value");
 
         var contextRequiresTrue = new FeatureFlags(true);

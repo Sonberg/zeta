@@ -44,7 +44,7 @@ public class ObjectSchemaTests
     {
         var schema = Z.Object<User>()
             .Field(u => u.Name, Z.String())
-            .WithContext<BanContext>()
+            .Using<BanContext>()
             .Refine((user, ctx) => user.Name != ctx.BannedName, "Name is banned");
 
         var context = new BanContext("Voldemort");
@@ -66,7 +66,7 @@ public class ObjectSchemaTests
         // it should implicitly promote the ObjectSchema to context-aware
         var contextAwareEmailSchema = Z.String()
             .Email()
-            .WithContext<EmailContext>()
+            .Using<EmailContext>()
             .Refine((email, ctx) => !email.EndsWith($"@{ctx.BannedDomain}"), "Email domain is banned");
 
         var schema = Z.Object<User>()
@@ -89,7 +89,7 @@ public class ObjectSchemaTests
     {
         var contextAwareEmailSchema = Z.String()
             .Email()
-            .WithContext<EmailContext>()
+            .Using<EmailContext>()
             .Refine((email, ctx) => !email.EndsWith($"@{ctx.BannedDomain}"), "Email domain is banned");
 
         // After implicit promotion, we should be able to chain more fields and refinements
@@ -105,14 +105,14 @@ public class ObjectSchemaTests
         Assert.True(result.IsSuccess);
     }
     
-    // ==================== Single-Parameter WithContext Tests ====================
+    // ==================== Single-Parameter Using Tests ====================
 
     [Fact]
-    public async Task WithContext_SingleParameter_AllowsContextInference()
+    public async Task Using_SingleParameter_AllowsContextInference()
     {
-        // The new .WithContext<TContext>() syntax infers T from the ObjectSchema<T>
+        // The new .Using<TContext>() syntax infers T from the ObjectSchema<T>
         var schema = Z.Object<User>()
-            .WithContext<BanContext>()
+            .Using<BanContext>()
             .Field(u => u.Name, Z.String().MinLength(2))
             .Refine((user, ctx) => user.Name != ctx.BannedName, "Name is banned");
 
@@ -127,11 +127,11 @@ public class ObjectSchemaTests
     }
 
     [Fact]
-    public async Task WithContext_SingleParameter_ChainsWithContextAwareFields()
+    public async Task Using_SingleParameter_ChainsWithContextAwareFields()
     {
         var schema = Z.Object<User>()
-            .WithContext<BanContext>()
-            .Field(u => u.Name, Z.String().WithContext<BanContext>()
+            .Using<BanContext>()
+            .Field(u => u.Name, Z.String().Using<BanContext>()
                 .Refine((name, ctx) => name != ctx.BannedName, "Field name is banned"))
             .Field(u => u.Age, Z.Int().Min(0));
 
@@ -193,7 +193,7 @@ public class ObjectSchemaTests
     // public async Task Select_ContextAware_DecimalProperty_ValidatesWithInlineBuilder()
     // {
     //     var schema = Z.Object<Product>()
-    //         .WithContext<ProductContext>()
+    //         .Using<ProductContext>()
     //         .When(
     //             (_, ctx) => ctx.EnforceMinPrice,
     //             then => then.Select(p => p.Price, s => s.Min(10.00m)));
@@ -210,7 +210,7 @@ public class ObjectSchemaTests
     // public async Task Select_ContextAware_IntProperty_ValidatesWithInlineBuilder()
     // {
     //     var schema = Z.Object<Product>()
-    //         .WithContext<ProductContext>()
+    //         .Using<ProductContext>()
     //         .When(
     //             p => p.Name != null,
     //             then => then.Select(p => p.Quantity, s => s.Min(1).Max(1000)));
@@ -227,7 +227,7 @@ public class ObjectSchemaTests
     // public async Task Select_ContextAware_DoubleProperty_ValidatesWithInlineBuilder()
     // {
     //     var schema = Z.Object<Product>()
-    //         .WithContext<ProductContext>()
+    //         .Using<ProductContext>()
     //         .When(
     //             p => p.Name != null,
     //             then => then.Select(p => p.Weight, s => s.Min(0.1).Max(100.0)));

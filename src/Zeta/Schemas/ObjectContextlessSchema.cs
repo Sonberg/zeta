@@ -38,48 +38,89 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
     /// <summary>
-    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/>
-    /// when the value is an instance of that type. Combines type checking with type-narrowed validation.
+    /// Adds a conditional branch and promotes the root object schema to context-aware when
+    /// the conditional builder returns a context-aware schema.
     /// </summary>
-    public ObjectContextlessSchema<T> If<TDerived>(
-        Action<ObjectContextlessSchema<TDerived>> configure) where TDerived : class, T
+    public ObjectContextSchema<T, TContext> If<TTarget, TContext>(
+        Func<T, bool> predicate,
+        ISchema<TTarget, TContext> schema)
+        where TTarget : class, T
     {
-        return If(
-            value => value is TDerived,
-            conditional =>
-            {
-                var derived = conditional.As<TDerived>();
-                configure(derived);
-            });
+        var promoted = Using<TContext>();
+        promoted.If(predicate, new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(schema));
+        return promoted;
     }
 
     /// <summary>
     /// Adds a conditional branch and promotes the root object schema to context-aware when
     /// the conditional builder returns a context-aware schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
     /// </summary>
     public ObjectContextSchema<T, TContext> If<TContext>(
         Func<T, bool> predicate,
         Func<ObjectContextlessSchema<T>, ObjectContextSchema<T, TContext>> configure)
     {
-        var conditional = configure(Z.Object<T>());
-        var promoted = WithContext<TContext>();
-        promoted.AddConditional(predicate, conditional);
+        return If<T, TContext>(predicate, configure);
+    }
+
+    /// <summary>
+    /// Adds a conditional branch and promotes the root object schema to context-aware when
+    /// the conditional builder returns a context-aware schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TTarget, TContext>(
+        Func<T, bool> predicate,
+        Func<ObjectContextlessSchema<T>, ObjectContextSchema<TTarget, TContext>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<T>());
+        var promoted = Using<TContext>();
+        promoted.AddConditional(
+            predicate,
+            new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(branchSchema));
         return promoted;
     }
 
     /// <summary>
-    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/> and promotes
-    /// the full schema to context-aware when the configured derived schema uses context.
+    /// Adds a conditional branch to the object schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
     /// </summary>
-    public ObjectContextSchema<T, TContext> If<TDerived, TContext>(
-        Func<ObjectContextlessSchema<TDerived>, ObjectContextSchema<TDerived, TContext>> configure) where TDerived : class, T
+    public ObjectContextlessSchema<T> If<TTarget>(
+        Func<T, bool> predicate,
+        ISchema<TTarget> schema)
+        where TTarget : class, T
     {
-        var conditional = configure(Z.Object<TDerived>());
-        var promoted = WithContext<TContext>();
-        promoted.AddConditional(
-            value => value is TDerived,
-            new TypeNarrowingSchemaAdapter<T, TDerived, TContext>(conditional));
-        return promoted;
+        return base.If(predicate, (ISchema<T>)new TypeNarrowingContextlessSchemaAdapter<T, TTarget>(schema));
+    }
+
+    /// <summary>
+    /// Adds a conditional branch to the object schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
+    /// </summary>
+    public ObjectContextlessSchema<T> If<TTarget>(
+        Func<T, bool> predicate,
+        Func<ObjectContextlessSchema<T>, ObjectContextlessSchema<TTarget>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<T>());
+        AddConditional(predicate, new TypeNarrowingContextlessSchemaAdapter<T, TTarget>(branchSchema));
+        return this;
+    }
+
+    public ObjectContextlessSchema<T> WhenType<TTarget>(
+        Func<ObjectContextlessSchema<TTarget>, ObjectContextlessSchema<TTarget>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<TTarget>());
+        return If(x => x is TTarget, branchSchema);
+    }
+
+    public ObjectContextSchema<T, TContext> WhenType<TTarget, TContext>(
+        Func<ObjectContextlessSchema<TTarget>, ObjectContextSchema<TTarget, TContext>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<TTarget>());
+        return If(x => x is TTarget, branchSchema);
     }
 
     internal void SetTypeAssertion(ITypeAssertion<T>? assertion) => _typeAssertion = assertion;
@@ -149,29 +190,39 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return this;
     }
 
-    // public ObjectContextlessSchema<T> Field(
-    //     Expression<Func<T, ICollection<int?>?>> propertySelector,
-    //     ISchema<ICollection<int?>?> schema)
-    // {
-    //     var propertyName = GetPropertyName(propertySelector);
-    //     var getter = CreateGetter(propertySelector);
-    //     _fields.Add(new FieldContextlessValidator<T, ICollection<int>>(propertyName, getter, schema));
-    //     return this;
-    // }
-
-    // Field overloads for primitive types are generated by SchemaFactoryGenerator
-
     /// <summary>
     /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.
     /// </summary>
     /// <typeparam name="TContext">The context type for context-aware validation.</typeparam>
-    public ObjectContextSchema<T, TContext> WithContext<TContext>()
+    public ObjectContextSchema<T, TContext> Using<TContext>()
     {
         var schema = new ObjectContextSchema<T, TContext>(Rules, _fields);
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
         if (_typeAssertion != null)
             schema.SetTypeAssertion(_typeAssertion.ToContext<TContext>());
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware object schema with a factory delegate for creating context data.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Using<TContext>(
+        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory(factory);
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware object schema with a factory delegate for creating context data.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Using<TContext>(
+        Func<T, IServiceProvider, TContext> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
         return schema;
     }
 

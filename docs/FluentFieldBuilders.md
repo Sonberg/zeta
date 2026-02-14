@@ -146,11 +146,11 @@ This is the **recommended approach for most scenarios**:
    ```csharp
    var emailSchema = Z.String()
        .Email()
-       .WithContext<UserContext>()
+       .Using<UserContext>()
        .Refine((email, ctx) => !ctx.EmailExists, "Email taken");
 
    var userSchema = Z.Object<User>()
-       .WithContext<User, UserContext>()
+       .Using<UserContext>()
        .Field(u => u.Email, emailSchema);
    ```
 
@@ -173,18 +173,18 @@ For context-aware schemas, you can still use fluent builders for primitive field
 ```csharp
 var userSchema = Z.Object<User>()
     .Field(u => u.Name, s => s.MinLength(3))
-    .WithContext<User, UserContext>()
+    .Using<UserContext>()
     .Field(u => u.Email, s => s.Email().MinLength(5))  // Still works
     .Field(u => u.Username,
         Z.String()
             .MinLength(3)
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .RefineAsync(async (username, ctx, ct) =>
                 !await ctx.Repo.UsernameExistsAsync(username, ct),
                 "Username taken"));
 ```
 
-**Note**: Fluent builders create contextless schemas. For context-aware validation, use pre-built schemas with `.WithContext<TContext>()`.
+**Note**: Fluent builders create contextless schemas. For context-aware validation, use pre-built schemas with `.Using<TContext>()`.
 
 ---
 

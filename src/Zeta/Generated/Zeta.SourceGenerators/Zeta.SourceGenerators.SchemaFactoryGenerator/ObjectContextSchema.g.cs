@@ -32,7 +32,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.String());
-        _fields.Add(new FieldContextContextValidator<T, string, TContext>(propertyName, instance => getter(instance)!, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, string, TContext>(propertyName, instance => getter(instance)!, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -59,7 +59,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.Int());
-        _fields.Add(new FieldContextContextValidator<T, int, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, int, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -86,7 +86,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.Double());
-        _fields.Add(new FieldContextContextValidator<T, double, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, double, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -113,7 +113,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.Decimal());
-        _fields.Add(new FieldContextContextValidator<T, decimal, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, decimal, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -140,7 +140,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.Bool());
-        _fields.Add(new FieldContextContextValidator<T, bool, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, bool, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -167,7 +167,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.Guid());
-        _fields.Add(new FieldContextContextValidator<T, System.Guid, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Guid, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -194,7 +194,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.DateTime());
-        _fields.Add(new FieldContextContextValidator<T, System.DateTime, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.DateTime, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -648,7 +648,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.DateOnly());
-        _fields.Add(new FieldContextContextValidator<T, DateOnly, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, DateOnly, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -675,7 +675,7 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.TimeOnly());
-        _fields.Add(new FieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -848,7 +848,7 @@ public partial class ObjectContextSchema<T, TContext>
         var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.Object<TProperty>());
-        _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -877,7 +877,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<string>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<string>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<string>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -906,7 +906,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<int>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<int>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<int>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -935,7 +935,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<double>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<double>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<double>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -964,7 +964,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<decimal>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<decimal>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<decimal>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -993,7 +993,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<bool>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<bool>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<bool>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1022,7 +1022,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<System.Guid>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.Guid>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.Guid>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1051,7 +1051,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<System.DateTime>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.DateTime>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.DateTime>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1080,7 +1080,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<string>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<string>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<string>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1109,7 +1109,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<int>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<int>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<int>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1138,7 +1138,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<double>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<double>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<double>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1167,7 +1167,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<decimal>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<decimal>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<decimal>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1196,7 +1196,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<bool>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<bool>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<bool>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1225,7 +1225,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<System.Guid>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.Guid>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.Guid>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1254,7 +1254,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<System.DateTime>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.DateTime>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.DateTime>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1283,7 +1283,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<string>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<string>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<string>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1312,7 +1312,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<int>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<int>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<int>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1341,7 +1341,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<double>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<double>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<double>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1370,7 +1370,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<decimal>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<decimal>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<decimal>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1399,7 +1399,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<bool>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<bool>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<bool>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1428,7 +1428,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<System.Guid>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.Guid>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.Guid>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1457,7 +1457,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<System.DateTime>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.DateTime>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<System.DateTime>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1488,7 +1488,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<TElement>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1519,7 +1519,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<TElement>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 
@@ -1550,7 +1550,7 @@ public partial class ObjectContextSchema<T, TContext>
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<TElement>();
         var configuredSchema = schema(collectionSchema);
-        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.WithContext<TContext>()));
+        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
         return this;
     }
 }

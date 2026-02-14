@@ -21,6 +21,21 @@ public class IfConditionalTests
     }
 
     [Fact]
+    public async Task ValueSchema_ActionConfigure_ValidatesInnerSchema()
+    {
+        var schema = Z.Int()
+            .If(v => v >= 18, s =>
+            {
+                s.Max(65);
+            });
+
+        var result = await schema.ValidateAsync(70);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "max_value");
+    }
+
+    [Fact]
     public async Task ValueSchema_ConditionFalse_SkipsInnerSchema()
     {
         var schema = Z.Int()
@@ -107,7 +122,7 @@ public class IfConditionalTests
     public async Task ContextAware_ValueOnlyPredicate()
     {
         var schema = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If(v => v.Length > 0, s => s.MinLength(3));
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -129,7 +144,7 @@ public class IfConditionalTests
     public async Task ContextAware_ValueAndContextPredicate()
     {
         var schema = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 
         var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -153,7 +168,7 @@ public class IfConditionalTests
     {
         var schema = Z.String()
             .If(v => v.StartsWith("A"), s => s.MinLength(5))
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
 
@@ -176,7 +191,7 @@ public class IfConditionalTests
         var schema = Z.Object<User>()
             .If(u => u.Type == "admin", s => s
                 .Field(u => u.Name, n => n.MinLength(5)))
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
 
@@ -238,7 +253,7 @@ public class IfConditionalTests
         ISchema<User, StrictContext> schema = Z.Object<User>()
             .If<StrictContext>(u => u.Type == "admin", s => s
                 .Field(x => x.Name, n => n.MinLength(5))
-                .WithContext<StrictContext>()
+                .Using<StrictContext>()
                 .Refine((_, ctx) => ctx.IsStrict, "Strict context required for admins"));
 
         var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -256,7 +271,7 @@ public class IfConditionalTests
     public async Task ObjectSchema_If_ContextAwareFieldSchema_PromotesRootSchema()
     {
         var contextAwareName = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .Refine((name, ctx) => !ctx.IsStrict || name.Length >= 5, "Name must be at least 5 in strict mode");
 
         ISchema<User, StrictContext> schema = Z.Object<User>()

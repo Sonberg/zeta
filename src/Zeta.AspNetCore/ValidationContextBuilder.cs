@@ -1,5 +1,7 @@
 using Zeta;
 
+namespace Zeta.AspNetCore;
+
 /// <summary>
 /// A builder for creating <see cref="ValidationContext"/> instances with fluent configuration.
 /// </summary>
@@ -28,7 +30,7 @@ public record ValidationContextBuilder
     /// <returns>A new builder instance with the service provider configured.</returns>
     public ValidationContextBuilder WithServiceProvider(IServiceProvider serviceProvider) => this with
     {
-        ServiceProvider = serviceProvider
+        ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))
     };
 
     /// <summary>
@@ -39,7 +41,7 @@ public record ValidationContextBuilder
     public ValidationContextBuilder WithTimeProvider(TimeProvider timeProvider)
         => this with
         {
-            TimeProvider = timeProvider
+            TimeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider))
         };
 
     /// <summary>
@@ -53,6 +55,18 @@ public record ValidationContextBuilder
                           ?? ServiceProvider?.GetService(typeof(TimeProvider)) as TimeProvider
                           ?? TimeProvider.System,
             cancellationToken: Cancellation ?? CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Builds a <see cref="ValidationContext{TData}"/> from the configured values.
+    /// </summary>
+    /// <typeparam name="TData">The context data type.</typeparam>
+    /// <param name="data">The context data value.</param>
+    /// <returns>A new <see cref="ValidationContext{TData}"/> instance.</returns>
+    public ValidationContext<TData> Build<TData>(TData data)
+    {
+        var context = Build();
+        return new ValidationContext<TData>(data, context.TimeProvider, context.CancellationToken);
     }
 
     /// <summary>

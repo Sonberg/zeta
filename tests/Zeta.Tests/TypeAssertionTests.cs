@@ -74,7 +74,7 @@ public class TypeAssertionTests
     public async Task As_ContextAware_TypeMatches_Succeeds()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
         schema.As<Dog>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -87,7 +87,7 @@ public class TypeAssertionTests
     public async Task As_ContextAware_TypeMismatch_ReturnsError()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
         schema.As<Dog>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -102,7 +102,7 @@ public class TypeAssertionTests
     {
         var contextless = Z.Object<IAnimal>();
         contextless.As<Dog>();
-        var schema = contextless.WithContext<StrictContext>();
+        var schema = contextless.Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
 
@@ -156,7 +156,7 @@ public class TypeAssertionTests
     public async Task As_WithIf_ContextAware_ValidatesFieldsWithContext()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If(x => x is Dog, c => c.As<Dog>()
                 .Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
@@ -175,13 +175,13 @@ public class TypeAssertionTests
         Assert.True(cat.IsSuccess);
     }
 
-    // --- .If<TDerived>() generic overload tests ---
+    // --- Type-narrowed .If() tests ---
 
     [Fact]
     public async Task IfGeneric_TypeMatches_ValidatesFields()
     {
         var schema = Z.Object<IAnimal>()
-            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+            .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
         var result = await schema.ValidateAsync(new Dog(50));
 
@@ -189,10 +189,40 @@ public class TypeAssertionTests
     }
 
     [Fact]
+    public async Task WhenType_TypeMatches_ValidatesFields()
+    {
+        var schema = Z.Object<IAnimal>()
+            .WhenType<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+
+        var result = await schema.ValidateAsync(new Dog(50));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task WhenType_ContextfulBranch_PromotesSchema()
+    {
+        ISchema<IAnimal, StrictContext> schema = Z.Object<IAnimal>()
+            .WhenType<Dog, StrictContext>(dog => dog
+                .Field(x => x.WoofVolume, x => x.Min(0).Max(100))
+                .Using<StrictContext>()
+                .Refine((_, ctx) => ctx.IsStrict, "Strict context required for dogs"));
+
+        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+
+        var strictDog = await schema.ValidateAsync(new Dog(50), strictCtx);
+        Assert.True(strictDog.IsSuccess);
+
+        var lenientDog = await schema.ValidateAsync(new Dog(50), lenientCtx);
+        Assert.False(lenientDog.IsSuccess);
+    }
+
+    [Fact]
     public async Task IfGeneric_ConditionFalse_Skips()
     {
         var schema = Z.Object<IAnimal>()
-            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+            .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
         var result = await schema.ValidateAsync(new Cat(5));
 
@@ -203,7 +233,7 @@ public class TypeAssertionTests
     public async Task IfGeneric_FieldValidationFails_ReportsError()
     {
         var schema = Z.Object<IAnimal>()
-            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+            .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
         var result = await schema.ValidateAsync(new Dog(150));
 
@@ -215,8 +245,8 @@ public class TypeAssertionTests
     public async Task IfGeneric_ContextAware_ValidatesFields()
     {
         var schema = Z.Object<IAnimal>()
-            .WithContext<StrictContext>()
-            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
+            .Using<StrictContext>()
+            .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
 
@@ -231,11 +261,34 @@ public class TypeAssertionTests
     }
 
     [Fact]
+    public async Task IfGeneric_ContextAware_UsesPrebuiltSchema()
+    {
+        var dogSchema = Z.Object<Dog>()
+            .Using<StrictContext>()
+            .Field(x => x.WoofVolume, x => x.Min(0).Max(100))
+            .Refine((_, ctx) => ctx.IsStrict, "Strict context required for dogs");
+
+        var schema = Z.Object<IAnimal>()
+            .Using<StrictContext>()
+            .If(x => x is Dog, dogSchema);
+
+        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+
+        var strictDog = await schema.ValidateAsync(new Dog(50), strictCtx);
+        Assert.True(strictDog.IsSuccess);
+
+        var lenientDog = await schema.ValidateAsync(new Dog(50), lenientCtx);
+        Assert.False(lenientDog.IsSuccess);
+        Assert.Contains(lenientDog.Errors, e => e.Message == "Strict context required for dogs");
+    }
+
+    [Fact]
     public async Task IfGeneric_MultipleBranches_ValidatesCorrectBranch()
     {
         var schema = Z.Object<IAnimal>()
-            .If<Dog>(dog => dog.Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
-            .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+            .If(x => x is Dog, dog => dog.As<Dog>().Field(x => x.WoofVolume, x => x.Min(0).Max(100)))
+            .If(x => x is Cat, cat => cat.As<Cat>().Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 
         // Valid dog
         var validDog = await schema.ValidateAsync(new Dog(50));
@@ -259,11 +312,11 @@ public class TypeAssertionTests
     public async Task IfGeneric_ContextfulDerivedBranch_PromotesRootSchema()
     {
         ISchema<IAnimal, StrictContext> schema = Z.Object<IAnimal>()
-            .If<Dog, StrictContext>(dog => dog
+            .If(x => x is Dog, dog => dog.As<Dog>()
                 .Field(x => x.WoofVolume, x => x.Min(0).Max(100))
-                .WithContext<StrictContext>()
+                .Using<StrictContext>()
                 .Refine((_, ctx) => ctx.IsStrict, "Strict context required for dogs"))
-            .If<Cat>(cat => cat.Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+            .If(x => x is Cat, cat => cat.As<Cat>().Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 
         var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
         var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));

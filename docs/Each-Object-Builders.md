@@ -55,7 +55,7 @@ var schema = Z.Collection<Product>()
     .Each(p => p
         .Field(x => x.Name, Z.String().MinLength(3))
         .Field(x => x.Sku, Z.String())
-        .WithContext<ProductContext>()
+        .Using<ProductContext>()
         .Refine((product, ctx) => !ctx.SkuExists(product.Sku), "SKU exists"))
     .MinLength(1);
 ```

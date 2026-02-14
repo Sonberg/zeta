@@ -46,7 +46,7 @@ public class IntSchemaTests
     public async Task ContextRefine_UsesContextData()
     {
         var schema = Z.Int()
-            .WithContext<LimitContext>()
+            .Using<LimitContext>()
             .Refine((val, ctx) => val <= ctx.MaxLimit, "Exceeds dynamic limit");
 
         var context = new LimitContext(50);

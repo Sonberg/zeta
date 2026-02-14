@@ -220,10 +220,10 @@ public class NullableSchemaTests
     record LimitContext(int MaxValue);
 
     [Fact]
-    public async Task NullableWithContext_StringNullValue_ReturnsSuccess()
+    public async Task NullableUsing_StringNullValue_ReturnsSuccess()
     {
         var schema = Z.String()
-            .WithContext<LimitContext>()
+            .Using<LimitContext>()
             .Refine((val, _) => val.Length <= 10, "Too long")
             .Nullable();
 
@@ -235,10 +235,10 @@ public class NullableSchemaTests
     }
 
     [Fact]
-    public async Task NullableWithContext_ValidValue_ReturnsSuccess()
+    public async Task NullableUsing_ValidValue_ReturnsSuccess()
     {
         var schema = Z.Int()
-            .WithContext<LimitContext>()
+            .Using<LimitContext>()
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds limit")
             .Nullable();
 
@@ -251,10 +251,10 @@ public class NullableSchemaTests
     }
 
     [Fact]
-    public async Task NullableWithContext_InvalidValue_ReturnsFailure()
+    public async Task NullableUsing_InvalidValue_ReturnsFailure()
     {
         var schema = Z.Int()
-            .WithContext<LimitContext>()
+            .Using<LimitContext>()
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds limit")
             .Nullable();
 
