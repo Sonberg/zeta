@@ -41,7 +41,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
     }
 
     [Fact]
-    public async Task ValidateAsync_MultipleContextFactoriesInSchemaTree_Throws()
+    public async Task ValidateAsync_MultipleBranchFactories_UsesApplicableFactory()
     {
         var services = new ServiceCollection();
         services.AddScoped<IZetaValidator, ZetaValidator>();
@@ -52,7 +52,8 @@ public class ZetaValidatorContextFactoryDiscoveryTests
 
         var dogSchema = Z.Object<Dog>()
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(true)))
-            .Field(d => d.BarkVolum, v => v.Min(0).Max(100));
+            .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
+            .Refine((_, ctx) => ctx.Value, "dog branch context must be true", "dog_context");
 
         var catSchema = Z.Object<Cat>()
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
@@ -62,10 +63,33 @@ public class ZetaValidatorContextFactoryDiscoveryTests
             .If(x => x is Dog, dogSchema)
             .If(x => x is Cat, catSchema);
 
+        var result = await validator.ValidateAsync<IAnimal, DogContext>(new Dog("Rex", 50), schema);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_RootAndBranchFactory_BothApplicable_Throws()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<IZetaValidator, ZetaValidator>();
+        await using var provider = services.BuildServiceProvider();
+
+        using var scope = provider.CreateScope();
+        var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
+
+        var dogBranchSchema = Z.Object<Dog>()
+            .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(true)))
+            .Field(d => d.BarkVolum, v => v.Min(0).Max(100));
+
+        var schema = Z.Object<IAnimal>()
+            .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(true)))
+            .If(x => x is Dog, dogBranchSchema);
+
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             async () => await validator.ValidateAsync<IAnimal, DogContext>(new Dog("Rex", 50), schema));
 
-        Assert.Contains("Multiple context factories", ex.Message);
+        Assert.Contains("Multiple applicable context factories", ex.Message);
     }
 
     [Fact]
@@ -80,7 +104,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
 
         var schema = Z.Object<IAnimal>()
             .Field(x => x.Name, n => n.MinLength(3))
-            .If<Dog, DogContext>(x => x
+            .If(x => x is Dog, x => x.As<Dog>()
                 .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
                 .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
                 .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context"))

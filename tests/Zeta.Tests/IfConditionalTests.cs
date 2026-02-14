@@ -21,6 +21,21 @@ public class IfConditionalTests
     }
 
     [Fact]
+    public async Task ValueSchema_ActionConfigure_ValidatesInnerSchema()
+    {
+        var schema = Z.Int()
+            .If(v => v >= 18, s =>
+            {
+                s.Max(65);
+            });
+
+        var result = await schema.ValidateAsync(70);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "max_value");
+    }
+
+    [Fact]
     public async Task ValueSchema_ConditionFalse_SkipsInnerSchema()
     {
         var schema = Z.Int()

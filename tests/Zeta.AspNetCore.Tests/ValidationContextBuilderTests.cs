@@ -100,4 +100,52 @@ public class ValidationContextBuilderTests
 
         Assert.Same(timeProvider, context.TimeProvider);
     }
+
+    [Fact]
+    public async Task ZetaValidator_ValidateAsync_Contextless_UsesBuilderContext()
+    {
+        var services = new ServiceCollection()
+            .AddScoped<IZetaValidator, ZetaValidator>()
+            .BuildServiceProvider();
+
+        using var scope = services.CreateScope();
+        var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
+        var schema = Z.String().RefineAsync(
+            (_, ct) => ValueTask.FromResult(ct.CanBeCanceled),
+            "token missing",
+            "token_missing");
+        using var cts = new CancellationTokenSource();
+
+        var result = await validator.ValidateAsync("abc", schema, new ValidationContextBuilder().WithCancellation(cts.Token));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task ZetaValidator_ValidateAsync_ContextAware_UsesBuilderContext()
+    {
+        var services = new ServiceCollection()
+            .AddScoped<IZetaValidator, ZetaValidator>()
+            .BuildServiceProvider();
+
+        using var scope = services.CreateScope();
+        var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
+
+        var schema = Z.String()
+            .Using<TestContext>((_, _, _) => ValueTask.FromResult(new TestContext(true)))
+            .Refine((_, ctx) => ctx.IsStrict, "context missing", "context_missing")
+            .RefineAsync((_, _, ct) => ValueTask.FromResult(ct.CanBeCanceled), "token missing", "token_missing");
+
+        using var cts = new CancellationTokenSource();
+        var result = await validator.ValidateAsync(
+            "abc",
+            schema,
+            new ValidationContextBuilder()
+                .WithCancellation(cts.Token)
+                .WithTimeProvider(new FakeTimeProvider()));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    private sealed record TestContext(bool IsStrict);
 }

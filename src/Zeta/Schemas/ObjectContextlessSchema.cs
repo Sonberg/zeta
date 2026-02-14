@@ -54,6 +54,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     /// <summary>
     /// Adds a conditional branch and promotes the root object schema to context-aware when
     /// the conditional builder returns a context-aware schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
     /// </summary>
     public ObjectContextSchema<T, TContext> If<TContext>(
         Func<T, bool> predicate,
@@ -106,20 +107,20 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return this;
     }
 
-    /// <summary>
-    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/> and promotes
-    /// the full schema to context-aware when the configured derived schema uses context.
-    /// Types are automatically inferred from the return value of the configure lambda.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> If<TDerived, TContext>(
-        Func<ObjectContextlessSchema<TDerived>, ObjectContextSchema<TDerived, TContext>> configure) where TDerived : class, T
+    public ObjectContextlessSchema<T> WhenType<TTarget>(
+        Func<ObjectContextlessSchema<TTarget>, ObjectContextlessSchema<TTarget>> configure)
+        where TTarget : class, T
     {
-        var conditional = configure(Z.Object<TDerived>());
-        var promoted = Using<TContext>();
-        promoted.AddConditional(
-            value => value is TDerived,
-            new TypeNarrowingSchemaAdapter<T, TDerived, TContext>(conditional));
-        return promoted;
+        var branchSchema = configure(Z.Object<TTarget>());
+        return If(x => x is TTarget, branchSchema);
+    }
+
+    public ObjectContextSchema<T, TContext> WhenType<TTarget, TContext>(
+        Func<ObjectContextlessSchema<TTarget>, ObjectContextSchema<TTarget, TContext>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(Z.Object<TTarget>());
+        return If(x => x is TTarget, branchSchema);
     }
 
     internal void SetTypeAssertion(ITypeAssertion<T>? assertion) => _typeAssertion = assertion;
