@@ -230,9 +230,23 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         return (TSchema)this;
     }
 
+    public TSchema If(Func<T, bool> predicate, ISchema<T, TContext> schema)
+    {
+        _conditionals ??= [];
+        _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
+        return (TSchema)this;
+    }
+
     public TSchema If(Func<T, TContext, bool> predicate, Func<TSchema, TSchema> configure)
     {
         var schema = configure(CreateInstance());
+        _conditionals ??= [];
+        _conditionals.Add(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
+        return (TSchema)this;
+    }
+
+    public TSchema If(Func<T, TContext, bool> predicate, ISchema<T, TContext> schema)
+    {
         _conditionals ??= [];
         _conditionals.Add(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
         return (TSchema)this;

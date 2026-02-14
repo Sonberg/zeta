@@ -99,6 +99,12 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         return (TSchema)this;
     }
 
+    public TSchema If(Func<T, bool> predicate, ISchema<T> schema)
+    {
+        AddConditional(predicate, schema);
+        return (TSchema)this;
+    }
+
     protected void AddConditional(Func<T, bool> predicate, ISchema<T> schema)
     {
         _conditionals ??= [];

@@ -231,6 +231,29 @@ public class TypeAssertionTests
     }
 
     [Fact]
+    public async Task IfGeneric_ContextAware_UsesPrebuiltSchema()
+    {
+        var dogSchema = Z.Object<Dog>()
+            .Using<StrictContext>()
+            .Field(x => x.WoofVolume, x => x.Min(0).Max(100))
+            .Refine((_, ctx) => ctx.IsStrict, "Strict context required for dogs");
+
+        var schema = Z.Object<IAnimal>()
+            .Using<StrictContext>()
+            .If(x => x is Dog, dogSchema);
+
+        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+
+        var strictDog = await schema.ValidateAsync(new Dog(50), strictCtx);
+        Assert.True(strictDog.IsSuccess);
+
+        var lenientDog = await schema.ValidateAsync(new Dog(50), lenientCtx);
+        Assert.False(lenientDog.IsSuccess);
+        Assert.Contains(lenientDog.Errors, e => e.Message == "Strict context required for dogs");
+    }
+
+    [Fact]
     public async Task IfGeneric_MultipleBranches_ValidatesCorrectBranch()
     {
         var schema = Z.Object<IAnimal>()

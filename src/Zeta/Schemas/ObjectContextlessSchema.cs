@@ -41,6 +41,20 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     /// Adds a conditional branch and promotes the root object schema to context-aware when
     /// the conditional builder returns a context-aware schema.
     /// </summary>
+    public ObjectContextSchema<T, TContext> If<TTarget, TContext>(
+        Func<T, bool> predicate,
+        ISchema<TTarget, TContext> schema)
+        where TTarget : class, T
+    {
+        var promoted = Using<TContext>();
+        promoted.If(predicate, new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(schema));
+        return promoted;
+    }
+
+    /// <summary>
+    /// Adds a conditional branch and promotes the root object schema to context-aware when
+    /// the conditional builder returns a context-aware schema.
+    /// </summary>
     public ObjectContextSchema<T, TContext> If<TContext>(
         Func<T, bool> predicate,
         Func<ObjectContextlessSchema<T>, ObjectContextSchema<T, TContext>> configure)
@@ -79,6 +93,18 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return promoted;
     }
     
+    /// <summary>
+    /// Adds a conditional branch to the object schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
+    /// </summary>
+    public ObjectContextlessSchema<T> If<TTarget>(
+        Func<T, bool> predicate,
+        ISchema<TTarget> schema)
+        where TTarget : class, T
+    {
+        return base.If(predicate, (ISchema<T>)new TypeNarrowingContextlessSchemaAdapter<T, TTarget>(schema));
+    }
+
     /// <summary>
     /// Adds a conditional branch to the object schema.
     /// Types are automatically inferred from the return value of the configure lambda.

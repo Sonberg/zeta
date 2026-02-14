@@ -49,6 +49,18 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     /// </summary>
     public ObjectContextSchema<T, TContext> If<TTarget>(
         Func<T, bool> predicate,
+        ISchema<TTarget, TContext> schema)
+        where TTarget : class, T
+    {
+        return base.If(predicate, (ISchema<T, TContext>)new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(schema));
+    }
+
+    /// <summary>
+    /// Adds a conditional type-narrowed branch to the object schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TTarget>(
+        Func<T, bool> predicate,
         Func<ObjectContextSchema<T, TContext>, ObjectContextSchema<TTarget, TContext>> configure)
         where TTarget : class, T
     {
