@@ -11,6 +11,9 @@
 
 - **`AddZeta(Assembly[])` is now obsolete** — use `AddZeta()` without parameters. Assembly scanning for context factories is no longer needed.
 
+### Fixed
+
+- **`ObjectSchema.If()` context-promotion parity**: Added context-promotion overloads for object conditional branches so passing context-aware schemas inside `.If(...)` promotes the full root schema to context-aware. This now works for both predicate-style object branches (`If<TContext>(predicate, configure)`) and polymorphic branches (`If<TDerived, TContext>(configure)`), preserving fluent chaining and ensuring conditional context rules execute.
 
 ## 0.1.11
 ### Added

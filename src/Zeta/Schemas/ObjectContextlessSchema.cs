@@ -54,6 +54,20 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
     /// <summary>
+    /// Adds a conditional branch and promotes the root object schema to context-aware when
+    /// the conditional builder returns a context-aware schema.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TContext>(
+        Func<T, bool> predicate,
+        Func<ObjectContextlessSchema<T>, ObjectContextSchema<T, TContext>> configure)
+    {
+        var conditional = configure(Z.Object<T>());
+        var promoted = WithContext<TContext>();
+        promoted.AddConditional(predicate, conditional);
+        return promoted;
+    }
+
+    /// <summary>
     /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/> and promotes
     /// the full schema to context-aware when the configured derived schema uses context.
     /// </summary>

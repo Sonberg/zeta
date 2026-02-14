@@ -231,4 +231,46 @@ public class IfConditionalTests
         var noHttp = await schema.ValidateAsync("just text");
         Assert.True(noHttp.IsSuccess);
     }
+
+    [Fact]
+    public async Task ObjectSchema_If_ContextAwareBranch_PromotesRootSchema()
+    {
+        ISchema<User, StrictContext> schema = Z.Object<User>()
+            .If<StrictContext>(u => u.Type == "admin", s => s
+                .Field(x => x.Name, n => n.MinLength(5))
+                .WithContext<StrictContext>()
+                .Refine((_, ctx) => ctx.IsStrict, "Strict context required for admins"));
+
+        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+
+        var strictAdmin = await schema.ValidateAsync(new User("Admin", 30, null, "admin"), strictCtx);
+        Assert.True(strictAdmin.IsSuccess);
+
+        var lenientAdmin = await schema.ValidateAsync(new User("Admin", 30, null, "admin"), lenientCtx);
+        Assert.False(lenientAdmin.IsSuccess);
+        Assert.Contains(lenientAdmin.Errors, e => e.Message == "Strict context required for admins");
+    }
+
+    [Fact]
+    public async Task ObjectSchema_If_ContextAwareFieldSchema_PromotesRootSchema()
+    {
+        var contextAwareName = Z.String()
+            .WithContext<StrictContext>()
+            .Refine((name, ctx) => !ctx.IsStrict || name.Length >= 5, "Name must be at least 5 in strict mode");
+
+        ISchema<User, StrictContext> schema = Z.Object<User>()
+            .If<StrictContext>(u => u.Type == "admin", s => s
+                .Field(x => x.Name, contextAwareName));
+
+        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+
+        var strictShort = await schema.ValidateAsync(new User("Joe", 30, null, "admin"), strictCtx);
+        Assert.False(strictShort.IsSuccess);
+        Assert.Contains(strictShort.Errors, e => e.Path == "name" && e.Message == "Name must be at least 5 in strict mode");
+
+        var lenientShort = await schema.ValidateAsync(new User("Joe", 30, null, "admin"), lenientCtx);
+        Assert.True(lenientShort.IsSuccess);
+    }
 }
