@@ -116,7 +116,7 @@ public class ValidationContextBuilderTests
             "token_missing");
         using var cts = new CancellationTokenSource();
 
-        var result = await validator.ValidateAsync("abc", schema, new ValidationContextBuilder().WithCancellation(cts.Token));
+        var result = await validator.ValidateAsync("abc", schema, cts.Token);
 
         Assert.True(result.IsSuccess);
     }
@@ -140,7 +140,7 @@ public class ValidationContextBuilderTests
         var result = await validator.ValidateAsync(
             "abc",
             schema,
-            new ValidationContextBuilder()
+            opt => opt
                 .WithCancellation(cts.Token)
                 .WithTimeProvider(new FakeTimeProvider()));
 
