@@ -12,7 +12,7 @@ internal sealed class TypeNarrowingSchemaAdapter<TBase, TDerived, TContext> : IS
 
     bool ISchema<TBase, TContext>.AllowNull => _inner.AllowNull;
 
-    public IEnumerable<Func<TBase, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    public IEnumerable<Func<TBase, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories()
     {
         foreach (var factory in _inner.GetContextFactories())
         {

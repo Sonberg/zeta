@@ -25,7 +25,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
         var dogSchema = Z.Object<Dog>()
-            .Using<DogContext>((_, _, _) => Task.FromResult(new DogContext(false)))
+            .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
             .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
             .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context");
 
@@ -51,11 +51,11 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
         var dogSchema = Z.Object<Dog>()
-            .Using<DogContext>((_, _, _) => Task.FromResult(new DogContext(true)))
+            .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(true)))
             .Field(d => d.BarkVolum, v => v.Min(0).Max(100));
 
         var catSchema = Z.Object<Cat>()
-            .Using<DogContext>((_, _, _) => Task.FromResult(new DogContext(false)))
+            .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
             .Field(c => c.ClawSharpness, v => v.Min(0).Max(100));
 
         var schema = Z.Object<IAnimal>()
@@ -82,7 +82,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
             .Field(x => x.Name, n => n.MinLength(3))
             .If<Dog, DogContext>(x => x
                 .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
-                .Using<DogContext>((_, _, _) => Task.FromResult(new DogContext(false)))
+                .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
                 .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context"))
             .If(x => x is Cat, x => x.As<Cat>().Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
 

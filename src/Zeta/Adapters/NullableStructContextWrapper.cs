@@ -15,7 +15,7 @@ internal sealed class NullableStructContextWrapper<T, TContext> : ISchema<T?, TC
 
     public bool AllowNull => _inner.AllowNull;
 
-    IEnumerable<Func<T?, IServiceProvider, CancellationToken, Task<TContext>>> ISchema<T?, TContext>.GetContextFactories()
+    IEnumerable<Func<T?, IServiceProvider, CancellationToken, ValueTask<TContext>>> ISchema<T?, TContext>.GetContextFactories()
     {
         foreach (var factory in _inner.GetContextFactories())
         {

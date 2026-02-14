@@ -71,7 +71,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
 
     internal void SetTypeAssertion(ITypeAssertion<T, TContext>? assertion) => _typeAssertion = assertion;
 
-    protected override IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactoriesCore()
+    protected override IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactoriesCore()
     {
         foreach (var factory in base.GetContextFactoriesCore())
         {

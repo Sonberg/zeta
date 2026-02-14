@@ -42,7 +42,7 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     /// Creates a context-aware int schema with a factory delegate for creating context data.
     /// </summary>
     public IntContextSchema<TContext> Using<TContext>(
-        Func<int, IServiceProvider, CancellationToken, Task<TContext>> factory)
+        Func<int, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
         var schema = Using<TContext>();
         schema.SetContextFactory(factory);

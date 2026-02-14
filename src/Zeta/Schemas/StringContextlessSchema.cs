@@ -114,7 +114,7 @@ public sealed class StringContextlessSchema : ContextlessSchema<string, StringCo
     /// Creates a context-aware string schema with a factory delegate for creating context data.
     /// </summary>
     public StringContextSchema<TContext> Using<TContext>(
-        Func<string, IServiceProvider, CancellationToken, Task<TContext>> factory)
+        Func<string, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
         var schema = Using<TContext>();
         schema.SetContextFactory(factory);

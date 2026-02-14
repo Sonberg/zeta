@@ -51,7 +51,7 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextl
     /// Creates a context-aware Guid schema with a factory delegate for creating context data.
     /// </summary>
     public GuidContextSchema<TContext> Using<TContext>(
-        Func<Guid, IServiceProvider, CancellationToken, Task<TContext>> factory)
+        Func<Guid, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
         var schema = Using<TContext>();
         schema.SetContextFactory(factory);

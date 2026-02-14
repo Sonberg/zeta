@@ -6,7 +6,7 @@ internal interface ISchemaConditional<T, TContext>
 {
     ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context);
 
-    IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories();
+    IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
 }
 
 internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
@@ -28,7 +28,7 @@ internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditi
         return result.IsFailure ? result.Errors : [];
     }
 
-    public IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    public IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories()
     {
         return [];
     }
@@ -53,7 +53,7 @@ internal sealed class ContextAwareSchemaConditional<T, TContext> : ISchemaCondit
         return result.IsFailure ? result.Errors : [];
     }
 
-    public IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    public IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories()
     {
         return _schema.GetContextFactories();
     }
@@ -78,7 +78,7 @@ internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaCondition
         return result.IsFailure ? result.Errors : [];
     }
 
-    public IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories()
+    public IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories()
     {
         return _schema.GetContextFactories();
     }
@@ -93,7 +93,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     public bool AllowNull { get; private set; }
 
-    public Func<T, IServiceProvider, CancellationToken, Task<TContext>>? ContextFactory { get; private set; }
+    public Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? ContextFactory { get; private set; }
 
     private List<ISchemaConditional<T, TContext>>? _conditionals;
 
@@ -147,15 +147,15 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         return this as TSchema ?? throw new InvalidOperationException();
     }
 
-    internal void SetContextFactory(Func<T, IServiceProvider, CancellationToken, Task<TContext>> factory)
+    internal void SetContextFactory(Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
         => ContextFactory = factory;
 
-    IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> ISchema<T, TContext>.GetContextFactories()
+    IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> ISchema<T, TContext>.GetContextFactories()
     {
         return GetContextFactoriesCore();
     }
 
-    protected virtual IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactoriesCore()
+    protected virtual IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactoriesCore()
     {
         if (ContextFactory is not null)
         {

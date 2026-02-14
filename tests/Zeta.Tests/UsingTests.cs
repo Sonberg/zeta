@@ -465,8 +465,8 @@ public class UsingTests
     [Fact]
     public void Using_WithFactory_StoresFactoryOnSchema()
     {
-        Func<string, IServiceProvider, CancellationToken, Task<UserContext>> factory =
-            (value, sp, ct) => Task.FromResult(new UserContext("", 100));
+        Func<string, IServiceProvider, CancellationToken, ValueTask<UserContext>> factory =
+            (value, sp, ct) => ValueTask.FromResult(new UserContext("", 100));
 
         var schema = Z.String()
             .Using(factory);
@@ -491,8 +491,8 @@ public class UsingTests
     [Fact]
     public void Using_ObjectSchema_WithFactory_StoresFactory()
     {
-        Func<User, IServiceProvider, CancellationToken, Task<UserContext>> factory =
-            (value, sp, ct) => Task.FromResult(new UserContext(value.Email, 100));
+        Func<User, IServiceProvider, CancellationToken, ValueTask<UserContext>> factory =
+            (value, sp, ct) => ValueTask.FromResult(new UserContext(value.Email, 100));
 
         var schema = Z.Object<User>()
             .Using(factory);

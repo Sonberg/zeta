@@ -15,7 +15,7 @@ internal sealed class SchemaAdapter<T, TContext> : ISchema<T, TContext>
 
     public bool AllowNull => _inner.AllowNull;
 
-    IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> ISchema<T, TContext>.GetContextFactories()
+    IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> ISchema<T, TContext>.GetContextFactories()
     {
         return [];
     }

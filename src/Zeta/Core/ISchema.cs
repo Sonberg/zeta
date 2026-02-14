@@ -8,7 +8,7 @@ public interface ISchema<in T, TContext>
 {
     internal bool AllowNull { get; }
 
-    internal IEnumerable<Func<T, IServiceProvider, CancellationToken, Task<TContext>>> GetContextFactories();
+    internal IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
 
     /// <summary>
     /// Validates the given value asynchronously with context.
@@ -24,7 +24,7 @@ public interface IContextFactorySchema<T, TContext>
     /// <summary>
     /// Gets the factory delegate for creating context data, or null if not set.
     /// </summary>
-    Func<T, IServiceProvider, CancellationToken, Task<TContext>>? ContextFactory { get; }
+    Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? ContextFactory { get; }
 }
 
 /// <summary>

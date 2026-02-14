@@ -65,7 +65,7 @@ public sealed class ZetaValidator : IZetaValidator
         return result.IsSuccess ? Result<T>.Success(value) : Result<T>.Failure(result.Errors);
     }
 
-    private static Func<T, IServiceProvider, CancellationToken, Task<TContext>> ResolveContextFactory<T, TContext>(ISchema<T, TContext> schema)
+    private static Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> ResolveContextFactory<T, TContext>(ISchema<T, TContext> schema)
     {
         var factories = schema.GetContextFactories().ToList();
         if (factories.Count == 1) return factories[0];

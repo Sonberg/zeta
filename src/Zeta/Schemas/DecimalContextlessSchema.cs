@@ -66,7 +66,7 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     /// Creates a context-aware decimal schema with a factory delegate for creating context data.
     /// </summary>
     public DecimalContextSchema<TContext> Using<TContext>(
-        Func<decimal, IServiceProvider, CancellationToken, Task<TContext>> factory)
+        Func<decimal, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
         var schema = Using<TContext>();
         schema.SetContextFactory(factory);
