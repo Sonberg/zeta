@@ -62,11 +62,11 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         Func<ObjectContextlessSchema<T>, ObjectContextSchema<T, TContext>> configure)
     {
         var conditional = configure(Z.Object<T>());
-        var promoted = WithContext<TContext>();
+        var promoted = Using<TContext>();
         promoted.AddConditional(predicate, conditional);
         return promoted;
     }
-
+    
     /// <summary>
     /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/> and promotes
     /// the full schema to context-aware when the configured derived schema uses context.

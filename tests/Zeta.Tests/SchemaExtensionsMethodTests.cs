@@ -9,7 +9,7 @@ public class SchemaExtensionsMethodTests
     public async Task ValidateAsync_ContextAwareExtension_ReturnsTypedResult()
     {
         var schema = Z.Int()
-            .WithContext<TestContext>()
+            .Using<TestContext>()
             .Refine((value, ctx) => value <= ctx.MaxAge, "too_big");
 
         var success = await SchemaExtensions.ValidateAsync(schema, 5, new TestContext(10));
@@ -35,7 +35,7 @@ public class SchemaExtensionsMethodTests
     public async Task Field_PromotionExtension_IsCovered()
     {
         var fieldSchema = Z.String()
-            .WithContext<TestContext>()
+            .Using<TestContext>()
             .MinLength(3);
 
         var schema = SchemaExtensions.Field(
@@ -51,7 +51,7 @@ public class SchemaExtensionsMethodTests
     public async Task Field_ContextAwareNullableReferenceExtension_IsCovered()
     {
         var schema = SchemaExtensions.Field(
-            Z.Object<Person>().WithContext<TestContext>(),
+            Z.Object<Person>().Using<TestContext>(),
             x => x.Nickname,
             Z.String().MinLength(3));
 
@@ -64,7 +64,7 @@ public class SchemaExtensionsMethodTests
     public async Task Field_ContextAwareNullableStructExtension_CurrentlyThrowsForNullableStruct()
     {
         Assert.Throws<ArgumentException>(() => SchemaExtensions.Field(
-            Z.Object<Person>().WithContext<TestContext>(),
+            Z.Object<Person>().Using<TestContext>(),
             x => x.Age,
             Z.Int().Min(18)));
     }

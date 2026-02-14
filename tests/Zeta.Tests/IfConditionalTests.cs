@@ -238,7 +238,7 @@ public class IfConditionalTests
         ISchema<User, StrictContext> schema = Z.Object<User>()
             .If<StrictContext>(u => u.Type == "admin", s => s
                 .Field(x => x.Name, n => n.MinLength(5))
-                .WithContext<StrictContext>()
+                .Using<StrictContext>()
                 .Refine((_, ctx) => ctx.IsStrict, "Strict context required for admins"));
 
         var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -256,7 +256,7 @@ public class IfConditionalTests
     public async Task ObjectSchema_If_ContextAwareFieldSchema_PromotesRootSchema()
     {
         var contextAwareName = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .Refine((name, ctx) => !ctx.IsStrict || name.Length >= 5, "Name must be at least 5 in strict mode");
 
         ISchema<User, StrictContext> schema = Z.Object<User>()
