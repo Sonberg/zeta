@@ -11,9 +11,19 @@
 
 - **`AddZeta(Assembly[])` is now obsolete** — use `AddZeta()` without parameters. Assembly scanning for context factories is no longer needed.
 
+### Added
+
+- **Self-resolving context schemas in `.If()` branches**: Context-aware schemas with factories (`.Using<TContext>(factory)`) can now be passed directly to `.If()` on contextless object schemas. The root schema stays contextless while each branch independently resolves its own context via `IServiceProvider` from `ValidationContext`. This enables polymorphic validation where different branches use different contexts without promoting the entire schema tree.
+
+- **`IServiceProvider` on `ValidationContext`**: Added optional `IServiceProvider?` property to `ValidationContext` and `ValidationContext<TData>`, propagated through `Push()` and `PushIndex()`. `ValidationContextBuilder.Build()` now passes the configured service provider to the built context.
+
+### Breaking
+
+- **Removed `WhenType<TTarget>()` and context-promoting `If` overloads** from `ObjectContextlessSchema` and `ObjectContextSchema`. These overloads promoted the entire root schema to context-aware, requiring all branches to share the same `TContext`. Use self-resolving schemas instead: build each branch as a separate schema with `.Using<TContext>(factory)` and pass it to `.If(predicate, schema)`.
+
 ### Fixed
 
-- **`ObjectSchema.If()` context-promotion parity**: Added context-promotion overloads for object conditional branches so passing context-aware schemas inside `.If(...)` promotes the full root schema to context-aware. This now works for both predicate-style object branches (`If<TContext>(predicate, configure)`) and polymorphic branches (`If<TDerived, TContext>(configure)`), preserving fluent chaining and ensuring conditional context rules execute.
+- **`ValidationContextBuilder.Build()` now passes `IServiceProvider`**: Previously, the builder stored the service provider but did not pass it through to the built `ValidationContext`.
 
 ## 0.1.11
 ### Added

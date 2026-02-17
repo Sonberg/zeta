@@ -54,7 +54,8 @@ public record ValidationContextBuilder
             timeProvider: TimeProvider
                           ?? ServiceProvider?.GetService(typeof(TimeProvider)) as TimeProvider
                           ?? TimeProvider.System,
-            cancellationToken: Cancellation ?? CancellationToken.None);
+            cancellationToken: Cancellation ?? CancellationToken.None,
+            serviceProvider: ServiceProvider);
     }
 
     /// <summary>
@@ -66,7 +67,7 @@ public record ValidationContextBuilder
     public ValidationContext<TData> Build<TData>(TData data)
     {
         var context = Build();
-        return new ValidationContext<TData>(data, context.TimeProvider, context.CancellationToken);
+        return new ValidationContext<TData>(data, context.TimeProvider, context.CancellationToken, context.ServiceProvider);
     }
 
     /// <summary>

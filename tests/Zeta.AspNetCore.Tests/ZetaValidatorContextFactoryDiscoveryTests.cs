@@ -63,7 +63,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
             .If(x => x is Dog, dogSchema)
             .If(x => x is Cat, catSchema);
 
-        var result = await validator.ValidateAsync<IAnimal, DogContext>(new Dog("Rex", 50), schema);
+        var result = await validator.ValidateAsync(new Dog("Rex", 50), schema);
 
         Assert.True(result.IsSuccess);
     }
@@ -93,7 +93,7 @@ public class ZetaValidatorContextFactoryDiscoveryTests
     }
 
     [Fact]
-    public async Task ValidateAsync_IfDerivedContextOverload_PromotesRootSchema()
+    public async Task ValidateAsync_IfDerivedContextOverload_SelfResolves()
     {
         var services = new ServiceCollection();
         services.AddScoped<IZetaValidator, ZetaValidator>();
@@ -102,13 +102,18 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         using var scope = provider.CreateScope();
         var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
+        var dogSchema = Z.Object<Dog>()
+            .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
+            .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
+            .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context");
+
+        var catSchema = Z.Object<Cat>()
+            .Field(c => c.ClawSharpness, v => v.Min(0).Max(100));
+
         var schema = Z.Object<IAnimal>()
             .Field(x => x.Name, n => n.MinLength(3))
-            .If(x => x is Dog, x => x.As<Dog>()
-                .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
-                .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
-                .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context"))
-            .If(x => x is Cat, x => x.As<Cat>().Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
+            .If(x => x is Dog, dogSchema)
+            .If(x => x is Cat, catSchema);
 
         var result = await validator.ValidateAsync(new Dog("Rex", 50), schema);
 

@@ -38,50 +38,6 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
     /// <summary>
-    /// Adds a conditional branch and promotes the root object schema to context-aware when
-    /// the conditional builder returns a context-aware schema.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> If<TTarget, TContext>(
-        Func<T, bool> predicate,
-        ISchema<TTarget, TContext> schema)
-        where TTarget : class, T
-    {
-        var promoted = Using<TContext>();
-        promoted.If(predicate, new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(schema));
-        return promoted;
-    }
-
-    /// <summary>
-    /// Adds a conditional branch and promotes the root object schema to context-aware when
-    /// the conditional builder returns a context-aware schema.
-    /// Types are automatically inferred from the return value of the configure lambda.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> If<TContext>(
-        Func<T, bool> predicate,
-        Func<ObjectContextlessSchema<T>, ObjectContextSchema<T, TContext>> configure)
-    {
-        return If<T, TContext>(predicate, configure);
-    }
-
-    /// <summary>
-    /// Adds a conditional branch and promotes the root object schema to context-aware when
-    /// the conditional builder returns a context-aware schema.
-    /// Types are automatically inferred from the return value of the configure lambda.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> If<TTarget, TContext>(
-        Func<T, bool> predicate,
-        Func<ObjectContextlessSchema<T>, ObjectContextSchema<TTarget, TContext>> configure)
-        where TTarget : class, T
-    {
-        var branchSchema = configure(Z.Object<T>());
-        var promoted = Using<TContext>();
-        promoted.AddConditional(
-            predicate,
-            new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(branchSchema));
-        return promoted;
-    }
-
-    /// <summary>
     /// Adds a conditional branch to the object schema.
     /// Types are automatically inferred from the return value of the configure lambda.
     /// </summary>
@@ -91,6 +47,31 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         where TTarget : class, T
     {
         return base.If(predicate, (ISchema<T>)new TypeNarrowingContextlessSchemaAdapter<T, TTarget>(schema));
+    }
+
+    /// <summary>
+    /// Adds a conditional branch with a context-aware schema. The schema must have a context factory
+    /// defined via <c>.Using&lt;TContext&gt;(factory)</c>. The factory is resolved during validation
+    /// using <see cref="IServiceProvider"/> from the <see cref="ValidationContext"/>.
+    /// The root schema remains contextless.
+    /// </summary>
+    public ObjectContextlessSchema<T> If<TTarget, TContext>(
+        Func<T, bool> predicate,
+        ISchema<TTarget, TContext> schema)
+        where TTarget : class, T
+    {
+        var factories = schema.GetContextFactories().ToList();
+        if (factories.Count == 0)
+            throw new InvalidOperationException(
+                $"No context factory found for {typeof(TTarget).Name}/{typeof(TContext).Name}. " +
+                "Provide a factory via .Using<TContext>(factory).");
+        if (factories.Count > 1)
+            throw new InvalidOperationException(
+                $"Multiple context factories found for {typeof(TTarget).Name}/{typeof(TContext).Name}. " +
+                "Ensure exactly one factory is defined.");
+
+        var selfResolving = new SelfResolvingSchema<TTarget, TContext>(schema, factories[0]);
+        return If(predicate, selfResolving);
     }
 
     /// <summary>
@@ -105,22 +86,6 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         var branchSchema = configure(Z.Object<T>());
         AddConditional(predicate, new TypeNarrowingContextlessSchemaAdapter<T, TTarget>(branchSchema));
         return this;
-    }
-
-    public ObjectContextlessSchema<T> WhenType<TTarget>(
-        Func<ObjectContextlessSchema<TTarget>, ObjectContextlessSchema<TTarget>> configure)
-        where TTarget : class, T
-    {
-        var branchSchema = configure(Z.Object<TTarget>());
-        return If(x => x is TTarget, branchSchema);
-    }
-
-    public ObjectContextSchema<T, TContext> WhenType<TTarget, TContext>(
-        Func<ObjectContextlessSchema<TTarget>, ObjectContextSchema<TTarget, TContext>> configure)
-        where TTarget : class, T
-    {
-        var branchSchema = configure(Z.Object<TTarget>());
-        return If(x => x is TTarget, branchSchema);
     }
 
     internal void SetTypeAssertion(ITypeAssertion<T>? assertion) => _typeAssertion = assertion;

@@ -69,14 +69,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return this;
     }
 
-    public ObjectContextSchema<T, TContext> WhenType<TTarget>(
-        Func<ObjectContextSchema<TTarget, TContext>, ObjectContextSchema<TTarget, TContext>> configure)
-        where TTarget : class, T
-    {
-        var branchSchema = configure(new ObjectContextSchema<TTarget, TContext>());
-        return If(x => x is TTarget, branchSchema);
-    }
-
     internal void SetTypeAssertion(ITypeAssertion<T, TContext>? assertion) => _typeAssertion = assertion;
 
     protected override IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactoriesCore()

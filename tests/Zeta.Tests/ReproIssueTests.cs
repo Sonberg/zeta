@@ -32,16 +32,16 @@ public class ReproIssueTests
             .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
             .Refine((_, ctx) => ctx.Value, "Dog context value must be true");
 
-        // Testing if both TTarget and TContext can be inferred from schema argument type
+        var catSchema = Z.Object<Cat>()
+            .Field(c => c.ClawSharpness, v => v.Min(0).Max(100));
+
+        // Schema stays contextless — context resolution happens via SelfResolvingSchema
         var schema = Z.Object<IAnimal>()
             .Field(x => x.Name, n => n.MinLength(3))
             .If(x => x is Dog, dogSchema)
-            .If(x => x is Cat, x => x.As<Cat>().Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
+            .If(x => x is Cat, catSchema);
 
-        // Verify promotion
-        Assert.IsType<ObjectContextSchema<IAnimal, CatContext>>(schema);
-
-        var result = await zeta.ValidateAsync(new Dog("Rex", 50), (ObjectContextSchema<IAnimal, CatContext>)schema);
+        var result = await zeta.ValidateAsync(new Dog("Rex", 50), schema);
 
         Assert.True(result.IsFailure);
         Assert.Contains(result.Errors, e => e.Message == "Dog context value must be true");
