@@ -15,41 +15,39 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext, D
     {
     }
 
+    private DecimalContextSchema(
+        ContextRuleEngine<decimal, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<decimal, TContext>>? conditionals,
+        Func<decimal, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
+    {
+    }
+
     protected override DecimalContextSchema<TContext> CreateInstance() => new();
 
+    protected override DecimalContextSchema<TContext> CreateInstance(
+        ContextRuleEngine<decimal, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<decimal, TContext>>? conditionals,
+        Func<decimal, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(rules, allowNull, conditionals, contextFactory);
+
     public DecimalContextSchema<TContext> Min(decimal min, string? message = null)
-    {
-        Use(new MinDecimalRule<TContext>(min, message));
-        return this;
-    }
+        => Append(new MinDecimalRule<TContext>(min, message));
 
     public DecimalContextSchema<TContext> Max(decimal max, string? message = null)
-    {
-        Use(new MaxDecimalRule<TContext>(max, message));
-        return this;
-    }
+        => Append(new MaxDecimalRule<TContext>(max, message));
 
     public DecimalContextSchema<TContext> Positive(string? message = null)
-    {
-        Use(new PositiveDecimalRule<TContext>(message));
-        return this;
-    }
+        => Append(new PositiveDecimalRule<TContext>(message));
 
     public DecimalContextSchema<TContext> Negative(string? message = null)
-    {
-        Use(new NegativeDecimalRule<TContext>(message));
-        return this;
-    }
+        => Append(new NegativeDecimalRule<TContext>(message));
 
     public DecimalContextSchema<TContext> Precision(int maxDecimalPlaces, string? message = null)
-    {
-        Use(new PrecisionRule<TContext>(maxDecimalPlaces, message));
-        return this;
-    }
+        => Append(new PrecisionRule<TContext>(maxDecimalPlaces, message));
 
     public DecimalContextSchema<TContext> MultipleOf(decimal step, string? message = null)
-    {
-        Use(new MultipleOfRule<TContext>(step, message));
-        return this;
-    }
+        => Append(new MultipleOfRule<TContext>(step, message));
 }

@@ -13,43 +13,39 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     {
     }
 
+    private DecimalContextlessSchema(
+        ContextlessRuleEngine<decimal> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<decimal, bool>, ISchema<decimal>)>? conditionals)
+        : base(rules, allowNull, conditionals)
+    {
+    }
+
     protected override DecimalContextlessSchema CreateInstance() => new();
 
+    protected override DecimalContextlessSchema CreateInstance(
+        ContextlessRuleEngine<decimal> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<decimal, bool>, ISchema<decimal>)>? conditionals)
+        => new(rules, allowNull, conditionals);
+
     public DecimalContextlessSchema Min(decimal min, string? message = null)
-    {
-        Use(new MinDecimalRule(min, message));
-        return this;
-    }
+        => Append(new MinDecimalRule(min, message));
 
     public DecimalContextlessSchema Max(decimal max, string? message = null)
-    {
-        Use(new MaxDecimalRule(max, message));
-        return this;
-    }
+        => Append(new MaxDecimalRule(max, message));
 
     public DecimalContextlessSchema Positive(string? message = null)
-    {
-        Use(new PositiveDecimalRule(message));
-        return this;
-    }
+        => Append(new PositiveDecimalRule(message));
 
     public DecimalContextlessSchema Negative(string? message = null)
-    {
-        Use(new NegativeDecimalRule(message));
-        return this;
-    }
+        => Append(new NegativeDecimalRule(message));
 
     public DecimalContextlessSchema Precision(int maxDecimalPlaces, string? message = null)
-    {
-        Use(new PrecisionRule(maxDecimalPlaces, message));
-        return this;
-    }
+        => Append(new PrecisionRule(maxDecimalPlaces, message));
 
     public DecimalContextlessSchema MultipleOf(decimal step, string? message = null)
-    {
-        Use(new MultipleOfRule(step, message));
-        return this;
-    }
+        => Append(new MultipleOfRule(step, message));
 
     /// <summary>
     /// Creates a context-aware decimal schema with all rules from this schema.
@@ -57,8 +53,8 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     public DecimalContextSchema<TContext> Using<TContext>()
     {
         var schema = new DecimalContextSchema<TContext>(Rules.ToContext<TContext>());
-        if (AllowNull) schema.Nullable();
-        schema.TransferContextlessConditionals(GetConditionals());
+        schema = AllowNull ? schema.Nullable() : schema;
+        schema = schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 
@@ -68,8 +64,6 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     public DecimalContextSchema<TContext> Using<TContext>(
         Func<decimal, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
-        var schema = Using<TContext>();
-        schema.SetContextFactory(factory);
-        return schema;
+        return Using<TContext>().WithContextFactory(factory);
     }
 }

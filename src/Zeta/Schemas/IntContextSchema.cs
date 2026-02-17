@@ -13,17 +13,27 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContex
 
     internal IntContextSchema(ContextRuleEngine<int, TContext> rules) : base(rules) { }
 
+    private IntContextSchema(
+        ContextRuleEngine<int, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<int, TContext>>? conditionals,
+        Func<int, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
+    {
+    }
+
     protected override IntContextSchema<TContext> CreateInstance() => new();
 
+    protected override IntContextSchema<TContext> CreateInstance(
+        ContextRuleEngine<int, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<int, TContext>>? conditionals,
+        Func<int, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(rules, allowNull, conditionals, contextFactory);
+
     public IntContextSchema<TContext> Min(int min, string? message = null)
-    {
-        Use(new MinIntRule<TContext>(min, message));
-        return this;
-    }
+        => Append(new MinIntRule<TContext>(min, message));
 
     public IntContextSchema<TContext> Max(int max, string? message = null)
-    {
-        Use(new MaxIntRule<TContext>(max, message));
-        return this;
-    }
+        => Append(new MaxIntRule<TContext>(max, message));
 }

@@ -14,20 +14,32 @@ public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext, GuidCon
     {
     }
 
+    private GuidContextSchema(
+        ContextRuleEngine<Guid, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<Guid, TContext>>? conditionals,
+        Func<Guid, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
+    {
+    }
+
     protected override GuidContextSchema<TContext> CreateInstance() => new();
 
+    protected override GuidContextSchema<TContext> CreateInstance(
+        ContextRuleEngine<Guid, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<Guid, TContext>>? conditionals,
+        Func<Guid, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(rules, allowNull, conditionals, contextFactory);
+
     public GuidContextSchema<TContext> NotEmpty(string? message = null)
-    {
-        Use(new RefinementRule<Guid, TContext>((val, ctx) =>
+        => Append(new RefinementRule<Guid, TContext>((val, ctx) =>
             val != Guid.Empty
                 ? null
                 : new ValidationError(ctx.Path, "not_empty", message ?? "GUID cannot be empty")));
-        return this;
-    }
 
     public GuidContextSchema<TContext> Version(int version, string? message = null)
-    {
-        Use(new RefinementRule<Guid, TContext>((val, ctx) =>
+        => Append(new RefinementRule<Guid, TContext>((val, ctx) =>
         {
             var bytes = val.ToByteArray();
             var guidVersion = (bytes[7] >> 4) & 0x0F;
@@ -35,6 +47,4 @@ public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext, GuidCon
                 ? null
                 : new ValidationError(ctx.Path, "version", message ?? $"GUID must be version {version}");
         }));
-        return this;
-    }
 }

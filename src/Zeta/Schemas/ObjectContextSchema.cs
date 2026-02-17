@@ -11,26 +11,65 @@ namespace Zeta.Schemas;
 /// </summary>
 public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContext, ObjectContextSchema<T, TContext>> where T : class
 {
-    private readonly List<IFieldContextValidator<T, TContext>> _fields;
-    private ITypeAssertion<T, TContext>? _typeAssertion;
+    private readonly IReadOnlyList<IFieldContextValidator<T, TContext>> _fields;
+    private readonly ITypeAssertion<T, TContext>? _typeAssertion;
 
-    internal ObjectContextSchema() : this(new ContextRuleEngine<T, TContext>(), [])
+    internal ObjectContextSchema() : this(
+        new ContextRuleEngine<T, TContext>(), [], null, false, null, null)
     {
     }
 
-    internal ObjectContextSchema(ContextRuleEngine<T, TContext> rules, List<IFieldContextValidator<T, TContext>> fields) : base(rules)
+    internal ObjectContextSchema(ContextRuleEngine<T, TContext> rules, IReadOnlyList<IFieldContextValidator<T, TContext>> fields)
+        : this(rules, fields, null, false, null, null)
     {
-        _fields = fields;
     }
 
     internal ObjectContextSchema(
         ContextlessRuleEngine<T> rules,
-        IReadOnlyList<IFieldContextlessValidator<T>> fields) : base(rules.ToContext<TContext>())
+        IReadOnlyList<IFieldContextlessValidator<T>> fields)
+        : this(
+            rules.ToContext<TContext>(),
+            fields.Select(f => (IFieldContextValidator<T, TContext>)new FieldContextlessValidatorAdapter<T, TContext>(f)).ToList(),
+            null, false, null, null)
     {
-        _fields = fields.Select(f => (IFieldContextValidator<T, TContext>)new FieldContextlessValidatorAdapter<T, TContext>(f)).ToList();
+    }
+
+    private ObjectContextSchema(
+        ContextRuleEngine<T, TContext> rules,
+        IReadOnlyList<IFieldContextValidator<T, TContext>> fields,
+        ITypeAssertion<T, TContext>? typeAssertion,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<T, TContext>>? conditionals,
+        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
+    {
+        _fields = fields;
+        _typeAssertion = typeAssertion;
     }
 
     protected override ObjectContextSchema<T, TContext> CreateInstance() => new();
+
+    protected override ObjectContextSchema<T, TContext> CreateInstance(
+        ContextRuleEngine<T, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<T, TContext>>? conditionals,
+        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(rules, _fields, _typeAssertion, allowNull, conditionals, contextFactory);
+
+    internal ObjectContextSchema<T, TContext> AddField(IFieldContextValidator<T, TContext> field)
+    {
+        var newFields = new List<IFieldContextValidator<T, TContext>>(_fields) { field };
+        return new ObjectContextSchema<T, TContext>(Rules, newFields, _typeAssertion, AllowNull, null, ContextFactory);
+    }
+
+    internal ObjectContextSchema<T, TContext> AddContextlessField(IFieldContextlessValidator<T> field)
+    {
+        var newFields = new List<IFieldContextValidator<T, TContext>>(_fields)
+        {
+            new FieldContextlessValidatorAdapter<T, TContext>(field)
+        };
+        return new ObjectContextSchema<T, TContext>(Rules, newFields, _typeAssertion, AllowNull, null, ContextFactory);
+    }
 
     /// <summary>
     /// Asserts that the value is of the derived type <typeparamref name="TDerived"/>,
@@ -38,10 +77,11 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     /// </summary>
     public ObjectContextSchema<TDerived, TContext> As<TDerived>() where TDerived : class, T
     {
-        var schema = new ObjectContextSchema<TDerived, TContext>();
-        _typeAssertion = new ContextAwareTypeAssertion<T, TDerived, TContext>(schema);
-        return schema;
+        return new ObjectContextSchema<TDerived, TContext>();
     }
+
+    internal ObjectContextSchema<T, TContext> WithTypeAssertion(ITypeAssertion<T, TContext> assertion)
+        => new(Rules, _fields, assertion, AllowNull, null, ContextFactory);
 
     /// <summary>
     /// Adds a conditional type-narrowed branch to the object schema.
@@ -65,11 +105,8 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         where TTarget : class, T
     {
         var branchSchema = configure(new ObjectContextSchema<T, TContext>());
-        AddConditional(predicate, new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(branchSchema));
-        return this;
+        return AddConditional(predicate, new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(branchSchema));
     }
-
-    internal void SetTypeAssertion(ITypeAssertion<T, TContext>? assertion) => _typeAssertion = assertion;
 
     protected override IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactoriesCore()
     {
@@ -144,8 +181,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         // This validates nullable property TProperty? using schema for TProperty.
         var wrapper = NullableAdapterFactory.CreateContextWrapper(schema);
 
-        _fields.Add(new FieldContextContextValidator<T, TProperty?, TContext>(propertyName, getter, wrapper));
-        return this;
+        return AddField(new FieldContextContextValidator<T, TProperty?, TContext>(propertyName, getter, wrapper));
     }
 
     // Field overloads for primitive types with fluent builders are generated by SchemaFactoryGenerator
