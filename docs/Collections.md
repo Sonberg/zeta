@@ -41,7 +41,7 @@ var result = await schema.ValidateAsync([1, 2, 3]);
 
 `IEnumerable<T>` is intentionally not supported as a validation input type.
 
-Collection validation needs repeatable access to the data (count checks, per-item validation, and indexed error paths like `[3]`). With `IEnumerable<T>`, this usually requires materialization (for example with `.ToList()`), which can cause unwanted effects:
+Collection validation needs repeatable access to the data (count checks, per-item validation, and indexed error paths like `$[3]`). With `IEnumerable<T>`, this usually requires materialization (for example with `.ToList()`), which can cause unwanted effects:
 
 - Triggers deferred queries unexpectedly (database/network calls)
 - Re-enumerates sequences with side effects
@@ -62,7 +62,7 @@ await schema.ValidateAsync(["user@example.com", "admin@example.com"]);
 // ✓ Success
 
 await schema.ValidateAsync(["user@example.com", "invalid"]);
-// ✗ Failure: email validation failed at [1]
+// ✗ Failure: email validation failed at $[1]
 ```
 
 ### Primitive Type Validation
@@ -214,7 +214,7 @@ var order = new Order(
 );
 
 var result = await orderSchema.ValidateAsync(order);
-// Error at path: "items[1].quantity" with message "Must be at least 1"
+// Error at path: "$.items[1].quantity" with message "Must be at least 1"
 ```
 
 ### Reusable Nested Schemas
@@ -324,8 +324,8 @@ var result = await schema.ValidateAsync([
 ]);
 
 // Errors:
-// - Path: "[1]", Code: "email", Message: "Invalid email format"
-// - Path: "[3]", Code: "email", Message: "Invalid email format"
+// - Path: "$[1]", Code: "email", Message: "Invalid email format"
+// - Path: "$[3]", Code: "email", Message: "Invalid email format"
 ```
 
 ### Nested Collection Errors
@@ -355,8 +355,8 @@ var user = new User(
 
 var result = await schema.ValidateAsync(user);
 // Errors:
-// - Path: "addresses[1].street", Code: "min_length"
-// - Path: "addresses[1].zipCode", Code: "regex"
+// - Path: "$.addresses[1].street", Code: "min_length"
+// - Path: "$.addresses[1].zipCode", Code: "regex"
 ```
 
 ## Best Practices

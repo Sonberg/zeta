@@ -42,7 +42,7 @@ dotnet run --project samples/Zeta.Sample.Api
 - `ISchema<T>` - Contextless validation interface. Returns `Result<T>`.
 - `ISchema<T, TContext>` - Context-aware validation interface (separate, no inheritance from `ISchema<T>`). Returns `Result`.
 - `Result<T>` - Discriminated result type with `IsSuccess`, `Value`, `Errors`, and monadic operations (`Map`, `Then`, `Match`)
-- `ValidationError(Path, Code, Message)` - Error record with dot-notation path (e.g., `user.address.street`)
+- `ValidationError(Path, Code, Message)` - Error record with JSONPath (e.g., `$.user.address.street`)
 - `ValidationContext<TData>` - Contains typed context data, path tracking, CancellationToken & TimeProvider
 - `ValidationContext` - Contains path tracking, CancellationToken & TimeProvider
 
@@ -77,7 +77,7 @@ Z.String().MinLength(3).MaxLength(100).Email()
 ```csharp
 // Default: Fluent inline builders
 Z.Object<User>()
-    .Field(u => u.Email, s => s.Email().MinLength(5))  // Error path: "email"
+    .Field(u => u.Email, s => s.Email().MinLength(5))  // Error path: "$.email"
     .Field(u => u.Age, s => s.Min(18).Max(100))
     .Field(u => u.Price, s => s.Positive().Precision(2))
 
@@ -96,7 +96,7 @@ var addressSchema = Z.Object<Address>()
 
 Z.Object<User>()
     .Field(u => u.Email, s => s.Email())
-    .Field(u => u.Address, addressSchema)  // Reuse nested schema, path: "address.street"
+    .Field(u => u.Address, addressSchema)  // Reuse nested schema, path: "$.address.street"
 
 // Collection fields with .Each() for element validation (RFC 003)
 Z.Object<User>()
@@ -191,7 +191,7 @@ Z.Object<IAnimal>()
 1. **Async by default** - All validation uses `ValueTask<Result<T>>`, no separate sync paths
 2. **No exceptions for control flow** - Validation failures return `Result<T>.Failure()`, never throw
 3. **Required by default** - Use `.Nullable()` to allow null values. Nullable value type fields (`int?`, etc.) in object schemas automatically skip validation when null
-4. **Path-aware errors** - Errors include full path: `"items[0].name"`, `"address.street"`
+4. **Path-aware errors** - Errors include full path: `"$.items[0].name"`, `"$.address.street"`
 5. **Error aggregation** - Collects all errors, no short-circuiting
 
 ## Known Behaviors

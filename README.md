@@ -69,7 +69,7 @@ Result<SignupRequest> result = await zetaValidator.ValidateAsync(request, signup
 - **Schema-first** - Define validation as reusable schema objects
 - **Async by default** - Every rule can be async, no separate sync/async paths
 - **Composable** - Schemas are values that can be reused and combined
-- **Path-aware errors** - Errors include location (`user.address.street`, `items[0]`)
+- **Path-aware errors** - Errors include JSONPath location (`$.user.address.street`, `$[0]`)
 - **ASP.NET Core native** - First-class support for Minimal APIs and Controllers
 
 ## Installation
@@ -245,7 +245,7 @@ var orderItemSchema = Z.Object<OrderItem>()
 Z.Collection(orderItemSchema)
     .MinLength(1);
 
-// Errors include index path: "tags[0]", "items[2].quantity"
+// Errors include index path: "$.tags[0]", "$.items[2].quantity"
 ```
 
 See the [Collections guide](docs/Collections.md) for advanced patterns including context-aware validation.
@@ -348,8 +348,8 @@ Validation failures return `400 Bad Request` with `ValidationProblemDetails`:
   "title": "Validation failed",
   "status": 400,
   "errors": {
-    "email": ["Invalid email format"],
-    "name": ["Must be at least 3 characters"]
+    "$.email": ["Invalid email format"],
+    "$.name": ["Must be at least 3 characters"]
   }
 }
 ```
@@ -488,7 +488,7 @@ See the [Validation Context guide](docs/ValidationContext.md) for more details.
 
 ```csharp
 public record ValidationError(
-    string Path,     // "user.address.street" or "items[0]"
+    string Path,     // "$.user.address.street" or "$[0]"
     string Code,     // "min_length", "email", "required"
     string Message   // "Must be at least 3 characters"
 );
