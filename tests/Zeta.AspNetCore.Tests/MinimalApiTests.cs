@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using System.Text;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
@@ -159,6 +161,39 @@ public class MinimalApiTests : IntegrationTestBase
         var response = await Client.PostAsJsonAsync("/api/minimal/orders/delivery", request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Files
+
+    [Fact]
+    public async Task UploadFile_ValidMultipartRequest_ReturnsOk()
+    {
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("hello-world"));
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+        content.Add(fileContent, "file", "test.txt");
+
+        var response = await Client.PostAsync("/api/minimal/files/upload", content);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadFile_EmptyFile_ReturnsBadRequest()
+    {
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new ByteArrayContent([]);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+        content.Add(fileContent, "file", "empty.txt");
+
+        var response = await Client.PostAsync("/api/minimal/files/upload", content);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var errors = await GetValidationErrors(response);
+        Assert.Contains(errors, e => e.Message == "File cannot be empty");
     }
 
     #endregion

@@ -135,6 +135,19 @@ app.MapPost("/api/minimal/orders/delivery", (ScheduleDeliveryRequest request) =>
     .WithName("MinimalScheduleDelivery")
     .WithTags("Minimal API - Orders");
 
+// Multipart form upload validation
+app.MapPost("/api/minimal/files/upload", (IFormFile file) =>
+        Results.Ok(new
+        {
+            Message = "File uploaded",
+            file.FileName,
+            file.Length
+        }))
+    .DisableAntiforgery()
+    .WithValidation(Schemas.UploadFile)
+    .WithName("MinimalUploadFile")
+    .WithTags("Minimal API - Files");
+
 // Map controllers
 app.MapControllers();
 app.Run();

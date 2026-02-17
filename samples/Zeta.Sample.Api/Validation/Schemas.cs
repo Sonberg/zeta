@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
 using Zeta.Sample.Api.Models;
 using Zeta.Sample.Api.Repository;
 using Zeta.Schemas;
@@ -11,6 +12,11 @@ namespace Zeta.Sample.Api.Validation;
 /// </summary>
 public static class Schemas
 {
+    public static readonly ISchema<IFormFile> UploadFile =
+        Z.Object<IFormFile>()
+            .Refine(f => !string.IsNullOrWhiteSpace(f.FileName), "File name is required", "file_name_required")
+            .Refine(f => f.Length > 0, "File cannot be empty", "file_empty");
+
     // =====================
     // Address Schema (Reusable)
     // =====================
