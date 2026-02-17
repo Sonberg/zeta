@@ -65,7 +65,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "min_value");
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "min_value");
     }
 
     #endregion
@@ -158,7 +158,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDouble" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDouble" && e.Code == "min_value");
     }
 
     #endregion
@@ -205,7 +205,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDecimal" && e.Code == "positive");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDecimal" && e.Code == "positive");
     }
 
     #endregion
@@ -252,7 +252,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableBool" && e.Code == "custom_error");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableBool" && e.Code == "custom_error");
     }
 
     #endregion
@@ -300,7 +300,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableGuid" && e.Code == "custom_error");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableGuid" && e.Code == "custom_error");
     }
 
     #endregion
@@ -347,7 +347,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDateTime" && e.Code == "min_date");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDateTime" && e.Code == "min_date");
     }
 
     #endregion
@@ -383,7 +383,7 @@ public class ObjectSchemaNullableFieldTests
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, new DateOnly(2019, 1, 1), null));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDateOnly" && e.Code == "min_date");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDateOnly" && e.Code == "min_date");
     }
 
     #endregion
@@ -418,7 +418,7 @@ public class ObjectSchemaNullableFieldTests
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, new TimeOnly(8, 0)));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableTimeOnly" && e.Code == "min_time");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableTimeOnly" && e.Code == "min_time");
     }
 
     #endregion
@@ -473,9 +473,9 @@ public class ObjectSchemaNullableFieldTests
         ));
         Assert.False(result.IsSuccess);
         Assert.Equal(3, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "min_value");
-        Assert.Contains(result.Errors, e => e.Path == "nullableDouble" && e.Code == "min_value");
-        Assert.Contains(result.Errors, e => e.Path == "nullableDecimal" && e.Code == "positive");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDouble" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDecimal" && e.Code == "positive");
     }
 
     #endregion
@@ -494,7 +494,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "null_value");
     }
 
     [Fact]
@@ -510,7 +510,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "null_value");
     }
 
     [Fact]
@@ -525,7 +525,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDouble" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDouble" && e.Code == "null_value");
     }
 
     [Fact]
@@ -540,7 +540,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDecimal" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDecimal" && e.Code == "null_value");
     }
 
     [Fact]
@@ -555,7 +555,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableBool" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableBool" && e.Code == "null_value");
     }
 
     [Fact]
@@ -570,7 +570,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableGuid" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableGuid" && e.Code == "null_value");
     }
 
     [Fact]
@@ -585,7 +585,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDateTime" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDateTime" && e.Code == "null_value");
     }
 
 #if !NETSTANDARD2_0
@@ -597,7 +597,7 @@ public class ObjectSchemaNullableFieldTests
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, null));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableDateOnly" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDateOnly" && e.Code == "null_value");
     }
 
     [Fact]
@@ -608,7 +608,7 @@ public class ObjectSchemaNullableFieldTests
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, null));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableTimeOnly" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableTimeOnly" && e.Code == "null_value");
     }
 #endif
 
@@ -627,9 +627,9 @@ public class ObjectSchemaNullableFieldTests
         ));
         Assert.False(result.IsSuccess);
         Assert.Equal(3, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "null_value");
-        Assert.Contains(result.Errors, e => e.Path == "nullableDouble" && e.Code == "null_value");
-        Assert.Contains(result.Errors, e => e.Path == "nullableDecimal" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDouble" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableDecimal" && e.Code == "null_value");
     }
 
     #endregion
@@ -684,7 +684,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ), context);
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "min_value");
     }
 
     [Fact]
@@ -701,7 +701,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ), context);
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "null_value");
     }
 
     [Fact]
@@ -719,7 +719,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ), context);
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "null_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "null_value");
     }
 
     [Fact]
@@ -771,7 +771,7 @@ public class ObjectSchemaNullableFieldTests
 #endif
         ), context);
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nullableInt" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.nullableInt" && e.Code == "min_value");
     }
 
     #endregion

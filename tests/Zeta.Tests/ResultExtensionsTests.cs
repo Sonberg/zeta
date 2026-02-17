@@ -41,8 +41,8 @@ public class ResultExtensionsTests
 
         Assert.True(combined.IsFailure);
         Assert.Equal(2, combined.Errors.Count);
-        Assert.Contains(combined.Errors, e => e.Path == "field1");
-        Assert.Contains(combined.Errors, e => e.Path == "field2");
+        Assert.Contains(combined.Errors, e => e.Path == "$.field1");
+        Assert.Contains(combined.Errors, e => e.Path == "$.field2");
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class ResultExtensionsTests
 
         Assert.True(result.IsFailure);
         Assert.Single(result.Errors);
-        Assert.Equal("field", result.Errors[0].Path);
+        Assert.Equal("$.field", result.Errors[0].Path);
     }
 
     // ==================== Async Map Extension Tests ====================
@@ -145,7 +145,7 @@ public class ResultExtensionsTests
 
         Assert.True(result.IsFailure);
         Assert.Single(result.Errors);
-        Assert.Equal("field", result.Errors[0].Path);
+        Assert.Equal("$.field", result.Errors[0].Path);
     }
 
     [Fact]

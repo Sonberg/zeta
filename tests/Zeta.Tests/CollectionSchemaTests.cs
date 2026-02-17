@@ -20,7 +20,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("[1]", result.Errors[0].Path);
+        Assert.Equal("$[1]", result.Errors[0].Path);
         Assert.Equal("min_value", result.Errors[0].Code);
     }
 
@@ -32,8 +32,8 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "[0]");
-        Assert.Contains(result.Errors, e => e.Path == "[1]");
+        Assert.Contains(result.Errors, e => e.Path == "$[0]");
+        Assert.Contains(result.Errors, e => e.Path == "$[1]");
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("[1]", result.Errors[0].Path);
+        Assert.Equal("$[1]", result.Errors[0].Path);
         Assert.Equal("email", result.Errors[0].Code);
     }
 
@@ -120,7 +120,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("items[1]", result.Errors[0].Path);
+        Assert.Equal("$.items[1]", result.Errors[0].Path);
     }
 
     record Order(List<string> Items);
@@ -146,7 +146,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("[1]", result.Errors[0].Path);
+        Assert.Equal("$[1]", result.Errors[0].Path);
         Assert.Equal("min_length", result.Errors[0].Code);
     }
 
@@ -173,8 +173,8 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "[0]");
-        Assert.Contains(result.Errors, e => e.Path == "[1]");
+        Assert.Contains(result.Errors, e => e.Path == "$[0]");
+        Assert.Contains(result.Errors, e => e.Path == "$[1]");
     }
 
     [Fact]
@@ -211,7 +211,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("roles[1]", result.Errors[0].Path);
+        Assert.Equal("$.roles[1]", result.Errors[0].Path);
         Assert.Equal("custom_error", result.Errors[0].Code);
         Assert.Equal("Must be Admin", result.Errors[0].Message);
     }
@@ -238,7 +238,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("[1]", result.Errors[0].Path);
+        Assert.Equal("$[1]", result.Errors[0].Path);
         Assert.Equal("max_length", result.Errors[0].Code);
     }
 
@@ -253,7 +253,7 @@ public class CollectionSchemaTests
 
         var result2 = await schema.ValidateAsync([1, 150]);
         Assert.False(result2.IsSuccess);
-        Assert.Equal("[1]", result2.Errors[0].Path);
+        Assert.Equal("$[1]", result2.Errors[0].Path);
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class CollectionSchemaTests
 
         var result2 = await schema.ValidateAsync([1.555m]);
         Assert.False(result2.IsSuccess);
-        Assert.Equal("[0]", result2.Errors[0].Path);
+        Assert.Equal("$[0]", result2.Errors[0].Path);
         Assert.Equal("precision", result2.Errors[0].Code);
     }
 
@@ -320,7 +320,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("[1].quantity", result.Errors[0].Path);
+        Assert.Equal("$[1].quantity", result.Errors[0].Path);
         Assert.Equal("min_value", result.Errors[0].Code);
     }
 
@@ -345,8 +345,8 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "[0].quantity");
-        Assert.Contains(result.Errors, e => e.Path == "[1].quantity");
+        Assert.Contains(result.Errors, e => e.Path == "$[0].quantity");
+        Assert.Contains(result.Errors, e => e.Path == "$[1].quantity");
     }
 
     [Fact]
@@ -423,7 +423,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("items[1].quantity", result.Errors[0].Path);
+        Assert.Equal("$.items[1].quantity", result.Errors[0].Path);
         Assert.Equal("max_value", result.Errors[0].Code);
     }
 
@@ -479,7 +479,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("items[1].quantity", result.Errors[0].Path);
+        Assert.Equal("$.items[1].quantity", result.Errors[0].Path);
         Assert.Equal("max_value", result.Errors[0].Code);
     }
 
@@ -511,7 +511,7 @@ public class CollectionSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("tags[1]", result.Errors[0].Path);
+        Assert.Equal("$.tags[1]", result.Errors[0].Path);
         Assert.Equal("min_length", result.Errors[0].Code);
     }
 

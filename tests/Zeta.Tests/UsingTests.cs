@@ -183,7 +183,7 @@ public class UsingTests
 
         var result = await schema.ValidateAsync("banned@example.com", context);
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "user.email");
+        Assert.Contains(result.Errors, e => e.Path == "$.user.email");
     }
 
     [Fact]
@@ -417,12 +417,12 @@ public class UsingTests
         // Name too short (field transferred from contextless)
         var shortNameResult = await schema.ValidateAsync(new Person("J", 30), context);
         Assert.False(shortNameResult.IsSuccess);
-        Assert.Contains(shortNameResult.Errors, e => e.Path == "name");
+        Assert.Contains(shortNameResult.Errors, e => e.Path == "$.name");
 
         // Age negative (field transferred from contextless)
         var negativeAgeResult = await schema.ValidateAsync(new Person("John", -1), context);
         Assert.False(negativeAgeResult.IsSuccess);
-        Assert.Contains(negativeAgeResult.Errors, e => e.Path == "age");
+        Assert.Contains(negativeAgeResult.Errors, e => e.Path == "$.age");
 
         // Age exceeds context max (context-aware refine added after WithContext)
         var oldResult = await schema.ValidateAsync(new Person("John", 100), context);

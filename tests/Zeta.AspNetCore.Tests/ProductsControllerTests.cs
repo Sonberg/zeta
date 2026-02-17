@@ -84,10 +84,10 @@ public class ProductsControllerTests : IntegrationTestBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errors = await GetValidationErrors(response);
-        Assert.Contains(errors, e => e.Path == "name");
-        Assert.Contains(errors, e => e.Path == "sku");
-        Assert.Contains(errors, e => e.Path == "price");
-        Assert.Contains(errors, e => e.Path == "stockQuantity");
+        Assert.Contains(errors, e => e.Path == "$.name");
+        Assert.Contains(errors, e => e.Path == "$.sku");
+        Assert.Contains(errors, e => e.Path == "$.price");
+        Assert.Contains(errors, e => e.Path == "$.stockQuantity");
     }
 
     #endregion
@@ -147,7 +147,7 @@ public class ProductsControllerTests : IntegrationTestBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errors = await GetValidationErrors(response);
-        Assert.Contains(errors, e => e.Path == "pageSize");
+        Assert.Contains(errors, e => e.Path == "$.pageSize");
     }
 
     [Fact]

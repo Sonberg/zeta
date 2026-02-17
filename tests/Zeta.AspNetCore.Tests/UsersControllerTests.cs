@@ -66,7 +66,7 @@ public class UsersControllerTests : IntegrationTestBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errors = await GetValidationErrors(response);
-        Assert.Contains(errors, e => e.Path == "password" && e.Code == "min_length");
+        Assert.Contains(errors, e => e.Path == "$.password" && e.Code == "min_length");
     }
 
     #endregion
@@ -213,7 +213,7 @@ public class UsersControllerTests : IntegrationTestBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errors = await GetValidationErrors(response);
-        Assert.Contains(errors, e => e.Path == "phoneNumber");
+        Assert.Contains(errors, e => e.Path == "$.phoneNumber");
     }
 
     #endregion
