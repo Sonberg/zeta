@@ -115,11 +115,22 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
     /// <summary>
     /// Creates a context-aware DateOnly schema with all rules from this schema.
     /// </summary>
-    public DateOnlyContextSchema<TContext> WithContext<TContext>()
+    public DateOnlyContextSchema<TContext> Using<TContext>()
     {
         var schema = new DateOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware DateOnly schema with a factory delegate for creating context data.
+    /// </summary>
+    public DateOnlyContextSchema<TContext> Using<TContext>(
+        Func<DateOnly, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory(factory);
         return schema;
     }
 }

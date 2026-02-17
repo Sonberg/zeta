@@ -21,7 +21,7 @@ public class CollectionContextBridgeTests
             .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
 
         var schema = Z.Object<CreateOrderRequest>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.CustomerId, x => x.NotEmpty())
             .Field(x => x.Items, x => x.Each(itemSchema));
 
@@ -45,7 +45,7 @@ public class CollectionContextBridgeTests
             .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
 
         var schema = Z.Object<CreateOrderRequestWithList>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.CustomerId, x => x.NotEmpty())
             .Field(x => x.Items, x => x.Each(itemSchema));
 
@@ -69,7 +69,7 @@ public class CollectionContextBridgeTests
             .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
 
         var schema = Z.Object<CreateOrderRequest>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.CustomerId, x => x.NotEmpty())
             .Field(x => x.Items, x => x.Each(itemSchema));
 
@@ -92,7 +92,7 @@ public class CollectionContextBridgeTests
     public async Task ContextAwareObjectWithPrimitiveArray_UsingEach_ShouldCompile()
     {
         var schema = Z.Object<TaggedItem>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.Tags, x => x.Each(t => t.MinLength(3).MaxLength(20)));
 
         var context = new CreateOrderContext(100);
@@ -106,7 +106,7 @@ public class CollectionContextBridgeTests
     public async Task ContextAwareObjectWithPrimitiveArray_InvalidElement_ReturnsError()
     {
         var schema = Z.Object<TaggedItem>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.Tags, x => x.Each(t => t.MinLength(3)));
 
         var context = new CreateOrderContext(100);
@@ -123,7 +123,7 @@ public class CollectionContextBridgeTests
     public async Task ContextAwareObjectWithPrimitiveList_UsingEach_ShouldCompile()
     {
         var schema = Z.Object<TaggedItemWithList>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.Tags, x => x.Each(t => t.MinLength(3).MaxLength(20)));
 
         var context = new CreateOrderContext(100);
@@ -137,7 +137,7 @@ public class CollectionContextBridgeTests
     public async Task ContextAwareObjectWithIntArray_UsingEach_ShouldCompile()
     {
         var schema = Z.Object<NumberContainer>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.Numbers, x => x.Each(n => n.Min(0).Max(100)));
 
         var context = new CreateOrderContext(100);
@@ -151,7 +151,7 @@ public class CollectionContextBridgeTests
     public async Task ContextAwareObjectWithIntArray_InvalidElement_ReturnsError()
     {
         var schema = Z.Object<NumberContainer>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.Numbers, x => x.Each(n => n.Min(0).Max(100)));
 
         var context = new CreateOrderContext(100);
@@ -172,7 +172,7 @@ public class CollectionContextBridgeTests
             .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
 
         var schema = Z.Object<CreateOrderRequest>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.CustomerId, x => x.NotEmpty())
             .Field(x => x.Items, x => x
                 .Each(itemSchema)
@@ -198,7 +198,7 @@ public class CollectionContextBridgeTests
             .Field(x => x.Quantity, Z.Int().Min(1));
 
         var schema = Z.Object<CreateOrderRequest>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.Items, x => x
                 .Each(itemSchema)
                 .MinLength(1));
@@ -212,18 +212,18 @@ public class CollectionContextBridgeTests
     }
 
     [Fact]
-    public async Task ExplicitWithContext_StillWorks()
+    public async Task ExplicitUsing_StillWorks()
     {
-        // Users should still be able to call .WithContext<TContext>() explicitly
+        // Users should still be able to call .Using<TContext>() explicitly
         var itemSchema = Z.Object<OrderItem>()
             .Field(x => x.ProductId, Z.Guid())
             .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
 
         var schema = Z.Object<CreateOrderRequest>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>()
             .Field(x => x.Items, x => x
                 .Each(itemSchema)
-                .WithContext<CreateOrderContext>());
+                .Using<CreateOrderContext>());
 
         var context = new CreateOrderContext(100);
         var order = new CreateOrderRequest(

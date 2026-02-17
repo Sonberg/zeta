@@ -7,11 +7,24 @@ namespace Zeta;
 public interface ISchema<in T, TContext>
 {
     internal bool AllowNull { get; }
-    
+
+    internal IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
+
     /// <summary>
     /// Validates the given value asynchronously with context.
     /// </summary>
     ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context);
+}
+
+/// <summary>
+/// Provides access to a schema's built-in context factory delegate.
+/// </summary>
+public interface IContextFactorySchema<T, TContext>
+{
+    /// <summary>
+    /// Gets the factory delegate for creating context data, or null if not set.
+    /// </summary>
+    Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? ContextFactory { get; }
 }
 
 /// <summary>

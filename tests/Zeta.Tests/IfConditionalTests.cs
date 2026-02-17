@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Zeta.Core;
 
 namespace Zeta.Tests;
@@ -13,6 +14,21 @@ public class IfConditionalTests
     {
         var schema = Z.Int()
             .If(v => v >= 18, s => s.Max(65));
+
+        var result = await schema.ValidateAsync(70);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Code == "max_value");
+    }
+
+    [Fact]
+    public async Task ValueSchema_ActionConfigure_ValidatesInnerSchema()
+    {
+        var schema = Z.Int()
+            .If(v => v >= 18, s =>
+            {
+                s.Max(65);
+            });
 
         var result = await schema.ValidateAsync(70);
 
@@ -107,7 +123,7 @@ public class IfConditionalTests
     public async Task ContextAware_ValueOnlyPredicate()
     {
         var schema = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If(v => v.Length > 0, s => s.MinLength(3));
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -129,7 +145,7 @@ public class IfConditionalTests
     public async Task ContextAware_ValueAndContextPredicate()
     {
         var schema = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 
         var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
@@ -153,7 +169,7 @@ public class IfConditionalTests
     {
         var schema = Z.String()
             .If(v => v.StartsWith("A"), s => s.MinLength(5))
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
 
@@ -176,7 +192,7 @@ public class IfConditionalTests
         var schema = Z.Object<User>()
             .If(u => u.Type == "admin", s => s
                 .Field(u => u.Name, n => n.MinLength(5)))
-            .WithContext<StrictContext>();
+            .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
 
@@ -233,44 +249,51 @@ public class IfConditionalTests
     }
 
     [Fact]
-    public async Task ObjectSchema_If_ContextAwareBranch_PromotesRootSchema()
+    public async Task ObjectSchema_If_ContextAwareBranch_SelfResolves()
     {
-        ISchema<User, StrictContext> schema = Z.Object<User>()
-            .If<StrictContext>(u => u.Type == "admin", s => s
-                .Field(x => x.Name, n => n.MinLength(5))
-                .WithContext<StrictContext>()
-                .Refine((_, ctx) => ctx.IsStrict, "Strict context required for admins"));
+        var adminSchema = Z.Object<User>()
+            .Field(x => x.Name, n => n.MinLength(5))
+            .Using<StrictContext>((_, _, _) => new ValueTask<StrictContext>(new StrictContext(false)))
+            .Refine((_, ctx) => ctx.IsStrict, "Strict context required for admins");
 
-        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
-        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+        var schema = Z.Object<User>()
+            .If(u => u.Type == "admin", adminSchema);
 
-        var strictAdmin = await schema.ValidateAsync(new User("Admin", 30, null, "admin"), strictCtx);
-        Assert.True(strictAdmin.IsSuccess);
+        var ctx = new ValidationContext(serviceProvider: new ServiceCollection().BuildServiceProvider());
 
-        var lenientAdmin = await schema.ValidateAsync(new User("Admin", 30, null, "admin"), lenientCtx);
-        Assert.False(lenientAdmin.IsSuccess);
-        Assert.Contains(lenientAdmin.Errors, e => e.Message == "Strict context required for admins");
+        // Admin: factory returns strict=false, refine fails
+        var admin = await schema.ValidateAsync(new User("Admin", 30, null, "admin"), ctx);
+        Assert.False(admin.IsSuccess);
+        Assert.Contains(admin.Errors, e => e.Message == "Strict context required for admins");
+
+        // Non-admin: condition is false, branch skipped
+        var regular = await schema.ValidateAsync(new User("RegularUser", 25, null, "user"), ctx);
+        Assert.True(regular.IsSuccess);
     }
 
     [Fact]
-    public async Task ObjectSchema_If_ContextAwareFieldSchema_PromotesRootSchema()
+    public async Task ObjectSchema_If_ContextAwareFieldSchema_SelfResolves()
     {
         var contextAwareName = Z.String()
-            .WithContext<StrictContext>()
+            .Using<StrictContext>()
             .Refine((name, ctx) => !ctx.IsStrict || name.Length >= 5, "Name must be at least 5 in strict mode");
 
-        ISchema<User, StrictContext> schema = Z.Object<User>()
-            .If<StrictContext>(u => u.Type == "admin", s => s
-                .Field(x => x.Name, contextAwareName));
+        var adminSchema = Z.Object<User>()
+            .Using<StrictContext>((_, _, _) => new ValueTask<StrictContext>(new StrictContext(true)))
+            .Field(x => x.Name, contextAwareName);
 
-        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
-        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+        var schema = Z.Object<User>()
+            .If(u => u.Type == "admin", adminSchema);
 
-        var strictShort = await schema.ValidateAsync(new User("Joe", 30, null, "admin"), strictCtx);
+        var ctx = new ValidationContext(serviceProvider: new ServiceCollection().BuildServiceProvider());
+
+        // Admin with short name, strict mode from factory
+        var strictShort = await schema.ValidateAsync(new User("Joe", 30, null, "admin"), ctx);
         Assert.False(strictShort.IsSuccess);
         Assert.Contains(strictShort.Errors, e => e.Path == "name" && e.Message == "Name must be at least 5 in strict mode");
 
-        var lenientShort = await schema.ValidateAsync(new User("Joe", 30, null, "admin"), lenientCtx);
-        Assert.True(lenientShort.IsSuccess);
+        // Non-admin: branch skipped
+        var regular = await schema.ValidateAsync(new User("Joe", 30, null, "user"), ctx);
+        Assert.True(regular.IsSuccess);
     }
 }

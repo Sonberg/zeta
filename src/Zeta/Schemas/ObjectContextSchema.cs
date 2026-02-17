@@ -44,22 +44,46 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     }
 
     /// <summary>
-    /// Conditionally validates the value as the derived type <typeparamref name="TDerived"/>
-    /// when the value is an instance of that type. Combines type checking with type-narrowed validation.
+    /// Adds a conditional type-narrowed branch to the object schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
     /// </summary>
-    public ObjectContextSchema<T, TContext> If<TDerived>(
-        Action<ObjectContextSchema<TDerived, TContext>> configure) where TDerived : class, T
+    public ObjectContextSchema<T, TContext> If<TTarget>(
+        Func<T, bool> predicate,
+        ISchema<TTarget, TContext> schema)
+        where TTarget : class, T
     {
-        return If(
-            value => value is TDerived,
-            conditional =>
-            {
-                var derived = conditional.As<TDerived>();
-                configure(derived);
-            });
+        return base.If(predicate, (ISchema<T, TContext>)new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(schema));
+    }
+
+    /// <summary>
+    /// Adds a conditional type-narrowed branch to the object schema.
+    /// Types are automatically inferred from the return value of the configure lambda.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> If<TTarget>(
+        Func<T, bool> predicate,
+        Func<ObjectContextSchema<T, TContext>, ObjectContextSchema<TTarget, TContext>> configure)
+        where TTarget : class, T
+    {
+        var branchSchema = configure(new ObjectContextSchema<T, TContext>());
+        AddConditional(predicate, new TypeNarrowingSchemaAdapter<T, TTarget, TContext>(branchSchema));
+        return this;
     }
 
     internal void SetTypeAssertion(ITypeAssertion<T, TContext>? assertion) => _typeAssertion = assertion;
+
+    protected override IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactoriesCore()
+    {
+        foreach (var factory in base.GetContextFactoriesCore())
+        {
+            yield return factory;
+        }
+
+        if (_typeAssertion == null) yield break;
+        foreach (var factory in _typeAssertion.GetContextFactories())
+        {
+            yield return factory;
+        }
+    }
 
     public override async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
@@ -116,10 +140,10 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     {
         var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        
+
         // This validates nullable property TProperty? using schema for TProperty.
         var wrapper = NullableAdapterFactory.CreateContextWrapper(schema);
-        
+
         _fields.Add(new FieldContextContextValidator<T, TProperty?, TContext>(propertyName, getter, wrapper));
         return this;
     }

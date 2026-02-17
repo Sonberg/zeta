@@ -29,47 +29,31 @@ public record UserContext(
 
 ---
 
-## Create a Context Factory
+## Create Context Inline
 
-Implement `IValidationContextFactory<TInput, TContext>` to load context data before validation runs:
+Use `.Using<TContext>(factory)` to load context data before validation runs:
 
 ```csharp
-public class UserContextFactory : IValidationContextFactory<User, UserContext>
-{
-    private readonly IUserRepository _repo;
-    private readonly IFeatureFlags _features;
-
-    public UserContextFactory(IUserRepository repo, IFeatureFlags features)
+var schema = Z.Object<User>()
+    .Field(u => u.Email, s => s.Email())
+    .Using<UserContext>(async (input, sp, ct) =>
     {
-        _repo = repo;
-        _features = features;
-    }
+        var repo = sp.GetRequiredService<IUserRepository>();
+        var features = sp.GetRequiredService<IFeatureFlags>();
 
-    public async Task<UserContext> CreateAsync(
-        User input,
-        IServiceProvider services,
-        CancellationToken ct)
-    {
-        var emailExists = await _repo.EmailExistsAsync(input.Email, ct);
-        var maintenanceMode = await _features.IsEnabledAsync("maintenance", ct);
-        var bannedDomains = await _repo.GetBannedDomainsAsync(ct);
+        var emailExists = await repo.EmailExistsAsync(input.Email, ct);
+        var maintenanceMode = await features.IsEnabledAsync("maintenance", ct);
+        var bannedDomains = await repo.GetBannedDomainsAsync(ct);
 
         return new UserContext(emailExists, maintenanceMode, bannedDomains);
-    }
-}
-```
-
-Register factories via assembly scanning:
-
-```csharp
-builder.Services.AddZeta(typeof(Program).Assembly);
+    });
 ```
 
 ---
 
 ## Promote Schemas to Context-Aware
 
-Schemas start contextless. Use `.WithContext<TContext>()` to enable context access:
+Schemas start contextless. Use `.Using<TContext>()` to enable context access:
 
 ```csharp
 // Basic string schema
@@ -78,17 +62,17 @@ var EmailSchema = Z.String().Email();
 // Promoted to context-aware
 var ContextAwareEmailSchema = Z.String()
     .Email()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
 ```
 
-Rules defined before `.WithContext()` are preserved:
+Rules defined before `.Using()` are preserved:
 
 ```csharp
 Z.String()
     .Email()               // This rule is kept
     .MinLength(5)          // This rule is kept
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .Refine((email, ctx) => !ctx.BannedDomains.Any(d => email.EndsWith(d)),
         "Domain not allowed");
 ```
@@ -97,27 +81,27 @@ Z.String()
 
 ## Context-Aware Object Schemas
 
-For objects, use `.WithContext<T, TContext>()`:
+For objects, use `.Using<TContext>()`:
 
 ```csharp
 var UserSchema = Z.Object<User>()
     .Field(u => u.Name, Z.String().MinLength(3))
-    .WithContext<User, UserContext>()
+    .Using<UserContext>()
     .Field(u => u.Email,
         Z.String()
             .Email()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .Refine((email, ctx) => !ctx.EmailExists, "Email already taken"))
     .Refine((user, ctx) => !ctx.IsMaintenanceMode, "Registration disabled");
 ```
 
-You can add fields before or after `.WithContext()`:
+You can add fields before or after `.Using()`:
 
 ```csharp
-// Fields before WithContext use contextless schemas
+// Fields before Using use contextless schemas
 Z.Object<User>()
     .Field(u => u.Name, Z.String().MinLength(3))  // Contextless
-    .WithContext<User, UserContext>()
+    .Using<UserContext>()
     .Field(u => u.Email, emailSchemaWithContext)  // Context-aware
 ```
 
@@ -129,7 +113,7 @@ After promoting a schema, you can use both context-free and context-aware refine
 
 ```csharp
 Z.String()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .Refine(val => val.Length > 3, "Too short")                    // No context
     .Refine((val, ctx) => val != ctx.BannedEmail, "Email banned"); // With context
 ```
@@ -143,7 +127,7 @@ Use `RefineAsync` for async validation logic:
 ```csharp
 Z.String()
     .Email()
-    .WithContext<UserContext>()
+    .Using<UserContext>()
     .RefineAsync(
         async (email, ctx, ct) => !await ctx.Repo.EmailExistsAsync(email, ct),
         message: "Email already taken",
@@ -161,11 +145,11 @@ RefineAsync can access:
 ```csharp
 Z.Object<User>()
     .Field(u => u.Name, Z.String().MinLength(3))
-    .WithContext<User, UserContext>()
+    .Using<UserContext>()
     .Field(u => u.Email,
         Z.String()
             .Email()
-            .WithContext<UserContext>()
+            .Using<UserContext>()
             .RefineAsync(async (email, ctx, ct) =>
                 !await ctx.Repo.EmailExistsAsync(email, ct),
                 "Email already registered"));
@@ -180,7 +164,7 @@ Use context in `.If()` conditions:
 ```csharp
 Z.Object<User>()
     .Field(u => u.Password, s => s.MinLength(8))
-    .WithContext<SecurityContext>()
+    .Using<SecurityContext>()
     .If((user, ctx) => ctx.RequireStrongPassword, s => s
         .Field(u => u.Password, p => p.MinLength(12).MaxLength(100)));
 ```
@@ -211,25 +195,33 @@ public class UsersController : ControllerBase
 
     private static readonly ISchema<User, UserContext> UserSchema =
         Z.Object<User>()
-            .WithContext<User, UserContext>()
+            .Using<UserContext>()
             .Field(u => u.Email,
                 Z.String()
                     .Email()
-                    .WithContext<UserContext>()
+                    .Using<UserContext>()
                     .Refine((e, ctx) => !ctx.EmailExists, "Email taken"));
 
     [HttpPost]
     public async Task<IActionResult> Create(User user, CancellationToken ct)
     {
-        var context = new UserContext(
-            EmailExists: await _repo.EmailExistsAsync(user.Email, ct)
-        );
-
-        var result = await _validator.ValidateAsync(user, UserSchema, context, ct);
+        var result = await _validator.ValidateAsync(
+            user,
+            UserSchema,
+            b => b.WithCancellation(ct));
 
         return result.ToActionResult(valid => Ok(new { Message = "Created" }));
     }
 }
+```
+
+You can also customize `TimeProvider` (or any other builder option):
+
+```csharp
+var result = await _validator.ValidateAsync(
+    user,
+    UserSchema,
+    b => b.WithCancellation(ct).WithTimeProvider(fakeTimeProvider));
 ```
 
 ---
@@ -241,7 +233,7 @@ public class UsersController : ControllerBase
 Factory exceptions propagate as HTTP 500. For expected failures, return a context that causes validation to fail:
 
 ```csharp
-public async Task<UserContext> CreateAsync(User input, IServiceProvider services, CancellationToken ct)
+public async ValueTask<UserContext> BuildContextAsync(User input, IServiceProvider services, CancellationToken ct)
 {
     try
     {
@@ -265,7 +257,7 @@ Load only what's needed for validation:
 
 ```csharp
 // Good - loads specific data needed for validation
-public async Task<UserContext> CreateAsync(User input, ...)
+public async ValueTask<UserContext> BuildContextAsync(User input, ...)
 {
     return new UserContext(
         EmailExists: await _repo.EmailExistsAsync(input.Email, ct)
@@ -273,7 +265,7 @@ public async Task<UserContext> CreateAsync(User input, ...)
 }
 
 // Avoid - loading unnecessary data
-public async Task<UserContext> CreateAsync(User input, ...)
+public async ValueTask<UserContext> BuildContextAsync(User input, ...)
 {
     var user = await _repo.GetFullUserProfileAsync(input.Email, ct);
     var orders = await _orderRepo.GetAllOrdersAsync(user.Id, ct);
@@ -291,7 +283,7 @@ public record ProductContext(
     Dictionary<string, decimal> ProductPrices
 );
 
-public async Task<ProductContext> CreateAsync(Order input, ...)
+public async ValueTask<ProductContext> BuildContextAsync(Order input, ...)
 {
     var categoryIds = input.Items.Select(i => i.CategoryId).Distinct();
     var productIds = input.Items.Select(i => i.ProductId).Distinct();

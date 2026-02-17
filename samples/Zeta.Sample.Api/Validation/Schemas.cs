@@ -1,4 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
 using Zeta.Sample.Api.Models;
+using Zeta.Sample.Api.Repository;
 using Zeta.Schemas;
 
 namespace Zeta.Sample.Api.Validation;
@@ -30,7 +32,12 @@ public static class Schemas
     /// </summary>
     public static readonly ISchema<RegisterUserRequest, RegisterUserContext> RegisterUser =
         Z.Object<RegisterUserRequest>()
-            .WithContext<RegisterUserContext>()
+            .Using<RegisterUserContext>(async (value, sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IUserRepository>();
+                var emailExists = await repo.EmailExistsAsync(value.Email, ct);
+                return new RegisterUserContext(emailExists);
+            })
             .Field(u => u.Email, Z.String().Email())
             .Field(u => u.Password, Z.String()
                 .MinLength(8)
@@ -88,14 +95,19 @@ public static class Schemas
     /// </summary>
     public static readonly ISchema<CreateProductRequest, CreateProductContext> CreateProduct =
         Z.Object<CreateProductRequest>()
-            .WithContext<CreateProductContext>()
+            .Using<CreateProductContext>(async (value, sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IProductRepository>();
+                var skuExists = await repo.SkuExistsAsync(value.Sku, ct);
+                return new CreateProductContext(skuExists);
+            })
             .Field(p => p.Name, Z.String().MinLength(2).MaxLength(200))
             .Field(p => p.Description, Z.String().MaxLength(2000).Nullable())
             .Field(p => p.Sku, Z.String()
                 .Regex(@"^[A-Z0-9\-]+$", "SKU must contain only uppercase letters, numbers, and hyphens"))
             .Field(p => p.Price, Z.Decimal().Min(0.01m).Max(999999.99m))
             .Field(p => p.StockQuantity, Z.Int().Min(0))
-            .Field(p => p.Tags, tags => tags.Each(s => s.MinLength(1).MaxLength(50)).WithContext<CreateProductContext>())
+            .Field(p => p.Tags, tags => tags.Each(s => s.MinLength(1).MaxLength(50)).Using<CreateProductContext>())
             .Refine((p, ctx) => !ctx.SkuExists, "SKU already exists");
 
     /// <summary>
@@ -168,7 +180,26 @@ public static class Schemas
     /// </summary>
     public static readonly ISchema<CreateOrderRequest, CreateOrderContext> CreateOrder =
         Z.Object<CreateOrderRequest>()
-            .WithContext<CreateOrderContext>()
+            .Using<CreateOrderContext>(async (value, sp, ct) =>
+            {
+                var userRepo = sp.GetRequiredService<IUserRepository>();
+                var productRepo = sp.GetRequiredService<IProductRepository>();
+                var orderRepo = sp.GetRequiredService<IOrderRepository>();
+
+                var customerExists = await userRepo.UserExistsAsync(value.CustomerId, ct);
+
+                var couponValid = string.IsNullOrEmpty(value.CouponCode)
+                                  || await orderRepo.CouponValidAsync(value.CouponCode, ct);
+
+                var validProductIds = new HashSet<Guid>();
+                foreach (var item in value.Items)
+                {
+                    if (await productRepo.ProductExistsAsync(item.ProductId, ct))
+                        validProductIds.Add(item.ProductId);
+                }
+
+                return new CreateOrderContext(customerExists, couponValid, validProductIds);
+            })
             .Field(o => o.CustomerId, Z.Guid())
             .Field(o => o.Items, Z.Collection(OrderItemBasic))
             .Field(o => o.ShippingAddress, Address)

@@ -15,6 +15,11 @@ internal sealed class NullableStructContextAdapter<T, TContext> : ISchema<T?, TC
 
     public bool AllowNull => _inner.AllowNull;
 
+    IEnumerable<Func<T?, IServiceProvider, CancellationToken, ValueTask<TContext>>> ISchema<T?, TContext>.GetContextFactories()
+    {
+        return [];
+    }
+
     public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (value is null)

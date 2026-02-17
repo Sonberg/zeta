@@ -92,13 +92,31 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         return this as TSchema ?? throw new InvalidOperationException();
     }
 
+    public TSchema If(Func<T, bool> predicate, Func<TSchema, TSchema> configure)
+    {
+        var schema = configure(CreateInstance());
+        AddConditional(predicate, schema);
+        return (TSchema)this;
+    }
+
     public TSchema If(Func<T, bool> predicate, Action<TSchema> configure)
     {
         var schema = CreateInstance();
         configure(schema);
+        AddConditional(predicate, schema);
+        return (TSchema)this;
+    }
+
+    public TSchema If(Func<T, bool> predicate, ISchema<T> schema)
+    {
+        AddConditional(predicate, schema);
+        return (TSchema)this;
+    }
+
+    protected void AddConditional(Func<T, bool> predicate, ISchema<T> schema)
+    {
         _conditionals ??= [];
         _conditionals.Add((predicate, schema));
-        return (TSchema)this;
     }
 
     internal IReadOnlyList<(Func<T, bool>, ISchema<T>)>? GetConditionals() => _conditionals;

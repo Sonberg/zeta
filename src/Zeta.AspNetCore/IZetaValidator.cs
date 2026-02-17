@@ -6,33 +6,26 @@ namespace Zeta.AspNetCore;
 public interface IZetaValidator
 {
     /// <summary>
-    /// Validates a value using a schema resolved from DI.
-    /// </summary>
-    ValueTask<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default);
-
-    /// <summary>
     /// Validates a value using the provided schema.
     /// </summary>
-    ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default) => ValidateAsync(value, schema, opt => opt.WithCancellation(ct));
 
     /// <summary>
-    /// Validates a value with context using a schema resolved from DI.
+    /// Validates a value using the provided schema and execution context builder.
     /// </summary>
-    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder);
 
     /// <summary>
     /// Validates a value with context using the provided schema.
+    /// Uses the schema's built-in factory delegate to create context data.
     /// </summary>
-    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default) => ValidateAsync(value, schema, opt => opt.WithCancellation(ct));
 
     /// <summary>
-    /// Validates a value with context using the provided schema and factory.
+    /// Validates a value with context using the provided schema and execution context builder.
+    /// Uses the schema's built-in factory delegate to create context data.
     /// </summary>
-    public ValueTask<Result<T>> ValidateAsync<T, TContext>(
-        T value,
-        ISchema<T, TContext> schema,
-        IValidationContextFactory<T, TContext> factory,
-        CancellationToken ct = default);
+    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder);
 }
 
 /// <summary>
@@ -41,68 +34,86 @@ public interface IZetaValidator
 public sealed class ZetaValidator : IZetaValidator
 {
     private readonly IServiceProvider _services;
-    private readonly TimeProvider _timeProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ZetaValidator"/> class.
     /// </summary>
     /// <param name="services">The service provider for resolving dependencies.</param>
-    /// <param name="timeProvider">Optional time provider for validation context. Defaults to <see cref="TimeProvider.System"/>.</param>
-    public ZetaValidator(IServiceProvider services, TimeProvider? timeProvider = null)
+    public ZetaValidator(IServiceProvider services)
     {
         _services = services;
-        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <inheritdoc />
-    public ValueTask<Result<T>> ValidateAsync<T>(T value, CancellationToken ct = default)
+    public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
     {
-        var schema = _services.GetService(typeof(ISchema<T>)) as ISchema<T>
-                     ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}> registered in DI.");
-
-        return ValidateAsync(value, schema, ct);
+        ArgumentNullException.ThrowIfNull(builder);
+        return schema.ValidateAsync(value, builder(new ValidationContextBuilder().WithServiceProvider(_services)).Build());
     }
 
+
     /// <inheritdoc />
-    public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, CancellationToken ct = default)
+    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
     {
-        return schema.ValidateAsync(value, new ValidationContext(_timeProvider, ct));
+        ArgumentNullException.ThrowIfNull(builder);
+        var execution = builder(new ValidationContextBuilder().WithServiceProvider(_services)).Build();
+        var contextData = await ResolveContextData(value, schema, execution.CancellationToken);
+        var result = await schema.ValidateAsync(
+            value,
+            new ValidationContext<TContext>(contextData, execution.TimeProvider, execution.CancellationToken));
+        return result.IsSuccess ? Result<T>.Success(value) : Result<T>.Failure(result.Errors);
     }
 
-    /// <inheritdoc />
-    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, CancellationToken ct = default)
+    private async ValueTask<TContext> ResolveContextData<T, TContext>(
+        T value,
+        ISchema<T, TContext> schema,
+        CancellationToken ct)
     {
-        var schema = _services.GetService(typeof(ISchema<T, TContext>)) as ISchema<T, TContext>
-                     ?? throw new InvalidOperationException($"No ISchema<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI.");
-
-        return await ValidateAsync(value, schema, ct);
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, CancellationToken ct = default)
-    {
-        if (_services.GetService(typeof(IValidationContextFactory<T, TContext>)) is IValidationContextFactory<T, TContext> factory)
+        var factories = schema.GetContextFactories().ToList();
+        if (factories.Count == 0)
         {
-            return await ValidateAsync(value, schema, factory, ct);
+            throw new InvalidOperationException(
+                $"No context factory for {typeof(T).Name}/{typeof(TContext).Name}. " +
+                $"Provide a factory via .Using<TContext>(factory).");
+        }
+
+        var applicableCount = 0;
+        TContext? contextData = default;
+
+        foreach (var factory in factories)
+        {
+            try
+            {
+                var candidate = await factory(value, _services, ct);
+                applicableCount++;
+
+                if (applicableCount > 1)
+                {
+                    throw new InvalidOperationException(
+                        $"Multiple applicable context factories for {typeof(T).Name}/{typeof(TContext).Name} were found for value type {value?.GetType().Name ?? "null"}. " +
+                        "Ensure each value matches exactly one context factory.");
+                }
+
+                contextData = candidate;
+            }
+            catch (InvalidOperationException ex) when (IsTypeNarrowingMismatch(ex))
+            {
+                // Ignore non-matching polymorphic branch factories.
+            }
+        }
+
+        if (applicableCount == 1)
+        {
+            return contextData!;
         }
 
         throw new InvalidOperationException(
-            $"No IValidationContextFactory<{typeof(T).Name}, {typeof(TContext).Name}> registered in DI. " +
-            $"Register a factory or use a schema without context.");
+            $"No applicable context factory for {typeof(T).Name}/{typeof(TContext).Name} and value type {value?.GetType().Name ?? "null"}. " +
+            $"Provide a matching factory via .Using<TContext>(factory).");
     }
 
-    /// <inheritdoc />
-    public async ValueTask<Result<T>> ValidateAsync<T, TContext>(
-        T value,
-        ISchema<T, TContext> schema,
-        IValidationContextFactory<T, TContext> factory,
-        CancellationToken ct = default)
+    private static bool IsTypeNarrowingMismatch(InvalidOperationException ex)
     {
-        var contextData = await factory.CreateAsync(value, ct);
-        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(contextData, _timeProvider, ct));
-
-        return result.IsSuccess
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(result.Errors);
+        return ex.GetType().Name == "TypeNarrowingContextFactoryMismatchException";
     }
 }

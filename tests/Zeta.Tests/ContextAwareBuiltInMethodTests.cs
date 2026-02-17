@@ -10,8 +10,8 @@ public class ContextAwareBuiltInMethodTests
     [Fact]
     public async Task BoolContextAwareMethods_AreCovered()
     {
-        var isTrueSchema = Z.Bool().WithContext<TestContext>().IsTrue();
-        var isFalseSchema = Z.Bool().WithContext<TestContext>().IsFalse();
+        var isTrueSchema = Z.Bool().Using<TestContext>().IsTrue();
+        var isFalseSchema = Z.Bool().Using<TestContext>().IsFalse();
 
         var trueResult = await isTrueSchema.ValidateAsync(true, new TestContext());
         Assert.True(trueResult.IsSuccess);
@@ -23,7 +23,7 @@ public class ContextAwareBuiltInMethodTests
     [Fact]
     public async Task IntContextAwareMethods_AreCovered()
     {
-        var schema = Z.Int().WithContext<TestContext>().Min(1).Max(10);
+        var schema = Z.Int().Using<TestContext>().Min(1).Max(10);
 
         var result = await schema.ValidateAsync(5, new TestContext());
         Assert.True(result.IsSuccess);
@@ -32,9 +32,9 @@ public class ContextAwareBuiltInMethodTests
     [Fact]
     public async Task DoubleContextAwareMethods_AreCovered()
     {
-        var rangeSchema = Z.Double().WithContext<TestContext>().Min(-10).Max(10).Finite();
-        var positiveSchema = Z.Double().WithContext<TestContext>().Positive();
-        var negativeSchema = Z.Double().WithContext<TestContext>().Negative();
+        var rangeSchema = Z.Double().Using<TestContext>().Min(-10).Max(10).Finite();
+        var positiveSchema = Z.Double().Using<TestContext>().Positive();
+        var negativeSchema = Z.Double().Using<TestContext>().Negative();
 
         Assert.True((await rangeSchema.ValidateAsync(1.5, new TestContext())).IsSuccess);
         Assert.True((await positiveSchema.ValidateAsync(2.0, new TestContext())).IsSuccess);
@@ -44,10 +44,10 @@ public class ContextAwareBuiltInMethodTests
     [Fact]
     public async Task DecimalContextAwareMethods_AreCovered()
     {
-        var rangeSchema = Z.Decimal().WithContext<TestContext>().Min(-10m).Max(10m).Precision(2);
-        var positiveSchema = Z.Decimal().WithContext<TestContext>().Positive();
-        var negativeSchema = Z.Decimal().WithContext<TestContext>().Negative();
-        var multipleOfSchema = Z.Decimal().WithContext<TestContext>().MultipleOf(0.25m);
+        var rangeSchema = Z.Decimal().Using<TestContext>().Min(-10m).Max(10m).Precision(2);
+        var positiveSchema = Z.Decimal().Using<TestContext>().Positive();
+        var negativeSchema = Z.Decimal().Using<TestContext>().Negative();
+        var multipleOfSchema = Z.Decimal().Using<TestContext>().MultipleOf(0.25m);
 
         Assert.True((await rangeSchema.ValidateAsync(1.25m, new TestContext())).IsSuccess);
         Assert.True((await positiveSchema.ValidateAsync(2m, new TestContext())).IsSuccess);
@@ -58,8 +58,8 @@ public class ContextAwareBuiltInMethodTests
     [Fact]
     public async Task GuidContextAwareMethods_AreCovered()
     {
-        var notEmptySchema = Z.Guid().WithContext<TestContext>().NotEmpty();
-        var versionSchema = Z.Guid().WithContext<TestContext>().Version(4);
+        var notEmptySchema = Z.Guid().Using<TestContext>().NotEmpty();
+        var versionSchema = Z.Guid().Using<TestContext>().Version(4);
 
         Assert.True((await notEmptySchema.ValidateAsync(Guid.NewGuid(), new TestContext())).IsSuccess);
         Assert.True((await versionSchema.ValidateAsync(Guid.NewGuid(), new TestContext())).IsSuccess);
@@ -69,7 +69,7 @@ public class ContextAwareBuiltInMethodTests
     public async Task StringContextAwareMethods_AreCovered()
     {
         var schema = Z.String()
-            .WithContext<TestContext>()
+            .Using<TestContext>()
             .MinLength(5)
             .MaxLength(10)
             .Length(8)
@@ -92,8 +92,8 @@ public class ContextAwareBuiltInMethodTests
     public async Task CollectionContextAwareMethods_AreCovered()
     {
         var schema = Z.Collection<int>()
-            .WithContext<TestContext>()
-            .Each(Z.Int().WithContext<TestContext>().Min(1))
+            .Using<TestContext>()
+            .Each(Z.Int().Using<TestContext>().Min(1))
             .MinLength(1)
             .MaxLength(3)
             .Length(2)
@@ -109,15 +109,15 @@ public class ContextAwareBuiltInMethodTests
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
         var context = new ValidationContext<TestContext>(new TestContext(), fakeTime);
 
-        var minSchema = Z.DateOnly().WithContext<TestContext>().Min(new DateOnly(2024, 1, 1));
-        var maxSchema = Z.DateOnly().WithContext<TestContext>().Max(new DateOnly(2024, 12, 31));
-        var pastSchema = Z.DateOnly().WithContext<TestContext>().Past();
-        var futureSchema = Z.DateOnly().WithContext<TestContext>().Future();
-        var betweenSchema = Z.DateOnly().WithContext<TestContext>().Between(new DateOnly(2024, 1, 1), new DateOnly(2024, 12, 31));
-        var weekdaySchema = Z.DateOnly().WithContext<TestContext>().Weekday();
-        var weekendSchema = Z.DateOnly().WithContext<TestContext>().Weekend();
-        var minAgeSchema = Z.DateOnly().WithContext<TestContext>().MinAge(18);
-        var maxAgeSchema = Z.DateOnly().WithContext<TestContext>().MaxAge(80);
+        var minSchema = Z.DateOnly().Using<TestContext>().Min(new DateOnly(2024, 1, 1));
+        var maxSchema = Z.DateOnly().Using<TestContext>().Max(new DateOnly(2024, 12, 31));
+        var pastSchema = Z.DateOnly().Using<TestContext>().Past();
+        var futureSchema = Z.DateOnly().Using<TestContext>().Future();
+        var betweenSchema = Z.DateOnly().Using<TestContext>().Between(new DateOnly(2024, 1, 1), new DateOnly(2024, 12, 31));
+        var weekdaySchema = Z.DateOnly().Using<TestContext>().Weekday();
+        var weekendSchema = Z.DateOnly().Using<TestContext>().Weekend();
+        var minAgeSchema = Z.DateOnly().Using<TestContext>().MinAge(18);
+        var maxAgeSchema = Z.DateOnly().Using<TestContext>().MaxAge(80);
 
         Assert.True((await minSchema.ValidateAsync(new DateOnly(2024, 6, 1), context)).IsSuccess);
         Assert.True((await maxSchema.ValidateAsync(new DateOnly(2024, 6, 1), context)).IsSuccess);
@@ -136,18 +136,18 @@ public class ContextAwareBuiltInMethodTests
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
         var context = new ValidationContext<TestContext>(new TestContext(), fakeTime);
 
-        var minSchema = Z.DateTime().WithContext<TestContext>().Min(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-        var maxSchema = Z.DateTime().WithContext<TestContext>().Max(new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc));
-        var pastSchema = Z.DateTime().WithContext<TestContext>().Past();
-        var futureSchema = Z.DateTime().WithContext<TestContext>().Future();
-        var betweenSchema = Z.DateTime().WithContext<TestContext>().Between(
+        var minSchema = Z.DateTime().Using<TestContext>().Min(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        var maxSchema = Z.DateTime().Using<TestContext>().Max(new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc));
+        var pastSchema = Z.DateTime().Using<TestContext>().Past();
+        var futureSchema = Z.DateTime().Using<TestContext>().Future();
+        var betweenSchema = Z.DateTime().Using<TestContext>().Between(
             new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc));
-        var weekdaySchema = Z.DateTime().WithContext<TestContext>().Weekday();
-        var weekendSchema = Z.DateTime().WithContext<TestContext>().Weekend();
-        var withinDaysSchema = Z.DateTime().WithContext<TestContext>().WithinDays(10);
-        var minAgeSchema = Z.DateTime().WithContext<TestContext>().MinAge(18);
-        var maxAgeSchema = Z.DateTime().WithContext<TestContext>().MaxAge(80);
+        var weekdaySchema = Z.DateTime().Using<TestContext>().Weekday();
+        var weekendSchema = Z.DateTime().Using<TestContext>().Weekend();
+        var withinDaysSchema = Z.DateTime().Using<TestContext>().WithinDays(10);
+        var minAgeSchema = Z.DateTime().Using<TestContext>().MinAge(18);
+        var maxAgeSchema = Z.DateTime().Using<TestContext>().MaxAge(80);
 
         Assert.True((await minSchema.ValidateAsync(new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc), context)).IsSuccess);
         Assert.True((await maxSchema.ValidateAsync(new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc), context)).IsSuccess);
@@ -166,13 +166,13 @@ public class ContextAwareBuiltInMethodTests
     {
         var context = new TestContext();
 
-        var minSchema = Z.TimeOnly().WithContext<TestContext>().Min(new TimeOnly(9, 0));
-        var maxSchema = Z.TimeOnly().WithContext<TestContext>().Max(new TimeOnly(18, 0));
-        var betweenSchema = Z.TimeOnly().WithContext<TestContext>().Between(new TimeOnly(9, 0), new TimeOnly(18, 0));
-        var businessSchema = Z.TimeOnly().WithContext<TestContext>().BusinessHours();
-        var morningSchema = Z.TimeOnly().WithContext<TestContext>().Morning();
-        var afternoonSchema = Z.TimeOnly().WithContext<TestContext>().Afternoon();
-        var eveningSchema = Z.TimeOnly().WithContext<TestContext>().Evening();
+        var minSchema = Z.TimeOnly().Using<TestContext>().Min(new TimeOnly(9, 0));
+        var maxSchema = Z.TimeOnly().Using<TestContext>().Max(new TimeOnly(18, 0));
+        var betweenSchema = Z.TimeOnly().Using<TestContext>().Between(new TimeOnly(9, 0), new TimeOnly(18, 0));
+        var businessSchema = Z.TimeOnly().Using<TestContext>().BusinessHours();
+        var morningSchema = Z.TimeOnly().Using<TestContext>().Morning();
+        var afternoonSchema = Z.TimeOnly().Using<TestContext>().Afternoon();
+        var eveningSchema = Z.TimeOnly().Using<TestContext>().Evening();
 
         Assert.True((await minSchema.ValidateAsync(new TimeOnly(10, 0), context)).IsSuccess);
         Assert.True((await maxSchema.ValidateAsync(new TimeOnly(10, 0), context)).IsSuccess);
@@ -187,7 +187,7 @@ public class ContextAwareBuiltInMethodTests
     public async Task ObjectField_ContextAwareSchemaExtension_IsCovered()
     {
         var nameSchema = Z.String()
-            .WithContext<TestContext>()
+            .Using<TestContext>()
             .MinLength(3);
 
         var schema = SchemaExtensions.Field(

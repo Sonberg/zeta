@@ -20,22 +20,11 @@ public static class ZetaExtensions
 
     /// <summary>
     /// Adds validation to a minimal API endpoint using the provided context-aware schema.
+    /// The schema must have a built-in factory delegate set via .Using&lt;TContext&gt;(factory).
     /// </summary>
     public static RouteHandlerBuilder WithValidation<T, TContext>(this RouteHandlerBuilder builder, ISchema<T, TContext> schema)
     {
-        // Factory will be resolved from DI inside the filter if not provided
-        return builder.AddEndpointFilter(new ValidationFilter<T, TContext>(schema, null));
-    }
-
-    /// <summary>
-    /// Adds validation to a minimal API endpoint using the provided schema and explicit context factory.
-    /// </summary>
-    public static RouteHandlerBuilder WithValidation<T, TContext>(
-        this RouteHandlerBuilder builder,
-        ISchema<T, TContext> schema,
-        IValidationContextFactory<T, TContext> factory)
-    {
-        return builder.AddEndpointFilter(new ValidationFilter<T, TContext>(schema, factory));
+        return builder.AddEndpointFilter(new ValidationFilter<T, TContext>(schema));
     }
 
     /// <summary>

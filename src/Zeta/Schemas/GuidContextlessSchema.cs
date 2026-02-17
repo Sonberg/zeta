@@ -39,11 +39,22 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextl
     /// <summary>
     /// Creates a context-aware Guid schema with all rules from this schema.
     /// </summary>
-    public GuidContextSchema<TContext> WithContext<TContext>()
+    public GuidContextSchema<TContext> Using<TContext>()
     {
         var schema = new GuidContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware Guid schema with a factory delegate for creating context data.
+    /// </summary>
+    public GuidContextSchema<TContext> Using<TContext>(
+        Func<Guid, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory(factory);
         return schema;
     }
 }

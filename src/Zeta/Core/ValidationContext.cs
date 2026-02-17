@@ -37,19 +37,22 @@ public record ValidationContext<TData> : ValidationContext
     /// <param name="data">The shared context data.</param>
     /// <param name="timeProvider">Optional time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <param name="serviceProvider">Optional service provider for dependency injection.</param>
     public ValidationContext(
         TData data,
         TimeProvider? timeProvider = null,
-        CancellationToken cancellationToken = default) : base(timeProvider, cancellationToken)
+        CancellationToken cancellationToken = default,
+        IServiceProvider? serviceProvider = null) : base(timeProvider, cancellationToken, serviceProvider)
     {
         Data = data;
     }
 
-    private ValidationContext(
+    internal ValidationContext(
         string path,
         TData data,
         TimeProvider? timeProvider = null,
-        CancellationToken cancellationToken = default) : base(path, timeProvider, cancellationToken)
+        CancellationToken cancellationToken = default,
+        IServiceProvider? serviceProvider = null) : base(path, timeProvider, cancellationToken, serviceProvider)
     {
         Data = data;
     }
@@ -67,7 +70,8 @@ public record ValidationContext<TData> : ValidationContext
             newPath,
             Data,
             TimeProvider,
-            CancellationToken);
+            CancellationToken,
+            ServiceProvider);
     }
 
     /// <summary>
@@ -81,7 +85,8 @@ public record ValidationContext<TData> : ValidationContext
                 : $"{Path}[{index}]",
             Data,
             TimeProvider,
-            CancellationToken);
+            CancellationToken,
+            ServiceProvider);
     }
 }
 
@@ -106,11 +111,17 @@ public record ValidationContext
     public TimeProvider TimeProvider { get; }
 
     /// <summary>
+    /// Optional service provider for dependency injection.
+    /// </summary>
+    public IServiceProvider? ServiceProvider { get; }
+
+    /// <summary>
     /// Creates a new validation execution context.
     /// </summary>
     public ValidationContext(
         TimeProvider? timeProvider = null,
-        CancellationToken cancellationToken = default) : this(null, timeProvider, cancellationToken)
+        CancellationToken cancellationToken = default,
+        IServiceProvider? serviceProvider = null) : this(null, timeProvider, cancellationToken, serviceProvider)
     {
     }
 
@@ -120,14 +131,17 @@ public record ValidationContext
     /// <param name="path">The validation path.</param>
     /// <param name="timeProvider">Optional time provider.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <param name="serviceProvider">Optional service provider for dependency injection.</param>
     protected ValidationContext(
         string? path = null,
         TimeProvider? timeProvider = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IServiceProvider? serviceProvider = null)
     {
         Path = path ?? "";
         CancellationToken = cancellationToken;
         TimeProvider = timeProvider ?? TimeProvider.System;
+        ServiceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -139,7 +153,7 @@ public record ValidationContext
             ? segment
             : PathCache.GetOrAdd(string.Concat(Path, ".", segment));
 
-        return new ValidationContext(newPath, TimeProvider, CancellationToken);
+        return new ValidationContext(newPath, TimeProvider, CancellationToken, ServiceProvider);
     }
 
     /// <summary>
@@ -148,7 +162,7 @@ public record ValidationContext
     public ValidationContext PushIndex(int index)
     {
         var newPath = string.IsNullOrEmpty(Path) ? $"[{index}]" : $"{Path}[{index}]";
-        return new ValidationContext(newPath, TimeProvider, CancellationToken);
+        return new ValidationContext(newPath, TimeProvider, CancellationToken, ServiceProvider);
     }
 
     /// <summary>

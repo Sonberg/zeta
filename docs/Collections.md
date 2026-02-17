@@ -261,14 +261,14 @@ if (requireEmail)
 
 ## Context-Aware Collections
 
-Use `.WithContext<TContext>()` for async validation with external data:
+Use `.Using<TContext>()` for async validation with external data:
 
 ```csharp
 public record ProductContext(IProductRepository Repository);
 
 var schema = Z.Collection<string>()
     .Each(s => s.MinLength(3))                    // Contextless validation
-    .WithContext<ProductContext>()                 // Promote to context-aware
+    .Using<ProductContext>()                 // Promote to context-aware
     .Each(s => s.RefineAsync(async (sku, ctx, ct) =>
         await ctx.Repository.SkuExistsAsync(sku, ct),
         "SKU does not exist"));
@@ -286,10 +286,10 @@ var result = await schema.ValidateAsync(
 ```csharp
 var schema = Z.Object<Product>()
     .Field(p => p.Name, s => s.MinLength(3))
-    .WithContext<ProductContext>()
+    .Using<ProductContext>()
     .Field(p => p.RelatedSkus, skus => skus
         .Each(s => s.MinLength(3))
-        .WithContext<ProductContext>()              // Collection also needs context
+        .Using<ProductContext>()              // Collection also needs context
         .Each(s => s.RefineAsync(async (sku, ctx, ct) =>
             await ctx.Repository.SkuExistsAsync(sku, ct),
             "SKU does not exist")));
@@ -431,12 +431,12 @@ Z.Collection<string>()
 // ✓ Good - Only when async validation is truly needed
 Z.Collection<string>()
     .Each(s => s.MinLength(3))                      // Simple validation
-    .WithContext<Context>()
+    .Using<Context>()
     .Each(s => s.RefineAsync(CheckDatabaseAsync))   // Only for async check
 
 // ✗ Avoid - Unnecessary context promotion
 Z.Collection<string>()
-    .WithContext<Context>()
+    .Using<Context>()
     .Each(s => s.MinLength(3))  // No context needed
 ```
 

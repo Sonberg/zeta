@@ -35,11 +35,22 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     /// <summary>
     /// Creates a context-aware bool schema with all rules from this schema.
     /// </summary>
-    public BoolContextSchema<TContext> WithContext<TContext>()
+    public BoolContextSchema<TContext> Using<TContext>()
     {
         var schema = new BoolContextSchema<TContext>(Rules.ToContext<TContext>());
         if (AllowNull) schema.Nullable();
         schema.TransferContextlessConditionals(GetConditionals());
+        return schema;
+    }
+
+    /// <summary>
+    /// Creates a context-aware bool schema with a factory delegate for creating context data.
+    /// </summary>
+    public BoolContextSchema<TContext> Using<TContext>(
+        Func<bool, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
+    {
+        var schema = Using<TContext>();
+        schema.SetContextFactory(factory);
         return schema;
     }
 }

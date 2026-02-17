@@ -36,7 +36,7 @@ public sealed record CreateUserCommand(
     int Age
 ) : IRequest<Result<User>>, IZetaValidation<CreateUserCommand>
 {
-    public static ISchema<CreateUserCommand> Schema =
+    public static ISchema<CreateUserCommand> Schema { get; } =
         Z.Object<CreateUserCommand>()
             .Field(x => x.Email, Z.String().Email())
             .Field(x => x.Age, Z.Int().Min(18));
@@ -136,47 +136,23 @@ public sealed record RegisterUserCommand(
     string Password
 ) : IRequest<Result<User>>, IZetaValidation<RegisterUserCommand>
 {
-    public static ISchema<RegisterUserCommand> Schema =
+    public static ISchema<RegisterUserCommand> Schema { get; } =
         Z.Object<RegisterUserCommand>()
-            .WithContext<RegisterUserCommand, UserContext>()
+            .Using<UserContext>(async (input, sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IUserRepository>();
+                return new UserContext(
+                    EmailExists: await repo.EmailExistsAsync(input.Email, ct)
+                );
+            })
             .Field(x => x.Email,
                 Z.String()
                     .Email()
-                    .WithContext<UserContext>()
+                    .Using<UserContext>()
                     .Refine((_, ctx) => !ctx.EmailExists, "Email already taken")
             )
             .Field(x => x.Password, Z.String().MinLength(8));
 }
-```
-
-### Context Factory
-
-```csharp
-public sealed class UserContextFactory
-    : IValidationContextFactory<RegisterUserCommand, UserContext>
-{
-    private readonly IUserRepository _repo;
-
-    public UserContextFactory(IUserRepository repo)
-    {
-        _repo = repo;
-    }
-
-    public async Task<UserContext> CreateAsync(
-        RegisterUserCommand input,
-        CancellationToken ct)
-    {
-        return new UserContext(
-            EmailExists: await _repo.EmailExistsAsync(input.Email, ct)
-        );
-    }
-}
-```
-
-Register factories via assembly scanning:
-
-```csharp
-services.AddZeta(typeof(Program).Assembly);
 ```
 
 ---
