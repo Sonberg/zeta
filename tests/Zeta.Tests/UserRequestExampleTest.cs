@@ -41,7 +41,7 @@ public class UserRequestExampleTest
 
         var result = await schema.ValidateAsync(new FooBar(50, 0));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "bar" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.bar" && e.Code == "min_value");
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class UserRequestExampleTest
 
         var result = await schema.ValidateAsync(new FooBar(50, 0));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "bar" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.bar" && e.Code == "min_value");
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class UserRequestExampleTest
         var result = await schema.ValidateAsync(new FooBar(5, 0));
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "foo" && e.Code == "min_value");
-        Assert.Contains(result.Errors, e => e.Path == "bar" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.foo" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.bar" && e.Code == "min_value");
     }
 }

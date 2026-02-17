@@ -164,12 +164,12 @@ public class OrdersControllerTests : IntegrationTestBase
         Assert.Contains(errors, e => e.Message!.Contains("products not found"));
         Assert.Contains(errors, e => e.Message!.Contains("Invalid coupon"));
         // Field-level validations keep their paths
-        Assert.Contains(errors, e => e.Path == "items[0].quantity");
-        Assert.Contains(errors, e => e.Path == "shippingAddress.street");
-        Assert.Contains(errors, e => e.Path == "shippingAddress.city");
-        Assert.Contains(errors, e => e.Path == "shippingAddress.state");
-        Assert.Contains(errors, e => e.Path == "shippingAddress.zipCode");
-        Assert.Contains(errors, e => e.Path == "paymentMethod");
+        Assert.Contains(errors, e => e.Path == "$.items[0].quantity");
+        Assert.Contains(errors, e => e.Path == "$.shippingAddress.street");
+        Assert.Contains(errors, e => e.Path == "$.shippingAddress.city");
+        Assert.Contains(errors, e => e.Path == "$.shippingAddress.state");
+        Assert.Contains(errors, e => e.Path == "$.shippingAddress.zipCode");
+        Assert.Contains(errors, e => e.Path == "$.paymentMethod");
     }
 
     #endregion
@@ -207,7 +207,7 @@ public class OrdersControllerTests : IntegrationTestBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errors = await GetValidationErrors(response);
-        Assert.Contains(errors, e => e.Path == "deliveryDate");
+        Assert.Contains(errors, e => e.Path == "$.deliveryDate");
     }
 
     [Fact]

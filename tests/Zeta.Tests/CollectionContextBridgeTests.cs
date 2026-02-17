@@ -84,7 +84,7 @@ public class CollectionContextBridgeTests
         var result = await schema.ValidateAsync(order, context);
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("items[1].quantity", result.Errors[0].Path);
+        Assert.Equal("$.items[1].quantity", result.Errors[0].Path);
         Assert.Equal("max_value", result.Errors[0].Code);
     }
 
@@ -115,7 +115,7 @@ public class CollectionContextBridgeTests
         var result = await schema.ValidateAsync(item, context);
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("tags[1]", result.Errors[0].Path);
+        Assert.Equal("$.tags[1]", result.Errors[0].Path);
         Assert.Equal("min_length", result.Errors[0].Code);
     }
 
@@ -160,7 +160,7 @@ public class CollectionContextBridgeTests
         var result = await schema.ValidateAsync(container, context);
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("numbers[1]", result.Errors[0].Path);
+        Assert.Equal("$.numbers[1]", result.Errors[0].Path);
         Assert.Equal("max_value", result.Errors[0].Code);
     }
 
@@ -208,7 +208,7 @@ public class CollectionContextBridgeTests
 
         var result = await schema.ValidateAsync(order, context);
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Code == "min_length" && e.Path == "items");
+        Assert.Contains(result.Errors, e => e.Code == "min_length" && e.Path == "$.items");
     }
 
     [Fact]

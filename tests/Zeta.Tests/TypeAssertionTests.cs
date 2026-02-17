@@ -68,7 +68,7 @@ public class TypeAssertionTests
         var result = await schema.ValidateAsync(new Dog(150));
 
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "woofVolume" && e.Code == "max_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.woofVolume" && e.Code == "max_value");
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class TypeAssertionTests
         var result = await schema.ValidateAsync(new Dog(150));
 
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "woofVolume" && e.Code == "max_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.woofVolume" && e.Code == "max_value");
     }
 
     [Fact]
@@ -276,7 +276,7 @@ public class TypeAssertionTests
         // Invalid cat
         var invalidCat = await schema.ValidateAsync(new Cat(20));
         Assert.False(invalidCat.IsSuccess);
-        Assert.Contains(invalidCat.Errors, e => e.Path == "clawSharpness" && e.Code == "max_value");
+        Assert.Contains(invalidCat.Errors, e => e.Path == "$.clawSharpness" && e.Code == "max_value");
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class TypeAssertionTests
 
         var invalidCat = await schema.ValidateAsync(new Cat(20), ctx);
         Assert.False(invalidCat.IsSuccess);
-        Assert.Contains(invalidCat.Errors, e => e.Path == "clawSharpness" && e.Code == "max_value");
+        Assert.Contains(invalidCat.Errors, e => e.Path == "$.clawSharpness" && e.Code == "max_value");
     }
 
     [Fact]

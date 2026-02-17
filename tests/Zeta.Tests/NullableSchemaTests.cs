@@ -180,7 +180,7 @@ public class NullableSchemaTests
         var result = await schema.ValidateAsync([1, -1, 3]);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "[1]");
+        Assert.Contains(result.Errors, e => e.Path == "$[1]");
     }
 
     // ==================== List Schema Nullable ====================
@@ -212,7 +212,7 @@ public class NullableSchemaTests
         var result = await schema.ValidateAsync(["a@b.com", "invalid"]);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "[1]" && e.Code == "email");
+        Assert.Contains(result.Errors, e => e.Path == "$[1]" && e.Code == "email");
     }
 
     // ==================== Context-Aware Nullable ====================
@@ -312,7 +312,7 @@ public class NullableSchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "age" && e.Code == "min_value");
-        Assert.Contains(result.Errors, e => e.Path == "bio" && e.Code == "max_length");
+        Assert.Contains(result.Errors, e => e.Path == "$.age" && e.Code == "min_value");
+        Assert.Contains(result.Errors, e => e.Path == "$.bio" && e.Code == "max_length");
     }
 }

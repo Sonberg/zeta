@@ -81,7 +81,7 @@ public class IfConditionalTests
         // Admin with short name fails
         var adminShort = await schema.ValidateAsync(new User("Jo", 30, null, "admin"));
         Assert.False(adminShort.IsSuccess);
-        Assert.Contains(adminShort.Errors, e => e.Path == "name" && e.Code == "min_length");
+        Assert.Contains(adminShort.Errors, e => e.Path == "$.name" && e.Code == "min_length");
 
         // Admin with valid name passes
         var adminOk = await schema.ValidateAsync(new User("Admin", 30, null, "admin"));
@@ -290,7 +290,7 @@ public class IfConditionalTests
         // Admin with short name, strict mode from factory
         var strictShort = await schema.ValidateAsync(new User("Joe", 30, null, "admin"), ctx);
         Assert.False(strictShort.IsSuccess);
-        Assert.Contains(strictShort.Errors, e => e.Path == "name" && e.Message == "Name must be at least 5 in strict mode");
+        Assert.Contains(strictShort.Errors, e => e.Path == "$.name" && e.Message == "Name must be at least 5 in strict mode");
 
         // Non-admin: branch skipped
         var regular = await schema.ValidateAsync(new User("Joe", 30, null, "user"), ctx);

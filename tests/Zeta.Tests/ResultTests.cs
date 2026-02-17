@@ -11,7 +11,7 @@ public class ResultTests
         var result = Result<string>.Failure(error, error, error);
 
         Assert.Equal(3, result.Errors.Count);
-        Assert.Equal("field", result.Errors[0].Path);
+        Assert.Equal("$.field", result.Errors[0].Path);
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public class ResultTests
 
         Assert.True(chained.IsFailure);
         Assert.Single(chained.Errors);
-        Assert.Equal("field", chained.Errors[0].Path);
+        Assert.Equal("$.field", chained.Errors[0].Path);
     }
 
     [Fact]
@@ -243,7 +243,7 @@ public class ResultTests
 
         Assert.True(chained.IsFailure);
         Assert.Single(chained.Errors);
-        Assert.Equal("field", chained.Errors[0].Path);
+        Assert.Equal("$.field", chained.Errors[0].Path);
     }
 
     // ==================== Match with Actions Tests ====================
@@ -300,8 +300,8 @@ public class ResultTests
         var exception = Assert.Throws<ValidationException>(() => result.GetOrThrow());
 
         Assert.Equal(2, exception.Errors.Count);
-        Assert.Contains("name: Name is required", exception.Message);
-        Assert.Contains("email: Invalid email", exception.Message);
+        Assert.Contains("$.name: Name is required", exception.Message);
+        Assert.Contains("$.email: Invalid email", exception.Message);
     }
 
     [Fact]
@@ -313,7 +313,7 @@ public class ResultTests
         var exception = Assert.Throws<ValidationException>(() => result.GetOrThrow());
 
         Assert.Single(exception.Errors);
-        Assert.Equal("Value is required", exception.Message);
+        Assert.Equal("$: Value is required", exception.Message);
     }
 
     // ==================== Implicit Operator Tests ====================

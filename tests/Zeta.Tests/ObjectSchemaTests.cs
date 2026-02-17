@@ -16,7 +16,7 @@ public class ObjectSchemaTests
 
         var invalid = await schema.ValidateAsync(new User("Jo", 20, new Address("City", "12345")));
         Assert.False(invalid.IsSuccess);
-        Assert.Contains(invalid.Errors, e => e.Path == "name" && e.Code == "min_length");
+        Assert.Contains(invalid.Errors, e => e.Path == "$.name" && e.Code == "min_length");
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class ObjectSchemaTests
 
         Assert.False(result.IsSuccess);
         var error = result.Errors.Single();
-        Assert.Equal("address.zip", error.Path);
+        Assert.Equal("$.address.zip", error.Path);
     }
 
     public record BanContext(string BannedName);
@@ -81,7 +81,7 @@ public class ObjectSchemaTests
         // Invalid case - email ends with banned domain
         var invalidResult = await schema.ValidateAsync(new User("user@banned.com", 20, null!), context);
         Assert.False(invalidResult.IsSuccess);
-        Assert.Contains(invalidResult.Errors, e => e.Path == "name" && e.Message == "Email domain is banned");
+        Assert.Contains(invalidResult.Errors, e => e.Path == "$.name" && e.Message == "Email domain is banned");
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public class ObjectSchemaTests
     //     // When RequiresPassword is true and password is too short, should fail
     //     var result = await schema.ValidateAsync(new UserProfile("short", null, null, null, true));
     //     Assert.False(result.IsSuccess);
-    //     Assert.Contains(result.Errors, e => e.Path == "password" && e.Code == "min_length");
+    //     Assert.Contains(result.Errors, e => e.Path == "$.password" && e.Code == "min_length");
     // }
     //
     // [Fact]
@@ -203,7 +203,7 @@ public class ObjectSchemaTests
     //     // Price too low
     //     var result = await schema.ValidateAsync(new Product("Widget", 5.00m, null, null), context);
     //     Assert.False(result.IsSuccess);
-    //     Assert.Contains(result.Errors, e => e.Path == "price" && e.Code == "min_value");
+    //     Assert.Contains(result.Errors, e => e.Path == "$.price" && e.Code == "min_value");
     // }
     //
     // [Fact]
@@ -220,7 +220,7 @@ public class ObjectSchemaTests
     //     // Quantity too high
     //     var result = await schema.ValidateAsync(new Product("Widget", null, 5000, null), context);
     //     Assert.False(result.IsSuccess);
-    //     Assert.Contains(result.Errors, e => e.Path == "quantity" && e.Code == "max_value");
+    //     Assert.Contains(result.Errors, e => e.Path == "$.quantity" && e.Code == "max_value");
     // }
     //
     // [Fact]
@@ -237,7 +237,7 @@ public class ObjectSchemaTests
     //     // Weight negative
     //     var result = await schema.ValidateAsync(new Product("Widget", null, null, -5.0), context);
     //     Assert.False(result.IsSuccess);
-    //     Assert.Contains(result.Errors, e => e.Path == "weight" && e.Code == "min_value");
+    //     Assert.Contains(result.Errors, e => e.Path == "$.weight" && e.Code == "min_value");
     // }
     //
     // [Fact]
@@ -255,9 +255,9 @@ public class ObjectSchemaTests
     //     var result = await schema.ValidateAsync(new UserProfile("short", 15, 150.0, null, true));
     //     Assert.False(result.IsSuccess);
     //     Assert.Equal(3, result.Errors.Count);
-    //     Assert.Contains(result.Errors, e => e.Path == "password" && e.Code == "min_length");
-    //     Assert.Contains(result.Errors, e => e.Path == "age" && e.Code == "min_value");
-    //     Assert.Contains(result.Errors, e => e.Path == "score" && e.Code == "max_value");
+    //     Assert.Contains(result.Errors, e => e.Path == "$.password" && e.Code == "min_length");
+    //     Assert.Contains(result.Errors, e => e.Path == "$.age" && e.Code == "min_value");
+    //     Assert.Contains(result.Errors, e => e.Path == "$.score" && e.Code == "max_value");
     // }
     //
     // [Fact]
