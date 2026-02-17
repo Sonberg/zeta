@@ -3,6 +3,8 @@
 
 ## Next release
 
+- Prefix error paths with $ to clearly distinguish them from property names and avoid confusion with nested properties. For example, an error on the root value would have path `"$"` instead of `""`, and a field error would have path `"$.fieldName"` instead of `"fieldName"`. This makes it clear that paths are error paths and prevents ambiguity with property names.
+
 ## 0.1.12
 
 ### Breaking
