@@ -61,17 +61,21 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         where TTarget : class, T
     {
         var factories = schema.GetContextFactories().ToList();
-        if (factories.Count == 0)
-            throw new InvalidOperationException(
-                $"No context factory found for {typeof(TTarget).Name}/{typeof(TContext).Name}. " +
-                "Provide a factory via .Using<TContext>(factory).");
-        if (factories.Count > 1)
-            throw new InvalidOperationException(
-                $"Multiple context factories found for {typeof(TTarget).Name}/{typeof(TContext).Name}. " +
-                "Ensure exactly one factory is defined.");
-
-        var selfResolving = new SelfResolvingSchema<TTarget, TContext>(schema, factories[0]);
-        return If(predicate, selfResolving);
+        switch (factories.Count)
+        {
+            case 0:
+                throw new InvalidOperationException(
+                    $"No context factory found for {typeof(TTarget).Name}/{typeof(TContext).Name}. " +
+                    "Provide a factory via .Using<TContext>(factory).");
+            case > 1:
+                throw new InvalidOperationException(
+                    $"Multiple context factories found for {typeof(TTarget).Name}/{typeof(TContext).Name}. " +
+                    "Ensure exactly one factory is defined.");
+            default:
+            {
+                return If(predicate, new SelfResolvingSchema<TTarget, TContext>(schema, factories[0]));
+            }
+        }
     }
 
     /// <summary>

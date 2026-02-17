@@ -7,6 +7,7 @@
 
 A composable, type-safe, async-first validation framework for .NET inspired by [Zod](https://zod.dev/).
 
+## Basic example
 ```csharp
 var UserSchema = Z.Object<User>()
     .Field(u => u.Email, s => s.Email())
@@ -21,6 +22,46 @@ if(!result.IsSuccess)
         Console.WriteLine($"{error.Path}: {error.Message}");
     }
 }
+```
+
+## Async example
+
+Copy-paste example for context-aware validation where context is built from async services:
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+
+public sealed record SignupRequest(string Email, string ReferralCode);
+public sealed record SignupContext(bool EmailAvailable, bool ReferralValid);
+
+public interface IAccountService
+{
+    Task<bool> IsEmailAvailableAsync(string email, CancellationToken ct);
+}
+
+public interface IReferralService
+{
+    Task<bool> IsValidCodeAsync(string code, CancellationToken ct);
+}
+
+var signupSchema = Z.Object<SignupRequest>()
+    .Field(x => x.Email, s => s.Email())
+    .Field(x => x.ReferralCode, s => s.MinLength(6))
+    .Using<SignupContext>(async (input, sp, ct) =>
+    {
+        var accounts = sp.GetRequiredService<IAccountService>();
+        var referrals = sp.GetRequiredService<IReferralService>();
+
+        var emailAvailable = await accounts.IsEmailAvailableAsync(input.Email, ct);
+        var referralValid = await referrals.IsValidCodeAsync(input.ReferralCode, ct);
+
+        return new SignupContext(emailAvailable, referralValid);
+    })
+    .Refine((_, ctx) => ctx.EmailAvailable, "Email is already in use")
+    .Refine((_, ctx) => ctx.ReferralValid, "Referral code is invalid");
+
+// Use IZetaValidator so IServiceProvider is available to the factory
+Result<SignupRequest> result = await zetaValidator.ValidateAsync(request, signupSchema, ct);
 ```
 
 ## Features

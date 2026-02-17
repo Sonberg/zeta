@@ -3,6 +3,8 @@
 
 ## Next release
 
+## 0.1.12
+
 ### Breaking
 
 - **Renamed `.WithContext<TContext>()` to `.Using<TContext>()`** on all contextless schema types. The new name better communicates the intent of promoting a schema to context-aware validation.
