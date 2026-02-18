@@ -24,7 +24,7 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContex
 
     protected override IntContextSchema<TContext> CreateInstance() => new();
 
-    protected override IntContextSchema<TContext> CreateInstance(
+    private protected override IntContextSchema<TContext> CreateInstance(
         ContextRuleEngine<int, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<int, TContext>>? conditionals,

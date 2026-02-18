@@ -5,6 +5,22 @@
 
 ### Breaking
 
+- **Immutable, append-only schemas**: Every fluent method (`.MinLength()`, `.Field()`, `.Nullable()`, `.If()`, etc.) now returns a **new schema instance** instead of mutating `this`. Schema reuse and branching are now safe — modifying a branched schema never affects the original. Rule engines use persistent linked lists with lazy materialization for O(1) append and structural sharing.
+
+- **`Action<TSchema>` overloads of `.If()` removed**: Use `Func<TSchema, TSchema>` overloads instead. With immutability, Action callbacks cannot capture the mutated state.
+
+- **`.As<TDerived>()` no longer mutates parent**: The return value must be captured and composed via `.If()`. The recommended pattern is `.If(x => x is Dog, dogSchema)`.
+
+- **`.SetContextFactory()` replaced with `.WithContextFactory()`**: Returns a new schema instance instead of mutating.
+
+### Fixed
+
+- **Collection `.Each()` extension methods now preserve `AllowNull` and conditionals**: Previously, generated `.Each()` extensions lost `AllowNull` and conditional state when creating new collection schemas.
+
+- **Context-aware `CollectionContextSchema.Each()` now preserves conditionals**: Previously passed `null` for conditionals, losing collection-level conditional validation.
+
+### Breaking
+
 - **Renamed `.WithContext<TContext>()` to `.Using<TContext>()`** on all contextless schema types. The new name better communicates the intent of promoting a schema to context-aware validation.
 
 - **Removed `IValidationContextFactory<TInput, TContext>`** — context factories are now inline delegates passed directly to `.Using<TContext>(factory)` instead of separate classes registered via DI assembly scanning. This simplifies the API and eliminates the need for factory classes and assembly scanning.

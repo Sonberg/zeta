@@ -49,7 +49,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
 
     protected override ObjectContextSchema<T, TContext> CreateInstance() => new();
 
-    protected override ObjectContextSchema<T, TContext> CreateInstance(
+    private protected override ObjectContextSchema<T, TContext> CreateInstance(
         ContextRuleEngine<T, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<T, TContext>>? conditionals,

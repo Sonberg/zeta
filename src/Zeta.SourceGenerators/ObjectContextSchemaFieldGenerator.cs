@@ -66,8 +66,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Func<{{mapping.SchemaClass}}, {{mapping.ContextSchemaClass}}<TContext>> schema)
                                 {
                                 {{PropertyPreamble}}
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, schema({{mapping.FactoryMethod}}())));
-                                    return this;
+                                    return AddField(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, schema({{mapping.FactoryMethod}}())));
                                 }
 
                                 /// <summary>
@@ -79,8 +78,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                 {
                                 {{PropertyPreamble}}
                                     var configuredSchema = schema({{mapping.FactoryMethod}}());
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, configuredSchema.Using<TContext>()));
-                                    return this;
+                                    return AddField(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, {{getterExpr}}, configuredSchema.Using<TContext>()));
                                 }
 
                             """);
@@ -100,9 +98,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     ISchema<{{mapping.Type}}> schema)
                                 {
                                 {{PropertyPreamble}}
-                                    _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(
-                                        new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema)));
-                                    return this;
+                                    return AddContextlessField(new FieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema));
                                 }
 
                             """);
@@ -122,8 +118,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     ISchema<{{mapping.Type}}, TContext> schema)
                                 {
                                 {{PropertyPreamble}}
-                                    _fields.Add(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
-                                    return this;
+                                    return AddField(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
                                 }
 
                             """);
@@ -144,9 +139,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     Func<{{mapping.SchemaClass}}, {{mapping.SchemaClass}}> schema)
                                 {
                                 {{PropertyPreamble}}
-                                    var inner = new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}()));
-                                    _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
-                                    return this;
+                                    return AddContextlessField(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
                                 }
 
                             """);
@@ -167,9 +160,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     ISchema<{{mapping.Type}}> schema)
                                 {
                                 {{PropertyPreamble}}
-                                    var inner = new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema);
-                                    _fields.Add(new FieldContextlessValidatorAdapter<T, TContext>(inner));
-                                    return this;
+                                    return AddContextlessField(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema));
                                 }
 
                             """);
@@ -190,8 +181,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     ISchema<{{mapping.Type}}, TContext> schema)
                                 {
                                 {{PropertyPreamble}}
-                                    _fields.Add(new NullableFieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
-                                    return this;
+                                    return AddField(new NullableFieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
                                 }
 
                             """);
@@ -212,8 +202,7 @@ internal static class ObjectContextSchemaFieldGenerator
                           {
                               var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                               var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                              _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema(Z.Object<TProperty>())));
-                              return this;
+                              return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema(Z.Object<TProperty>())));
                           }
 
                           /// <summary>
@@ -227,8 +216,7 @@ internal static class ObjectContextSchemaFieldGenerator
                               var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                               var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
                               var configuredSchema = schema(Z.Object<TProperty>());
-                              _fields.Add(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
-                              return this;
+                              return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
                           }
                       """);
     }
@@ -254,8 +242,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                         var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
                                         var collectionSchema = Z.Collection<{{mapping.Type}}>();
-                                        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, schema(collectionSchema)));
-                                        return this;
+                                        return AddField(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, schema(collectionSchema)));
                                     }
 
                                     /// <summary>
@@ -269,8 +256,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
                                         var collectionSchema = Z.Collection<{{mapping.Type}}>();
                                         var configuredSchema = schema(collectionSchema);
-                                        _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
-                                        return this;
+                                        return AddField(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<{{mapping.Type}}>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
                                     }
                                 """);
             }
@@ -296,8 +282,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
                                     var collectionSchema = Z.Collection<TElement>();
-                                    _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, schema(collectionSchema)));
-                                    return this;
+                                    return AddField(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, schema(collectionSchema)));
                                 }
 
                                 /// <summary>
@@ -312,8 +297,7 @@ internal static class ObjectContextSchemaFieldGenerator
                                     var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
                                     var collectionSchema = Z.Collection<TElement>();
                                     var configuredSchema = schema(collectionSchema);
-                                    _fields.Add(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
-                                    return this;
+                                    return AddField(new FieldContextContextValidator<T, System.Collections.Generic.ICollection<TElement>, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
                                 }
                             """);
         }

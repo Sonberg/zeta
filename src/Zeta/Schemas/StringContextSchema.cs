@@ -27,7 +27,7 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext, Str
 
     protected override StringContextSchema<TContext> CreateInstance() => new();
 
-    protected override StringContextSchema<TContext> CreateInstance(
+    private protected override StringContextSchema<TContext> CreateInstance(
         ContextRuleEngine<string, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<string, TContext>>? conditionals,

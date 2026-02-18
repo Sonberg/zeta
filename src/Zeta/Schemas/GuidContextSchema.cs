@@ -25,7 +25,7 @@ public class GuidContextSchema<TContext> : ContextSchema<Guid, TContext, GuidCon
 
     protected override GuidContextSchema<TContext> CreateInstance() => new();
 
-    protected override GuidContextSchema<TContext> CreateInstance(
+    private protected override GuidContextSchema<TContext> CreateInstance(
         ContextRuleEngine<Guid, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<Guid, TContext>>? conditionals,

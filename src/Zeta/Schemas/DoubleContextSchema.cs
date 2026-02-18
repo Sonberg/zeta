@@ -25,7 +25,7 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext, Dou
 
     protected override DoubleContextSchema<TContext> CreateInstance() => new();
 
-    protected override DoubleContextSchema<TContext> CreateInstance(
+    private protected override DoubleContextSchema<TContext> CreateInstance(
         ContextRuleEngine<double, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<double, TContext>>? conditionals,

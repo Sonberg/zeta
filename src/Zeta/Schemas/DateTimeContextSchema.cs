@@ -25,7 +25,7 @@ public class DateTimeContextSchema<TContext> : ContextSchema<DateTime, TContext,
 
     protected override DateTimeContextSchema<TContext> CreateInstance() => new();
 
-    protected override DateTimeContextSchema<TContext> CreateInstance(
+    private protected override DateTimeContextSchema<TContext> CreateInstance(
         ContextRuleEngine<DateTime, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<DateTime, TContext>>? conditionals,

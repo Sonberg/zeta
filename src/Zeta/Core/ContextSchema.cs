@@ -105,7 +105,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
     {
     }
 
-    protected ContextSchema(
+    private protected ContextSchema(
         ContextRuleEngine<T, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<T, TContext>>? conditionals,
@@ -119,7 +119,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     protected abstract TSchema CreateInstance();
 
-    protected abstract TSchema CreateInstance(
+    private protected abstract TSchema CreateInstance(
         ContextRuleEngine<T, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<T, TContext>>? conditionals,
@@ -155,6 +155,8 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
     {
         return Rules;
     }
+
+    internal IReadOnlyList<ISchemaConditional<T, TContext>>? GetConditionals() => _conditionals;
 
     public TSchema Nullable()
     {

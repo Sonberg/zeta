@@ -26,7 +26,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext,
 
     protected override DateOnlyContextSchema<TContext> CreateInstance() => new();
 
-    protected override DateOnlyContextSchema<TContext> CreateInstance(
+    private protected override DateOnlyContextSchema<TContext> CreateInstance(
         ContextRuleEngine<DateOnly, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<DateOnly, TContext>>? conditionals,

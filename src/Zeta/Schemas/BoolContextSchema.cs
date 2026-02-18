@@ -23,7 +23,7 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolCon
 
     protected override BoolContextSchema<TContext> CreateInstance() => new();
 
-    protected override BoolContextSchema<TContext> CreateInstance(
+    private protected override BoolContextSchema<TContext> CreateInstance(
         ContextRuleEngine<bool, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<bool, TContext>>? conditionals,

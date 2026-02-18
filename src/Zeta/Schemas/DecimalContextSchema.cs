@@ -26,7 +26,7 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext, D
 
     protected override DecimalContextSchema<TContext> CreateInstance() => new();
 
-    protected override DecimalContextSchema<TContext> CreateInstance(
+    private protected override DecimalContextSchema<TContext> CreateInstance(
         ContextRuleEngine<decimal, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<decimal, TContext>>? conditionals,

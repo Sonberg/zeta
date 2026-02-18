@@ -26,7 +26,7 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext,
 
     protected override TimeOnlyContextSchema<TContext> CreateInstance() => new();
 
-    protected override TimeOnlyContextSchema<TContext> CreateInstance(
+    private protected override TimeOnlyContextSchema<TContext> CreateInstance(
         ContextRuleEngine<TimeOnly, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<TimeOnly, TContext>>? conditionals,
