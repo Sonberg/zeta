@@ -23,9 +23,9 @@ public async Task Email_InvalidFormat_ReturnsError()
 [Fact]
 public async Task Object_ValidInput_Succeeds()
 {
-    var schema = Z.Object<User>()
-        .Field(u => u.Email, Z.String().Email())
-        .Field(u => u.Age, Z.Int().Min(18));
+    var schema = Z.Schema<User>()
+        .Property(u => u.Email, Z.String().Email())
+        .Property(u => u.Age, Z.Int().Min(18));
 
     var result = await schema.ValidateAsync(new User("test@example.com", 25));
 
@@ -131,9 +131,9 @@ public async Task CreateUser_UnderageUser_ReturnsValidationError()
     var serviceProvider = services.BuildServiceProvider();
 
 var validator = serviceProvider.GetRequiredService<IZetaValidator>();
-    var schema = Z.Object<UserRequest>()
-        .Field(x => x.Email, Z.String().Email())
-        .Field(x => x.BirthDate, Z.DateTime().MinAge(18));
+    var schema = Z.Schema<UserRequest>()
+        .Property(x => x.Email, Z.String().Email())
+        .Property(x => x.BirthDate, Z.DateTime().MinAge(18));
 
     var request = new UserRequest("test@example.com", new DateTime(2010, 1, 1));
 

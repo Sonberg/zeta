@@ -34,8 +34,8 @@ public record UserContext(
 Use `.Using<TContext>(factory)` to load context data before validation runs:
 
 ```csharp
-var schema = Z.Object<User>()
-    .Field(u => u.Email, s => s.Email())
+var schema = Z.Schema<User>()
+    .Property(u => u.Email, s => s.Email())
     .Using<UserContext>(async (input, sp, ct) =>
     {
         var repo = sp.GetRequiredService<IUserRepository>();
@@ -86,10 +86,10 @@ Z.String()
 For objects, use `.Using<TContext>()`:
 
 ```csharp
-var UserSchema = Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(3))
+var UserSchema = Z.Schema<User>()
+    .Property(u => u.Name, Z.String().MinLength(3))
     .Using<UserContext>()
-    .Field(u => u.Email,
+    .Property(u => u.Email,
         Z.String()
             .Email()
             .Using<UserContext>()
@@ -101,10 +101,10 @@ You can add fields before or after `.Using()`:
 
 ```csharp
 // Fields before Using use contextless schemas
-Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(3))  // Contextless
+Z.Schema<User>()
+    .Property(u => u.Name, Z.String().MinLength(3))  // Contextless
     .Using<UserContext>()
-    .Field(u => u.Email, emailSchemaWithContext)  // Context-aware
+    .Property(u => u.Email, emailSchemaWithContext)  // Context-aware
 ```
 
 ---
@@ -145,10 +145,10 @@ RefineAsync can access:
 **Object Schema Example:**
 
 ```csharp
-Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(3))
+Z.Schema<User>()
+    .Property(u => u.Name, Z.String().MinLength(3))
     .Using<UserContext>()
-    .Field(u => u.Email,
+    .Property(u => u.Email,
         Z.String()
             .Email()
             .Using<UserContext>()
@@ -164,11 +164,11 @@ Z.Object<User>()
 Use context in `.If()` conditions:
 
 ```csharp
-Z.Object<User>()
-    .Field(u => u.Password, s => s.MinLength(8))
+Z.Schema<User>()
+    .Property(u => u.Password, s => s.MinLength(8))
     .Using<SecurityContext>()
     .If((user, ctx) => ctx.RequireStrongPassword, s => s
-        .Field(u => u.Password, p => p.MinLength(12).MaxLength(100)));
+        .Property(u => u.Password, p => p.MinLength(12).MaxLength(100)));
 ```
 
 `.If()` supports both value-only and value+context predicates:
@@ -176,11 +176,11 @@ Z.Object<User>()
 ```csharp
 // Value-only predicate (no context needed)
 .If(user => user.Type == "admin", s => s
-    .Field(u => u.Name, n => n.MinLength(5)))
+    .Property(u => u.Name, n => n.MinLength(5)))
 
 // Value + context predicate
 .If((user, ctx) => ctx.IsStrictMode, s => s
-    .Field(u => u.Email, e => e.MinLength(10)))
+    .Property(u => u.Email, e => e.MinLength(10)))
 ```
 
 ---
@@ -196,9 +196,9 @@ public class UsersController : ControllerBase
     private readonly IUserRepository _repo;
 
     private static readonly ISchema<User, UserContext> UserSchema =
-        Z.Object<User>()
+        Z.Schema<User>()
             .Using<UserContext>()
-            .Field(u => u.Email,
+            .Property(u => u.Email,
                 Z.String()
                     .Email()
                     .Using<UserContext>()

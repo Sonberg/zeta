@@ -6,32 +6,32 @@ Support for inline object builders in `.Each()` allows you to validate complex o
 
 ```csharp
 // Had to pre-build the schema first
-var orderItemSchema = Z.Object<OrderItemDto>()
-    .Field(i => i.ProductId, Z.Guid())
-    .Field(i => i.Quantity, Z.Int().Min(1).Max(100))
-    .Field(i => i.Notes, Z.String().MaxLength(500).Nullable());
+var orderItemSchema = Z.Schema<OrderItemDto>()
+    .Property(i => i.ProductId, Z.Guid())
+    .Property(i => i.Quantity, Z.Int().Min(1).Max(100))
+    .Property(i => i.Notes, Z.String().MaxLength(500).Nullable());
 
 // Then pass it to Z.Collection()
-var orderSchema = Z.Object<CreateOrderRequest>()
-    .Field(o => o.CustomerId, Z.Guid())
-    .Field(o => o.Items, Z.Collection(orderItemSchema))
-    .Field(o => o.ShippingAddress, addressSchema);
+var orderSchema = Z.Schema<CreateOrderRequest>()
+    .Property(o => o.CustomerId, Z.Guid())
+    .Property(o => o.Items, Z.Collection(orderItemSchema))
+    .Property(o => o.ShippingAddress, addressSchema);
 ```
 
 ## After (Inline object builders)
 
 ```csharp
 // Build the schema inline with .Each()
-var orderSchema = Z.Object<CreateOrderRequest>()
-    .Field(o => o.CustomerId, Z.Guid())
-    .Field(o => o.Items, Z.Collection<OrderItemDto>()
+var orderSchema = Z.Schema<CreateOrderRequest>()
+    .Property(o => o.CustomerId, Z.Guid())
+    .Property(o => o.Items, Z.Collection<OrderItemDto>()
         .Each(item => item
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100))
-            .Field(i => i.Notes, Z.String().MaxLength(500).Nullable()))
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100))
+            .Property(i => i.Notes, Z.String().MaxLength(500).Nullable()))
         .MinLength(1)
         .MaxLength(50))
-    .Field(o => o.ShippingAddress, addressSchema);
+    .Property(o => o.ShippingAddress, addressSchema);
 ```
 
 ## Usage
@@ -43,8 +43,8 @@ The `.Each()` method with object builders works for both contextless and context
 ```csharp
 var schema = Z.Collection<Product>()
     .Each(p => p
-        .Field(x => x.Name, Z.String().MinLength(3))
-        .Field(x => x.Price, Z.Decimal().Min(0.01m)))
+        .Property(x => x.Name, Z.String().MinLength(3))
+        .Property(x => x.Price, Z.Decimal().Min(0.01m)))
     .MinLength(1);
 ```
 
@@ -53,8 +53,8 @@ var schema = Z.Collection<Product>()
 ```csharp
 var schema = Z.Collection<Product>()
     .Each(p => p
-        .Field(x => x.Name, Z.String().MinLength(3))
-        .Field(x => x.Sku, Z.String())
+        .Property(x => x.Name, Z.String().MinLength(3))
+        .Property(x => x.Sku, Z.String())
         .Using<ProductContext>()
         .Refine((product, ctx) => !ctx.SkuExists(product.Sku), "SKU exists"))
     .MinLength(1);

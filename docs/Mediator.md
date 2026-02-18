@@ -37,9 +37,9 @@ public sealed record CreateUserCommand(
 ) : IRequest<Result<User>>, IZetaValidation<CreateUserCommand>
 {
     public static ISchema<CreateUserCommand> Schema { get; } =
-        Z.Object<CreateUserCommand>()
-            .Field(x => x.Email, Z.String().Email())
-            .Field(x => x.Age, Z.Int().Min(18));
+        Z.Schema<CreateUserCommand>()
+            .Property(x => x.Email, Z.String().Email())
+            .Property(x => x.Age, Z.Int().Min(18));
 }
 ```
 
@@ -137,7 +137,7 @@ public sealed record RegisterUserCommand(
 ) : IRequest<Result<User>>, IZetaValidation<RegisterUserCommand>
 {
     public static ISchema<RegisterUserCommand> Schema { get; } =
-        Z.Object<RegisterUserCommand>()
+        Z.Schema<RegisterUserCommand>()
             .Using<UserContext>(async (input, sp, ct) =>
             {
                 var repo = sp.GetRequiredService<IUserRepository>();
@@ -145,13 +145,13 @@ public sealed record RegisterUserCommand(
                     EmailExists: await repo.EmailExistsAsync(input.Email, ct)
                 );
             })
-            .Field(x => x.Email,
+            .Property(x => x.Email,
                 Z.String()
                     .Email()
                     .Using<UserContext>()
                     .Refine((_, ctx) => !ctx.EmailExists, "Email already taken")
             )
-            .Field(x => x.Password, Z.String().MinLength(8));
+            .Property(x => x.Password, Z.String().MinLength(8));
 }
 ```
 
@@ -166,8 +166,8 @@ public sealed class CreateBookingHandler
     : IRequestHandler<CreateBooking, Result<Booking>>
 {
     private static readonly ISchema<CreateBooking> Schema =
-        Z.Object<CreateBooking>()
-            .Field(x => x.Date, Z.DateTime().Future());
+        Z.Schema<CreateBooking>()
+            .Property(x => x.Date, Z.DateTime().Future());
 
     private readonly IZetaValidator _validator;
 

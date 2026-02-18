@@ -7,9 +7,9 @@ A composable, type-safe, async-first validation framework for .NET inspired by Z
 **Schema-first validation** that feels as natural as Zod in TypeScript, but built for modern .NET with async/await and the Result pattern at its core.
 
 ```csharp
-var UserSchema = Z.Object<User>()
-    .Field(u => u.Email, Z.String().Email())
-    .Field(u => u.Age, Z.Int().Min(18));
+var UserSchema = Z.Schema<User>()
+    .Property(u => u.Email, Z.String().Email())
+    .Property(u => u.Age, Z.Int().Min(18));
 
 var result = await UserSchema.ValidateAsync(user);
 ```
@@ -30,7 +30,7 @@ var result = await UserSchema.ValidateAsync(user);
 
 | Question | Decision |
 |----------|----------|
-| Entry point naming | `Z.String()`, `Z.Int()`, `Z.Object<T>()` |
+| Entry point naming | `Z.String()`, `Z.Int()`, `Z.Schema<T>()` |
 | Nullability | Required by default (Zod-style) |
 | Transforms | Included in MVP |
 
@@ -163,15 +163,15 @@ Z.String<MyContext>()
 ### Object Schema
 
 ```csharp
-Z.Object<User>()
-    .Field(x => x.Email, Z.String().Email())
-    .Field(x => x.Age, Z.Int().Min(18))
-    .Field(x => x.Address, AddressSchema)  // Nested schema
+Z.Schema<User>()
+    .Property(x => x.Email, Z.String().Email())
+    .Property(x => x.Age, Z.Int().Min(18))
+    .Property(x => x.Address, AddressSchema)  // Nested schema
     .Refine((u, _) => u.Password != u.Email, "Password cannot be email");
 
 // With context
-Z.Object<User, UserContext>()
-    .Field(u => u.Email, Z.String<UserContext>()
+Z.Schema<User, UserContext>()
+    .Property(u => u.Email, Z.String<UserContext>()
         .Refine((email, ctx) => !ctx.EmailExists, "Email taken"));
 ```
 
@@ -244,8 +244,8 @@ app.MapPost("/users", (User user) => Results.Ok(user))
 builder.Services.AddZetaControllers();
 
 // Register schema in DI
-builder.Services.AddSingleton<ISchema<User>>(Z.Object<User>()
-    .Field(u => u.Name, Z.String().MinLength(3)));
+builder.Services.AddSingleton<ISchema<User>>(Z.Schema<User>()
+    .Property(u => u.Name, Z.String().MinLength(3)));
 
 // Controller - validation runs automatically
 [ApiController]
@@ -412,7 +412,7 @@ Zeta/
 - [x] `IValidationContextFactory<TInput, TContext>` for async context
 - [x] `StringSchema` with: MinLength, MaxLength, Email, NotEmpty, Regex, Refine
 - [x] `IntSchema` with: Min, Max, Refine
-- [x] `ObjectSchema<T>` with: Field, Refine (supports nested schemas)
+- [x] `ObjectSchema<T>` with: Property, Refine (supports nested schemas)
 - [x] Minimal API filter: `WithValidation<T>(schema)`
 - [x] MVC Controller filter: `AddZetaControllers()`
 - [x] Controller attributes: `[ZetaIgnore]`, `[ZetaValidate(typeof(...))]`
@@ -435,5 +435,5 @@ Zeta/
 
 ### v1.0
 - [ ] Localization support
-- [x] Source generators for Field overloads and collection extensions
+- [x] Source generators for Property overloads and collection extensions
 - [ ] Full documentation

@@ -166,13 +166,13 @@ public record User(
     List<string> Emails
 );
 
-var schema = Z.Object<User>()
-    .Field(u => u.Name, s => s.MinLength(3))
-    .Field(u => u.Tags, tags => tags
+var schema = Z.Schema<User>()
+    .Property(u => u.Name, s => s.MinLength(3))
+    .Property(u => u.Tags, tags => tags
         .Each(t => t.MinLength(3).MaxLength(50))
         .MinLength(1)
         .MaxLength(10))
-    .Field(u => u.Emails, emails => emails
+    .Property(u => u.Emails, emails => emails
         .Each(e => e.Email())
         .MinLength(1)
         .MaxLength(5));
@@ -191,15 +191,15 @@ public record OrderItem(Guid ProductId, int Quantity, string? Notes);
 public record Order(Guid CustomerId, List<OrderItem> Items);
 
 // Create element schema
-var orderItemSchema = Z.Object<OrderItem>()
-    .Field(i => i.ProductId, s => s)
-    .Field(i => i.Quantity, s => s.Min(1).Max(100))
-    .Field(i => i.Notes, s => s.MaxLength(500).Nullable());
+var orderItemSchema = Z.Schema<OrderItem>()
+    .Property(i => i.ProductId, s => s)
+    .Property(i => i.Quantity, s => s.Min(1).Max(100))
+    .Property(i => i.Notes, s => s.MaxLength(500).Nullable());
 
 // Use in collection
-var orderSchema = Z.Object<Order>()
-    .Field(o => o.CustomerId, s => s)
-    .Field(o => o.Items, Z.Collection(orderItemSchema)  // Pass pre-built schema
+var orderSchema = Z.Schema<Order>()
+    .Property(o => o.CustomerId, s => s)
+    .Property(o => o.Items, Z.Collection(orderItemSchema)  // Pass pre-built schema
         .MinLength(1)
         .MaxLength(20));
 
@@ -223,21 +223,21 @@ Extract complex schemas for reuse:
 
 ```csharp
 // Shared address schema
-var addressSchema = Z.Object<Address>()
-    .Field(a => a.Street, s => s.MinLength(5).MaxLength(200))
-    .Field(a => a.City, s => s.MinLength(2).MaxLength(100))
-    .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}(-\d{4})?$"));
+var addressSchema = Z.Schema<Address>()
+    .Property(a => a.Street, s => s.MinLength(5).MaxLength(200))
+    .Property(a => a.City, s => s.MinLength(2).MaxLength(100))
+    .Property(a => a.ZipCode, s => s.Regex(@"^\d{5}(-\d{4})?$"));
 
 // Use in multiple places
-var customerSchema = Z.Object<Customer>()
-    .Field(c => c.Name, s => s.MinLength(2))
-    .Field(c => c.Addresses, Z.Collection(addressSchema)
+var customerSchema = Z.Schema<Customer>()
+    .Property(c => c.Name, s => s.MinLength(2))
+    .Property(c => c.Addresses, Z.Collection(addressSchema)
         .MinLength(1)
         .MaxLength(5));
 
-var warehouseSchema = Z.Object<Warehouse>()
-    .Field(w => w.Name, s => s.MinLength(3))
-    .Field(w => w.Locations, Z.Collection(addressSchema)
+var warehouseSchema = Z.Schema<Warehouse>()
+    .Property(w => w.Name, s => s.MinLength(3))
+    .Property(w => w.Locations, Z.Collection(addressSchema)
         .MinLength(1));
 ```
 
@@ -297,10 +297,10 @@ var result = await schema.ValidateAsync(
 ### Context-Aware in Object Schemas
 
 ```csharp
-var schema = Z.Object<Product>()
-    .Field(p => p.Name, s => s.MinLength(3))
+var schema = Z.Schema<Product>()
+    .Property(p => p.Name, s => s.MinLength(3))
     .Using<ProductContext>()
-    .Field(p => p.RelatedSkus, skus => skus
+    .Property(p => p.RelatedSkus, skus => skus
         .Each(s => s.MinLength(3))
         .Using<ProductContext>()              // Collection also needs context
         .Each(s => s.RefineAsync(async (sku, ctx, ct) =>
@@ -336,12 +336,12 @@ Paths include full navigation to the error:
 public record User(string Name, List<Address> Addresses);
 public record Address(string Street, string City, string ZipCode);
 
-var schema = Z.Object<User>()
-    .Field(u => u.Name, s => s.MinLength(2))
-    .Field(u => u.Addresses, Z.Collection(
-        Z.Object<Address>()
-            .Field(a => a.Street, s => s.MinLength(5))
-            .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}$"))
+var schema = Z.Schema<User>()
+    .Property(u => u.Name, s => s.MinLength(2))
+    .Property(u => u.Addresses, Z.Collection(
+        Z.Schema<Address>()
+            .Property(a => a.Street, s => s.MinLength(5))
+            .Property(a => a.ZipCode, s => s.Regex(@"^\d{5}$"))
     ).MinLength(1));
 
 var user = new User(
@@ -365,8 +365,8 @@ var result = await schema.ValidateAsync(user);
 
 ```csharp
 // ✓ Good - Simple, readable
-Z.Object<User>()
-    .Field(u => u.Tags, tags => tags
+Z.Schema<User>()
+    .Property(u => u.Tags, tags => tags
         .Each(t => t.MinLength(3))
         .MaxLength(10))
 ```
@@ -375,19 +375,19 @@ Z.Object<User>()
 
 ```csharp
 // ✓ Good - Reusable, testable
-var addressSchema = Z.Object<Address>()
-    .Field(a => a.Street, s => s.MinLength(5))
-    .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}$"));
+var addressSchema = Z.Schema<Address>()
+    .Property(a => a.Street, s => s.MinLength(5))
+    .Property(a => a.ZipCode, s => s.Regex(@"^\d{5}$"));
 
-Z.Object<User>()
-    .Field(u => u.Addresses, Z.Collection(addressSchema).MinLength(1))
+Z.Schema<User>()
+    .Property(u => u.Addresses, Z.Collection(addressSchema).MinLength(1))
 
 // ✗ Avoid - Nested and hard to test
-Z.Object<User>()
-    .Field(u => u.Addresses, Z.Collection(
-        Z.Object<Address>()
-            .Field(a => a.Street, s => s.MinLength(5))
-            .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}$"))
+Z.Schema<User>()
+    .Property(u => u.Addresses, Z.Collection(
+        Z.Schema<Address>()
+            .Property(a => a.Street, s => s.MinLength(5))
+            .Property(a => a.ZipCode, s => s.Regex(@"^\d{5}$"))
     ).MinLength(1))
 ```
 
@@ -411,14 +411,14 @@ Z.Collection<string>()
 // ✓ Good - Works with fluent builder
 public record User(string Name, List<string> Tags);
 
-Z.Object<User>()
-    .Field(u => u.Tags, tags => tags.Each(t => t.MinLength(3)))
+Z.Schema<User>()
+    .Property(u => u.Tags, tags => tags.Each(t => t.MinLength(3)))
 
 // ✗ Avoid - Arrays don't work with fluent builders
 public record User(string Name, string[] Tags);
 
-Z.Object<User>()
-    .Field(u => u.Tags, tags => tags.Each(t => t.MinLength(3)))  // Won't compile
+Z.Schema<User>()
+    .Property(u => u.Tags, tags => tags.Each(t => t.MinLength(3)))  // Won't compile
 ```
 
 ### 5. Keep Element Validation Simple
@@ -479,10 +479,10 @@ var tagSchema = Z.Collection<string>()
 ### Shopping Cart Items
 
 ```csharp
-var itemSchema = Z.Object<CartItem>()
-    .Field(i => i.ProductId, s => s.NotEmpty())
-    .Field(i => i.Quantity, s => s.Min(1).Max(100))
-    .Field(i => i.Price, s => s.Positive().Precision(2));
+var itemSchema = Z.Schema<CartItem>()
+    .Property(i => i.ProductId, s => s.NotEmpty())
+    .Property(i => i.Quantity, s => s.Min(1).Max(100))
+    .Property(i => i.Price, s => s.Positive().Precision(2));
 
 var cartSchema = Z.Collection(itemSchema)
     .MinLength(1)
@@ -511,7 +511,7 @@ var roleSchema = Z.Collection<string>()
 
 ## `IEnumerable<T>` Limitation
 
-`IEnumerable<T>` collection fields are intentionally not supported directly for collection field builders.
+`IEnumerable<T>` collection fields are intentionally not supported directly for collection property builders.
 
 Why:
 - `IEnumerable<T>` may be lazy/deferred.
@@ -522,7 +522,7 @@ Use a materialized collection type (`List<T>`, `T[]`, `ICollection<T>`, `IReadOn
 
 ## See Also
 
-- [Fluent Field Builders](FluentFieldBuilders.md) - Using collections in object schemas
+- [Fluent Property Builders](FluentFieldBuilders.md) - Using collections in schemas
 - [Validation Context](ValidationContext.md) - Async validation with context
 - [Custom Rules](CustomRules.md) - Creating reusable validation rules
 - [RFC 003](../rfc/003-rfc-collection-schema.md) - Technical design of `.Each()` method

@@ -9,9 +9,9 @@ A composable, type-safe, async-first validation framework for .NET inspired by [
 
 ## Basic example
 ```csharp
-var UserSchema = Z.Object<User>()
-    .Field(u => u.Email, s => s.Email())
-    .Field(u => u.Age, s => s.Min(18));
+var UserSchema = Z.Schema<User>()
+    .Property(u => u.Email, s => s.Email())
+    .Property(u => u.Age, s => s.Min(18));
 
 var result = await UserSchema.ValidateAsync(user);
 
@@ -24,18 +24,20 @@ if(!result.IsSuccess)
 }
 ```
 
+`Z.Schema<T>()`/`.Property(...)` are the preferred names. `Z.Object<T>()`/`.Field(...)` remain supported aliases.
+
 Use `.Using<TContext>(factory)` to inject async services into validation:
 
 ```csharp
-var createUserSchema = Z.Object<CreateUserRequest>()
-    .Field(x => x.Email, s => s.Email())
+var createUserSchema = Z.Schema<CreateUserRequest>()
+    .Property(x => x.Email, s => s.Email())
     .Using<CreateUserContext>(async (input, sp, ct) =>
     {
         var repo = sp.GetRequiredService<IUserRepository>();
         var isTaken = await repo.EmailExistsAsync(input.Email, ct);
         return new CreateUserContext(isTaken);
     })
-    .Field(x => x.Email,
+    .Property(x => x.Email,
         Z.String()
             .Email()
             .Using<CreateUserContext>()
@@ -151,7 +153,7 @@ All schemas are required by default. Use `.Nullable()` to allow null values:
 ```csharp
 Z.String().Nullable()           // Allows null strings
 Z.Int().Nullable()              // Allows null ints
-Z.Object<Address>().Nullable()  // Allows null objects
+Z.Schema<Address>().Nullable()  // Allows null objects
 ```
 
 **Nullable value type fields** (`int?`, `double?`, etc.) are handled automatically in object schemas — null values skip validation, non-null values are validated. No need to call `.Nullable()`:
@@ -159,11 +161,11 @@ Z.Object<Address>().Nullable()  // Allows null objects
 ```csharp
 public record User(string Name, int? Age, decimal? Balance, string? Bio);
 
-Z.Object<User>()
-    .Field(u => u.Name, s => s.MinLength(2))
-    .Field(u => u.Age, s => s.Min(0).Max(120))          // int? — null skips validation
-    .Field(u => u.Balance, s => s.Positive().Precision(2)) // decimal? — null skips validation
-    .Field(u => u.Bio, s => s.MaxLength(500).Nullable())   // string? — call .Nullable() to allow null
+Z.Schema<User>()
+    .Property(u => u.Name, s => s.MinLength(2))
+    .Property(u => u.Age, s => s.Min(0).Max(120))          // int? — null skips validation
+    .Property(u => u.Balance, s => s.Positive().Precision(2)) // decimal? — null skips validation
+    .Property(u => u.Bio, s => s.MaxLength(500).Nullable())   // string? — call .Nullable() to allow null
 ```
 
 For nullable reference types (`string?`), call `.Nullable()` on the schema if null should be a valid value.
@@ -173,11 +175,11 @@ For nullable reference types (`string?`), call `.Nullable()` on the schema if nu
 Define field schemas inline with builder functions:
 
 ```csharp
-Z.Object<User>()
-    .Field(u => u.Name, s => s.MinLength(2))
-    .Field(u => u.Email, s => s.Email().MinLength(5))
-    .Field(u => u.Age, s => s.Min(18).Max(100))
-    .Field(u => u.Price, s => s.Positive().Precision(2))
+Z.Schema<User>()
+    .Property(u => u.Name, s => s.MinLength(2))
+    .Property(u => u.Email, s => s.Email().MinLength(5))
+    .Property(u => u.Age, s => s.Min(18).Max(100))
+    .Property(u => u.Price, s => s.Positive().Precision(2))
     .Refine(u => u.Password != u.Email, "Password cannot be email");
 
 // Supported for: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
@@ -186,13 +188,13 @@ Z.Object<User>()
 **For Composability** - Extract reusable schemas when needed across multiple objects:
 
 ```csharp
-var AddressSchema = Z.Object<Address>()
-    .Field(a => a.Street, s => s.MinLength(3))
-    .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}$"));
+var AddressSchema = Z.Schema<Address>()
+    .Property(a => a.Street, s => s.MinLength(3))
+    .Property(a => a.ZipCode, s => s.Regex(@"^\d{5}$"));
 
-Z.Object<User>()
-    .Field(u => u.Name, s => s.MinLength(2))
-    .Field(u => u.Address, AddressSchema);  // Reuse nested schema
+Z.Schema<User>()
+    .Property(u => u.Name, s => s.MinLength(2))
+    .Property(u => u.Address, AddressSchema);  // Reuse nested schema
 ```
 
 ### Collections
@@ -211,15 +213,15 @@ Z.Collection<int>()
     .NotEmpty()
 
 // In object schemas with fluent builders
-Z.Object<User>()
-    .Field(u => u.Tags, tags => tags
+Z.Schema<User>()
+    .Property(u => u.Tags, tags => tags
         .Each(s => s.MinLength(3).MaxLength(50))
         .MinLength(1).MaxLength(10));
 
 // Complex nested objects - pass pre-built schema
-var orderItemSchema = Z.Object<OrderItem>()
-    .Field(i => i.ProductId, s => s)
-    .Field(i => i.Quantity, s => s.Min(1));
+var orderItemSchema = Z.Schema<OrderItem>()
+    .Property(i => i.ProductId, s => s)
+    .Property(i => i.Quantity, s => s.Min(1));
 
 Z.Collection(orderItemSchema)
     .MinLength(1);
@@ -234,13 +236,13 @@ See the [Collections guide](docs/Collections.md) for advanced patterns including
 Use `.If()` for guard-style conditional validation on any schema type:
 
 ```csharp
-// Object schemas — conditional field validation
-Z.Object<Order>()
-    .Field(o => o.PaymentMethod, s => s.NotEmpty())
+// Schemas — conditional property validation
+Z.Schema<Order>()
+    .Property(o => o.PaymentMethod, s => s.NotEmpty())
     .If(o => o.PaymentMethod == "card", s => s
-        .Field(o => o.CardNumber, n => n.MinLength(16)))
+        .Property(o => o.CardNumber, n => n.MinLength(16)))
     .If(o => o.PaymentMethod == "bank", s => s
-        .Field(o => o.BankAccount, n => n.MinLength(10)));
+        .Property(o => o.BankAccount, n => n.MinLength(10)));
 
 // Value schemas — apply rules only when predicate matches
 Z.Int()
@@ -262,16 +264,16 @@ Z.String()
 Use branch schemas with `.If(predicate, schema)`:
 
 ```csharp
-var dogSchema = Z.Object<Dog>()
-    .Field(x => x.BarkVolume, x => x.Min(0).Max(100));
+var dogSchema = Z.Schema<Dog>()
+    .Property(x => x.BarkVolume, x => x.Min(0).Max(100));
 
-var schema = Z.Object<IAnimal>()
+var schema = Z.Schema<IAnimal>()
     .If(x => x is Dog, dogSchema)
-    .If(x => x is Cat, Z.Object<Cat>()
-        .Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+    .If(x => x is Cat, Z.Schema<Cat>()
+        .Property(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 
 // Explicit type assertion is still available
-Z.Object<IAnimal>().As<Dog>();  // Fails with type_mismatch if not a Dog
+Z.Schema<IAnimal>().As<Dog>();  // Fails with type_mismatch if not a Dog
 ```
 
 ## Result Pattern
@@ -311,9 +313,9 @@ builder.Services.AddZeta();
 ### Minimal APIs
 
 ```csharp
-var UserSchema = Z.Object<User>()
-    .Field(u => u.Email, s => s.Email())
-    .Field(u => u.Name, s => s.MinLength(3));
+var UserSchema = Z.Schema<User>()
+    .Property(u => u.Email, s => s.Email())
+    .Property(u => u.Name, s => s.MinLength(3));
 
 app.MapPost("/users", (User user) => Results.Ok(user))
     .WithValidation(UserSchema);
@@ -344,9 +346,9 @@ public class UsersController : ControllerBase
 {
     private readonly IZetaValidator _validator;
 
-    private static readonly ISchema<User> UserSchema = Z.Object<User>()
-        .Field(u => u.Name, s => s.MinLength(3))
-        .Field(u => u.Email, s => s.Email());
+    private static readonly ISchema<User> UserSchema = Z.Schema<User>()
+        .Property(u => u.Name, s => s.MinLength(3))
+        .Property(u => u.Email, s => s.Email());
 
     public UsersController(IZetaValidator validator)
     {
@@ -442,17 +444,17 @@ For async data loading before validation (e.g., checking database):
 // Define context
 public record UserContext(bool EmailExists);
 
-var UserSchema = Z.Object<User>()
-    .Field(u => u.Name, s => s.MinLength(3))
+var UserSchema = Z.Schema<User>()
+    .Property(u => u.Name, s => s.MinLength(3))
     .Using<UserContext>(async (input, sp, ct) =>
     {
         var repo = sp.GetRequiredService<IUserRepository>();
         var exists = await repo.EmailExistsAsync(input.Email, ct);
         return new UserContext(EmailExists: exists);
     })
-    .Field(u => u.Email, s => s.Email())  // Fluent builders still work
+    .Property(u => u.Email, s => s.Email())  // Fluent builders still work
     // For context-aware validation, use pre-built schemas
-    .Field(u => u.Username,
+    .Property(u => u.Username,
         Z.String()
             .MinLength(3)
             .Using<UserContext>()
@@ -526,7 +528,7 @@ dotnet run --project benchmarks/Zeta.Benchmarks -c Release
 ## Documentation
 
 - [Collections](docs/Collections.md) - Arrays, lists, and element validation patterns
-- [Fluent Field Builders](docs/FluentFieldBuilders.md) - Inline schema definitions for object fields
+- [Fluent Property Builders](docs/FluentFieldBuilders.md) - Inline schema definitions for schema properties
 - [Validation Context](docs/ValidationContext.md) - Async data loading and context-aware schemas
 - [Custom Rules](docs/CustomRules.md) - Creating reusable validation rules
 - [Testing](docs/Testing.md) - Testing strategies and TimeProvider support
