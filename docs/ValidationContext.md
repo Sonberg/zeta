@@ -97,6 +97,17 @@ var UserSchema = Z.Schema<User>()
     .Refine((user, ctx) => !ctx.IsMaintenanceMode, "Registration disabled");
 ```
 
+If a context-aware object rule should report on a specific property, use `RefineAt(...)`:
+
+```csharp
+Z.Schema<User>()
+    .Using<UserContext>()
+    .RefineAt(
+        u => u.Email,
+        (u, ctx) => !ctx.BannedDomains.Any(d => u.Email.EndsWith(d)),
+        "Domain not allowed");
+```
+
 You can add fields before or after `.Using()`:
 
 ```csharp

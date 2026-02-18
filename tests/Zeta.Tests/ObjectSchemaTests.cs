@@ -68,6 +68,36 @@ public class ObjectSchemaTests
         Assert.False(result.IsSuccess);
         Assert.Equal("Name is banned", result.Errors.Single().Message);
     }
+
+    [Fact]
+    public async Task RefineAt_Contextless_UsesSelectedPropertyPath()
+    {
+        var schema = Z.Schema<User>()
+            .RefineAt(u => u.Name, u => u.Name != "Forbidden", "Name is forbidden");
+
+        var result = await schema.ValidateAsync(new User("Forbidden", 20, new Address("City", "12345")));
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Path == "$.name" && e.Message == "Name is forbidden");
+    }
+
+    [Fact]
+    public async Task RefineAt_ContextAware_UsesSelectedPropertyPathAndMessageFactory()
+    {
+        var schema = Z.Schema<User>()
+            .Using<BanContext>()
+            .RefineAt(
+                u => u.Name,
+                (u, ctx) => u.Name != ctx.BannedName,
+                (_, ctx) => $"{ctx.BannedName} is banned");
+
+        var result = await schema.ValidateAsync(
+            new User("Voldemort", 20, new Address("City", "12345")),
+            new BanContext("Voldemort"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Path == "$.name" && e.Message == "Voldemort is banned");
+    }
     
     // ==================== Implicit Promotion Tests ====================
 

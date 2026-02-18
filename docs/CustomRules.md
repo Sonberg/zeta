@@ -1,6 +1,6 @@
 # Custom Rules
 
-This guide covers custom validation with Zeta's public DSL: `Refine(...)` and `RefineAsync(...)`.
+This guide covers custom validation with Zeta's public DSL: `Refine(...)`, `RefineAt(...)`, and `RefineAsync(...)`.
 
 ---
 
@@ -18,6 +18,34 @@ Z.String()
 ```
 
 The `code` parameter is optional and defaults to `"custom_error"`.
+
+---
+
+## Target a Property Path with RefineAt
+
+Use `.RefineAt(...)` on object schemas when the predicate needs the full object, but the error should land on a specific property path.
+
+```csharp
+Z.Schema<User>()
+    .RefineAt(
+        x => x.Email,
+        x => x.Email.EndsWith("@company.com"),
+        "Email must be company email",
+        "company_email");
+```
+
+Context-aware with message factory:
+
+```csharp
+Z.Schema<GetOrCreateQuantificationQuery>()
+    .Using<GetOrCreateQuantificationValidationContext>(BuildContextAsync)
+    .RefineAt(
+        x => x.PlanningCode,
+        (_, ctx) => ctx.Errors.Count == 0,
+        (_, ctx) => ctx.Errors.First().Message);
+```
+
+Use plain `.Refine(...)` when the error truly belongs at root (`$`).
 
 ---
 

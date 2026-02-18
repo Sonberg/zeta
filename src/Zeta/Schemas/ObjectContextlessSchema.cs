@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Zeta.Adapters;
 using Zeta.Core;
+using Zeta.Rules;
 using Zeta.Validators;
 
 namespace Zeta.Schemas;
@@ -215,6 +216,29 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return Field(propertySelector, schema);
     }
 
+    public ObjectContextlessSchema<T> RefineAt<TProperty>(
+        Expression<Func<T, TProperty?>> propertySelector,
+        Func<T, bool> predicate,
+        string message,
+        string code = "custom_error")
+    {
+        return RefineAt(propertySelector, predicate, _ => message, code);
+    }
+
+    public ObjectContextlessSchema<T> RefineAt<TProperty>(
+        Expression<Func<T, TProperty?>> propertySelector,
+        Func<T, bool> predicate,
+        Func<T, string> messageFactory,
+        string code = "custom_error")
+    {
+        var propertyName = ToPathSegment(GetPropertyName(propertySelector));
+
+        return Append(new RefinementRule<T>((val, ctx) =>
+            predicate(val)
+                ? null
+                : new ValidationError(ctx.Push(propertyName).Path, code, messageFactory(val))));
+    }
+
     /// <summary>
     /// Creates a context-aware object schema with all rules, fields, and conditionals from this schema.
     /// </summary>
@@ -255,6 +279,13 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         if (body is MemberExpression m)
             return m.Member.Name;
         throw new ArgumentException("Expression must be a property access");
+    }
+
+    internal static string ToPathSegment(string propertyName)
+    {
+        if (!string.IsNullOrEmpty(propertyName) && char.IsUpper(propertyName[0]))
+            return char.ToLower(propertyName[0]) + propertyName[1..];
+        return propertyName;
     }
 
     internal static Func<T, TProperty> CreateGetter<TProperty>(

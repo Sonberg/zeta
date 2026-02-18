@@ -185,6 +185,28 @@ Z.Schema<User>()
 // Supported for: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
 ```
 
+Use `.RefineAt(...)` when the rule is object-level but the error should be attached to one property:
+
+```csharp
+Z.Schema<User>()
+    .Property(u => u.Email, s => s.Email())
+    .Property(u => u.Age, s => s.Min(0))
+    .RefineAt(u => u.Email,
+        u => u.Email != "blocked@company.com",
+        "Email is blocked");
+```
+
+Context-aware message mapping:
+
+```csharp
+Z.Schema<GetOrCreateQuantificationQuery>()
+    .Using<GetOrCreateQuantificationValidationContext>(BuildContextAsync)
+    .RefineAt(
+        x => x.PlanningCode,
+        (_, ctx) => ctx.Errors.Count == 0,
+        (_, ctx) => ctx.Errors.First().Message);
+```
+
 **For Composability** - Extract reusable schemas when needed across multiple objects:
 
 ```csharp

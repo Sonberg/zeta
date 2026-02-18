@@ -3,6 +3,10 @@
 
 ## Next release
 
+### Added
+
+- **`RefineAt(...)` for object schemas**: Attach object-level refinement errors to a specific property path instead of root (`$`). Supports contextless and context-aware object schemas, including dynamic message factories.
+
 ### Fixed
 
 - **Context-aware schemas now implement `ISchema<T>`**: Schemas created via `.Using<TContext>(factory)` can now be assigned to `ISchema<T>` variables directly. Validation uses the embedded factory to self-resolve context via `IServiceProvider`.
