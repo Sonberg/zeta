@@ -190,6 +190,13 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return AddField(new FieldContextlessValidator<T, TProperty?>(propertyName, getter, wrapper));
     }
 
+    public ObjectContextlessSchema<T> Property<TProperty>(
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> schema)
+    {
+        return Field(propertySelector, schema);
+    }
+
     /// <summary>
     /// Adds a nullable field with a concrete context-aware schema and promotes this schema to context-aware.
     /// This overload avoids ambiguity when a context-aware schema is also assignable to ISchema&lt;TProperty&gt;.
@@ -199,6 +206,13 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         IContextSchema<TProperty, TContext> schema)
     {
         return Using<TContext>().Field(propertySelector, (ISchema<TProperty, TContext>)schema);
+    }
+
+    public ObjectContextSchema<T, TContext> Property<TProperty, TContext>(
+        Expression<Func<T, TProperty?>> propertySelector,
+        IContextSchema<TProperty, TContext> schema)
+    {
+        return Field(propertySelector, schema);
     }
 
     /// <summary>

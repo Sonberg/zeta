@@ -20,6 +20,20 @@ public class ObjectSchemaTests
     }
 
     [Fact]
+    public async Task Property_PropagatesValidation()
+    {
+        var schema = Z.Schema<User>()
+            .Property(u => u.Name, s => s.MinLength(3));
+
+        var valid = await schema.ValidateAsync(new User("Joe", 20, new Address("City", "12345")));
+        Assert.True(valid.IsSuccess);
+
+        var invalid = await schema.ValidateAsync(new User("Jo", 20, new Address("City", "12345")));
+        Assert.False(invalid.IsSuccess);
+        Assert.Contains(invalid.Errors, e => e.Path == "$.name" && e.Code == "min_length");
+    }
+
+    [Fact]
     public async Task NestedField_PropagatesPath()
     {
         var addressSchema = Z.Object<Address>()
@@ -79,6 +93,23 @@ public class ObjectSchemaTests
         Assert.True(validResult.IsSuccess);
 
         // Invalid case - email ends with banned domain
+        var invalidResult = await schema.ValidateAsync(new User("user@banned.com", 20, null!), context);
+        Assert.False(invalidResult.IsSuccess);
+        Assert.Contains(invalidResult.Errors, e => e.Path == "$.name" && e.Message == "Email domain is banned");
+    }
+
+    [Fact]
+    public async Task Property_WithContextAwareSchema_ImplicitlyPromotesObjectSchema()
+    {
+        var contextAwareEmailSchema = Z.String()
+            .Email()
+            .Using<EmailContext>()
+            .Refine((email, ctx) => !email.EndsWith($"@{ctx.BannedDomain}"), "Email domain is banned");
+
+        var schema = Z.Schema<User>()
+            .Property(u => u.Name, contextAwareEmailSchema);
+
+        var context = new EmailContext("banned.com");
         var invalidResult = await schema.ValidateAsync(new User("user@banned.com", 20, null!), context);
         Assert.False(invalidResult.IsSuccess);
         Assert.Contains(invalidResult.Errors, e => e.Path == "$.name" && e.Message == "Email domain is banned");

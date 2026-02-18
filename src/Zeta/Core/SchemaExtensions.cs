@@ -37,6 +37,14 @@ public static class SchemaExtensions
         return PromoteField(schema, propertySelector, fieldSchema);
     }
 
+    public static ObjectContextSchema<T, TContext> Property<T, TProperty, TContext>(
+        this ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty, TContext> fieldSchema) where T : class
+    {
+        return Field(schema, propertySelector, fieldSchema);
+    }
+
     /// <summary>
     /// Adds a field with a context-aware schema type from Zeta, automatically promoting the object schema to context-aware.
     /// This overload avoids ambiguity when a context-aware schema is also assignable to ISchema&lt;TProperty&gt;.
@@ -48,6 +56,15 @@ public static class SchemaExtensions
         where T : class
     {
         return PromoteField(schema, propertySelector, (ISchema<TProperty, TContext>)fieldSchema);
+    }
+
+    public static ObjectContextSchema<T, TContext> Property<T, TProperty, TContext>(
+        this ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty>> propertySelector,
+        IContextSchema<TProperty, TContext> fieldSchema)
+        where T : class
+    {
+        return Field(schema, propertySelector, fieldSchema);
     }
 
     private static ObjectContextSchema<T, TContext> PromoteField<T, TProperty, TContext>(
@@ -74,6 +91,16 @@ public static class SchemaExtensions
         return schema.Field(propertySelector, new NullableReferenceContextAdapter<TProperty, TContext>(fieldSchema));
     }
 
+    public static ObjectContextSchema<T, TContext> Property<T, TContext, TProperty>(
+        this ObjectContextSchema<T, TContext> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : class
+    {
+        return Field(schema, propertySelector, fieldSchema);
+    }
+
     /// <summary>
     /// Defines a field validation for a nullable value type property using a non-nullable contextless schema.
     /// </summary>
@@ -85,6 +112,16 @@ public static class SchemaExtensions
         where TProperty : struct
     {
         return schema.Field(propertySelector, new NullableStructContextAdapter<TProperty, TContext>(fieldSchema));
+    }
+
+    public static ObjectContextSchema<T, TContext> Property<T, TContext, TProperty>(
+        this ObjectContextSchema<T, TContext> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : struct
+    {
+        return Field(schema, propertySelector, fieldSchema);
     }
 
     /// <summary>
@@ -100,6 +137,16 @@ public static class SchemaExtensions
          return schema.Field(propertySelector, new NullableReferenceContextlessAdapter<TProperty>(fieldSchema));
     }
 
+    public static ObjectContextlessSchema<T> Property<T, TProperty>(
+        this ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : class
+    {
+        return Field(schema, propertySelector, fieldSchema);
+    }
+
      /// <summary>
      /// Defines a field validation for a nullable value type property using a non-nullable schema.
      /// </summary>
@@ -111,5 +158,15 @@ public static class SchemaExtensions
         where TProperty : struct
     {
          return schema.Field(propertySelector, new NullableStructContextlessAdapter<TProperty>(fieldSchema));
+    }
+
+    public static ObjectContextlessSchema<T> Property<T, TProperty>(
+        this ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty?>> propertySelector,
+        ISchema<TProperty> fieldSchema)
+        where T : class
+        where TProperty : struct
+    {
+        return Field(schema, propertySelector, fieldSchema);
     }
 }
