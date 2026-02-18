@@ -34,7 +34,7 @@ public static class SchemaExtensions
         Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty, TContext> fieldSchema) where T : class
     {
-        return schema.Using<TContext>().Field(propertySelector, fieldSchema);
+        return PromoteField(schema, propertySelector, fieldSchema);
     }
 
     /// <summary>
@@ -47,7 +47,16 @@ public static class SchemaExtensions
         IContextSchema<TProperty, TContext> fieldSchema)
         where T : class
     {
-        return schema.Using<TContext>().Field(propertySelector, (ISchema<TProperty, TContext>)fieldSchema);
+        return PromoteField(schema, propertySelector, (ISchema<TProperty, TContext>)fieldSchema);
+    }
+
+    private static ObjectContextSchema<T, TContext> PromoteField<T, TProperty, TContext>(
+        ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty, TContext> fieldSchema)
+        where T : class
+    {
+        return schema.Using<TContext>().Field(propertySelector, fieldSchema);
     }
 
     // ==================== Nullability Adaption Extensions ====================

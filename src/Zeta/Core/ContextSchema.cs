@@ -165,7 +165,11 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
                 "IServiceProvider is required for context factory resolution. " +
                 "Ensure the validation context includes a service provider.");
 
-        var contextData = await ResolveContextData(value, serviceProvider, context.CancellationToken);
+        var contextData = await ContextFactoryResolver.ResolveAsync(
+            value,
+            GetContextFactoriesCore(),
+            serviceProvider,
+            context.CancellationToken);
         var typedContext = new ValidationContext<TContext>(
             context.Path,
             contextData,
@@ -177,59 +181,6 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return result.IsSuccess
             ? Result<T>.Success(value)
             : Result<T>.Failure(result.Errors);
-    }
-
-    private async ValueTask<TContext> ResolveContextData(
-        T value,
-        IServiceProvider serviceProvider,
-        CancellationToken ct)
-    {
-        var factories = GetContextFactoriesCore().ToList();
-        if (factories.Count == 0)
-        {
-            throw new InvalidOperationException(
-                $"No context factory for {typeof(T).Name}/{typeof(TContext).Name}. " +
-                "Provide a factory via .Using<TContext>(factory).");
-        }
-
-        var applicableCount = 0;
-        TContext? contextData = default;
-
-        foreach (var factory in factories)
-        {
-            try
-            {
-                var candidate = await factory(value, serviceProvider, ct);
-                applicableCount++;
-
-                if (applicableCount > 1)
-                {
-                    throw new InvalidOperationException(
-                        $"Multiple applicable context factories for {typeof(T).Name}/{typeof(TContext).Name} were found for value type {value?.GetType().Name ?? "null"}. " +
-                        "Ensure each value matches exactly one context factory.");
-                }
-
-                contextData = candidate;
-            }
-            catch (InvalidOperationException ex) when (IsTypeNarrowingMismatch(ex))
-            {
-                // Ignore non-matching polymorphic branch factories.
-            }
-        }
-
-        if (applicableCount == 1)
-        {
-            return contextData!;
-        }
-
-        throw new InvalidOperationException(
-            $"No applicable context factory for {typeof(T).Name}/{typeof(TContext).Name} and value type {value?.GetType().Name ?? "null"}. " +
-            "Provide a matching factory via .Using<TContext>(factory).");
-    }
-
-    private static bool IsTypeNarrowingMismatch(InvalidOperationException ex)
-    {
-        return ex.GetType().Name == "TypeNarrowingContextFactoryMismatchException";
     }
 
     internal ContextRuleEngine<T, TContext> GetRules()
