@@ -8,6 +8,7 @@
 ### Added
 
 - **`RefineAt(...)` for object schemas**: Attach object-level refinement errors to a specific property path instead of root (`$`). Supports contextless and context-aware object schemas, including dynamic message factories.
+- **Enum schemas**: Added `Z.Enum<TEnum>()` with `.Defined()` and `.OneOf(...)` (contextless and context-aware), plus object `.Field/.Property(...)` support for enum and nullable enum properties.
 
 ### Fixed
 

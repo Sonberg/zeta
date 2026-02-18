@@ -44,6 +44,7 @@ Fluent property builders are available for these primitive types:
 - `DateTime`
 - `DateOnly`
 - `TimeOnly`
+- `enum` (via `Z.Enum<TEnum>()`)
 
 ---
 
@@ -85,7 +86,8 @@ Z.Schema<Event>()
 Z.Schema<Settings>()
     .Property(s => s.UserId, s => s.NotEmpty().Version(4))
     .Property(s => s.IsEnabled, s => s.IsTrue())
-    .Property(s => s.AcceptedTerms, s => s.IsTrue());
+    .Property(s => s.AcceptedTerms, s => s.IsTrue())
+    .Property(s => s.Channel, s => s.Defined());
 ```
 
 ---

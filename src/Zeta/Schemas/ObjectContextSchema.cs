@@ -226,6 +226,80 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return Field(propertySelector, schema);
     }
 
+    public ObjectContextSchema<T, TContext> Field<TEnum>(
+        Expression<Func<T, TEnum>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
+        where TEnum : struct, Enum
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, schema(Z.Enum<TEnum>())));
+    }
+
+    public ObjectContextSchema<T, TContext> Property<TEnum>(
+        Expression<Func<T, TEnum>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
+        where TEnum : struct, Enum
+    {
+        return Field(propertySelector, schema);
+    }
+
+    public ObjectContextSchema<T, TContext> Field<TEnum>(
+        Expression<Func<T, TEnum>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        var configuredSchema = schema(Z.Enum<TEnum>());
+        return AddField(new FieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
+    }
+
+    public ObjectContextSchema<T, TContext> Property<TEnum>(
+        Expression<Func<T, TEnum>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        return Field(propertySelector, schema);
+    }
+
+    public ObjectContextSchema<T, TContext> Field<TEnum>(
+        Expression<Func<T, TEnum?>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
+        where TEnum : struct, Enum
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, schema(Z.Enum<TEnum>())));
+    }
+
+    public ObjectContextSchema<T, TContext> Property<TEnum>(
+        Expression<Func<T, TEnum?>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
+        where TEnum : struct, Enum
+    {
+        return Field(propertySelector, schema);
+    }
+
+    public ObjectContextSchema<T, TContext> Field<TEnum>(
+        Expression<Func<T, TEnum?>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        var configuredSchema = schema(Z.Enum<TEnum>());
+        return AddField(new NullableFieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
+    }
+
+    public ObjectContextSchema<T, TContext> Property<TEnum>(
+        Expression<Func<T, TEnum?>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        return Field(propertySelector, schema);
+    }
+
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, TContext, bool> predicate,

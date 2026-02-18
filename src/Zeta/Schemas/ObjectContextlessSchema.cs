@@ -198,6 +198,42 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return Field(propertySelector, schema);
     }
 
+    public ObjectContextlessSchema<T> Field<TEnum>(
+        Expression<Func<T, TEnum>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new FieldContextlessValidator<T, TEnum>(propertyName, getter, schema(Z.Enum<TEnum>())));
+    }
+
+    public ObjectContextlessSchema<T> Property<TEnum>(
+        Expression<Func<T, TEnum>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        return Field(propertySelector, schema);
+    }
+
+    public ObjectContextlessSchema<T> Field<TEnum>(
+        Expression<Func<T, TEnum?>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextlessValidator<T, TEnum>(propertyName, getter, schema(Z.Enum<TEnum>())));
+    }
+
+    public ObjectContextlessSchema<T> Property<TEnum>(
+        Expression<Func<T, TEnum?>> propertySelector,
+        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
+        where TEnum : struct, Enum
+    {
+        return Field(propertySelector, schema);
+    }
+
     /// <summary>
     /// Adds a nullable field with a concrete context-aware schema and promotes this schema to context-aware.
     /// This overload avoids ambiguity when a context-aware schema is also assignable to ISchema&lt;TProperty&gt;.

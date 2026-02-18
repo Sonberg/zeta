@@ -144,6 +144,10 @@ Z.Guid()
 Z.Bool()
     .IsTrue()           // Must be true (e.g., terms accepted)
     .IsFalse()          // Must be false
+
+Z.Enum<Channel>()
+    .Defined()          // Value must be a defined enum member
+    .OneOf(Channel.Online, Channel.Store)
 ```
 
 ### Nullable (Optional Fields)
@@ -182,7 +186,7 @@ Z.Schema<User>()
     .Property(u => u.Price, s => s.Positive().Precision(2))
     .Refine(u => u.Password != u.Email, "Password cannot be email");
 
-// Supported for: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
+// Supported for: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly, enum
 ```
 
 Use `.RefineAt(...)` when the rule is object-level but the error should be attached to one property:

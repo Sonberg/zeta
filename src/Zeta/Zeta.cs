@@ -82,6 +82,11 @@ public static class Z
     public static BoolContextlessSchema Bool() => new();
 
     /// <summary>
+    /// Creates a schema for validating enum values.
+    /// </summary>
+    public static EnumContextlessSchema<TEnum> Enum<TEnum>() where TEnum : struct, Enum => new();
+
+    /// <summary>
     /// Creates an empty validation context.
     /// </summary>
     public static ValidationContext Context() => ValidationContext.Empty;
