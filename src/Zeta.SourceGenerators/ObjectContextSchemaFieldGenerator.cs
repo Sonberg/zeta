@@ -121,6 +121,18 @@ internal static class ObjectContextSchemaFieldGenerator
                                     return AddField(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
                                 }
 
+                                /// <summary>
+                                /// Adds a field validator for non-nullable {{mapping.Type}} properties with a pre-built Zeta context-aware schema.
+                                /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;{{mapping.Type}}&gt;.
+                                /// </summary>
+                                public ObjectContextSchema<T, TContext> Field(
+                                    Expression<Func<T, {{mapping.Type}}>> propertySelector,
+                                    IContextSchema<{{mapping.Type}}, TContext> schema)
+                                {
+                                {{PropertyPreamble}}
+                                    return AddField(new FieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, (ISchema<{{mapping.Type}}, TContext>)schema));
+                                }
+
                             """);
         }
     }
@@ -182,6 +194,18 @@ internal static class ObjectContextSchemaFieldGenerator
                                 {
                                 {{PropertyPreamble}}
                                     return AddField(new NullableFieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, schema));
+                                }
+
+                                /// <summary>
+                                /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built Zeta context-aware schema.
+                                /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;{{mapping.Type}}&gt;.
+                                /// </summary>
+                                public ObjectContextSchema<T, TContext> Field(
+                                    Expression<Func<T, {{mapping.Type}}?>> propertySelector,
+                                    IContextSchema<{{mapping.Type}}, TContext> schema)
+                                {
+                                {{PropertyPreamble}}
+                                    return AddField(new NullableFieldContextContextValidator<T, {{mapping.Type}}, TContext>(propertyName, getter, (ISchema<{{mapping.Type}}, TContext>)schema));
                                 }
 
                             """);

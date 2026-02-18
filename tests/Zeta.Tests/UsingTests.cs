@@ -1,5 +1,6 @@
 using Zeta.Core;
 using Zeta.Schemas;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Zeta.Tests;
 
@@ -500,6 +501,40 @@ public class UsingTests
         var factorySchema = schema as IContextFactorySchema<User, UserContext>;
         Assert.NotNull(factorySchema);
         Assert.NotNull(factorySchema.ContextFactory);
+    }
+
+    [Fact]
+    public async Task Using_ContextSchema_AssignableToISchema_ResolvesFactory()
+    {
+        ISchema<string> schema = Z.String()
+            .Using<UserContext>((_, _, _) => ValueTask.FromResult(new UserContext("banned@example.com", 100)))
+            .Refine((value, ctx) => value != ctx.BannedEmail, "Email is banned", "banned_email");
+
+        await using var provider = new ServiceCollection().BuildServiceProvider();
+        var context = new ValidationContext(serviceProvider: provider);
+
+        var result = await schema.ValidateAsync("banned@example.com", context);
+        Assert.True(result.IsFailure);
+        Assert.Contains(result.Errors, e => e.Code == "banned_email");
+    }
+
+    [Fact]
+    public async Task Using_ContextSchema_AsISchema_ResolvesFactoryFromConditionalBranch()
+    {
+        var branch = Z.String()
+            .Using<UserContext>((_, _, _) => ValueTask.FromResult(new UserContext("blocked", 100)))
+            .Refine((value, ctx) => value != ctx.BannedEmail, "Blocked value", "blocked");
+
+        ISchema<string> schema = Z.String()
+            .Using<UserContext>()
+            .If(value => value.StartsWith("b", StringComparison.Ordinal), branch);
+
+        await using var provider = new ServiceCollection().BuildServiceProvider();
+        var context = new ValidationContext(serviceProvider: provider);
+
+        var result = await schema.ValidateAsync("blocked", context);
+        Assert.True(result.IsFailure);
+        Assert.Contains(result.Errors, e => e.Code == "blocked");
     }
 
     private record GuidContext(Guid BannedId);

@@ -28,6 +28,14 @@ public interface IContextFactorySchema<T, TContext>
 }
 
 /// <summary>
+/// Marker interface for Zeta context-aware schemas that are also contextless-assignable.
+/// Enables overload resolution to prefer context-aware schema paths.
+/// </summary>
+public interface IContextSchema<T, TContext> : ISchema<T, TContext>, ISchema<T>
+{
+}
+
+/// <summary>
 /// Defines a contextless schema that can validate a value of type <typeparamref name="T"/>.
 /// This is completely separate from ISchema&lt;T, TContext&gt; - no inheritance relationship.
 /// </summary>

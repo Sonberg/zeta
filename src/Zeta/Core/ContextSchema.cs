@@ -8,7 +8,7 @@ internal interface ISchemaConditional<T, TContext>
 
     IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
 }
-
+ 
 internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
 {
     private readonly Func<T, bool> _predicate;
@@ -87,7 +87,7 @@ internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaCondition
 /// <summary>
 /// Base class for context-aware schemas.
 /// </summary>
-public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>, IContextFactorySchema<T, TContext> where TSchema : ContextSchema<T, TContext, TSchema>
+public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TContext>, IContextFactorySchema<T, TContext> where TSchema : ContextSchema<T, TContext, TSchema>
 {
     protected ContextRuleEngine<T, TContext> Rules { get; }
 
@@ -149,6 +149,87 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
         return errors == null
             ? Result.Success()
             : Result.Failure(errors);
+    }
+
+    async ValueTask<Result<T>> ISchema<T>.ValidateAsync(T? value, ValidationContext context)
+    {
+        if (value is null)
+        {
+            return AllowNull
+                ? Result<T>.Success(value!)
+                : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+        }
+
+        var serviceProvider = context.ServiceProvider
+            ?? throw new InvalidOperationException(
+                "IServiceProvider is required for context factory resolution. " +
+                "Ensure the validation context includes a service provider.");
+
+        var contextData = await ResolveContextData(value, serviceProvider, context.CancellationToken);
+        var typedContext = new ValidationContext<TContext>(
+            context.Path,
+            contextData,
+            context.TimeProvider,
+            context.CancellationToken,
+            context.ServiceProvider);
+
+        var result = await ValidateAsync(value, typedContext);
+        return result.IsSuccess
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(result.Errors);
+    }
+
+    private async ValueTask<TContext> ResolveContextData(
+        T value,
+        IServiceProvider serviceProvider,
+        CancellationToken ct)
+    {
+        var factories = GetContextFactoriesCore().ToList();
+        if (factories.Count == 0)
+        {
+            throw new InvalidOperationException(
+                $"No context factory for {typeof(T).Name}/{typeof(TContext).Name}. " +
+                "Provide a factory via .Using<TContext>(factory).");
+        }
+
+        var applicableCount = 0;
+        TContext? contextData = default;
+
+        foreach (var factory in factories)
+        {
+            try
+            {
+                var candidate = await factory(value, serviceProvider, ct);
+                applicableCount++;
+
+                if (applicableCount > 1)
+                {
+                    throw new InvalidOperationException(
+                        $"Multiple applicable context factories for {typeof(T).Name}/{typeof(TContext).Name} were found for value type {value?.GetType().Name ?? "null"}. " +
+                        "Ensure each value matches exactly one context factory.");
+                }
+
+                contextData = candidate;
+            }
+            catch (InvalidOperationException ex) when (IsTypeNarrowingMismatch(ex))
+            {
+                // Ignore non-matching polymorphic branch factories.
+            }
+        }
+
+        if (applicableCount == 1)
+        {
+            return contextData!;
+        }
+
+        throw new InvalidOperationException(
+            $"No applicable context factory for {typeof(T).Name}/{typeof(TContext).Name} and value type {value?.GetType().Name ?? "null"}. " +
+            "Provide a matching factory via .Using<TContext>(factory).");
+    }
+
+    private static bool IsTypeNarrowingMismatch(InvalidOperationException ex)
+    {
+        return ex.GetType().Name == "TypeNarrowingContextFactoryMismatchException";
     }
 
     internal ContextRuleEngine<T, TContext> GetRules()

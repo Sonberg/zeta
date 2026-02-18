@@ -93,7 +93,7 @@ public static class Schemas
     /// <summary>
     /// Product creation with context-aware SKU uniqueness check.
     /// </summary>
-    public static readonly ISchema<CreateProductRequest, CreateProductContext> CreateProduct =
+    public static readonly ISchema<CreateProductRequest> CreateProduct =
         Z.Object<CreateProductRequest>()
             .Using<CreateProductContext>(async (value, sp, ct) =>
             {

@@ -269,6 +269,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for non-nullable int properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;int&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, int>> propertySelector,
+        IContextSchema<int, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, int, TContext>(propertyName, getter, (ISchema<int, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for non-nullable double properties with a pre-built context-aware schema.
     /// </summary>
     public ObjectContextSchema<T, TContext> Field(
@@ -278,6 +291,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new FieldContextContextValidator<T, double, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for non-nullable double properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;double&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, double>> propertySelector,
+        IContextSchema<double, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, double, TContext>(propertyName, getter, (ISchema<double, TContext>)schema));
     }
 
     /// <summary>
@@ -293,6 +319,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for non-nullable decimal properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;decimal&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, decimal>> propertySelector,
+        IContextSchema<decimal, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, decimal, TContext>(propertyName, getter, (ISchema<decimal, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for non-nullable bool properties with a pre-built context-aware schema.
     /// </summary>
     public ObjectContextSchema<T, TContext> Field(
@@ -302,6 +341,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new FieldContextContextValidator<T, bool, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for non-nullable bool properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;bool&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, bool>> propertySelector,
+        IContextSchema<bool, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, bool, TContext>(propertyName, getter, (ISchema<bool, TContext>)schema));
     }
 
     /// <summary>
@@ -317,6 +369,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for non-nullable System.Guid properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;System.Guid&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, System.Guid>> propertySelector,
+        IContextSchema<System.Guid, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, System.Guid, TContext>(propertyName, getter, (ISchema<System.Guid, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for non-nullable System.DateTime properties with a pre-built context-aware schema.
     /// </summary>
     public ObjectContextSchema<T, TContext> Field(
@@ -326,6 +391,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new FieldContextContextValidator<T, System.DateTime, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for non-nullable System.DateTime properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;System.DateTime&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, System.DateTime>> propertySelector,
+        IContextSchema<System.DateTime, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, System.DateTime, TContext>(propertyName, getter, (ISchema<System.DateTime, TContext>)schema));
     }
 
     /// <summary>
@@ -498,6 +576,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for nullable int? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;int&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, int?>> propertySelector,
+        IContextSchema<int, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, int, TContext>(propertyName, getter, (ISchema<int, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for nullable double? properties with a pre-built context-aware schema.
     /// Null values skip validation. Non-null values are validated by the provided schema.
     /// </summary>
@@ -508,6 +599,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new NullableFieldContextContextValidator<T, double, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for nullable double? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;double&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, double?>> propertySelector,
+        IContextSchema<double, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, double, TContext>(propertyName, getter, (ISchema<double, TContext>)schema));
     }
 
     /// <summary>
@@ -524,6 +628,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for nullable decimal? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;decimal&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, decimal?>> propertySelector,
+        IContextSchema<decimal, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, decimal, TContext>(propertyName, getter, (ISchema<decimal, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for nullable bool? properties with a pre-built context-aware schema.
     /// Null values skip validation. Non-null values are validated by the provided schema.
     /// </summary>
@@ -534,6 +651,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new NullableFieldContextContextValidator<T, bool, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for nullable bool? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;bool&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, bool?>> propertySelector,
+        IContextSchema<bool, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, bool, TContext>(propertyName, getter, (ISchema<bool, TContext>)schema));
     }
 
     /// <summary>
@@ -550,6 +680,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for nullable System.Guid? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;System.Guid&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, System.Guid?>> propertySelector,
+        IContextSchema<System.Guid, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, System.Guid, TContext>(propertyName, getter, (ISchema<System.Guid, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for nullable System.DateTime? properties with a pre-built context-aware schema.
     /// Null values skip validation. Non-null values are validated by the provided schema.
     /// </summary>
@@ -560,6 +703,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new NullableFieldContextContextValidator<T, System.DateTime, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for nullable System.DateTime? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;System.DateTime&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, System.DateTime?>> propertySelector,
+        IContextSchema<System.DateTime, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, System.DateTime, TContext>(propertyName, getter, (ISchema<System.DateTime, TContext>)schema));
     }
 
 #if !NETSTANDARD2_0
@@ -650,6 +806,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for non-nullable DateOnly properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;DateOnly&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, DateOnly>> propertySelector,
+        IContextSchema<DateOnly, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, DateOnly, TContext>(propertyName, getter, (ISchema<DateOnly, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for non-nullable TimeOnly properties with a pre-built context-aware schema.
     /// </summary>
     public ObjectContextSchema<T, TContext> Field(
@@ -659,6 +828,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new FieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for non-nullable TimeOnly properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;TimeOnly&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, TimeOnly>> propertySelector,
+        IContextSchema<TimeOnly, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new FieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, (ISchema<TimeOnly, TContext>)schema));
     }
 
     /// <summary>
@@ -727,6 +909,19 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
+    /// Adds a field validator for nullable DateOnly? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;DateOnly&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, DateOnly?>> propertySelector,
+        IContextSchema<DateOnly, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, DateOnly, TContext>(propertyName, getter, (ISchema<DateOnly, TContext>)schema));
+    }
+
+    /// <summary>
     /// Adds a field validator for nullable TimeOnly? properties with a pre-built context-aware schema.
     /// Null values skip validation. Non-null values are validated by the provided schema.
     /// </summary>
@@ -737,6 +932,19 @@ public partial class ObjectContextSchema<T, TContext>
                     var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                 var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         return AddField(new NullableFieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator for nullable TimeOnly? properties with a pre-built Zeta context-aware schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;TimeOnly&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field(
+        Expression<Func<T, TimeOnly?>> propertySelector,
+        IContextSchema<TimeOnly, TContext> schema)
+    {
+                    var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
+                var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
+        return AddField(new NullableFieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, (ISchema<TimeOnly, TContext>)schema));
     }
 
 #endif

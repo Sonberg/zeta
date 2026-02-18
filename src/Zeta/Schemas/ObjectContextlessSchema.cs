@@ -73,6 +73,18 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
     /// <summary>
+    /// Adds a conditional branch with a context-aware object schema.
+    /// This overload exists to avoid ambiguity when a context-aware schema is also assignable to ISchema&lt;TTarget&gt;.
+    /// </summary>
+    public ObjectContextlessSchema<T> If<TTarget, TContext>(
+        Func<T, bool> predicate,
+        ObjectContextSchema<TTarget, TContext> schema)
+        where TTarget : class, T
+    {
+        return If<TTarget, TContext>(predicate, (ISchema<TTarget, TContext>)schema);
+    }
+
+    /// <summary>
     /// Adds a conditional branch with a context-aware schema. The schema must have a context factory
     /// defined via <c>.Using&lt;TContext&gt;(factory)</c>. The factory is resolved during validation
     /// using <see cref="IServiceProvider"/> from the <see cref="ValidationContext"/>.
@@ -172,6 +184,17 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         var getter = CreateGetter(propertySelector);
         var wrapper = NullableAdapterFactory.CreateContextlessWrapper(schema);
         return AddField(new FieldContextlessValidator<T, TProperty?>(propertyName, getter, wrapper));
+    }
+
+    /// <summary>
+    /// Adds a nullable field with a concrete context-aware schema and promotes this schema to context-aware.
+    /// This overload avoids ambiguity when a context-aware schema is also assignable to ISchema&lt;TProperty&gt;.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Field<TProperty, TContext>(
+        Expression<Func<T, TProperty?>> propertySelector,
+        IContextSchema<TProperty, TContext> schema)
+    {
+        return Using<TContext>().Field(propertySelector, (ISchema<TProperty, TContext>)schema);
     }
 
     /// <summary>

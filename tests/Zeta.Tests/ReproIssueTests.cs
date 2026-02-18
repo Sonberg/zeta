@@ -18,6 +18,15 @@ public class ReproIssueTests
     private record CatContext(bool Value);
 
     [Fact]
+    public void ContextAwareSchema_WithFactory_CanBeAssignedToContextless()
+    {
+        ISchema<Dog> schema = Z.Object<Dog>()
+            .Using<CatContext>(async (_, _, _) => new CatContext(true))
+            .Field(d => d.BarkVolum, v => v.Min(0).Max(100));
+        Assert.NotNull(schema);
+    }
+
+    [Fact]
     public async Task UserScenario_ShouldWork()
     {
         var services = new ServiceCollection();

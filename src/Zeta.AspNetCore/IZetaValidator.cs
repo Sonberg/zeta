@@ -26,6 +26,20 @@ public interface IZetaValidator
     /// Uses the schema's built-in factory delegate to create context data.
     /// </summary>
     ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder);
+
+    /// <summary>
+    /// Validates a value with context using a Zeta context schema.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;T&gt;.
+    /// </summary>
+    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, IContextSchema<T, TContext> schema, CancellationToken ct = default)
+        => ValidateAsync(value, (ISchema<T, TContext>)schema, ct);
+
+    /// <summary>
+    /// Validates a value with context using a Zeta context schema and execution context builder.
+    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;T&gt;.
+    /// </summary>
+    ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, IContextSchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
+        => ValidateAsync(value, (ISchema<T, TContext>)schema, builder);
 }
 
 /// <summary>
@@ -60,9 +74,13 @@ public sealed class ZetaValidator : IZetaValidator
         var contextData = await ResolveContextData(value, schema, execution.CancellationToken);
         var result = await schema.ValidateAsync(
             value,
-            new ValidationContext<TContext>(contextData, execution.TimeProvider, execution.CancellationToken));
+            new ValidationContext<TContext>(contextData, execution.TimeProvider, execution.CancellationToken, execution.ServiceProvider));
         return result.IsSuccess ? Result<T>.Success(value) : Result<T>.Failure(result.Errors);
     }
+
+    /// <inheritdoc />
+    public ValueTask<Result<T>> ValidateAsync<T, TContext>(T value, IContextSchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
+        => ValidateAsync(value, (ISchema<T, TContext>)schema, builder);
 
     private async ValueTask<TContext> ResolveContextData<T, TContext>(
         T value,
