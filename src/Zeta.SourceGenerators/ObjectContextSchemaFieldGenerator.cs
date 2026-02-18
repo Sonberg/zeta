@@ -45,7 +45,6 @@ internal static class ObjectContextSchemaFieldGenerator
         GenerateNonNullablePrebuiltContextlessOverloads(sb, mappings);
         GenerateNonNullablePrebuiltContextAwareOverloads(sb, mappings);
         GenerateNullableInlineBuilderOverloads(sb, mappings);
-        GenerateNullablePrebuiltContextlessOverloads(sb, mappings);
         GenerateNullablePrebuiltContextAwareOverloads(sb, mappings);
         if (conditional) sb.AppendLine("#endif");
     }
@@ -152,27 +151,6 @@ internal static class ObjectContextSchemaFieldGenerator
                                 {
                                 {{PropertyPreamble}}
                                     return AddContextlessField(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema({{mapping.FactoryMethod}}())));
-                                }
-
-                            """);
-        }
-    }
-
-    private static void GenerateNullablePrebuiltContextlessOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)
-    {
-        foreach (var mapping in mappings.Where(m => m.IsValueType))
-        {
-            sb.AppendLine($$"""
-                                /// <summary>
-                                /// Adds a field validator for nullable {{mapping.Type}}? properties with a pre-built contextless schema.
-                                /// Null values skip validation. Non-null values are validated by the provided schema.
-                                /// </summary>
-                                public ObjectContextSchema<T, TContext> Field(
-                                    Expression<Func<T, {{mapping.Type}}?>> propertySelector,
-                                    ISchema<{{mapping.Type}}> schema)
-                                {
-                                {{PropertyPreamble}}
-                                    return AddContextlessField(new NullableFieldContextlessValidator<T, {{mapping.Type}}>(propertyName, getter, schema));
                                 }
 
                             """);
