@@ -320,7 +320,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     internal static string ToPathSegment(string propertyName)
     {
         if (!string.IsNullOrEmpty(propertyName) && char.IsUpper(propertyName[0]))
-            return char.ToLower(propertyName[0]) + propertyName[1..];
+            return char.ToLower(propertyName[0]) + propertyName.Substring(1);
         return propertyName;
     }
 
