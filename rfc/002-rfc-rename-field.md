@@ -1,8 +1,19 @@
 # RFC 002
 ## Rename methods to align with C# language
 
-Select -> Property (Should be that same since Conditional should return same schema)
 Field -> Property  (Align with)
 Object -> Schema 
 
-Remove Required Method on Conditional
+
+Example:
+```csharp
+var schema = Z.Schema<User>()
+    .Property(u => u.Name, x => x.MinLength(3).MaxLength(50))
+    .Property(u => u.Age, x => x.Minimum(0).Maximum(120));
+
+public class User
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+```

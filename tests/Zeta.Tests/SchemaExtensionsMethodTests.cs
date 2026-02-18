@@ -55,7 +55,7 @@ public class SchemaExtensionsMethodTests
 
         var result = await schema.ValidateAsync(new Person("ab", 10), new TestContext(99));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nickname" && e.Code == "min_length");
+        Assert.Contains(result.Errors, e => e.Path == "$.nickname" && e.Code == "min_length");
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class SchemaExtensionsMethodTests
 
         var result = await schema.ValidateAsync(new Person("ab", 10));
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Path == "nickname" && e.Code == "min_length");
+        Assert.Contains(result.Errors, e => e.Path == "$.nickname" && e.Code == "min_length");
     }
 
     [Fact]

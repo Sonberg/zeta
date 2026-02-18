@@ -5,6 +5,7 @@ This guide covers validation of arrays, lists, and other collection types in Zet
 ## Table of Contents
 
 - [Basic Collection Validation](#basic-collection-validation)
+- [`IEnumerable<T>` Not Supported](#ienumerablet-not-supported)
 - [Element Validation with `.Each()`](#element-validation-with-each)
 - [Collection-Level Validation](#collection-level-validation)
 - [Combining Element and Collection Rules](#combining-element-and-collection-rules)
@@ -36,6 +37,18 @@ var result = await schema.ValidateAsync([1, 2, 3]);
 - Date/Time: `DateTime`, `DateOnly`, `TimeOnly`
 - Complex objects: Any class type
 
+## `IEnumerable<T>` Not Supported
+
+`IEnumerable<T>` is intentionally not supported as a validation input type.
+
+Collection validation needs repeatable access to the data (count checks, per-item validation, and indexed error paths like `$[3]`). With `IEnumerable<T>`, this usually requires materialization (for example with `.ToList()`), which can cause unwanted effects:
+
+- Triggers deferred queries unexpectedly (database/network calls)
+- Re-enumerates sequences with side effects
+- Adds hidden memory and performance costs for large streams
+
+For predictable behavior, use a concrete materialized collection type such as `List<T>`, arrays (`T[]`), or other `ICollection<T>` implementations before validation.
+
 ## Element Validation with `.Each()`
 
 Use `.Each()` to apply validation rules to every element in the collection:
@@ -49,7 +62,7 @@ await schema.ValidateAsync(["user@example.com", "admin@example.com"]);
 // ✓ Success
 
 await schema.ValidateAsync(["user@example.com", "invalid"]);
-// ✗ Failure: email validation failed at [1]
+// ✗ Failure: email validation failed at $[1]
 ```
 
 ### Primitive Type Validation

@@ -7,6 +7,7 @@
 
 A composable, type-safe, async-first validation framework for .NET inspired by [Zod](https://zod.dev/).
 
+## Basic example
 ```csharp
 var UserSchema = Z.Object<User>()
     .Field(u => u.Email, s => s.Email())
@@ -47,7 +48,7 @@ var createUserSchema = Z.Object<CreateUserRequest>()
 - **Async by default** - Every rule can be async, no separate sync/async paths
 - **Composable** - Schemas are values that can be reused and combined
 - **Immutable fluent API** - Every call returns a new schema instance (safe branching/reuse)
-- **Path-aware errors** - Errors include location (`$.user.address.street`, `$[0]`)
+- **Path-aware errors** - Errors include JSONPath location (`$.user.address.street`, `$[0]`)
 - **ASP.NET Core native** - First-class support for Minimal APIs and Controllers
 
 ## Installation
@@ -326,8 +327,8 @@ Validation failures return `400 Bad Request` with `ValidationProblemDetails`:
   "title": "Validation failed",
   "status": 400,
   "errors": {
-    "email": ["Invalid email format"],
-    "name": ["Must be at least 3 characters"]
+    "$.email": ["Invalid email format"],
+    "$.name": ["Must be at least 3 characters"]
   }
 }
 ```

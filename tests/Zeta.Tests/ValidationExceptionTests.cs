@@ -26,7 +26,7 @@ public class ValidationExceptionTests
         var exception = new ValidationException("test", errors);
 
         Assert.Single(exception.Errors);
-        Assert.Equal("field", exception.Errors[0].Path);
+        Assert.Equal("$.field", exception.Errors[0].Path);
         Assert.Equal("code", exception.Errors[0].Code);
         Assert.Equal("message", exception.Errors[0].Message);
     }

@@ -26,6 +26,11 @@
 
 - **Context-aware `CollectionContextSchema.Each()` now preserves conditionals**: Previously passed `null` for conditionals, losing collection-level conditional validation.
 
+- Prefix error paths with $ to clearly distinguish them from property names and avoid confusion with nested properties. For example, an error on the root value would have path `"$"` instead of `""`, and a field error would have path `"$.fieldName"` instead of `"fieldName"`. This makes it clear that paths are error paths and prevents ambiguity with property names.
+
+## 0.1.12
+
+
 ### Breaking
 
 - **Renamed `.WithContext<TContext>()` to `.Using<TContext>()`** on all contextless schema types. The new name better communicates the intent of promoting a schema to context-aware validation.

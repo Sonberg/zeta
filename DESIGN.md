@@ -42,7 +42,7 @@ var result = await UserSchema.ValidateAsync(user);
 
 ```csharp
 public sealed record ValidationError(
-    string Path,      // "user.email" or "$" for root
+    string Path,      // "$.user.email" or "$" for root
     string Code,      // "min_length", "email", "required"
     string Message    // Human-readable message
 );
@@ -292,8 +292,8 @@ Returns `400 Bad Request` with `ValidationProblemDetails`:
   "title": "Validation failed",
   "status": 400,
   "errors": {
-    "email": ["Invalid email format"],
-    "name": ["Must be at least 3 characters"]
+    "$.email": ["Invalid email format"],
+    "$.name": ["Must be at least 3 characters"]
   }
 }
 ```
@@ -321,7 +321,7 @@ builder.Services.AddSingleton<ISchema<User>>(UserSchema);
 
 ```csharp
 public sealed record ValidationError(
-    string Path,      // Dot-notation path: "$.address.street"
+    string Path,      // JSONPath: "$.address.street"
     string Code,      // Machine-readable: "min_length"
     string Message    // Human-readable: "Must be at least 3 characters"
 );
@@ -337,7 +337,6 @@ public sealed record ValidationError(
 ### Standard Error Codes
 
 | Code | Meaning |
-|------|---------|
 | `required` | Value is null/missing |
 | `min_length` | Below minimum length |
 | `max_length` | Above maximum length |
