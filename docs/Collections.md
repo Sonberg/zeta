@@ -509,6 +509,17 @@ var roleSchema = Z.Collection<string>()
     );
 ```
 
+## `IEnumerable<T>` Limitation
+
+`IEnumerable<T>` collection fields are intentionally not supported directly for collection field builders.
+
+Why:
+- `IEnumerable<T>` may be lazy/deferred.
+- Validation would need materialization to enumerate reliably.
+- Materialization can trigger unwanted side effects (extra database queries, repeated iterator execution, one-shot stream consumption).
+
+Use a materialized collection type (`List<T>`, `T[]`, `ICollection<T>`, `IReadOnlyCollection<T>`) before validation.
+
 ## See Also
 
 - [Fluent Field Builders](FluentFieldBuilders.md) - Using collections in object schemas

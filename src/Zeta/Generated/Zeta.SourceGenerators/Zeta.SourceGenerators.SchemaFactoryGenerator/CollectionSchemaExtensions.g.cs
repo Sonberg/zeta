@@ -17,7 +17,7 @@ public static class CollectionSchemaExtensions
         Func<StringContextlessSchema, ISchema<string>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.String());
-        return new CollectionContextlessSchema<string>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -28,7 +28,7 @@ public static class CollectionSchemaExtensions
         Func<IntContextlessSchema, ISchema<int>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Int());
-        return new CollectionContextlessSchema<int>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public static class CollectionSchemaExtensions
         Func<DoubleContextlessSchema, ISchema<double>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Double());
-        return new CollectionContextlessSchema<double>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public static class CollectionSchemaExtensions
         Func<DecimalContextlessSchema, ISchema<decimal>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Decimal());
-        return new CollectionContextlessSchema<decimal>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public static class CollectionSchemaExtensions
         Func<BoolContextlessSchema, ISchema<bool>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Bool());
-        return new CollectionContextlessSchema<bool>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public static class CollectionSchemaExtensions
         Func<GuidContextlessSchema, ISchema<System.Guid>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Guid());
-        return new CollectionContextlessSchema<System.Guid>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public static class CollectionSchemaExtensions
         Func<DateTimeContextlessSchema, ISchema<System.DateTime>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.DateTime());
-        return new CollectionContextlessSchema<System.DateTime>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
 #if !NETSTANDARD2_0
@@ -95,7 +95,7 @@ public static class CollectionSchemaExtensions
         Func<DateOnlyContextlessSchema, ISchema<DateOnly>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.DateOnly());
-        return new CollectionContextlessSchema<DateOnly>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public static class CollectionSchemaExtensions
         Func<TimeOnlyContextlessSchema, ISchema<TimeOnly>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.TimeOnly());
-        return new CollectionContextlessSchema<TimeOnly>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
 #endif
@@ -118,7 +118,7 @@ public static class CollectionSchemaExtensions
         Func<StringContextlessSchema, ISchema<string, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.String());
-        return new CollectionContextSchema<string, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public static class CollectionSchemaExtensions
         Func<IntContextlessSchema, ISchema<int, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Int());
-        return new CollectionContextSchema<int, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public static class CollectionSchemaExtensions
         Func<DoubleContextlessSchema, ISchema<double, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Double());
-        return new CollectionContextSchema<double, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public static class CollectionSchemaExtensions
         Func<DecimalContextlessSchema, ISchema<decimal, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Decimal());
-        return new CollectionContextSchema<decimal, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -162,7 +162,7 @@ public static class CollectionSchemaExtensions
         Func<BoolContextlessSchema, ISchema<bool, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Bool());
-        return new CollectionContextSchema<bool, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public static class CollectionSchemaExtensions
         Func<GuidContextlessSchema, ISchema<System.Guid, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.Guid());
-        return new CollectionContextSchema<System.Guid, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -184,7 +184,7 @@ public static class CollectionSchemaExtensions
         Func<DateTimeContextlessSchema, ISchema<System.DateTime, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.DateTime());
-        return new CollectionContextSchema<System.DateTime, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
 #if !NETSTANDARD2_0
@@ -196,7 +196,7 @@ public static class CollectionSchemaExtensions
         Func<DateOnlyContextlessSchema, ISchema<DateOnly, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.DateOnly());
-        return new CollectionContextSchema<DateOnly, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
     /// <summary>
@@ -207,7 +207,7 @@ public static class CollectionSchemaExtensions
         Func<TimeOnlyContextlessSchema, ISchema<TimeOnly, TContext>> elementTransform)
     {
         var newElementSchema = elementTransform(Z.TimeOnly());
-        return new CollectionContextSchema<TimeOnly, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
 #endif
@@ -221,7 +221,7 @@ public static class CollectionSchemaExtensions
         where TElement : class
     {
         var newElementSchema = elementTransform(Z.Object<TElement>());
-        return new CollectionContextSchema<TElement, TContext>(newElementSchema, schema.GetRules());
+        return schema.WithElementSchema(newElementSchema);
     }
 
 }

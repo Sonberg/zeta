@@ -8,7 +8,7 @@ internal interface ISchemaConditional<T, TContext>
 
     IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
 }
-
+ 
 internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
 {
     private readonly Func<T, bool> _predicate;
@@ -87,26 +87,46 @@ internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaCondition
 /// <summary>
 /// Base class for context-aware schemas.
 /// </summary>
-public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>, IContextFactorySchema<T, TContext> where TSchema : ContextSchema<T, TContext, TSchema>
+public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TContext>, IContextFactorySchema<T, TContext> where TSchema : ContextSchema<T, TContext, TSchema>
 {
     protected ContextRuleEngine<T, TContext> Rules { get; }
 
-    public bool AllowNull { get; private set; }
+    public bool AllowNull { get; }
 
-    public Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? ContextFactory { get; private set; }
+    public Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? ContextFactory { get; }
 
-    private List<ISchemaConditional<T, TContext>>? _conditionals;
+    private readonly IReadOnlyList<ISchemaConditional<T, TContext>>? _conditionals;
 
-    protected ContextSchema() : this(new ContextRuleEngine<T, TContext>())
+    protected ContextSchema() : this(new ContextRuleEngine<T, TContext>(), false, null, null)
     {
     }
 
-    protected ContextSchema(ContextRuleEngine<T, TContext> rules)
+    protected ContextSchema(ContextRuleEngine<T, TContext> rules) : this(rules, false, null, null)
+    {
+    }
+
+    private protected ContextSchema(
+        ContextRuleEngine<T, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<T, TContext>>? conditionals,
+        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
     {
         Rules = rules;
+        AllowNull = allowNull;
+        _conditionals = conditionals;
+        ContextFactory = contextFactory;
     }
 
     protected abstract TSchema CreateInstance();
+
+    private protected abstract TSchema CreateInstance(
+        ContextRuleEngine<T, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<T, TContext>>? conditionals,
+        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory);
+
+    protected TSchema Append(IValidationRule<T, TContext> rule)
+        => CreateInstance(Rules.Add(rule), AllowNull, _conditionals, ContextFactory);
 
     public virtual async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
@@ -131,24 +151,52 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
             : Result.Failure(errors);
     }
 
-    protected void Use(IValidationRule<T, TContext> rule)
+    async ValueTask<Result<T>> ISchema<T>.ValidateAsync(T? value, ValidationContext context)
     {
-        Rules.Add(rule);
+        if (value is null)
+        {
+            return AllowNull
+                ? Result<T>.Success(value!)
+                : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+        }
+
+        var serviceProvider = context.ServiceProvider
+            ?? throw new InvalidOperationException(
+                "IServiceProvider is required for context factory resolution. " +
+                "Ensure the validation context includes a service provider.");
+
+        var contextData = await ContextFactoryResolver.ResolveAsync(
+            value,
+            GetContextFactoriesCore(),
+            serviceProvider,
+            context.CancellationToken);
+        var typedContext = new ValidationContext<TContext>(
+            context.Path,
+            contextData,
+            context.TimeProvider,
+            context.CancellationToken,
+            context.ServiceProvider);
+
+        var result = await ValidateAsync(value, typedContext);
+        return result.IsSuccess
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(result.Errors);
     }
-    
+
     internal ContextRuleEngine<T, TContext> GetRules()
     {
         return Rules;
     }
 
+    internal IReadOnlyList<ISchemaConditional<T, TContext>>? GetConditionals() => _conditionals;
+
     public TSchema Nullable()
     {
-        AllowNull = true;
-        return this as TSchema ?? throw new InvalidOperationException();
+        return CreateInstance(Rules, true, _conditionals, ContextFactory);
     }
 
-    internal void SetContextFactory(Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
-        => ContextFactory = factory;
+    internal TSchema WithContextFactory(Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
+        => CreateInstance(Rules, AllowNull, _conditionals, factory);
 
     IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> ISchema<T, TContext>.GetContextFactories()
     {
@@ -174,29 +222,26 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     public TSchema Refine(Func<T, TContext, bool> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<T, TContext>((val, ctx) =>
+        return Append(new RefinementRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
-        return this as TSchema ?? throw new InvalidOperationException();
     }
 
     public TSchema RefineAsync(Func<T, TContext, ValueTask<bool>> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<T, TContext>(async (val, ctx) =>
+        return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
-        return this as TSchema ?? throw new InvalidOperationException();
     }
 
     public TSchema RefineAsync(Func<T, TContext, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<T, TContext>(async (val, ctx) =>
+        return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data, ctx.CancellationToken)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
-        return this as TSchema ?? throw new InvalidOperationException();
     }
 
     public TSchema Refine(Func<T, bool> predicate, string message, string code = "custom_error")
@@ -206,85 +251,69 @@ public abstract class ContextSchema<T, TContext, TSchema> : ISchema<T, TContext>
 
     public TSchema RefineAsync(Func<T, ValueTask<bool>> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<T, TContext>(async (val, ctx) =>
+        return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
-        return this as TSchema ?? throw new InvalidOperationException();
     }
 
     public TSchema RefineAsync(Func<T, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
     {
-        Use(new RefinementRule<T, TContext>(async (val, ctx) =>
+        return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.CancellationToken)
                 ? null
                 : new ValidationError(ctx.Path, code, message)));
-        return this as TSchema ?? throw new InvalidOperationException();
     }
 
     public TSchema If(Func<T, bool> predicate, Func<TSchema, TSchema> configure)
     {
         var schema = configure(CreateInstance());
-        _conditionals ??= [];
-        _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
-        return (TSchema)this;
-    }
-
-    public TSchema If(Func<T, bool> predicate, Action<TSchema> configure)
-    {
-        var schema = CreateInstance();
-        configure(schema);
-        _conditionals ??= [];
-        _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
-        return (TSchema)this;
+        return AppendConditional(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
     }
 
     public TSchema If(Func<T, bool> predicate, ISchema<T, TContext> schema)
     {
-        _conditionals ??= [];
-        _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
-        return (TSchema)this;
+        return AppendConditional(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
     }
 
     public TSchema If(Func<T, TContext, bool> predicate, Func<TSchema, TSchema> configure)
     {
         var schema = configure(CreateInstance());
-        _conditionals ??= [];
-        _conditionals.Add(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
-        return (TSchema)this;
-    }
-
-    public TSchema If(Func<T, TContext, bool> predicate, Action<TSchema> configure)
-    {
-        var schema = CreateInstance();
-        configure(schema);
-        _conditionals ??= [];
-        _conditionals.Add(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
-        return (TSchema)this;
+        return AppendConditional(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
     }
 
     public TSchema If(Func<T, TContext, bool> predicate, ISchema<T, TContext> schema)
     {
-        _conditionals ??= [];
-        _conditionals.Add(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
-        return (TSchema)this;
+        return AppendConditional(new ContextAwareSchemaConditional<T, TContext>(predicate, schema));
     }
 
-    internal void TransferContextlessConditionals(IReadOnlyList<(Func<T, bool>, ISchema<T>)>? conditionals)
+    private TSchema AppendConditional(ISchemaConditional<T, TContext> conditional)
     {
-        if (conditionals == null) return;
+        var newConditionals = _conditionals != null
+            ? new List<ISchemaConditional<T, TContext>>(_conditionals) { conditional }
+            : new List<ISchemaConditional<T, TContext>> { conditional };
+        return CreateInstance(Rules, AllowNull, newConditionals, ContextFactory);
+    }
 
-        _conditionals ??= [];
+    internal TSchema TransferContextlessConditionals(IReadOnlyList<(Func<T, bool>, ISchema<T>)>? conditionals)
+    {
+        if (conditionals == null) return (TSchema)this;
+
+        var newConditionals = _conditionals != null
+            ? new List<ISchemaConditional<T, TContext>>(_conditionals)
+            : new List<ISchemaConditional<T, TContext>>();
+
         foreach (var (predicate, schema) in conditionals)
         {
-            _conditionals.Add(new ContextlessSchemaConditional<T, TContext>(predicate, schema));
+            newConditionals.Add(new ContextlessSchemaConditional<T, TContext>(predicate, schema));
         }
+
+        return CreateInstance(Rules, AllowNull, newConditionals, ContextFactory);
     }
 
-    internal void AddConditional(Func<T, bool> predicate, ISchema<T, TContext> schema)
+    internal TSchema AddConditional(Func<T, bool> predicate, ISchema<T, TContext> schema)
     {
-        _conditionals ??= [];
-        _conditionals.Add(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
+        return AppendConditional(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
     }
 
     protected async ValueTask<List<ValidationError>?> ExecuteConditionalsAsync(T value, ValidationContext<TContext> context)

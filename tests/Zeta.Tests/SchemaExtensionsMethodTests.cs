@@ -38,10 +38,8 @@ public class SchemaExtensionsMethodTests
             .Using<TestContext>()
             .MinLength(3);
 
-        var schema = SchemaExtensions.Field(
-            Z.Object<Person>(),
-            x => x.Nickname!,
-            fieldSchema);
+        var schema = Z.Object<Person>()
+            .Field(x => x.Nickname, fieldSchema);
 
         var result = await schema.ValidateAsync(new Person("abcd", 10), new TestContext(99));
         Assert.True(result.IsSuccess);

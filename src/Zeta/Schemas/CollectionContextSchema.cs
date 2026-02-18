@@ -9,23 +9,47 @@ namespace Zeta.Schemas;
 /// </summary>
 public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollection<TElement>, TContext, CollectionContextSchema<TElement, TContext>>
 {
-    private ISchema<TElement, TContext>? ElementSchema { get; set; }
+    private ISchema<TElement, TContext>? ElementSchema { get; }
 
-    internal CollectionContextSchema() { }
+    internal CollectionContextSchema() : this(
+        (ISchema<TElement, TContext>?)null,
+        new ContextRuleEngine<ICollection<TElement>, TContext>(),
+        false, null, null)
+    {
+    }
 
-    protected override CollectionContextSchema<TElement, TContext> CreateInstance() => new();
+    public CollectionContextSchema(ISchema<TElement, TContext>? elementSchema, ContextRuleEngine<ICollection<TElement>, TContext> rules)
+        : this(elementSchema, rules, false, null, null)
+    {
+    }
 
-    public CollectionContextSchema(ISchema<TElement, TContext>? elementSchema, ContextRuleEngine<ICollection<TElement>, TContext> rules) : base(rules)
+    public CollectionContextSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules)
+        : this(
+            elementSchema is not null ? new SchemaAdapter<TElement, TContext>(elementSchema) : null,
+            rules.ToContext<TContext>(),
+            false, null, null)
+    {
+    }
+
+    private CollectionContextSchema(
+        ISchema<TElement, TContext>? elementSchema,
+        ContextRuleEngine<ICollection<TElement>, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<ICollection<TElement>, TContext>>? conditionals,
+        Func<ICollection<TElement>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
     {
         ElementSchema = elementSchema;
     }
 
-    public CollectionContextSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules) : base(rules.ToContext<TContext>())
-    {
-        ElementSchema = elementSchema is not null
-            ? new SchemaAdapter<TElement, TContext>(elementSchema)
-            : null;
-    }
+    protected override CollectionContextSchema<TElement, TContext> CreateInstance() => new();
+
+    private protected override CollectionContextSchema<TElement, TContext> CreateInstance(
+        ContextRuleEngine<ICollection<TElement>, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<ICollection<TElement>, TContext>>? conditionals,
+        Func<ICollection<TElement>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(ElementSchema, rules, allowNull, conditionals, contextFactory);
 
     public override async ValueTask<Result> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
     {
@@ -70,32 +94,20 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
     }
 
     public CollectionContextSchema<TElement, TContext> MinLength(int min, string? message = null)
-    {
-        Use(new MinLengthRule<TElement, TContext>(min, message));
-        return this;
-    }
+        => Append(new MinLengthRule<TElement, TContext>(min, message));
 
     public CollectionContextSchema<TElement, TContext> MaxLength(int max, string? message = null)
-    {
-        Use(new MaxLengthRule<TElement, TContext>(max, message));
-        return this;
-    }
+        => Append(new MaxLengthRule<TElement, TContext>(max, message));
 
     public CollectionContextSchema<TElement, TContext> Length(int exact, string? message = null)
-    {
-        Use(new LengthRule<TElement, TContext>(exact, message));
-        return this;
-    }
+        => Append(new LengthRule<TElement, TContext>(exact, message));
 
     public CollectionContextSchema<TElement, TContext> NotEmpty(string? message = null)
-    {
-        Use(new NotEmptyRule<TElement, TContext>(message));
-        return this;
-    }
+        => Append(new NotEmptyRule<TElement, TContext>(message));
 
     public CollectionContextSchema<TElement, TContext> Each(ISchema<TElement, TContext> elementSchema)
-    {
-        ElementSchema = elementSchema;
-        return this;
-    }
+        => new(elementSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+
+    internal CollectionContextSchema<TElement, TContext> WithElementSchema(ISchema<TElement, TContext> elementSchema)
+        => new(elementSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
 }

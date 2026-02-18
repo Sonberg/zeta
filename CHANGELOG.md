@@ -3,9 +3,33 @@
 
 ## Next release
 
+### Fixed
+
+- **Context-aware schemas now implement `ISchema<T>`**: Schemas created via `.Using<TContext>(factory)` can now be assigned to `ISchema<T>` variables directly. Validation uses the embedded factory to self-resolve context via `IServiceProvider`.
+- **`ObjectContextSchema` supports pre-built contextless field schemas**: `Field(p => p.Name, Z.String()...)` now works on context-aware object schemas, mirroring the contextless `ObjectContextlessSchema` API.
+- **`ObjectContextSchema.AddField`/`AddContextlessField` now preserve conditionals**: Previously, calling `.Field()` after `.If()` silently dropped conditionals.
+- **`ZetaValidator.ValidateAsync<T, TContext>` now propagates `IServiceProvider`** to the typed `ValidationContext<TContext>`.
+
+### Breaking
+
+- **Immutable, append-only schemas**: Every fluent method (`.MinLength()`, `.Field()`, `.Nullable()`, `.If()`, etc.) now returns a **new schema instance** instead of mutating `this`. Schema reuse and branching are now safe — modifying a branched schema never affects the original. Rule engines use persistent linked lists with lazy materialization for O(1) append and structural sharing.
+
+- **`Action<TSchema>` overloads of `.If()` removed**: Use `Func<TSchema, TSchema>` overloads instead. With immutability, Action callbacks cannot capture the mutated state.
+
+- **`.As<TDerived>()` no longer mutates parent**: The return value must be captured and composed via `.If()`. The recommended pattern is `.If(x => x is Dog, dogSchema)`.
+
+- **`.SetContextFactory()` replaced with `.WithContextFactory()`**: Returns a new schema instance instead of mutating.
+
+### Fixed
+
+- **Collection `.Each()` extension methods now preserve `AllowNull` and conditionals**: Previously, generated `.Each()` extensions lost `AllowNull` and conditional state when creating new collection schemas.
+
+- **Context-aware `CollectionContextSchema.Each()` now preserves conditionals**: Previously passed `null` for conditionals, losing collection-level conditional validation.
+
 - Prefix error paths with $ to clearly distinguish them from property names and avoid confusion with nested properties. For example, an error on the root value would have path `"$"` instead of `""`, and a field error would have path `"$.fieldName"` instead of `"fieldName"`. This makes it clear that paths are error paths and prevents ambiguity with property names.
 
 ## 0.1.12
+
 
 ### Breaking
 

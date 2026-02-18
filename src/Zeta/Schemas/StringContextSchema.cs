@@ -16,79 +16,59 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext, Str
     {
     }
 
+    private StringContextSchema(
+        ContextRuleEngine<string, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<string, TContext>>? conditionals,
+        Func<string, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
+    {
+    }
+
     protected override StringContextSchema<TContext> CreateInstance() => new();
 
+    private protected override StringContextSchema<TContext> CreateInstance(
+        ContextRuleEngine<string, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<string, TContext>>? conditionals,
+        Func<string, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(rules, allowNull, conditionals, contextFactory);
+
     public StringContextSchema<TContext> MinLength(int min, string? message = null)
-    {
-        Use(new MinLengthRule<TContext>(min, message));
-        return this;
-    }
+        => Append(new MinLengthRule<TContext>(min, message));
 
     public StringContextSchema<TContext> MaxLength(int max, string? message = null)
-    {
-        Use(new MaxLengthRule<TContext>(max, message));
-        return this;
-    }
+        => Append(new MaxLengthRule<TContext>(max, message));
 
     public StringContextSchema<TContext> Length(int exact, string? message = null)
-    {
-        Use(new LengthRule<TContext>(exact, message));
-        return this;
-    }
+        => Append(new LengthRule<TContext>(exact, message));
 
     public StringContextSchema<TContext> NotEmpty(string? message = null)
-    {
-        Use(new NotEmptyRule<TContext>(message));
-        return this;
-    }
+        => Append(new NotEmptyRule<TContext>(message));
 
     public StringContextSchema<TContext> Email(string? message = null)
-    {
-        Use(new EmailRule<TContext>(message));
-        return this;
-    }
+        => Append(new EmailRule<TContext>(message));
 
     public StringContextSchema<TContext> Uuid(string? message = null)
-    {
-        Use(new UuidRule<TContext>(message));
-        return this;
-    }
+        => Append(new UuidRule<TContext>(message));
 
     public StringContextSchema<TContext> Url(string? message = null)
-    {
-        Use(new UrlRule<TContext>(message));
-        return this;
-    }
+        => Append(new UrlRule<TContext>(message));
 
     public StringContextSchema<TContext> Uri(UriKind kind = UriKind.Absolute, string? message = null)
-    {
-        Use(new UriRule<TContext>(kind, message));
-        return this;
-    }
+        => Append(new UriRule<TContext>(kind, message));
 
     public StringContextSchema<TContext> Alphanumeric(string? message = null)
-    {
-        Use(new AlphanumericRule<TContext>(message));
-        return this;
-    }
+        => Append(new AlphanumericRule<TContext>(message));
 
     public StringContextSchema<TContext> StartsWith(string prefix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
-    {
-        Use(new StartsWithRule<TContext>(prefix, comparison, message));
-        return this;
-    }
+        => Append(new StartsWithRule<TContext>(prefix, comparison, message));
 
     public StringContextSchema<TContext> EndsWith(string suffix, StringComparison comparison = StringComparison.Ordinal, string? message = null)
-    {
-        Use(new EndsWithRule<TContext>(suffix, comparison, message));
-        return this;
-    }
+        => Append(new EndsWithRule<TContext>(suffix, comparison, message));
 
     public StringContextSchema<TContext> Contains(string substring, StringComparison comparison = StringComparison.Ordinal, string? message = null)
-    {
-        Use(new ContainsRule<TContext>(substring, comparison, message));
-        return this;
-    }
+        => Append(new ContainsRule<TContext>(substring, comparison, message));
 
     public StringContextSchema<TContext> Regex(string pattern, string? message = null, string code = "regex")
     {
@@ -97,7 +77,6 @@ public class StringContextSchema<TContext> : ContextSchema<string, TContext, Str
             RegexOptions.Compiled,
             TimeSpan.FromSeconds(1));
 
-        Use(new RegexRule<TContext>(compiledRegex, message, code));
-        return this;
+        return Append(new RegexRule<TContext>(compiledRegex, message, code));
     }
 }

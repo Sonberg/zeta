@@ -12,25 +12,33 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     {
     }
 
+    private BoolContextlessSchema(
+        ContextlessRuleEngine<bool> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<bool, bool>, ISchema<bool>)>? conditionals)
+        : base(rules, allowNull, conditionals)
+    {
+    }
+
     protected override BoolContextlessSchema CreateInstance() => new();
 
+    protected override BoolContextlessSchema CreateInstance(
+        ContextlessRuleEngine<bool> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<bool, bool>, ISchema<bool>)>? conditionals)
+        => new(rules, allowNull, conditionals);
+
     public BoolContextlessSchema IsTrue(string? message = null)
-    {
-        Use(new RefinementRule<bool>((val, exec) =>
+        => Append(new RefinementRule<bool>((val, exec) =>
             val
                 ? null
                 : new ValidationError(exec.Path, "is_true", message ?? "Must be true")));
-        return this;
-    }
 
     public BoolContextlessSchema IsFalse(string? message = null)
-    {
-        Use(new RefinementRule<bool>((val, exec) =>
+        => Append(new RefinementRule<bool>((val, exec) =>
             !val
                 ? null
                 : new ValidationError(exec.Path, "is_false", message ?? "Must be false")));
-        return this;
-    }
 
     /// <summary>
     /// Creates a context-aware bool schema with all rules from this schema.
@@ -38,8 +46,8 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     public BoolContextSchema<TContext> Using<TContext>()
     {
         var schema = new BoolContextSchema<TContext>(Rules.ToContext<TContext>());
-        if (AllowNull) schema.Nullable();
-        schema.TransferContextlessConditionals(GetConditionals());
+        schema = AllowNull ? schema.Nullable() : schema;
+        schema = schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 
@@ -49,8 +57,6 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     public BoolContextSchema<TContext> Using<TContext>(
         Func<bool, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
-        var schema = Using<TContext>();
-        schema.SetContextFactory(factory);
-        return schema;
+        return Using<TContext>().WithContextFactory(factory);
     }
 }

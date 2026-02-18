@@ -303,8 +303,8 @@ Returns `400 Bad Request` with `ValidationProblemDetails`:
 ## Dependency Injection
 
 ```csharp
-// Register Zeta with context factory scanning
-builder.Services.AddZeta(typeof(Program).Assembly);
+// Register Zeta
+builder.Services.AddZeta();
 
 // Register MVC filter
 builder.Services.AddZetaControllers();

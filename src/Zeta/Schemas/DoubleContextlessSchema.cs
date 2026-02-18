@@ -13,37 +13,36 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     {
     }
 
+    private DoubleContextlessSchema(
+        ContextlessRuleEngine<double> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<double, bool>, ISchema<double>)>? conditionals)
+        : base(rules, allowNull, conditionals)
+    {
+    }
+
     protected override DoubleContextlessSchema CreateInstance() => new();
 
+    protected override DoubleContextlessSchema CreateInstance(
+        ContextlessRuleEngine<double> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<double, bool>, ISchema<double>)>? conditionals)
+        => new(rules, allowNull, conditionals);
+
     public DoubleContextlessSchema Min(double min, string? message = null)
-    {
-        Use(new MinDoubleRule(min, message));
-        return this;
-    }
+        => Append(new MinDoubleRule(min, message));
 
     public DoubleContextlessSchema Max(double max, string? message = null)
-    {
-        Use(new MaxDoubleRule(max, message));
-        return this;
-    }
+        => Append(new MaxDoubleRule(max, message));
 
     public DoubleContextlessSchema Positive(string? message = null)
-    {
-        Use(new PositiveDoubleRule(message));
-        return this;
-    }
+        => Append(new PositiveDoubleRule(message));
 
     public DoubleContextlessSchema Negative(string? message = null)
-    {
-        Use(new NegativeDoubleRule(message));
-        return this;
-    }
+        => Append(new NegativeDoubleRule(message));
 
     public DoubleContextlessSchema Finite(string? message = null)
-    {
-        Use(new FiniteRule(message));
-        return this;
-    }
+        => Append(new FiniteRule(message));
 
     /// <summary>
     /// Creates a context-aware double schema with all rules from this schema.
@@ -51,8 +50,8 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     public DoubleContextSchema<TContext> Using<TContext>()
     {
         var schema = new DoubleContextSchema<TContext>(Rules.ToContext<TContext>());
-        if (AllowNull) schema.Nullable();
-        schema.TransferContextlessConditionals(GetConditionals());
+        schema = AllowNull ? schema.Nullable() : schema;
+        schema = schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 
@@ -62,8 +61,6 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     public DoubleContextSchema<TContext> Using<TContext>(
         Func<double, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
-        var schema = Using<TContext>();
-        schema.SetContextFactory(factory);
-        return schema;
+        return Using<TContext>().WithContextFactory(factory);
     }
 }

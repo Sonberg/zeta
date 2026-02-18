@@ -11,80 +11,72 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
 {
     public DateOnlyContextlessSchema() { }
 
+    private DateOnlyContextlessSchema(
+        ContextlessRuleEngine<DateOnly> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<DateOnly, bool>, ISchema<DateOnly>)>? conditionals)
+        : base(rules, allowNull, conditionals)
+    {
+    }
+
     protected override DateOnlyContextlessSchema CreateInstance() => new();
 
+    protected override DateOnlyContextlessSchema CreateInstance(
+        ContextlessRuleEngine<DateOnly> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<DateOnly, bool>, ISchema<DateOnly>)>? conditionals)
+        => new(rules, allowNull, conditionals);
+
     public DateOnlyContextlessSchema Min(DateOnly min, string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
             val >= min
                 ? null
                 : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
-        return this;
-    }
 
     public DateOnlyContextlessSchema Max(DateOnly max, string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
             val <= max
                 ? null
                 : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
-        return this;
-    }
 
     public DateOnlyContextlessSchema Past(string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
                 ? null
                 : new ValidationError(exec.Path, "past", message ?? "Must be in the past");
         }));
-        return this;
-    }
 
     public DateOnlyContextlessSchema Future(string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
                 ? null
                 : new ValidationError(exec.Path, "future", message ?? "Must be in the future");
         }));
-        return this;
-    }
 
     public DateOnlyContextlessSchema Between(DateOnly min, DateOnly max, string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
             val >= min && val <= max
                 ? null
                 : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
-        return this;
-    }
 
     public DateOnlyContextlessSchema Weekday(string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
-        return this;
-    }
 
     public DateOnlyContextlessSchema Weekend(string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
                 : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
-        return this;
-    }
 
     public DateOnlyContextlessSchema MinAge(int years, string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -94,12 +86,9 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
                 ? null
                 : new ValidationError(exec.Path, "min_age", message ?? $"Must be at least {years} years old");
         }));
-        return this;
-    }
 
     public DateOnlyContextlessSchema MaxAge(int years, string? message = null)
-    {
-        Use(new RefinementRule<DateOnly>((val, exec) =>
+        => Append(new RefinementRule<DateOnly>((val, exec) =>
         {
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             var age = today.Year - val.Year;
@@ -109,8 +98,6 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
                 ? null
                 : new ValidationError(exec.Path, "max_age", message ?? $"Must be at most {years} years old");
         }));
-        return this;
-    }
 
     /// <summary>
     /// Creates a context-aware DateOnly schema with all rules from this schema.
@@ -118,8 +105,8 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
     public DateOnlyContextSchema<TContext> Using<TContext>()
     {
         var schema = new DateOnlyContextSchema<TContext>(Rules.ToContext<TContext>());
-        if (AllowNull) schema.Nullable();
-        schema.TransferContextlessConditionals(GetConditionals());
+        schema = AllowNull ? schema.Nullable() : schema;
+        schema = schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 
@@ -129,9 +116,7 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
     public DateOnlyContextSchema<TContext> Using<TContext>(
         Func<DateOnly, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
-        var schema = Using<TContext>();
-        schema.SetContextFactory(factory);
-        return schema;
+        return Using<TContext>().WithContextFactory(factory);
     }
 }
 #endif

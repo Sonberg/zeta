@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Zeta.Adapters;
+using Zeta.Core;
 using Zeta.Schemas;
 
 namespace Zeta;
@@ -32,6 +33,28 @@ public static class SchemaExtensions
         this ObjectContextlessSchema<T> schema,
         Expression<Func<T, TProperty>> propertySelector,
         ISchema<TProperty, TContext> fieldSchema) where T : class
+    {
+        return PromoteField(schema, propertySelector, fieldSchema);
+    }
+
+    /// <summary>
+    /// Adds a field with a context-aware schema type from Zeta, automatically promoting the object schema to context-aware.
+    /// This overload avoids ambiguity when a context-aware schema is also assignable to ISchema&lt;TProperty&gt;.
+    /// </summary>
+    public static ObjectContextSchema<T, TContext> Field<T, TProperty, TContext>(
+        this ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty>> propertySelector,
+        IContextSchema<TProperty, TContext> fieldSchema)
+        where T : class
+    {
+        return PromoteField(schema, propertySelector, (ISchema<TProperty, TContext>)fieldSchema);
+    }
+
+    private static ObjectContextSchema<T, TContext> PromoteField<T, TProperty, TContext>(
+        ObjectContextlessSchema<T> schema,
+        Expression<Func<T, TProperty>> propertySelector,
+        ISchema<TProperty, TContext> fieldSchema)
+        where T : class
     {
         return schema.Using<TContext>().Field(propertySelector, fieldSchema);
     }

@@ -12,26 +12,25 @@ public class TypeAssertionTests
     public record StrictContext(bool IsStrict);
 
     [Fact]
-    public async Task As_TypeMatches_Succeeds()
+    public async Task As_ReturnsNewDerivedSchema()
     {
-        var schema = Z.Object<IAnimal>();
-        schema.As<Dog>();
+        var baseSchema = Z.Object<IAnimal>();
+        var dogSchema = baseSchema.As<Dog>();
 
-        var result = await schema.ValidateAsync(new Dog(50));
-
+        // As<Dog>() returns a new ObjectContextlessSchema<Dog>, not mutating the parent
+        var result = await dogSchema.ValidateAsync(new Dog(50));
         Assert.True(result.IsSuccess);
     }
 
     [Fact]
-    public async Task As_TypeMismatch_ReturnsTypeMismatchError()
+    public async Task As_DoesNotMutateParent()
     {
         var schema = Z.Object<IAnimal>();
-        schema.As<Dog>();
+        schema.As<Dog>(); // return value not captured
 
+        // Parent schema should not have type assertion — Cat passes
         var result = await schema.ValidateAsync(new Cat(5));
-
-        Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Code == "type_mismatch");
+        Assert.True(result.IsSuccess);
     }
 
     [Fact]
@@ -72,38 +71,51 @@ public class TypeAssertionTests
     }
 
     [Fact]
-    public async Task As_ContextAware_TypeMatches_Succeeds()
+    public async Task As_ContextAware_DoesNotMutateParent()
     {
         var schema = Z.Object<IAnimal>()
             .Using<StrictContext>();
-        schema.As<Dog>();
+        schema.As<Dog>(); // return value not captured
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
-        var result = await schema.ValidateAsync(new Dog(50), ctx);
 
+        // Parent schema should not have type assertion — Cat passes
+        var result = await schema.ValidateAsync(new Cat(5), ctx);
         Assert.True(result.IsSuccess);
     }
 
     [Fact]
-    public async Task As_ContextAware_TypeMismatch_ReturnsError()
+    public async Task If_WithAs_TypeMismatch_ReportsError()
     {
+        var dogSchema = Z.Object<Dog>()
+            .Field(x => x.WoofVolume, x => x.Min(0).Max(100));
+
         var schema = Z.Object<IAnimal>()
-            .Using<StrictContext>();
-        schema.As<Dog>();
+            .If(x => x is Dog, dogSchema);
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
-        var result = await schema.ValidateAsync(new Cat(5), ctx);
+        // Dog with valid volume passes
+        var dogResult = await schema.ValidateAsync(new Dog(50));
+        Assert.True(dogResult.IsSuccess);
 
-        Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, e => e.Code == "type_mismatch");
+        // Dog with invalid volume fails
+        var invalidDogResult = await schema.ValidateAsync(new Dog(150));
+        Assert.False(invalidDogResult.IsSuccess);
+        Assert.Contains(invalidDogResult.Errors, e => e.Code == "max_value");
+
+        // Cat passes (condition not met)
+        var catResult = await schema.ValidateAsync(new Cat(5));
+        Assert.True(catResult.IsSuccess);
     }
 
     [Fact]
-    public async Task As_ContextPromotion_TransfersTypeAssertion()
+    public async Task If_WithAs_ContextPromotion_Works()
     {
-        var contextless = Z.Object<IAnimal>();
-        contextless.As<Dog>();
-        var schema = contextless.Using<StrictContext>();
+        var dogSchema = Z.Object<Dog>()
+            .Field(x => x.WoofVolume, x => x.Min(0).Max(100));
+
+        var schema = Z.Object<IAnimal>()
+            .If(x => x is Dog, dogSchema)
+            .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
 
@@ -111,25 +123,9 @@ public class TypeAssertionTests
         var dogResult = await schema.ValidateAsync(new Dog(50), ctx);
         Assert.True(dogResult.IsSuccess);
 
-        // Cat should fail with type_mismatch
+        // Cat should pass (no Dog predicate match)
         var catResult = await schema.ValidateAsync(new Cat(5), ctx);
-        Assert.False(catResult.IsSuccess);
-        Assert.Contains(catResult.Errors, e => e.Code == "type_mismatch");
-    }
-
-    [Fact]
-    public async Task As_ErrorMessageFormat_ContainsTypeNames()
-    {
-        var schema = Z.Object<IAnimal>();
-        schema.As<Dog>();
-
-        var result = await schema.ValidateAsync(new Cat(5));
-
-        Assert.False(result.IsSuccess);
-        var error = Assert.Single(result.Errors);
-        Assert.Equal("type_mismatch", error.Code);
-        Assert.Contains("Dog", error.Message);
-        Assert.Contains("Cat", error.Message);
+        Assert.True(catResult.IsSuccess);
     }
 
     [Fact]

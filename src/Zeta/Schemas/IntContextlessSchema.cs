@@ -13,19 +13,27 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     {
     }
 
+    private IntContextlessSchema(
+        ContextlessRuleEngine<int> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<int, bool>, ISchema<int>)>? conditionals)
+        : base(rules, allowNull, conditionals)
+    {
+    }
+
     protected override IntContextlessSchema CreateInstance() => new();
 
+    protected override IntContextlessSchema CreateInstance(
+        ContextlessRuleEngine<int> rules,
+        bool allowNull,
+        IReadOnlyList<(Func<int, bool>, ISchema<int>)>? conditionals)
+        => new(rules, allowNull, conditionals);
+
     public IntContextlessSchema Min(int min, string? message = null)
-    {
-        Use(new MinIntRule(min, message));
-        return this;
-    }
+        => Append(new MinIntRule(min, message));
 
     public IntContextlessSchema Max(int max, string? message = null)
-    {
-        Use(new MaxIntRule(max, message));
-        return this;
-    }
+        => Append(new MaxIntRule(max, message));
 
     /// <summary>
     /// Creates a context-aware int schema with all rules from this schema.
@@ -33,8 +41,8 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     public IntContextSchema<TContext> Using<TContext>()
     {
         var schema = new IntContextSchema<TContext>(Rules.ToContext<TContext>());
-        if (AllowNull) schema.Nullable();
-        schema.TransferContextlessConditionals(GetConditionals());
+        schema = AllowNull ? schema.Nullable() : schema;
+        schema = schema.TransferContextlessConditionals(GetConditionals());
         return schema;
     }
 
@@ -44,8 +52,6 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     public IntContextSchema<TContext> Using<TContext>(
         Func<int, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
-        var schema = Using<TContext>();
-        schema.SetContextFactory(factory);
-        return schema;
+        return Using<TContext>().WithContextFactory(factory);
     }
 }

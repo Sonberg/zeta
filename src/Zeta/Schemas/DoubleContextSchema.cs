@@ -14,35 +14,36 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext, Dou
     {
     }
 
+    private DoubleContextSchema(
+        ContextRuleEngine<double, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<double, TContext>>? conditionals,
+        Func<double, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
+    {
+    }
+
     protected override DoubleContextSchema<TContext> CreateInstance() => new();
 
+    private protected override DoubleContextSchema<TContext> CreateInstance(
+        ContextRuleEngine<double, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<double, TContext>>? conditionals,
+        Func<double, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(rules, allowNull, conditionals, contextFactory);
+
     public DoubleContextSchema<TContext> Min(double min, string? message = null)
-    {
-        Use(new MinDoubleRule<TContext>(min, message));
-        return this;
-    }
+        => Append(new MinDoubleRule<TContext>(min, message));
 
     public DoubleContextSchema<TContext> Max(double max, string? message = null)
-    {
-        Use(new MaxDoubleRule<TContext>(max, message));
-        return this;
-    }
+        => Append(new MaxDoubleRule<TContext>(max, message));
 
     public DoubleContextSchema<TContext> Positive(string? message = null)
-    {
-        Use(new PositiveDoubleRule<TContext>(message));
-        return this;
-    }
+        => Append(new PositiveDoubleRule<TContext>(message));
 
     public DoubleContextSchema<TContext> Negative(string? message = null)
-    {
-        Use(new NegativeDoubleRule<TContext>(message));
-        return this;
-    }
+        => Append(new NegativeDoubleRule<TContext>(message));
 
     public DoubleContextSchema<TContext> Finite(string? message = null)
-    {
-        Use(new FiniteRule<TContext>(message));
-        return this;
-    }
+        => Append(new FiniteRule<TContext>(message));
 }

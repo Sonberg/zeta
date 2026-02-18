@@ -12,23 +12,33 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolCon
 
     internal BoolContextSchema(ContextRuleEngine<bool, TContext> rules) : base(rules) { }
 
+    private BoolContextSchema(
+        ContextRuleEngine<bool, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<bool, TContext>>? conditionals,
+        Func<bool, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        : base(rules, allowNull, conditionals, contextFactory)
+    {
+    }
+
     protected override BoolContextSchema<TContext> CreateInstance() => new();
 
+    private protected override BoolContextSchema<TContext> CreateInstance(
+        ContextRuleEngine<bool, TContext> rules,
+        bool allowNull,
+        IReadOnlyList<ISchemaConditional<bool, TContext>>? conditionals,
+        Func<bool, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        => new(rules, allowNull, conditionals, contextFactory);
+
     public BoolContextSchema<TContext> IsTrue(string? message = null)
-    {
-        Use(new RefinementRule<bool, TContext>((val, ctx) =>
+        => Append(new RefinementRule<bool, TContext>((val, ctx) =>
             val
                 ? null
                 : new ValidationError(ctx.Path, "is_true", message ?? "Must be true")));
-        return this;
-    }
 
     public BoolContextSchema<TContext> IsFalse(string? message = null)
-    {
-        Use(new RefinementRule<bool, TContext>((val, ctx) =>
+        => Append(new RefinementRule<bool, TContext>((val, ctx) =>
             !val
                 ? null
                 : new ValidationError(ctx.Path, "is_false", message ?? "Must be false")));
-        return this;
-    }
 }

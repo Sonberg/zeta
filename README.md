@@ -24,44 +24,22 @@ if(!result.IsSuccess)
 }
 ```
 
-## Async example
-
-Copy-paste example for context-aware validation where context is built from async services:
+Use `.Using<TContext>(factory)` to inject async services into validation:
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
-
-public sealed record SignupRequest(string Email, string ReferralCode);
-public sealed record SignupContext(bool EmailAvailable, bool ReferralValid);
-
-public interface IAccountService
-{
-    Task<bool> IsEmailAvailableAsync(string email, CancellationToken ct);
-}
-
-public interface IReferralService
-{
-    Task<bool> IsValidCodeAsync(string code, CancellationToken ct);
-}
-
-var signupSchema = Z.Object<SignupRequest>()
+var createUserSchema = Z.Object<CreateUserRequest>()
     .Field(x => x.Email, s => s.Email())
-    .Field(x => x.ReferralCode, s => s.MinLength(6))
-    .Using<SignupContext>(async (input, sp, ct) =>
+    .Using<CreateUserContext>(async (input, sp, ct) =>
     {
-        var accounts = sp.GetRequiredService<IAccountService>();
-        var referrals = sp.GetRequiredService<IReferralService>();
-
-        var emailAvailable = await accounts.IsEmailAvailableAsync(input.Email, ct);
-        var referralValid = await referrals.IsValidCodeAsync(input.ReferralCode, ct);
-
-        return new SignupContext(emailAvailable, referralValid);
+        var repo = sp.GetRequiredService<IUserRepository>();
+        var isTaken = await repo.EmailExistsAsync(input.Email, ct);
+        return new CreateUserContext(isTaken);
     })
-    .Refine((_, ctx) => ctx.EmailAvailable, "Email is already in use")
-    .Refine((_, ctx) => ctx.ReferralValid, "Referral code is invalid");
-
-// Use IZetaValidator so IServiceProvider is available to the factory
-Result<SignupRequest> result = await zetaValidator.ValidateAsync(request, signupSchema, ct);
+    .Field(x => x.Email,
+        Z.String()
+            .Email()
+            .Using<CreateUserContext>()
+            .Refine((email, ctx) => !ctx.EmailExists, "Email already exists"));
 ```
 
 ## Features
@@ -69,6 +47,7 @@ Result<SignupRequest> result = await zetaValidator.ValidateAsync(request, signup
 - **Schema-first** - Define validation as reusable schema objects
 - **Async by default** - Every rule can be async, no separate sync/async paths
 - **Composable** - Schemas are values that can be reused and combined
+- **Immutable fluent API** - Every call returns a new schema instance (safe branching/reuse)
 - **Path-aware errors** - Errors include JSONPath location (`$.user.address.street`, `$[0]`)
 - **ASP.NET Core native** - First-class support for Minimal APIs and Controllers
 
@@ -280,7 +259,7 @@ Z.String()
 
 ### Polymorphic Validation
 
-Use branch schemas with `.If(predicate, schema)` or `.WhenType<TDerived>(...)`:
+Use branch schemas with `.If(predicate, schema)`:
 
 ```csharp
 var dogSchema = Z.Object<Dog>()
@@ -288,7 +267,7 @@ var dogSchema = Z.Object<Dog>()
 
 var schema = Z.Object<IAnimal>()
     .If(x => x is Dog, dogSchema)
-    .WhenType<Cat>(cat => cat
+    .If(x => x is Cat, Z.Object<Cat>()
         .Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 
 // Explicit type assertion is still available
@@ -488,7 +467,7 @@ See the [Validation Context guide](docs/ValidationContext.md) for more details.
 
 ```csharp
 public record ValidationError(
-    string Path,     // "$.user.address.street" or "$[0]"
+    string Path,     // "$.user.address.street" or "$.items[0]"
     string Code,     // "min_length", "email", "required"
     string Message   // "Must be at least 3 characters"
 );
@@ -524,20 +503,20 @@ Comparing Zeta against FluentValidation and DataAnnotations on .NET 10 (Apple M2
 
 | Method | Mean | Allocated |
 |--------|-----:|----------:|
-| FluentValidation | 129.1 ns | 600 B |
-| FluentValidation (Async) | 229.3 ns | 672 B |
-| **Zeta** | **293.2 ns** | **152 B** |
-| Zeta (Invalid) | 398.6 ns | 904 B |
-| DataAnnotations | 617.8 ns | 1,848 B |
-| DataAnnotations (Invalid) | 974.9 ns | 2,672 B |
-| FluentValidation (Invalid) | 1,920.5 ns | 7,728 B |
-| FluentValidation (Invalid Async) | 2,095.8 ns | 7,800 B |
+| FluentValidation | 131.2 ns | 600 B |
+| FluentValidation (Async) | 230.1 ns | 672 B |
+| **Zeta** | **353.2 ns** | **216 B** |
+| Zeta (Invalid) | 442.2 ns | 1,048 B |
+| DataAnnotations | 627.9 ns | 1,848 B |
+| DataAnnotations (Invalid) | 990.5 ns | 2,672 B |
+| FluentValidation (Invalid) | 1,923.9 ns | 7,728 B |
+| FluentValidation (Invalid Async) | 2,095.5 ns | 7,800 B |
 
 **Key findings:**
-- Allocates **75% less memory** than FluentValidation on valid input (152 B vs 600 B)
-- Allocates **8.5x less memory** than FluentValidation on invalid input (904 B vs 7,728 B)
-- **4.8x faster** than FluentValidation when validation fails (398 ns vs 1,920 ns)
-- **2.4x faster** than DataAnnotations when validation fails (398 ns vs 974 ns)
+- Allocates **64% less memory** than FluentValidation on valid input (216 B vs 600 B)
+- Allocates **7.4x less memory** than FluentValidation on invalid input (1,048 B vs 7,728 B)
+- **4.4x faster** than FluentValidation when validation fails (442 ns vs 1,924 ns)
+- **2.2x faster** than DataAnnotations when validation fails (442 ns vs 991 ns)
 
 Run benchmarks:
 ```bash
