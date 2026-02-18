@@ -201,7 +201,7 @@ var order = new Order(
 );
 
 var result = await orderSchema.ValidateAsync(order);
-// Error at path: "items[1].quantity" with message "Must be at least 1"
+// Error at path: "$.items[1].quantity" with message "Must be at least 1"
 ```
 
 ### Reusable Nested Schemas
@@ -311,8 +311,8 @@ var result = await schema.ValidateAsync([
 ]);
 
 // Errors:
-// - Path: "[1]", Code: "email", Message: "Invalid email format"
-// - Path: "[3]", Code: "email", Message: "Invalid email format"
+// - Path: "$[1]", Code: "email", Message: "Invalid email format"
+// - Path: "$[3]", Code: "email", Message: "Invalid email format"
 ```
 
 ### Nested Collection Errors
@@ -342,8 +342,8 @@ var user = new User(
 
 var result = await schema.ValidateAsync(user);
 // Errors:
-// - Path: "addresses[1].street", Code: "min_length"
-// - Path: "addresses[1].zipCode", Code: "regex"
+// - Path: "$.addresses[1].street", Code: "min_length"
+// - Path: "$.addresses[1].zipCode", Code: "regex"
 ```
 
 ## Best Practices
@@ -495,6 +495,17 @@ var roleSchema = Z.Collection<string>()
         "Roles must be unique"
     );
 ```
+
+## `IEnumerable<T>` Limitation
+
+`IEnumerable<T>` collection fields are intentionally not supported directly for collection field builders.
+
+Why:
+- `IEnumerable<T>` may be lazy/deferred.
+- Validation would need materialization to enumerate reliably.
+- Materialization can trigger unwanted side effects (extra database queries, repeated iterator execution, one-shot stream consumption).
+
+Use a materialized collection type (`List<T>`, `T[]`, `ICollection<T>`, `IReadOnlyCollection<T>`) before validation.
 
 ## See Also
 

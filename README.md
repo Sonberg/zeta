@@ -23,12 +23,31 @@ if(!result.IsSuccess)
 }
 ```
 
+Use `.Using<TContext>(factory)` to inject async services into validation:
+
+```csharp
+var createUserSchema = Z.Object<CreateUserRequest>()
+    .Field(x => x.Email, s => s.Email())
+    .Using<CreateUserContext>(async (input, sp, ct) =>
+    {
+        var repo = sp.GetRequiredService<IUserRepository>();
+        var isTaken = await repo.EmailExistsAsync(input.Email, ct);
+        return new CreateUserContext(isTaken);
+    })
+    .Field(x => x.Email,
+        Z.String()
+            .Email()
+            .Using<CreateUserContext>()
+            .Refine((email, ctx) => !ctx.EmailExists, "Email already exists"));
+```
+
 ## Features
 
 - **Schema-first** - Define validation as reusable schema objects
 - **Async by default** - Every rule can be async, no separate sync/async paths
 - **Composable** - Schemas are values that can be reused and combined
-- **Path-aware errors** - Errors include location (`user.address.street`, `items[0]`)
+- **Immutable fluent API** - Every call returns a new schema instance (safe branching/reuse)
+- **Path-aware errors** - Errors include location (`$.user.address.street`, `$[0]`)
 - **ASP.NET Core native** - First-class support for Minimal APIs and Controllers
 
 ## Installation
@@ -204,7 +223,7 @@ var orderItemSchema = Z.Object<OrderItem>()
 Z.Collection(orderItemSchema)
     .MinLength(1);
 
-// Errors include index path: "tags[0]", "items[2].quantity"
+// Errors include index path: "$.tags[0]", "$.items[2].quantity"
 ```
 
 See the [Collections guide](docs/Collections.md) for advanced patterns including context-aware validation.
@@ -239,7 +258,7 @@ Z.String()
 
 ### Polymorphic Validation
 
-Use branch schemas with `.If(predicate, schema)` or `.WhenType<TDerived>(...)`:
+Use branch schemas with `.If(predicate, schema)`:
 
 ```csharp
 var dogSchema = Z.Object<Dog>()
@@ -247,7 +266,7 @@ var dogSchema = Z.Object<Dog>()
 
 var schema = Z.Object<IAnimal>()
     .If(x => x is Dog, dogSchema)
-    .WhenType<Cat>(cat => cat
+    .If(x => x is Cat, Z.Object<Cat>()
         .Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
 
 // Explicit type assertion is still available
@@ -447,7 +466,7 @@ See the [Validation Context guide](docs/ValidationContext.md) for more details.
 
 ```csharp
 public record ValidationError(
-    string Path,     // "user.address.street" or "items[0]"
+    string Path,     // "$.user.address.street" or "$.items[0]"
     string Code,     // "min_length", "email", "required"
     string Message   // "Must be at least 3 characters"
 );

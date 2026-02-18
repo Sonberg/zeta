@@ -151,7 +151,7 @@ This is the **recommended approach for most scenarios**:
 
    var userSchema = Z.Object<User>()
        .Using<UserContext>()
-       .Field(u => u.Email, emailSchema);
+       .Field(u => u.Email, emailSchema); // No cast needed
    ```
 
 4. **Schema is complex with nested objects or arrays**

@@ -66,6 +66,8 @@ var ContextAwareEmailSchema = Z.String()
     .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
 ```
 
+Context-aware schemas are also assignable to `ISchema<T>` in this branch. They still resolve context through their configured factory when validated in a contextless flow that includes `IServiceProvider`.
+
 Rules defined before `.Using()` are preserved:
 
 ```csharp
@@ -214,6 +216,8 @@ public class UsersController : ControllerBase
     }
 }
 ```
+
+You can also keep a context-aware schema in an `ISchema<T>` variable and validate it through `IZetaValidator`; context is still factory-resolved from the schema.
 
 You can also customize `TimeProvider` (or any other builder option):
 

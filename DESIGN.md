@@ -20,7 +20,7 @@ var result = await UserSchema.ValidateAsync(user);
 2. **Async by default** — Every rule can be async, no separate sync/async paths
 3. **No exceptions for control flow** — Validation failures return Results, never throw
 4. **Composable** — Schemas are values that can be reused and combined
-5. **Path-aware errors** — Errors know their location (`user.address.street`)
+5. **Path-aware errors** — Errors know their location (`$.user.address.street`)
 6. **Required by default** — Values must be present unless explicitly marked optional/nullable
 7. **Minimal API & MVC native** — First-class integration for both
 
@@ -42,7 +42,7 @@ var result = await UserSchema.ValidateAsync(user);
 
 ```csharp
 public sealed record ValidationError(
-    string Path,      // "user.email" or "" for root
+    string Path,      // "user.email" or "$" for root
     string Code,      // "min_length", "email", "required"
     string Message    // Human-readable message
 );
@@ -303,8 +303,8 @@ Returns `400 Bad Request` with `ValidationProblemDetails`:
 ## Dependency Injection
 
 ```csharp
-// Register Zeta with context factory scanning
-builder.Services.AddZeta(typeof(Program).Assembly);
+// Register Zeta
+builder.Services.AddZeta();
 
 // Register MVC filter
 builder.Services.AddZetaControllers();
@@ -321,7 +321,7 @@ builder.Services.AddSingleton<ISchema<User>>(UserSchema);
 
 ```csharp
 public sealed record ValidationError(
-    string Path,      // Dot-notation path: "address.street"
+    string Path,      // Dot-notation path: "$.address.street"
     string Code,      // Machine-readable: "min_length"
     string Message    // Human-readable: "Must be at least 3 characters"
 );
@@ -329,10 +329,10 @@ public sealed record ValidationError(
 
 ### Path Building
 
-- Root level: `""`
-- Object field: `"email"` (auto-camelCased)
-- Nested: `"address.street"`
-- Array: `"items[0].name"`
+- Root level: `"$"`
+- Object field: `"$.email"` (auto-camelCased)
+- Nested: `"$.address.street"`
+- Array: `"$.items[0].name"`
 
 ### Standard Error Codes
 
