@@ -40,11 +40,14 @@ internal sealed class TypeNarrowingSchemaAdapter<TBase, TDerived, TContext> : IS
         }
     }
 
-    public async ValueTask<Result> ValidateAsync(TBase? value, ValidationContext<TContext> context)
+    public async ValueTask<Result<TBase, TContext>> ValidateAsync(TBase? value, ValidationContext<TContext> context)
     {
         if (value is not TDerived derived)
-            return Result.Success();
+            return Result<TBase, TContext>.Success(value!, context.Data);
 
-        return await _inner.ValidateAsync(derived, context);
+        var result = await _inner.ValidateAsync(derived, context);
+        return result.IsSuccess
+            ? Result<TBase, TContext>.Success(value!, context.Data)
+            : Result<TBase, TContext>.Failure(result.Errors);
     }
 }

@@ -7,6 +7,21 @@
 
 - **Dictionary schemas**: `Z.Dictionary<TKey, TValue>()` and `Z.Dictionary(keySchema, valueSchema)` for validating `IDictionary<TKey, TValue>`. Supports `.EachKey()`, `.EachValue()`, `.MinLength()`, `.MaxLength()`, `.NotEmpty()`, `.Nullable()`, `.If()`, and `.Refine()`. Context-aware promotion via `.Using<TContext>()`. Object field support via generated `Field()` overloads for both `IDictionary<TKey, TValue>` and `Dictionary<TKey, TValue>` properties. Key errors are reported at `$.keys[N]`, value errors at `$.<key>`.
 
+- **`Result<T, TContext>` type**: Context-aware validation now returns `Result<T, TContext>` (extends `Result<T>`). Provides both `.Value` (the validated input) and `.Context` (the resolved context data). All monadic operations (`.Map()`, `.Then()`, `.Match()`, `.GetOrDefault()`, `.GetOrThrow()`) continue to work via inheritance.
+
+- Added a new Blazor sample app at `samples/Zeta.Sample.Blazor` demonstrating interactive form validation with Zeta schemas.
+
+### Breaking
+
+- **`ISchema<T, TContext>.ValidateAsync` return type changed**: Now returns `ValueTask<Result<T, TContext>>` instead of `ValueTask<Result>`. Callers that assigned the result to `Result` can now use `Result<T, TContext>` or `Result<T>` (both are valid since `Result<T, TContext>` extends `Result<T>`).
+
+- **`IZetaValidator.ValidateAsync<T, TContext>` return type changed**: Now returns `ValueTask<Result<T, TContext>>` instead of `ValueTask<Result<T>>`. Existing code assigning to `Result<T>` continues to work without changes.
+
+- **`SchemaExtensions.ValidateAsync<T, TContext>` return type changed**: The convenience extension method now returns `ValueTask<Result<T, TContext>>` instead of `ValueTask<Result<T>>`.
+
+- **`ISchema<in T, TContext>` variance removed**: `T` is now invariant (was contravariant `in T`). Required to allow `T` to appear in the return type `Result<T, TContext>`. Assignments relying on contravariant `T` will need explicit adapters.
+
+
 ## 0.1.13
 
 ### Added
