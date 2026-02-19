@@ -1,0 +1,85 @@
+@page "/"
+@page "/forms/basic"
+@rendermode InteractiveServer
+@using Zeta.Core
+@using Zeta.Sample.Blazor.Models
+@using Zeta.Sample.Blazor.Validation
+
+<PageTitle>Basic Fields</PageTitle>
+
+<h1>Basic Field Rules</h1>
+<p class="text-muted">Simple scalar validation with required values, email format, and numeric bounds.</p>
+
+<EditForm Model="@_model" OnSubmit="HandleSubmitAsync" class="mt-4">
+    <div class="mb-3">
+        <label class="form-label" for="fullName">Full name</label>
+        <InputText id="fullName" class="form-control" @bind-Value="_model.FullName" />
+        @foreach (var message in FieldErrors("$.fullName"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="email">Email</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="_model.Email" />
+        @foreach (var message in FieldErrors("$.email"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="age">Age</label>
+        <InputNumber id="age" class="form-control" @bind-Value="_model.Age" />
+        @foreach (var message in FieldErrors("$.age"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="password">Password</label>
+        <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" />
+        @foreach (var message in FieldErrors("$.password", "password_contains_email"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary">Validate</button>
+</EditForm>
+
+@if (_isSuccess == true)
+{
+    <div class="alert alert-success mt-3" role="alert">
+        Validation succeeded.
+    </div>
+}
+
+@code {
+    private readonly RegistrationRequest _model = new();
+    private bool? _isSuccess;
+    private IReadOnlyList<ValidationError> _errors = [];
+
+    private async Task HandleSubmitAsync(EditContext _)
+    {
+        var result = await RegistrationSchema.Instance.ValidateAsync(_model);
+        _isSuccess = result.IsSuccess;
+        _errors = result.Errors;
+    }
+
+    private IEnumerable<string> FieldErrors(string path, string? includeCode = null)
+    {
+        var byPath = _errors
+            .Where(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message);
+
+        if (includeCode is null)
+            return byPath;
+
+        return byPath.Concat(_errors
+            .Where(e => string.Equals(e.Code, includeCode, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message));
+    }
+}
