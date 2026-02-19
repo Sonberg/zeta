@@ -1,0 +1,106 @@
+@page "/forms/async-email"
+@rendermode InteractiveServer
+@using Zeta
+@using Zeta.Core
+
+<PageTitle>Async Email Check</PageTitle>
+
+<h1>Async Email Exists Check</h1>
+<p class="text-muted">
+    Simulates an HTTP call by waiting <strong>80ms</strong> before validating that the email is not already taken.
+</p>
+
+<div>
+    <strong>Taken emails:</strong>
+    @foreach (var email in ExistingEmails)
+    {
+        <div class="small mt-1">@email</div>
+    }
+</div>
+
+<EditForm Model="@_model" OnSubmit="HandleSubmitAsync" class="mt-4">
+    <div class="mb-3">
+        <label class="form-label" for="displayName">Display name</label>
+        <InputText id="displayName" class="form-control" @bind-Value="_model.DisplayName" />
+        @foreach (var message in FieldErrors("$.displayName"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="email">Email</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="_model.Email" />
+        @foreach (var message in FieldErrors("$.email"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@_isSubmitting">
+        @if (_isSubmitting)
+        {
+            <span>Checking...</span>
+        }
+        else
+        {
+            <span>Validate</span>
+        }
+    </button>
+</EditForm>
+
+@if (_isSuccess == true)
+{
+    <div class="alert alert-success mt-3">Validation succeeded.</div>
+}
+
+@code {
+    private readonly AsyncEmailRequest _model = new();
+    private bool _isSubmitting;
+    private bool? _isSuccess;
+    private IReadOnlyList<ValidationError> _errors = [];
+
+    private static readonly HashSet<string> ExistingEmails =
+    [
+        "taken@company.com",
+        "admin@company.com",
+        "support@company.com"
+    ];
+
+    private static readonly ISchema<AsyncEmailRequest> Schema = Z.Schema<AsyncEmailRequest>()
+        .Property(x => x.DisplayName, s => s.NotEmpty().MinLength(2))
+        .Property(x => x.Email, s => s
+            .Email()
+            .RefineAsync(async (email, ct) =>
+            {
+                await Task.Delay(80, ct);
+                var normalized = email.Trim().ToLowerInvariant();
+                return !ExistingEmails.Contains(normalized);
+            }, "Email already exists.", "email_exists"));
+
+    private async Task HandleSubmitAsync(EditContext _)
+    {
+        _isSubmitting = true;
+        try
+        {
+            var result = await Schema.ValidateAsync(_model);
+            _isSuccess = result.IsSuccess;
+            _errors = result.Errors;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private IEnumerable<string> FieldErrors(string path) =>
+        _errors
+            .Where(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message);
+
+    private sealed class AsyncEmailRequest
+    {
+        public string DisplayName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+}
