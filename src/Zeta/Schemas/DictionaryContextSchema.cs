@@ -14,10 +14,12 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
 {
     private ISchema<TKey, TContext>? KeySchema { get; }
     private ISchema<TValue, TContext>? ValueSchema { get; }
+    private readonly Func<TValue, TKey, ISchema<TValue, TContext>>? _valueSchemaFactory;
 
     internal DictionaryContextSchema() : this(
         (ISchema<TKey, TContext>?)null,
         (ISchema<TValue, TContext>?)null,
+        null,
         new ContextRuleEngine<IDictionary<TKey, TValue>, TContext>(),
         false, null, null)
     {
@@ -27,7 +29,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         ISchema<TKey, TContext>? keySchema,
         ISchema<TValue, TContext>? valueSchema,
         ContextRuleEngine<IDictionary<TKey, TValue>, TContext> rules)
-        : this(keySchema, valueSchema, rules, false, null, null)
+        : this(keySchema, valueSchema, null, rules, false, null, null)
     {
     }
 
@@ -38,6 +40,21 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         : this(
             keySchema is not null ? new SchemaAdapter<TKey, TContext>(keySchema) : null,
             valueSchema is not null ? new SchemaAdapter<TValue, TContext>(valueSchema) : null,
+            null,
+            rules.ToContext<TContext>(),
+            false, null, null)
+    {
+    }
+
+    internal DictionaryContextSchema(
+        ISchema<TKey>? keySchema,
+        ISchema<TValue>? valueSchema,
+        Func<TValue, TKey, ISchema<TValue>>? valueSchemaFactory,
+        ContextlessRuleEngine<IDictionary<TKey, TValue>> rules)
+        : this(
+            keySchema is not null ? new SchemaAdapter<TKey, TContext>(keySchema) : null,
+            valueSchema is not null ? new SchemaAdapter<TValue, TContext>(valueSchema) : null,
+            valueSchemaFactory is not null ? (v, k) => new SchemaAdapter<TValue, TContext>(valueSchemaFactory(v, k)) : null,
             rules.ToContext<TContext>(),
             false, null, null)
     {
@@ -46,6 +63,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
     private DictionaryContextSchema(
         ISchema<TKey, TContext>? keySchema,
         ISchema<TValue, TContext>? valueSchema,
+        Func<TValue, TKey, ISchema<TValue, TContext>>? valueSchemaFactory,
         ContextRuleEngine<IDictionary<TKey, TValue>, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<IDictionary<TKey, TValue>, TContext>>? conditionals,
@@ -54,6 +72,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
     {
         KeySchema = keySchema;
         ValueSchema = valueSchema;
+        _valueSchemaFactory = valueSchemaFactory;
     }
 
     protected override DictionaryContextSchema<TKey, TValue, TContext> CreateInstance() => new();
@@ -63,7 +82,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         bool allowNull,
         IReadOnlyList<ISchemaConditional<IDictionary<TKey, TValue>, TContext>>? conditionals,
         Func<IDictionary<TKey, TValue>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
-        => new(KeySchema, ValueSchema, rules, allowNull, conditionals, contextFactory);
+        => new(KeySchema, ValueSchema, _valueSchemaFactory, rules, allowNull, conditionals, contextFactory);
 
     public override async ValueTask<Result<IDictionary<TKey, TValue>, TContext>> ValidateAsync(
         IDictionary<TKey, TValue>? value, ValidationContext<TContext> context)
@@ -92,10 +111,11 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
                 }
             }
 
-            if (ValueSchema is not null)
+            if (ValueSchema is not null || _valueSchemaFactory is not null)
             {
                 var valueContext = context.Push("values").PushIndex(index);
-                var valueResult = await ValueSchema.ValidateAsync(kvp.Value, valueContext);
+                var schema = _valueSchemaFactory?.Invoke(kvp.Value, kvp.Key) ?? ValueSchema!;
+                var valueResult = await schema.ValidateAsync(kvp.Value, valueContext);
                 if (valueResult.IsFailure)
                 {
                     errors ??= [];
@@ -128,14 +148,20 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         => Append(new DictionaryNotEmptyRule<TKey, TValue, TContext>(message));
 
     public DictionaryContextSchema<TKey, TValue, TContext> EachKey(ISchema<TKey, TContext> keySchema)
-        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(keySchema, ValueSchema, _valueSchemaFactory, Rules, AllowNull, GetConditionals(), ContextFactory);
 
     public DictionaryContextSchema<TKey, TValue, TContext> EachValue(ISchema<TValue, TContext> valueSchema)
-        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(KeySchema, valueSchema, null, Rules, AllowNull, GetConditionals(), ContextFactory);
+
+    /// <summary>
+    /// Validates each value in the dictionary using a context-aware schema resolved via a factory function.
+    /// </summary>
+    public DictionaryContextSchema<TKey, TValue, TContext> EachValue(Func<TValue, TKey, ISchema<TValue, TContext>> valueSchemaFactory)
+        => new(KeySchema, null, valueSchemaFactory, Rules, AllowNull, GetConditionals(), ContextFactory);
 
     internal DictionaryContextSchema<TKey, TValue, TContext> WithKeySchema(ISchema<TKey, TContext> keySchema)
-        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(keySchema, ValueSchema, _valueSchemaFactory, Rules, AllowNull, GetConditionals(), ContextFactory);
 
     internal DictionaryContextSchema<TKey, TValue, TContext> WithValueSchema(ISchema<TValue, TContext> valueSchema)
-        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(KeySchema, valueSchema, null, Rules, AllowNull, GetConditionals(), ContextFactory);
 }

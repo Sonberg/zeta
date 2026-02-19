@@ -12,7 +12,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
     where TKey : notnull
 {
     internal DictionaryContextlessSchema()
-        : this(null, null, new ContextlessRuleEngine<IDictionary<TKey, TValue>>(), false, null)
+        : this(null, null, null, new ContextlessRuleEngine<IDictionary<TKey, TValue>>(), false, null)
     {
     }
 
@@ -20,13 +20,14 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
         ISchema<TKey>? keySchema,
         ISchema<TValue>? valueSchema,
         ContextlessRuleEngine<IDictionary<TKey, TValue>> rules)
-        : this(keySchema, valueSchema, rules, false, null)
+        : this(keySchema, valueSchema, null, rules, false, null)
     {
     }
 
     private DictionaryContextlessSchema(
         ISchema<TKey>? keySchema,
         ISchema<TValue>? valueSchema,
+        Func<TValue, TKey, ISchema<TValue>>? valueSchemaFactory,
         ContextlessRuleEngine<IDictionary<TKey, TValue>> rules,
         bool allowNull,
         IReadOnlyList<(Func<IDictionary<TKey, TValue>, bool>, ISchema<IDictionary<TKey, TValue>>)>? conditionals)
@@ -34,10 +35,12 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
     {
         KeySchema = keySchema;
         ValueSchema = valueSchema;
+        _valueSchemaFactory = valueSchemaFactory;
     }
 
     private ISchema<TKey>? KeySchema { get; }
     private ISchema<TValue>? ValueSchema { get; }
+    private readonly Func<TValue, TKey, ISchema<TValue>>? _valueSchemaFactory;
 
     protected override DictionaryContextlessSchema<TKey, TValue> CreateInstance() => new();
 
@@ -45,7 +48,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
         ContextlessRuleEngine<IDictionary<TKey, TValue>> rules,
         bool allowNull,
         IReadOnlyList<(Func<IDictionary<TKey, TValue>, bool>, ISchema<IDictionary<TKey, TValue>>)>? conditionals)
-        => new(KeySchema, ValueSchema, rules, allowNull, conditionals);
+        => new(KeySchema, ValueSchema, _valueSchemaFactory, rules, allowNull, conditionals);
 
     public override async ValueTask<Result<IDictionary<TKey, TValue>>> ValidateAsync(
         IDictionary<TKey, TValue>? value, ValidationContext context)
@@ -74,10 +77,11 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
                 }
             }
 
-            if (ValueSchema is not null)
+            if (ValueSchema is not null || _valueSchemaFactory is not null)
             {
                 var valueContext = context.Push("values").PushIndex(index);
-                var valueResult = await ValueSchema.ValidateAsync(kvp.Value, valueContext);
+                var schema = _valueSchemaFactory?.Invoke(kvp.Value, kvp.Key) ?? ValueSchema!;
+                var valueResult = await schema.ValidateAsync(kvp.Value, valueContext);
                 if (valueResult.IsFailure)
                 {
                     errors ??= [];
@@ -110,16 +114,22 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
         => Append(new DictionaryNotEmptyRule<TKey, TValue>(message));
 
     public DictionaryContextlessSchema<TKey, TValue> EachKey(ISchema<TKey> keySchema)
-        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals());
+        => new(keySchema, ValueSchema, _valueSchemaFactory, Rules, AllowNull, GetConditionals());
 
     public DictionaryContextlessSchema<TKey, TValue> EachValue(ISchema<TValue> valueSchema)
-        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals());
+        => new(KeySchema, valueSchema, null, Rules, AllowNull, GetConditionals());
+
+    /// <summary>
+    /// Validates each value in the dictionary using a schema resolved via a factory function.
+    /// </summary>
+    public DictionaryContextlessSchema<TKey, TValue> EachValue(Func<TValue, TKey, ISchema<TValue>> valueSchemaFactory)
+        => new(KeySchema, null, valueSchemaFactory, Rules, AllowNull, GetConditionals());
 
     internal DictionaryContextlessSchema<TKey, TValue> WithKeySchema(ISchema<TKey> keySchema)
-        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals());
+        => new(keySchema, ValueSchema, _valueSchemaFactory, Rules, AllowNull, GetConditionals());
 
     internal DictionaryContextlessSchema<TKey, TValue> WithValueSchema(ISchema<TValue> valueSchema)
-        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals());
+        => new(KeySchema, valueSchema, null, Rules, AllowNull, GetConditionals());
 
     /// <summary>
     /// Creates a context-aware dictionary schema with all rules from this schema.
@@ -127,7 +137,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
     /// </summary>
     public DictionaryContextSchema<TKey, TValue, TContext> Using<TContext>()
     {
-        var schema = new DictionaryContextSchema<TKey, TValue, TContext>(KeySchema, ValueSchema, Rules);
+        var schema = new DictionaryContextSchema<TKey, TValue, TContext>(KeySchema, ValueSchema, _valueSchemaFactory, Rules);
         schema = AllowNull ? schema.Nullable() : schema;
         schema = schema.TransferContextlessConditionals(GetConditionals());
         return schema;

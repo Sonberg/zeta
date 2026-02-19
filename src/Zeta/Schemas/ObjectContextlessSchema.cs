@@ -191,6 +191,18 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return AddField(new FieldContextlessValidator<T, TProperty?>(propertyName, getter, wrapper));
     }
 
+    /// <summary>
+    /// Adds a field with a schema resolved at runtime via a factory function.
+    /// </summary>
+    public ObjectContextlessSchema<T> Field<TProperty>(
+        Expression<Func<T, TProperty?>> propertySelector,
+        Func<T, IServiceProvider, ISchema<TProperty>> schemaFactory)
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new DelegatedFieldContextlessValidator<T, TProperty>(propertyName, getter, schemaFactory));
+    }
+
     public ObjectContextlessSchema<T> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
@@ -255,8 +267,16 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     public ObjectContextlessSchema<T> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, bool> predicate,
-        string message,
-        string code = "custom_error")
+        string message)
+    {
+        return RefineAt(propertySelector, predicate, _ => message, "custom_error");
+    }
+
+    public ObjectContextlessSchema<T> RefineAt<TProperty>(
+        Expression<Func<T, TProperty?>> propertySelector,
+        Func<T, bool> predicate,
+        string code,
+        string message)
     {
         return RefineAt(propertySelector, predicate, _ => message, code);
     }
