@@ -3,9 +3,9 @@
 @using Zeta
 @using Zeta.Core
 
-<PageTitle>Level 4 - Cross-Record Rules</PageTitle>
+<PageTitle>Cross-Record Rules</PageTitle>
 
-<h1>Level 4 - Cross-Record Constraints</h1>
+<h1>Cross-Record Constraints</h1>
 <p class="text-muted">Combines conditional fields, per-member constraints, uniqueness, and cross-record consistency checks.</p>
 
 <EditForm Model="@_model" OnSubmit="HandleSubmitAsync" class="mt-4">
@@ -97,6 +97,15 @@
     private bool? _isSuccess;
     private IReadOnlyList<ValidationError> _errors = [];
 
+    private static readonly ISchema<MemberInput> MemberSchema =
+        Z.Schema<MemberInput>()
+            .Property(x => x.Name, s => s.NotEmpty().MinLength(2))
+            .Property(x => x.Email, s => s.Email())
+            .Property(x => x.Role, s => s.NotEmpty())
+            .If(
+                x => string.Equals(x.Role, "admin", StringComparison.OrdinalIgnoreCase),
+                s => s.Property(x => x.Email, p => p.EndsWith("@company.com")));
+
     private static readonly ISchema<TeamProvisioningRequest> Schema =
         Z.Schema<TeamProvisioningRequest>()
             .Property(x => x.TeamName, s => s.NotEmpty().MinLength(3).MaxLength(50))
@@ -116,15 +125,6 @@
                     string.Equals(m.Email, x.ManagerEmail, StringComparison.OrdinalIgnoreCase)),
                 "Approver email cannot match a member email.",
                 "approver_conflict");
-
-    private static readonly ISchema<MemberInput> MemberSchema =
-        Z.Schema<MemberInput>()
-            .Property(x => x.Name, s => s.NotEmpty().MinLength(2))
-            .Property(x => x.Email, s => s.Email())
-            .Property(x => x.Role, s => s.NotEmpty())
-            .If(
-                x => string.Equals(x.Role, "admin", StringComparison.OrdinalIgnoreCase),
-                s => s.Property(x => x.Email, p => p.EndsWith("@company.com")));
 
     private async Task HandleSubmitAsync(EditContext _)
     {

@@ -3,9 +3,9 @@
 @using Zeta
 @using Zeta.Core
 
-<PageTitle>Level 3 - Nested Collections</PageTitle>
+<PageTitle>Nested Collections</PageTitle>
 
-<h1>Level 3 - Nested Objects and Collections</h1>
+<h1>Nested Objects and Collections</h1>
 <p class="text-muted">Checkout form with nested address, line items, conditional card field, and aggregate rule.</p>
 
 <EditForm Model="@_model" OnSubmit="HandleSubmitAsync" class="mt-4">
@@ -113,6 +113,17 @@
     private bool? _isSuccess;
     private IReadOnlyList<ValidationError> _errors = [];
 
+    private static readonly ISchema<ShippingAddressInput> ShippingAddressSchema =
+        Z.Schema<ShippingAddressInput>()
+            .Property(x => x.Street, s => s.NotEmpty().MinLength(3))
+            .Property(x => x.City, s => s.NotEmpty().MinLength(2))
+            .Property(x => x.PostalCode, s => s.Regex(@"^\d{5}$"));
+
+    private static readonly ISchema<OrderItemInput> OrderItemSchema =
+        Z.Schema<OrderItemInput>()
+            .Property(x => x.Sku, s => s.NotEmpty().MinLength(3))
+            .Property(x => x.Quantity, s => s.Min(1).Max(99));
+
     private static readonly ISchema<CheckoutRequest> Schema =
         Z.Schema<CheckoutRequest>()
             .Property(x => x.CustomerEmail, s => s.Email())
@@ -126,17 +137,6 @@
                 x => x.Items.Sum(i => i.Quantity) <= 200,
                 "Total quantity across line items must be 200 or less.",
                 "total_quantity");
-
-    private static readonly ISchema<ShippingAddressInput> ShippingAddressSchema =
-        Z.Schema<ShippingAddressInput>()
-            .Property(x => x.Street, s => s.NotEmpty().MinLength(3))
-            .Property(x => x.City, s => s.NotEmpty().MinLength(2))
-            .Property(x => x.PostalCode, s => s.Regex(@"^\d{5}$"));
-
-    private static readonly ISchema<OrderItemInput> OrderItemSchema =
-        Z.Schema<OrderItemInput>()
-            .Property(x => x.Sku, s => s.NotEmpty().MinLength(3))
-            .Property(x => x.Quantity, s => s.Min(1).Max(99));
 
     private async Task HandleSubmitAsync(EditContext _)
     {
