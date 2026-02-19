@@ -1,0 +1,202 @@
+@page "/forms/checkout"
+@rendermode InteractiveServer
+@using Zeta
+@using Zeta.Core
+
+<PageTitle>Level 3 - Nested Collections</PageTitle>
+
+<h1>Level 3 - Nested Objects and Collections</h1>
+<p class="text-muted">Checkout form with nested address, line items, conditional card field, and aggregate rule.</p>
+
+<EditForm Model="@_model" OnSubmit="HandleSubmitAsync" class="mt-4">
+    <div class="mb-3">
+        <label class="form-label" for="customerEmail">Customer email</label>
+        <InputText id="customerEmail" class="form-control" @bind-Value="_model.CustomerEmail" />
+        @foreach (var message in FieldErrors("$.customerEmail"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <h5 class="mt-4">Shipping address</h5>
+    <div class="mb-3">
+        <label class="form-label" for="street">Street</label>
+        <InputText id="street" class="form-control" @bind-Value="_model.ShippingAddress.Street" />
+        @foreach (var message in FieldErrors("$.shippingAddress.street"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="city">City</label>
+        <InputText id="city" class="form-control" @bind-Value="_model.ShippingAddress.City" />
+        @foreach (var message in FieldErrors("$.shippingAddress.city"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="postalCode">Postal code</label>
+        <InputText id="postalCode" class="form-control" @bind-Value="_model.ShippingAddress.PostalCode" />
+        @foreach (var message in FieldErrors("$.shippingAddress.postalCode"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <h5 class="mt-4">Line items</h5>
+    @for (var i = 0; i < _model.Items.Count; i++)
+    {
+        var index = i;
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title">Item @(index + 1)</h6>
+                <div class="mb-3">
+                    <label class="form-label" for="@($"sku-{index}")">SKU</label>
+                    <InputText id="@($"sku-{index}")" class="form-control" @bind-Value="_model.Items[index].Sku" />
+                    @foreach (var message in ItemFieldErrors(index, "sku"))
+                    {
+                        <div class="text-danger small mt-1">@message</div>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="@($"qty-{index}")">Quantity</label>
+                    <InputNumber id="@($"qty-{index}")" class="form-control" @bind-Value="_model.Items[index].Quantity" />
+                    @foreach (var message in ItemFieldErrors(index, "quantity"))
+                    {
+                        <div class="text-danger small mt-1">@message</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex gap-2 mb-3">
+        <button type="button" class="btn btn-outline-secondary" @onclick="AddItem">Add item</button>
+        @if (_model.Items.Count > 1)
+        {
+            <button type="button" class="btn btn-outline-secondary" @onclick="RemoveLastItem">Remove last item</button>
+        }
+    </div>
+    @foreach (var message in FieldErrors("$.items", "total_quantity"))
+    {
+        <div class="text-danger small mt-1">@message</div>
+    }
+
+    <div class="mb-3 mt-4">
+        <label class="form-label" for="paymentMethod">Payment method</label>
+        <InputSelect id="paymentMethod" class="form-select" @bind-Value="_model.PaymentMethod">
+            <option value="card">Card</option>
+            <option value="invoice">Invoice</option>
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="cardLast4">Card last 4 (required for Card)</label>
+        <InputText id="cardLast4" class="form-control" @bind-Value="_model.CardLast4" />
+        @foreach (var message in FieldErrors("$.cardLast4"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary">Validate</button>
+</EditForm>
+
+@if (_isSuccess == true)
+{
+    <div class="alert alert-success mt-3">Validation succeeded.</div>
+}
+
+@code {
+    private readonly CheckoutRequest _model = new();
+    private bool? _isSuccess;
+    private IReadOnlyList<ValidationError> _errors = [];
+
+    private static readonly ISchema<CheckoutRequest> Schema =
+        Z.Schema<CheckoutRequest>()
+            .Property(x => x.CustomerEmail, s => s.Email())
+            .Property(x => x.ShippingAddress, ShippingAddressSchema)
+            .Property(x => x.Items, Z.Collection(OrderItemSchema).MinLength(1).MaxLength(5))
+            .Property(x => x.PaymentMethod, s => s.NotEmpty())
+            .If(
+                x => string.Equals(x.PaymentMethod, "card", StringComparison.OrdinalIgnoreCase),
+                s => s.Property(x => x.CardLast4, p => p.Regex(@"^\d{4}$")))
+            .Refine(
+                x => x.Items.Sum(i => i.Quantity) <= 200,
+                "Total quantity across line items must be 200 or less.",
+                "total_quantity");
+
+    private static readonly ISchema<ShippingAddressInput> ShippingAddressSchema =
+        Z.Schema<ShippingAddressInput>()
+            .Property(x => x.Street, s => s.NotEmpty().MinLength(3))
+            .Property(x => x.City, s => s.NotEmpty().MinLength(2))
+            .Property(x => x.PostalCode, s => s.Regex(@"^\d{5}$"));
+
+    private static readonly ISchema<OrderItemInput> OrderItemSchema =
+        Z.Schema<OrderItemInput>()
+            .Property(x => x.Sku, s => s.NotEmpty().MinLength(3))
+            .Property(x => x.Quantity, s => s.Min(1).Max(99));
+
+    private async Task HandleSubmitAsync(EditContext _)
+    {
+        var result = await Schema.ValidateAsync(_model);
+        _isSuccess = result.IsSuccess;
+        _errors = result.Errors;
+    }
+
+    private void AddItem()
+    {
+        if (_model.Items.Count >= 5)
+            return;
+
+        _model.Items.Add(new OrderItemInput());
+    }
+
+    private void RemoveLastItem()
+    {
+        if (_model.Items.Count <= 1)
+            return;
+
+        _model.Items.RemoveAt(_model.Items.Count - 1);
+    }
+
+    private IEnumerable<string> FieldErrors(string path, string? includeCode = null)
+    {
+        var byPath = _errors
+            .Where(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message);
+
+        if (includeCode is null)
+            return byPath;
+
+        return byPath.Concat(_errors
+            .Where(e => string.Equals(e.Code, includeCode, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message));
+    }
+
+    private IEnumerable<string> ItemFieldErrors(int index, string field) =>
+        FieldErrors($"$.items[{index}].{field}");
+
+    private sealed class CheckoutRequest
+    {
+        public string CustomerEmail { get; set; } = string.Empty;
+        public ShippingAddressInput ShippingAddress { get; set; } = new();
+        public List<OrderItemInput> Items { get; set; } = [new()];
+        public string PaymentMethod { get; set; } = "card";
+        public string CardLast4 { get; set; } = string.Empty;
+    }
+
+    private sealed class ShippingAddressInput
+    {
+        public string Street { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string PostalCode { get; set; } = string.Empty;
+    }
+
+    private sealed class OrderItemInput
+    {
+        public string Sku { get; set; } = string.Empty;
+        public int Quantity { get; set; } = 1;
+    }
+}

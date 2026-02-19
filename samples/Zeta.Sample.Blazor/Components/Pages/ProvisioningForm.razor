@@ -1,0 +1,183 @@
+@page "/forms/provisioning"
+@rendermode InteractiveServer
+@using Zeta
+@using Zeta.Core
+
+<PageTitle>Level 4 - Cross-Record Rules</PageTitle>
+
+<h1>Level 4 - Cross-Record Constraints</h1>
+<p class="text-muted">Combines conditional fields, per-member constraints, uniqueness, and cross-record consistency checks.</p>
+
+<EditForm Model="@_model" OnSubmit="HandleSubmitAsync" class="mt-4">
+    <div class="mb-3">
+        <label class="form-label" for="teamName">Team name</label>
+        <InputText id="teamName" class="form-control" @bind-Value="_model.TeamName" />
+        @foreach (var message in FieldErrors("$.teamName"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="form-check mb-3">
+        <InputCheckbox id="requireApproval" class="form-check-input" @bind-Value="_model.RequireManagerApproval" />
+        <label class="form-check-label" for="requireApproval">Require manager approval</label>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="managerEmail">Manager email (required when approval is enabled)</label>
+        <InputText id="managerEmail" class="form-control" @bind-Value="_model.ManagerEmail" />
+        @foreach (var message in FieldErrors("$.managerEmail", "approver_conflict"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <h5 class="mt-4">Members</h5>
+    @for (var i = 0; i < _model.Members.Count; i++)
+    {
+        var index = i;
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title">Member @(index + 1)</h6>
+                <div class="mb-3">
+                    <label class="form-label" for="@($"member-name-{index}")">Name</label>
+                    <InputText id="@($"member-name-{index}")" class="form-control" @bind-Value="_model.Members[index].Name" />
+                    @foreach (var message in MemberFieldErrors(index, "name"))
+                    {
+                        <div class="text-danger small mt-1">@message</div>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="@($"member-email-{index}")">Email</label>
+                    <InputText id="@($"member-email-{index}")" class="form-control" @bind-Value="_model.Members[index].Email" />
+                    @foreach (var message in MemberFieldErrors(index, "email"))
+                    {
+                        <div class="text-danger small mt-1">@message</div>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="@($"member-role-{index}")">Role</label>
+                    <InputSelect id="@($"member-role-{index}")" class="form-select" @bind-Value="_model.Members[index].Role">
+                        <option value="viewer">Viewer</option>
+                        <option value="editor">Editor</option>
+                        <option value="admin">Admin (must end with company.com email)</option>
+                    </InputSelect>
+                    @foreach (var message in MemberFieldErrors(index, "role"))
+                    {
+                        <div class="text-danger small mt-1">@message</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @foreach (var message in FieldErrors("$.members", "duplicate_member_email"))
+    {
+        <div class="text-danger small mt-1">@message</div>
+    }
+
+    <div class="d-flex gap-2 mb-3">
+        <button type="button" class="btn btn-outline-secondary" @onclick="AddMember">Add member</button>
+        @if (_model.Members.Count > 1)
+        {
+            <button type="button" class="btn btn-outline-secondary" @onclick="RemoveLastMember">Remove last member</button>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary">Validate</button>
+</EditForm>
+
+@if (_isSuccess == true)
+{
+    <div class="alert alert-success mt-3">Validation succeeded.</div>
+}
+
+@code {
+    private readonly TeamProvisioningRequest _model = new();
+    private bool? _isSuccess;
+    private IReadOnlyList<ValidationError> _errors = [];
+
+    private static readonly ISchema<TeamProvisioningRequest> Schema =
+        Z.Schema<TeamProvisioningRequest>()
+            .Property(x => x.TeamName, s => s.NotEmpty().MinLength(3).MaxLength(50))
+            .Property(x => x.Members, Z.Collection(MemberSchema).MinLength(1).MaxLength(8))
+            .If(
+                x => x.RequireManagerApproval,
+                s => s.Property(x => x.ManagerEmail, p => p.NotEmpty().Email()))
+            .Refine(
+                x => x.Members
+                    .Select(m => m.Email.Trim().ToLowerInvariant())
+                    .Distinct()
+                    .Count() == x.Members.Count,
+                "Member emails must be unique.",
+                "duplicate_member_email")
+            .Refine(
+                x => !x.RequireManagerApproval || !x.Members.Any(m =>
+                    string.Equals(m.Email, x.ManagerEmail, StringComparison.OrdinalIgnoreCase)),
+                "Approver email cannot match a member email.",
+                "approver_conflict");
+
+    private static readonly ISchema<MemberInput> MemberSchema =
+        Z.Schema<MemberInput>()
+            .Property(x => x.Name, s => s.NotEmpty().MinLength(2))
+            .Property(x => x.Email, s => s.Email())
+            .Property(x => x.Role, s => s.NotEmpty())
+            .If(
+                x => string.Equals(x.Role, "admin", StringComparison.OrdinalIgnoreCase),
+                s => s.Property(x => x.Email, p => p.EndsWith("@company.com")));
+
+    private async Task HandleSubmitAsync(EditContext _)
+    {
+        var result = await Schema.ValidateAsync(_model);
+        _isSuccess = result.IsSuccess;
+        _errors = result.Errors;
+    }
+
+    private void AddMember()
+    {
+        if (_model.Members.Count >= 8)
+            return;
+
+        _model.Members.Add(new MemberInput());
+    }
+
+    private void RemoveLastMember()
+    {
+        if (_model.Members.Count <= 1)
+            return;
+
+        _model.Members.RemoveAt(_model.Members.Count - 1);
+    }
+
+    private IEnumerable<string> FieldErrors(string path, string? includeCode = null)
+    {
+        var byPath = _errors
+            .Where(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message);
+
+        if (includeCode is null)
+            return byPath;
+
+        return byPath.Concat(_errors
+            .Where(e => string.Equals(e.Code, includeCode, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message));
+    }
+
+    private IEnumerable<string> MemberFieldErrors(int index, string field) =>
+        FieldErrors($"$.members[{index}].{field}");
+
+    private sealed class TeamProvisioningRequest
+    {
+        public string TeamName { get; set; } = string.Empty;
+        public bool RequireManagerApproval { get; set; }
+        public string ManagerEmail { get; set; } = string.Empty;
+        public List<MemberInput> Members { get; set; } = [new()];
+    }
+
+    private sealed class MemberInput
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = "viewer";
+    }
+}

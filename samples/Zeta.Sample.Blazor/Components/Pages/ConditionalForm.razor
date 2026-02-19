@@ -1,0 +1,91 @@
+@page "/forms/conditional"
+@rendermode InteractiveServer
+@using Zeta
+@using Zeta.Core
+
+<PageTitle>Level 2 - Conditional Rules</PageTitle>
+
+<h1>Level 2 - Conditional Validation</h1>
+<p class="text-muted">Validation rules that only apply when specific choices are selected.</p>
+
+<EditForm Model="@_model" OnSubmit="HandleSubmitAsync" class="mt-4">
+    <div class="mb-3">
+        <label class="form-label" for="contactMethod">Preferred contact method</label>
+        <InputSelect id="contactMethod" class="form-select" @bind-Value="_model.ContactMethod">
+            <option value="email">Email</option>
+            <option value="sms">SMS</option>
+        </InputSelect>
+        @foreach (var message in FieldErrors("$.contactMethod"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="email">Email</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="_model.Email" />
+        @foreach (var message in FieldErrors("$.email"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="phone">Phone (required for SMS)</label>
+        <InputText id="phone" class="form-control" @bind-Value="_model.Phone" />
+        @foreach (var message in FieldErrors("$.phone"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <div class="form-check mb-3">
+        <InputCheckbox id="acceptTerms" class="form-check-input" @bind-Value="_model.AcceptTerms" />
+        <label class="form-check-label" for="acceptTerms">I accept terms and conditions</label>
+        @foreach (var message in FieldErrors("$.acceptTerms"))
+        {
+            <div class="text-danger small mt-1">@message</div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary">Validate</button>
+</EditForm>
+
+@if (_isSuccess == true)
+{
+    <div class="alert alert-success mt-3">Validation succeeded.</div>
+}
+
+@code {
+    private readonly ContactPreferenceRequest _model = new();
+    private bool? _isSuccess;
+    private IReadOnlyList<ValidationError> _errors = [];
+
+    private static readonly ISchema<ContactPreferenceRequest> Schema = Z.Schema<ContactPreferenceRequest>()
+        .Property(x => x.ContactMethod, s => s.NotEmpty())
+        .Property(x => x.Email, s => s.Email())
+        .Property(x => x.AcceptTerms, s => s.IsTrue())
+        .If(
+            x => string.Equals(x.ContactMethod, "sms", StringComparison.OrdinalIgnoreCase),
+            s => s.Property(x => x.Phone, p => p.NotEmpty().MinLength(10).MaxLength(15)));
+
+    private async Task HandleSubmitAsync(EditContext _)
+    {
+        var result = await Schema.ValidateAsync(_model);
+        _isSuccess = result.IsSuccess;
+        _errors = result.Errors;
+    }
+
+    private IEnumerable<string> FieldErrors(string path) =>
+        _errors
+            .Where(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Message);
+
+    private sealed class ContactPreferenceRequest
+    {
+        public string ContactMethod { get; set; } = "email";
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public bool AcceptTerms { get; set; }
+    }
+}
