@@ -23,7 +23,7 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("$.city", result.Errors[0].Path);
+        Assert.Equal("$.values[0]", result.Errors[0].Path);
         Assert.Equal("min_value", result.Errors[0].Code);
     }
 
@@ -52,8 +52,8 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "$.a");
-        Assert.Contains(result.Errors, e => e.Path == "$.b");
+        Assert.Contains(result.Errors, e => e.Path == "$.values[0]");
+        Assert.Contains(result.Errors, e => e.Path == "$.values[1]");
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public class DictionarySchemaTests
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
         Assert.Contains(result.Errors, e => e.Code == "min_length" && e.Path == "$");
-        Assert.Contains(result.Errors, e => e.Code == "min_value" && e.Path == "$.a");
+        Assert.Contains(result.Errors, e => e.Code == "min_value" && e.Path == "$.values[0]");
     }
 
     // ── ObjectSchema field integration ─────────────────────────────────────
@@ -221,7 +221,7 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("$.metadata.city", result.Errors[0].Path);
+        Assert.Equal("$.metadata.values[0]", result.Errors[0].Path);
         Assert.Equal("max_length", result.Errors[0].Code);
     }
 
@@ -266,7 +266,7 @@ public class DictionarySchemaTests
         var result = await schema.ValidateAsync(scores);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("$.points.alice", result.Errors[0].Path);
+        Assert.Equal("$.points.values[0]", result.Errors[0].Path);
     }
 
     // ── conditionals ───────────────────────────────────────────────────────
@@ -397,7 +397,7 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("$.order1.quantity", result.Errors[0].Path);
+        Assert.Equal("$.values[0].quantity", result.Errors[0].Path);
         Assert.Equal("min_value", result.Errors[0].Code);
     }
 
@@ -420,8 +420,8 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "$.first.quantity");
-        Assert.Contains(result.Errors, e => e.Path == "$.third.quantity");
+        Assert.Contains(result.Errors, e => e.Path == "$.values[0].quantity");
+        Assert.Contains(result.Errors, e => e.Path == "$.values[2].quantity");
     }
 
     [Fact]
@@ -442,8 +442,8 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
-        Assert.Contains(result.Errors, e => e.Path == "$.widget.quantity");
-        Assert.Contains(result.Errors, e => e.Path == "$.widget.label");
+        Assert.Contains(result.Errors, e => e.Path == "$.values[0].quantity");
+        Assert.Contains(result.Errors, e => e.Path == "$.values[0].label");
     }
 
     [Fact]
@@ -479,7 +479,7 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("$.items.gadget.quantity", result.Errors[0].Path);
+        Assert.Equal("$.items.values[0].quantity", result.Errors[0].Path);
         Assert.Equal("min_value", result.Errors[0].Code);
     }
 
@@ -504,7 +504,7 @@ public class DictionarySchemaTests
 
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
-        Assert.Equal("$.items.widget.quantity", result.Errors[0].Path);
+        Assert.Equal("$.items.values[1].quantity", result.Errors[0].Path);
         Assert.Equal("max_value", result.Errors[0].Code);
     }
 
@@ -526,13 +526,148 @@ public class DictionarySchemaTests
         Assert.False(result.IsSuccess);
         Assert.Equal(2, result.Errors.Count);
         Assert.Contains(result.Errors, e => e.Code == "min_length" && e.Path == "$");
-        Assert.Contains(result.Errors, e => e.Code == "min_value" && e.Path == "$.order1.quantity");
+        Assert.Contains(result.Errors, e => e.Code == "min_value" && e.Path == "$.values[0].quantity");
+    }
+
+    // ── complex key types ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Dictionary_ComplexKey_AllValid_ReturnsSuccess()
+    {
+        var keySchema = Z.Object<ProductKey>()
+            .Field(k => k.Category, Z.String().MinLength(1))
+            .Field(k => k.Code, Z.String().MinLength(3));
+
+        var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
+
+        var dict = new Dictionary<ProductKey, int>
+        {
+            [new ProductKey("electronics", "abc")] = 10,
+            [new ProductKey("furniture", "desk")] = 5
+        };
+
+        var result = await schema.ValidateAsync(dict);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexKey_InvalidField_ReturnsFailureWithCorrectPath()
+    {
+        var keySchema = Z.Object<ProductKey>()
+            .Field(k => k.Category, Z.String().MinLength(1))
+            .Field(k => k.Code, Z.String().MinLength(5));
+
+        var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
+
+        var dict = new Dictionary<ProductKey, int>
+        {
+            [new ProductKey("electronics", "ab")] = 10 // code too short
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("$.keys[0].code", result.Errors[0].Path);
+        Assert.Equal("min_length", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexKey_MultipleInvalidKeys_ReturnsAllErrors()
+    {
+        var keySchema = Z.Object<ProductKey>()
+            .Field(k => k.Code, Z.String().MinLength(5));
+
+        var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
+
+        var dict = new Dictionary<ProductKey, int>
+        {
+            [new ProductKey("a", "ab")] = 1,  // code too short
+            [new ProductKey("b", "cd")] = 2   // code too short
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Path == "$.keys[0].code");
+        Assert.Contains(result.Errors, e => e.Path == "$.keys[1].code");
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexKey_MultipleInvalidFieldsInSameKey_ReturnsAllErrors()
+    {
+        var keySchema = Z.Object<ProductKey>()
+            .Field(k => k.Category, Z.String().MinLength(3))
+            .Field(k => k.Code, Z.String().MinLength(5));
+
+        var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
+
+        var dict = new Dictionary<ProductKey, int>
+        {
+            [new ProductKey("ab", "cd")] = 1 // both fields invalid
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Path == "$.keys[0].category");
+        Assert.Contains(result.Errors, e => e.Path == "$.keys[0].code");
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexKey_NestedInObject_PropagatesFullPath()
+    {
+        var keySchema = Z.Object<ProductKey>()
+            .Field(k => k.Code, Z.String().MinLength(5));
+
+        var schema = Z.Object<Inventory>()
+            .Field(inv => inv.Stock, dict => dict.EachKey(keySchema));
+
+        var inventory = new Inventory(new Dictionary<ProductKey, int>
+        {
+            [new ProductKey("electronics", "ab")] = 10 // code too short
+        });
+
+        var result = await schema.ValidateAsync(inventory);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("$.stock.keys[0].code", result.Errors[0].Path);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexKey_AndComplexValue_BothInvalid_ReturnsAllErrors()
+    {
+        var keySchema = Z.Object<ProductKey>()
+            .Field(k => k.Code, Z.String().MinLength(5));
+
+        var valueSchema = Z.Object<OrderItem>()
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
+        var schema = Z.Dictionary(keySchema, valueSchema);
+
+        var key = new ProductKey("electronics", "ab"); // code too short
+        var dict = new Dictionary<ProductKey, OrderItem>
+        {
+            [key] = new OrderItem(Guid.NewGuid(), 0, "widget") // quantity too low
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Path == "$.keys[0].code");
+        Assert.Contains(result.Errors, e => e.Code == "min_value" && e.Path == "$.values[0].quantity");
     }
 
     record Request(IDictionary<string, string> Metadata);
     record Scores(IDictionary<string, int> Points);
     record OrderItem(Guid ProductId, int Quantity, string Label = "default");
     record Catalog(IDictionary<string, OrderItem> Items);
+    record ProductKey(string Category, string Code);
+    record Inventory(IDictionary<ProductKey, int> Stock);
 
     class TestContext
     {

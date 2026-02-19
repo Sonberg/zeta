@@ -76,7 +76,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
 
             if (ValueSchema is not null)
             {
-                var valueContext = context.Push(kvp.Key.ToString() ?? $"[{index}]");
+                var valueContext = context.Push("values").PushIndex(index);
                 var valueResult = await ValueSchema.ValidateAsync(kvp.Value, valueContext);
                 if (valueResult.IsFailure)
                 {
