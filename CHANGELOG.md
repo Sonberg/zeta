@@ -3,6 +3,20 @@
 
 ## Next release
 
+### Added
+
+- **`Result<T, TContext>` type**: Context-aware validation now returns `Result<T, TContext>` (extends `Result<T>`). Provides both `.Value` (the validated input) and `.Context` (the resolved context data). All monadic operations (`.Map()`, `.Then()`, `.Match()`, `.GetOrDefault()`, `.GetOrThrow()`) continue to work via inheritance.
+
+### Breaking
+
+- **`ISchema<T, TContext>.ValidateAsync` return type changed**: Now returns `ValueTask<Result<T, TContext>>` instead of `ValueTask<Result>`. Callers that assigned the result to `Result` can now use `Result<T, TContext>` or `Result<T>` (both are valid since `Result<T, TContext>` extends `Result<T>`).
+
+- **`IZetaValidator.ValidateAsync<T, TContext>` return type changed**: Now returns `ValueTask<Result<T, TContext>>` instead of `ValueTask<Result<T>>`. Existing code assigning to `Result<T>` continues to work without changes.
+
+- **`SchemaExtensions.ValidateAsync<T, TContext>` return type changed**: The convenience extension method now returns `ValueTask<Result<T, TContext>>` instead of `ValueTask<Result<T>>`.
+
+- **`ISchema<in T, TContext>` variance removed**: `T` is now invariant (was contravariant `in T`). Required to allow `T` to appear in the return type `Result<T, TContext>`. Assignments relying on contravariant `T` will need explicit adapters.
+
 ## 0.1.13
 
 ### Added

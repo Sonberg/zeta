@@ -10,13 +10,9 @@ public static class SchemaExtensions
     /// <summary>
     /// Validates a value using a context-aware schema with context data.
     /// </summary>
-    public static async ValueTask<Result<T>> ValidateAsync<T, TContext>(this ISchema<T, TContext> schema, T value, TContext data)
+    public static ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(this ISchema<T, TContext> schema, T value, TContext data)
     {
-        var result = await schema.ValidateAsync(value, new ValidationContext<TContext>(data));
-
-        return result.IsSuccess
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(result.Errors);
+        return schema.ValidateAsync(value, new ValidationContext<TContext>(data));
     }
 
     public static async ValueTask<Result<T>> ValidateAsync<T>(this ISchema<T> schema, T? value) where T : class

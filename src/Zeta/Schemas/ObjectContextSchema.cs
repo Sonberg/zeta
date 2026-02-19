@@ -122,13 +122,13 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         }
     }
 
-    public override async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public override async ValueTask<Result<T, TContext>> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (value is null)
         {
             return AllowNull
-                ? Result.Success()
-                : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                ? Result<T, TContext>.Success(value!, context.Data)
+                : Result<T, TContext>.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
         }
 
         List<ValidationError>? errors = null;
@@ -167,8 +167,8 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         }
 
         return errors == null
-            ? Result.Success()
-            : Result.Failure(errors);
+            ? Result<T, TContext>.Success(value!, context.Data)
+            : Result<T, TContext>.Failure(errors);
     }
 
     public ObjectContextSchema<T, TContext> Field<TProperty>(
