@@ -77,12 +77,12 @@ public record Result<T> : Result
         ? _value!
         : throw new InvalidOperationException("Cannot access Value on a failed result. Check IsSuccess first.");
 
-    private Result(T value)
+    private protected Result(T value)
     {
         _value = value;
     }
 
-    private Result(IReadOnlyList<ValidationError> errors) : base(errors)
+    private protected Result(IReadOnlyList<ValidationError> errors) : base(errors)
     {
         _value = default;
     }
@@ -184,6 +184,39 @@ public record Result<T> : Result
     /// Implicitly converts a value to a successful result.
     /// </summary>
     public static implicit operator Result<T>(T value) => Success(value);
+}
+
+/// <summary>
+/// Represents the result of a context-aware validation operation.
+/// Extends <see cref="Result{T}"/> with the resolved context data.
+/// </summary>
+public sealed record Result<T, TContext> : Result<T>
+{
+    /// <summary>
+    /// Gets the resolved context data. Default value if validation failed.
+    /// </summary>
+    public TContext Context { get; }
+
+    private Result(T value, TContext context)
+        : base(value) => Context = context;
+
+    private Result(IReadOnlyList<ValidationError> errors)
+        : base(errors) => Context = default!;
+
+    /// <summary>
+    /// Creates a successful result with the given value and context.
+    /// </summary>
+    public static Result<T, TContext> Success(T value, TContext context) => new(value, context);
+
+    /// <summary>
+    /// Creates a failed result with the given errors.
+    /// </summary>
+    public new static Result<T, TContext> Failure(IReadOnlyList<ValidationError> errors) => new(errors);
+
+    /// <summary>
+    /// Creates a failed result with the given errors.
+    /// </summary>
+    public new static Result<T, TContext> Failure(params ValidationError[] errors) => new(errors);
 }
 
 /// <summary>

@@ -128,13 +128,13 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
     protected TSchema Append(IValidationRule<T, TContext> rule)
         => CreateInstance(Rules.Add(rule), AllowNull, _conditionals, ContextFactory);
 
-    public virtual async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public virtual async ValueTask<Result<T, TContext>> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (value is null)
         {
             return AllowNull
-                ? Result.Success()
-                : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                ? Result<T, TContext>.Success(value!, context.Data)
+                : Result<T, TContext>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
         }
 
         var errors = await Rules.ExecuteAsync(value, context);
@@ -147,8 +147,8 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         }
 
         return errors == null
-            ? Result.Success()
-            : Result.Failure(errors);
+            ? Result<T, TContext>.Success(value!, context.Data)
+            : Result<T, TContext>.Failure(errors);
     }
 
     async ValueTask<Result<T>> ISchema<T>.ValidateAsync(T? value, ValidationContext context)

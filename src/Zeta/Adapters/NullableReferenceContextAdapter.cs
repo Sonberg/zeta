@@ -20,11 +20,11 @@ internal sealed class NullableReferenceContextAdapter<T, TContext> : ISchema<T?,
         return [];
     }
 
-    public async ValueTask<Result> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public async ValueTask<Result<T?, TContext>> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         var result = await _inner.ValidateAsync(value, context);
         return result.IsSuccess
-            ? Result.Success()
-            : Result.Failure(result.Errors);
+            ? Result<T?, TContext>.Success(value!, context.Data)
+            : Result<T?, TContext>.Failure(result.Errors);
     }
 }

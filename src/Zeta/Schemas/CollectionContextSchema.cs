@@ -51,13 +51,13 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         Func<ICollection<TElement>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(ElementSchema, rules, allowNull, conditionals, contextFactory);
 
-    public override async ValueTask<Result> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
+    public override async ValueTask<Result<ICollection<TElement>, TContext>> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
     {
         if (value is null)
         {
             return AllowNull
-                ? Result.Success()
-                : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                ? Result<ICollection<TElement>, TContext>.Success(value!, context.Data)
+                : Result<ICollection<TElement>, TContext>.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
         }
 
         var errors = await Rules.ExecuteAsync(value, context);
@@ -89,8 +89,8 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         }
 
         return errors == null
-            ? Result.Success()
-            : Result.Failure(errors);
+            ? Result<ICollection<TElement>, TContext>.Success(value!, context.Data)
+            : Result<ICollection<TElement>, TContext>.Failure(errors);
     }
 
     public CollectionContextSchema<TElement, TContext> MinLength(int min, string? message = null)
