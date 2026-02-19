@@ -1,7 +1,8 @@
 # Change log
-- Remove .When - Will be reimplemented
 
 ## Next release
+
+## 0.1.14
 
 ### Added
 
