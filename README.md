@@ -60,6 +60,12 @@ dotnet add package Zeta
 dotnet add package Zeta.AspNetCore  # For ASP.NET Core integration
 ```
 
+### Which package should I use?
+
+- `Zeta`: Core validation library for all app types (Console, Class Library, Worker, Blazor, .NET MAUI, etc.).
+- `Zeta.AspNetCore`: Add this only for ASP.NET Core web integration (Minimal APIs, Controllers, endpoint filters).
+- Blazor and .NET MAUI apps typically only need `Zeta` unless they also host ASP.NET Core endpoints.
+
 ## Schema Types
 
 ### String
