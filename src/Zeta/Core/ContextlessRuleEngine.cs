@@ -177,18 +177,4 @@ public sealed class ContextRuleEngine<T, TContext>
 
         return errors;
     }
-
-    public ContextRuleEngine<T, TNewContext> Adapt<TNewContext>(
-        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> contextResolver)
-    {
-        var rules = Materialize();
-        var engine = new ContextRuleEngine<T, TNewContext>();
-
-        foreach (var rule in rules)
-        {
-            engine = engine.Add(new ContextRuleAdapter<T, TContext, TNewContext>(rule, contextResolver));
-        }
-
-        return engine;
-    }
 }

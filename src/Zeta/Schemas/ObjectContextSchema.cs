@@ -219,68 +219,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddContextlessField(new FieldContextlessValidator<T, TProperty?>(propertyName, getter, wrapper));
     }
 
-    /// <summary>
-    /// Adds a field with a schema resolved at runtime via a factory function.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Field<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        Func<T, IServiceProvider, ISchema<TProperty>> schemaFactory)
-    {
-        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        return AddField(new DelegatedFieldContextlessValidatorAdapter<T, TProperty?, TContext>(
-            new DelegatedFieldContextlessValidator<T, TProperty?>(propertyName, getter, (inst, sp) => (ISchema<TProperty?>)schemaFactory(inst, sp))));
-    }
-
-    /// <summary>
-    /// Creates a context-aware object schema with a factory delegate for creating context data.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Using(
-        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
-    {
-        return WithContextFactory(factory);
-    }
-
-    /// <summary>
-    /// Creates a new context-aware object schema by chaining a new context factory onto the existing one.
-    /// The new factory has access to the current input, the previous context data, and the service provider.
-    /// </summary>
-    public ObjectContextSchema<T, TNewContext> Using<TNewContext>(
-        Func<T, TContext, IServiceProvider, CancellationToken, ValueTask<TNewContext>> factory)
-    {
-        var oldFactories = GetContextFactoriesCore().ToList();
-        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> oldContextResolver = (val, sp, ct) 
-            => ContextFactoryResolver.ResolveAsync(val, oldFactories, sp, ct);
-
-        // Adapt existing rules
-        var newRules = Rules.Adapt<TNewContext>(oldContextResolver);
-
-        // Adapt existing fields
-        var newFields = _fields.Select(f => (IFieldContextValidator<T, TNewContext>)new FieldContextValidatorAdapter<T, TContext, TNewContext>(f, oldContextResolver)).ToList();
-
-        // Adapt existing conditionals
-        var newConditionals = GetConditionals()?.Select(c => c.Adapt<TNewContext>(oldContextResolver)).ToList();
-
-        var schema = new ObjectContextSchema<T, TNewContext>(newRules, newFields, null, AllowNull, newConditionals, async (val, sp, ct) => {
-            var prevContext = await oldContextResolver(val, sp, ct);
-            return await factory(val, prevContext, sp, ct);
-        });
-
-        return schema;
-    }
-
-    /// <summary>
-    /// Adds a field with a context-aware schema resolved at runtime via a factory function.
-    /// </summary>
-    public ObjectContextSchema<T, TContext> Field<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        Func<T, TContext, IServiceProvider, ISchema<TProperty, TContext>> schemaFactory)
-    {
-        var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
-        var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        return AddField(new DelegatedFieldContextValidator<T, TProperty, TContext>(propertyName, getter, schemaFactory));
-    }
-
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
@@ -365,16 +303,8 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, TContext, bool> predicate,
-        string message)
-    {
-        return RefineAt(propertySelector, predicate, (_, _) => message, "custom_error");
-    }
-
-    public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        Func<T, TContext, bool> predicate,
-        string code,
-        string message)
+        string message,
+        string code = "custom_error")
     {
         return RefineAt(propertySelector, predicate, (_, _) => message, code);
     }
@@ -396,18 +326,10 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, bool> predicate,
-        string message)
+        string message,
+        string code = "custom_error")
     {
-        return RefineAt(propertySelector, (val, _) => predicate(val), (_, _) => message, "custom_error");
-    }
-
-    public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        Func<T, bool> predicate,
-        string code,
-        string message)
-    {
-        return RefineAt(propertySelector, (val, _) => predicate(val), (val, _) => message, code);
+        return RefineAt(propertySelector, (val, _) => predicate(val), (_, _) => message, code);
     }
 
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(

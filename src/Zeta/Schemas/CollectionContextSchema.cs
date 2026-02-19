@@ -10,37 +10,22 @@ namespace Zeta.Schemas;
 public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollection<TElement>, TContext, CollectionContextSchema<TElement, TContext>>
 {
     private ISchema<TElement, TContext>? ElementSchema { get; }
-    private readonly Func<TElement, int, ISchema<TElement, TContext>>? _elementSchemaFactory;
 
     internal CollectionContextSchema() : this(
         (ISchema<TElement, TContext>?)null,
-        null,
         new ContextRuleEngine<ICollection<TElement>, TContext>(),
         false, null, null)
     {
     }
 
     public CollectionContextSchema(ISchema<TElement, TContext>? elementSchema, ContextRuleEngine<ICollection<TElement>, TContext> rules)
-        : this(elementSchema, null, rules, false, null, null)
+        : this(elementSchema, rules, false, null, null)
     {
     }
 
     public CollectionContextSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules)
         : this(
             elementSchema is not null ? new SchemaAdapter<TElement, TContext>(elementSchema) : null,
-            null,
-            rules.ToContext<TContext>(),
-            false, null, null)
-    {
-    }
-
-    internal CollectionContextSchema(
-        ISchema<TElement>? elementSchema,
-        Func<TElement, int, ISchema<TElement>>? elementSchemaFactory,
-        ContextlessRuleEngine<ICollection<TElement>> rules)
-        : this(
-            elementSchema is not null ? new SchemaAdapter<TElement, TContext>(elementSchema) : null,
-            elementSchemaFactory is not null ? (item, index) => new SchemaAdapter<TElement, TContext>(elementSchemaFactory(item, index)) : null,
             rules.ToContext<TContext>(),
             false, null, null)
     {
@@ -48,7 +33,6 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
 
     private CollectionContextSchema(
         ISchema<TElement, TContext>? elementSchema,
-        Func<TElement, int, ISchema<TElement, TContext>>? elementSchemaFactory,
         ContextRuleEngine<ICollection<TElement>, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<ICollection<TElement>, TContext>>? conditionals,
@@ -56,7 +40,6 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         : base(rules, allowNull, conditionals, contextFactory)
     {
         ElementSchema = elementSchema;
-        _elementSchemaFactory = elementSchemaFactory;
     }
 
     protected override CollectionContextSchema<TElement, TContext> CreateInstance() => new();
@@ -66,7 +49,7 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         bool allowNull,
         IReadOnlyList<ISchemaConditional<ICollection<TElement>, TContext>>? conditionals,
         Func<ICollection<TElement>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
-        => new(ElementSchema, _elementSchemaFactory, rules, allowNull, conditionals, contextFactory);
+        => new(ElementSchema, rules, allowNull, conditionals, contextFactory);
 
     public override async ValueTask<Result<ICollection<TElement>, TContext>> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
     {
@@ -79,15 +62,14 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
 
         var errors = await Rules.ExecuteAsync(value, context);
 
-        // Validate each element if element schema or factory is provided
-        if (ElementSchema is not null || _elementSchemaFactory is not null)
+        // Validate each element if element schema is provided
+        if (ElementSchema is not null)
         {
             var index = 0;
             foreach (var item in value)
             {
                 var elementContext = context.PushIndex(index);
-                var schema = _elementSchemaFactory?.Invoke(item, index) ?? ElementSchema!;
-                var result = await schema.ValidateAsync(item, elementContext);
+                var result = await ElementSchema.ValidateAsync(item, elementContext);
                 if (result.IsFailure)
                 {
                     errors ??= [];
@@ -124,14 +106,8 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         => Append(new NotEmptyRule<TElement, TContext>(message));
 
     public CollectionContextSchema<TElement, TContext> Each(ISchema<TElement, TContext> elementSchema)
-        => new(elementSchema, null, Rules, AllowNull, GetConditionals(), ContextFactory);
-
-    /// <summary>
-    /// Validates each element in the collection using a context-aware schema resolved via a factory function.
-    /// </summary>
-    public CollectionContextSchema<TElement, TContext> Each(Func<TElement, int, ISchema<TElement, TContext>> elementSchemaFactory)
-        => new(null, elementSchemaFactory, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(elementSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
 
     internal CollectionContextSchema<TElement, TContext> WithElementSchema(ISchema<TElement, TContext> elementSchema)
-        => new(elementSchema, null, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(elementSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
 }

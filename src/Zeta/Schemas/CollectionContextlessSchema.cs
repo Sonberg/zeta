@@ -8,25 +8,23 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<ICollection<TElement>, CollectionContextlessSchema<TElement>>
 {
-    internal CollectionContextlessSchema() : this(null, null, new ContextlessRuleEngine<ICollection<TElement>>(), false, null)
+    internal CollectionContextlessSchema() : this(null, new ContextlessRuleEngine<ICollection<TElement>>(), false, null)
     {
     }
 
     public CollectionContextlessSchema(ISchema<TElement>? elementSchema, ContextlessRuleEngine<ICollection<TElement>> rules)
-        : this(elementSchema, null, rules, false, null)
+        : this(elementSchema, rules, false, null)
     {
     }
 
     private CollectionContextlessSchema(
         ISchema<TElement>? elementSchema,
-        Func<TElement, int, ISchema<TElement>>? elementSchemaFactory,
         ContextlessRuleEngine<ICollection<TElement>> rules,
         bool allowNull,
         IReadOnlyList<(Func<ICollection<TElement>, bool>, ISchema<ICollection<TElement>>)>? conditionals)
         : base(rules, allowNull, conditionals)
     {
         ElementSchema = elementSchema;
-        _elementSchemaFactory = elementSchemaFactory;
     }
 
     protected override CollectionContextlessSchema<TElement> CreateInstance() => new();
@@ -35,10 +33,9 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         ContextlessRuleEngine<ICollection<TElement>> rules,
         bool allowNull,
         IReadOnlyList<(Func<ICollection<TElement>, bool>, ISchema<ICollection<TElement>>)>? conditionals)
-        => new(ElementSchema, _elementSchemaFactory, rules, allowNull, conditionals);
+        => new(ElementSchema, rules, allowNull, conditionals);
 
     private ISchema<TElement>? ElementSchema { get; }
-    private readonly Func<TElement, int, ISchema<TElement>>? _elementSchemaFactory;
 
     public override async ValueTask<Result<ICollection<TElement>>> ValidateAsync(ICollection<TElement>? value, ValidationContext context)
     {
@@ -51,15 +48,14 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
 
         var errors = await Rules.ExecuteAsync(value, context);
 
-        // Validate each element if element schema or factory is provided
-        if (ElementSchema is not null || _elementSchemaFactory is not null)
+        // Validate each element if element schema is provided
+        if (ElementSchema is not null)
         {
             var index = 0;
             foreach (var item in value)
             {
                 var elementExecution = context.PushIndex(index);
-                var schema = _elementSchemaFactory?.Invoke(item, index) ?? ElementSchema!;
-                var result = await schema.ValidateAsync(item, elementExecution);
+                var result = await ElementSchema.ValidateAsync(item, elementExecution);
                 if (result.IsFailure)
                 {
                     errors ??= [];
@@ -96,16 +92,10 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         => Append(new NotEmptyRule<TElement>(message));
 
     public CollectionContextlessSchema<TElement> Each(ISchema<TElement> elementSchema)
-        => new(elementSchema, null, Rules, AllowNull, GetConditionals());
-
-    /// <summary>
-    /// Validates each element in the collection using a schema resolved via a factory function.
-    /// </summary>
-    public CollectionContextlessSchema<TElement> Each(Func<TElement, int, ISchema<TElement>> elementSchemaFactory)
-        => new(null, elementSchemaFactory, Rules, AllowNull, GetConditionals());
+        => new(elementSchema, Rules, AllowNull, GetConditionals());
 
     internal CollectionContextlessSchema<TElement> WithElementSchema(ISchema<TElement> elementSchema)
-        => new(elementSchema, null, Rules, AllowNull, GetConditionals());
+        => new(elementSchema, Rules, AllowNull, GetConditionals());
 
     /// <summary>
     /// Creates a context-aware array schema with all rules from this schema.
@@ -113,7 +103,7 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
     /// </summary>
     public CollectionContextSchema<TElement, TContext> Using<TContext>()
     {
-        var schema = new CollectionContextSchema<TElement, TContext>(ElementSchema, _elementSchemaFactory, Rules);
+        var schema = new CollectionContextSchema<TElement, TContext>(ElementSchema, Rules);
         schema = AllowNull ? schema.Nullable() : schema;
         schema = schema.TransferContextlessConditionals(GetConditionals());
         return schema;
