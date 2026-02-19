@@ -358,8 +358,181 @@ public class DictionarySchemaTests
         Assert.True(result.IsSuccess);
     }
 
+    // ── complex value types ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_AllValid_ReturnsSuccess()
+    {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
+        var schema = Z.Dictionary(Z.String(), itemSchema);
+
+        var dict = new Dictionary<string, OrderItem>
+        {
+            ["order1"] = new OrderItem(Guid.NewGuid(), 5),
+            ["order2"] = new OrderItem(Guid.NewGuid(), 10)
+        };
+
+        var result = await schema.ValidateAsync(dict);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_InvalidField_ReturnsFailureWithCorrectPath()
+    {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.ProductId, Z.Guid())
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
+        var schema = Z.Dictionary(Z.String(), itemSchema);
+
+        var dict = new Dictionary<string, OrderItem>
+        {
+            ["order1"] = new OrderItem(Guid.NewGuid(), 0) // quantity too low
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("$.order1.quantity", result.Errors[0].Path);
+        Assert.Equal("min_value", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_MultipleEntries_MultipleErrors_ReturnsAllErrors()
+    {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+
+        var schema = Z.Dictionary(Z.String(), itemSchema);
+
+        var dict = new Dictionary<string, OrderItem>
+        {
+            ["first"] = new OrderItem(Guid.NewGuid(), 0),   // too low
+            ["second"] = new OrderItem(Guid.NewGuid(), 5),  // valid
+            ["third"] = new OrderItem(Guid.NewGuid(), 150)  // too high
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Path == "$.first.quantity");
+        Assert.Contains(result.Errors, e => e.Path == "$.third.quantity");
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_MultipleInvalidFieldsInSameEntry_ReturnsAllErrors()
+    {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100))
+            .Field(i => i.Label, Z.String().MinLength(3));
+
+        var schema = Z.Dictionary(Z.String(), itemSchema);
+
+        var dict = new Dictionary<string, OrderItem>
+        {
+            ["widget"] = new OrderItem(Guid.NewGuid(), 0, "ab") // both fields invalid
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Path == "$.widget.quantity");
+        Assert.Contains(result.Errors, e => e.Path == "$.widget.label");
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_InlineBuilder_ValidatesCorrectly()
+    {
+        var schema = Z.Dictionary<string, OrderItem>()
+            .EachValue(Z.Object<OrderItem>().Field(i => i.Quantity, Z.Int().Min(1)));
+
+        var dict = new Dictionary<string, OrderItem>
+        {
+            ["order1"] = new OrderItem(Guid.NewGuid(), 5)
+        };
+
+        var result = await schema.ValidateAsync(dict);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_NestedInObject_PropagatesFullPath()
+    {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+
+        var schema = Z.Object<Catalog>()
+            .Field(c => c.Items, dict => dict.EachValue(itemSchema).NotEmpty());
+
+        var catalog = new Catalog(new Dictionary<string, OrderItem>
+        {
+            ["gadget"] = new OrderItem(Guid.NewGuid(), 0) // quantity too low
+        });
+
+        var result = await schema.ValidateAsync(catalog);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("$.items.gadget.quantity", result.Errors[0].Path);
+        Assert.Equal("min_value", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_NestedInObject_PreBuiltSchema_PropagatesFullPath()
+    {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+
+        var dictSchema = Z.Dictionary(Z.String(), itemSchema).NotEmpty();
+
+        var schema = Z.Object<Catalog>()
+            .Field(c => c.Items, dictSchema);
+
+        var catalog = new Catalog(new Dictionary<string, OrderItem>
+        {
+            ["gadget"] = new OrderItem(Guid.NewGuid(), 5),
+            ["widget"] = new OrderItem(Guid.NewGuid(), 200) // too high
+        });
+
+        var result = await schema.ValidateAsync(catalog);
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(result.Errors);
+        Assert.Equal("$.items.widget.quantity", result.Errors[0].Path);
+        Assert.Equal("max_value", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task Dictionary_ComplexValues_ChainedWithCountRules_BothFail_ReturnsAllErrors()
+    {
+        var itemSchema = Z.Object<OrderItem>()
+            .Field(i => i.Quantity, Z.Int().Min(1));
+
+        var schema = Z.Dictionary(Z.String(), itemSchema).MinLength(3);
+
+        var dict = new Dictionary<string, OrderItem>
+        {
+            ["order1"] = new OrderItem(Guid.NewGuid(), 0) // quantity and count both fail
+        };
+
+        var result = await schema.ValidateAsync(dict);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Code == "min_length" && e.Path == "$");
+        Assert.Contains(result.Errors, e => e.Code == "min_value" && e.Path == "$.order1.quantity");
+    }
+
     record Request(IDictionary<string, string> Metadata);
     record Scores(IDictionary<string, int> Points);
+    record OrderItem(Guid ProductId, int Quantity, string Label = "default");
+    record Catalog(IDictionary<string, OrderItem> Items);
 
     class TestContext
     {
