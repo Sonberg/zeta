@@ -7,11 +7,8 @@ internal interface ISchemaConditional<T, TContext>
     ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context);
 
     IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
-
-    ISchemaConditional<T, TNewContext> Adapt<TNewContext>(
-        Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> contextResolver);
 }
-
+ 
 internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
 {
     private readonly Func<T, bool> _predicate;
@@ -34,11 +31,6 @@ internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditi
     public IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories()
     {
         return [];
-    }
-
-    public ISchemaConditional<T, TNewContext> Adapt<TNewContext>(Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> contextResolver)
-    {
-        return new ContextlessSchemaConditional<T, TNewContext>(_predicate, _schema);
     }
 }
 
@@ -65,11 +57,6 @@ internal sealed class ContextAwareSchemaConditional<T, TContext> : ISchemaCondit
     {
         return _schema.GetContextFactories();
     }
-
-    public ISchemaConditional<T, TNewContext> Adapt<TNewContext>(Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> contextResolver)
-    {
-        return new SchemaConditionalAdapter<T, TContext, TNewContext>(this, contextResolver);
-    }
 }
 
 internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaConditional<T, TContext>
@@ -94,43 +81,6 @@ internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaCondition
     public IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories()
     {
         return _schema.GetContextFactories();
-    }
-
-    public ISchemaConditional<T, TNewContext> Adapt<TNewContext>(Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> contextResolver)
-    {
-        return new SchemaConditionalAdapter<T, TContext, TNewContext>(this, contextResolver);
-    }
-}
-
-internal sealed class SchemaConditionalAdapter<T, TOldContext, TNewContext> : ISchemaConditional<T, TNewContext>
-{
-    private readonly ISchemaConditional<T, TOldContext> _inner;
-    private readonly Func<T, IServiceProvider, CancellationToken, ValueTask<TOldContext>> _contextResolver;
-
-    public SchemaConditionalAdapter(ISchemaConditional<T, TOldContext> inner, Func<T, IServiceProvider, CancellationToken, ValueTask<TOldContext>> contextResolver)
-    {
-        _inner = inner;
-        _contextResolver = contextResolver;
-    }
-
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TNewContext> context)
-    {
-        var oldContextData = await _contextResolver(value, context.ServiceProvider!, context.CancellationToken);
-        var oldContext = new ValidationContext<TOldContext>(context.Path, oldContextData, context.TimeProvider, context.CancellationToken, context.ServiceProvider);
-        return await _inner.ValidateAsync(value, oldContext);
-    }
-
-    public IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TNewContext>>> GetContextFactories()
-    {
-        // Chained context factories will be handled by the parent schema.
-        // We return nothing here to avoid re-resolving the old context twice? 
-        // Actually, ObjectContextSchema.GetContextFactoriesCore() already includes factories.
-        return [];
-    }
-
-    public ISchemaConditional<T, TRootContext> Adapt<TRootContext>(Func<T, IServiceProvider, CancellationToken, ValueTask<TNewContext>> contextResolver)
-    {
-        return new SchemaConditionalAdapter<T, TNewContext, TRootContext>(this, contextResolver);
     }
 }
 
