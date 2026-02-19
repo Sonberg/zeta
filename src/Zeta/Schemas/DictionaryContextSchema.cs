@@ -65,14 +65,15 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         Func<IDictionary<TKey, TValue>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(KeySchema, ValueSchema, rules, allowNull, conditionals, contextFactory);
 
-    public override async ValueTask<Result> ValidateAsync(
+    public override async ValueTask<Result<IDictionary<TKey, TValue>, TContext>> ValidateAsync(
         IDictionary<TKey, TValue>? value, ValidationContext<TContext> context)
     {
         if (value is null)
         {
             return AllowNull
-                ? Result.Success()
-                : Result.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                ? Result<IDictionary<TKey, TValue>, TContext>.Success(value!, context.Data)
+                : Result<IDictionary<TKey, TValue>, TContext>.Failure(
+                    [new ValidationError(context.Path, "null_value", "Value cannot be null")]);
         }
 
         var errors = await Rules.ExecuteAsync(value, context);
@@ -113,8 +114,8 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         }
 
         return errors == null
-            ? Result.Success()
-            : Result.Failure(errors);
+            ? Result<IDictionary<TKey, TValue>, TContext>.Success(value, context.Data)
+            : Result<IDictionary<TKey, TValue>, TContext>.Failure(errors);
     }
 
     public DictionaryContextSchema<TKey, TValue, TContext> MinLength(int min, string? message = null)
