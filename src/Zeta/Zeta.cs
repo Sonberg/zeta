@@ -53,7 +53,28 @@ public static class Z
     /// <typeparam name="TElement">The type of elements in the collection.</typeparam>
     /// <param name="elementSchema">The schema to use for validating each element in the collection.</param>
     public static CollectionContextlessSchema<TElement> Collection<TElement>(ISchema<TElement> elementSchema) => new(elementSchema, new ContextlessRuleEngine<ICollection<TElement>>());
-    
+
+    /// <summary>
+    /// Creates a schema for validating dictionaries of key-value pairs.
+    /// </summary>
+    /// <typeparam name="TKey">The type of dictionary keys.</typeparam>
+    /// <typeparam name="TValue">The type of dictionary values.</typeparam>
+    public static DictionaryContextlessSchema<TKey, TValue> Dictionary<TKey, TValue>()
+        where TKey : notnull
+        => new(null, null, new ContextlessRuleEngine<IDictionary<TKey, TValue>>());
+
+    /// <summary>
+    /// Creates a schema for validating dictionaries with pre-defined key and value schemas.
+    /// </summary>
+    /// <typeparam name="TKey">The type of dictionary keys.</typeparam>
+    /// <typeparam name="TValue">The type of dictionary values.</typeparam>
+    /// <param name="keySchema">The schema to use for validating each key.</param>
+    /// <param name="valueSchema">The schema to use for validating each value.</param>
+    public static DictionaryContextlessSchema<TKey, TValue> Dictionary<TKey, TValue>(
+        ISchema<TKey> keySchema, ISchema<TValue> valueSchema)
+        where TKey : notnull
+        => new(keySchema, valueSchema, new ContextlessRuleEngine<IDictionary<TKey, TValue>>());
+
     /// <summary>
     /// Creates a schema for validating DateTime values.
     /// </summary>

@@ -3,6 +3,10 @@
 
 ## Next release
 
+### Added
+
+- **Dictionary schemas**: `Z.Dictionary<TKey, TValue>()` and `Z.Dictionary(keySchema, valueSchema)` for validating `IDictionary<TKey, TValue>`. Supports `.EachKey()`, `.EachValue()`, `.MinLength()`, `.MaxLength()`, `.NotEmpty()`, `.Nullable()`, `.If()`, and `.Refine()`. Context-aware promotion via `.Using<TContext>()`. Object field support via generated `Field()` overloads for both `IDictionary<TKey, TValue>` and `Dictionary<TKey, TValue>` properties. Key errors are reported at `$.keys[N]`, value errors at `$.<key>`.
+
 ## 0.1.13
 
 ### Added

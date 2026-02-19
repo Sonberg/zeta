@@ -751,6 +751,45 @@ public partial class ObjectContextlessSchema<T>
         var collectionSchema = Z.Collection<TElement>();
         return AddField(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<TElement>>(propertyName, getter, schema(collectionSchema)));
     }
+
+    /// <summary>
+    /// Adds a field validator with fluent schema builder for IDictionary&lt;TKey, TValue&gt; properties.
+    /// </summary>
+    public ObjectContextlessSchema<T> Field<TKey, TValue>(
+        Expression<Func<T, System.Collections.Generic.IDictionary<TKey, TValue>>> propertySelector,
+        Func<DictionaryContextlessSchema<TKey, TValue>, DictionaryContextlessSchema<TKey, TValue>> schema)
+        where TKey : notnull
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new FieldContextlessValidator<T, System.Collections.Generic.IDictionary<TKey, TValue>>(propertyName, getter, schema(Z.Dictionary<TKey, TValue>())));
+    }
+
+    /// <summary>
+    /// Adds a field validator for IDictionary&lt;TKey, TValue&gt; properties with a pre-built schema.
+    /// </summary>
+    public ObjectContextlessSchema<T> Field<TKey, TValue>(
+        Expression<Func<T, System.Collections.Generic.IDictionary<TKey, TValue>>> propertySelector,
+        ISchema<System.Collections.Generic.IDictionary<TKey, TValue>> schema)
+        where TKey : notnull
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new FieldContextlessValidator<T, System.Collections.Generic.IDictionary<TKey, TValue>>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a field validator with fluent schema builder for Dictionary&lt;TKey, TValue&gt; properties.
+    /// </summary>
+    public ObjectContextlessSchema<T> Field<TKey, TValue>(
+        Expression<Func<T, System.Collections.Generic.Dictionary<TKey, TValue>>> propertySelector,
+        Func<DictionaryContextlessSchema<TKey, TValue>, DictionaryContextlessSchema<TKey, TValue>> schema)
+        where TKey : notnull
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new FieldContextlessValidator<T, System.Collections.Generic.IDictionary<TKey, TValue>>(propertyName, getter, schema(Z.Dictionary<TKey, TValue>())));
+    }
     /// <summary>
     /// Adds a property validator with fluent schema builder for string properties.
     /// </summary>
@@ -1492,5 +1531,44 @@ public partial class ObjectContextlessSchema<T>
         var getter = CreateGetter(propertySelector);
         var collectionSchema = Z.Collection<TElement>();
         return AddField(new FieldContextlessValidator<T, System.Collections.Generic.ICollection<TElement>>(propertyName, getter, schema(collectionSchema)));
+    }
+
+    /// <summary>
+    /// Adds a property validator with fluent schema builder for IDictionary&lt;TKey, TValue&gt; properties.
+    /// </summary>
+    public ObjectContextlessSchema<T> Property<TKey, TValue>(
+        Expression<Func<T, System.Collections.Generic.IDictionary<TKey, TValue>>> propertySelector,
+        Func<DictionaryContextlessSchema<TKey, TValue>, DictionaryContextlessSchema<TKey, TValue>> schema)
+        where TKey : notnull
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new FieldContextlessValidator<T, System.Collections.Generic.IDictionary<TKey, TValue>>(propertyName, getter, schema(Z.Dictionary<TKey, TValue>())));
+    }
+
+    /// <summary>
+    /// Adds a property validator for IDictionary&lt;TKey, TValue&gt; properties with a pre-built schema.
+    /// </summary>
+    public ObjectContextlessSchema<T> Property<TKey, TValue>(
+        Expression<Func<T, System.Collections.Generic.IDictionary<TKey, TValue>>> propertySelector,
+        ISchema<System.Collections.Generic.IDictionary<TKey, TValue>> schema)
+        where TKey : notnull
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new FieldContextlessValidator<T, System.Collections.Generic.IDictionary<TKey, TValue>>(propertyName, getter, schema));
+    }
+
+    /// <summary>
+    /// Adds a property validator with fluent schema builder for Dictionary&lt;TKey, TValue&gt; properties.
+    /// </summary>
+    public ObjectContextlessSchema<T> Property<TKey, TValue>(
+        Expression<Func<T, System.Collections.Generic.Dictionary<TKey, TValue>>> propertySelector,
+        Func<DictionaryContextlessSchema<TKey, TValue>, DictionaryContextlessSchema<TKey, TValue>> schema)
+        where TKey : notnull
+    {
+        var propertyName = GetPropertyName(propertySelector);
+        var getter = CreateGetter(propertySelector);
+        return AddField(new FieldContextlessValidator<T, System.Collections.Generic.IDictionary<TKey, TValue>>(propertyName, getter, schema(Z.Dictionary<TKey, TValue>())));
     }
 }
