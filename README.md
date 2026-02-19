@@ -551,6 +551,17 @@ Run benchmarks:
 dotnet run --project benchmarks/Zeta.Benchmarks -c Release
 ```
 
+## Samples
+
+- API sample:
+  ```bash
+  dotnet run --project samples/Zeta.Sample.Api
+  ```
+- Blazor sample:
+  ```bash
+  dotnet run --project samples/Zeta.Sample.Blazor
+  ```
+
 ## Documentation
 
 - [Collections](docs/Collections.md) - Arrays, lists, and element validation patterns

@@ -1,0 +1,73 @@
+@page "/zeta-validation"
+@rendermode InteractiveServer
+@using Zeta.Core
+@using Zeta.Sample.Blazor.Models
+@using Zeta.Sample.Blazor.Validation
+
+<PageTitle>Zeta Validation</PageTitle>
+
+<h1>Zeta Validation Demo</h1>
+
+<p>Submit the form to validate it with a Zeta schema and inspect field-level errors.</p>
+
+<EditForm Model="@_model" OnSubmit="HandleSubmitAsync">
+    <div class="mb-3">
+        <label class="form-label" for="fullName">Full name</label>
+        <InputText id="fullName" class="form-control" @bind-Value="_model.FullName" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="email">Email</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="_model.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="age">Age</label>
+        <InputNumber id="age" class="form-control" @bind-Value="_model.Age" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="password">Password</label>
+        <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Validate</button>
+</EditForm>
+
+@if (_isSuccess.HasValue)
+{
+    if (_isSuccess.Value)
+    {
+        <div class="alert alert-success mt-3" role="alert">
+            Validation succeeded.
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            Validation failed.
+        </div>
+
+        <ul class="list-group">
+            @foreach (var error in _errors)
+            {
+                <li class="list-group-item">
+                    <strong>@error.Path</strong>: @error.Message (@error.Code)
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    private readonly RegistrationRequest _model = new();
+    private bool? _isSuccess;
+    private IReadOnlyList<ValidationError> _errors = [];
+
+    private async Task HandleSubmitAsync(EditContext _)
+    {
+        var result = await RegistrationSchema.Instance.ValidateAsync(_model);
+        _isSuccess = result.IsSuccess;
+        _errors = result.Errors;
+    }
+}

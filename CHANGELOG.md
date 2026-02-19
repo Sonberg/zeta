@@ -3,6 +3,10 @@
 
 ## Next release
 
+### Added
+
+- Added a new Blazor sample app at `samples/Zeta.Sample.Blazor` demonstrating interactive form validation with Zeta schemas.
+
 ## 0.1.13
 
 ### Added
