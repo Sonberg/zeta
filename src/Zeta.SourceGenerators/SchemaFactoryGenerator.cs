@@ -25,6 +25,10 @@ public class SchemaFactoryGenerator : IIncrementalGenerator
             // Generate CollectionSchemaExtensions
             var collectionExtensionsCode = CollectionExtensionsGenerator.Generate();
             ctx.AddSource("CollectionSchemaExtensions.g.cs", SourceText.From(collectionExtensionsCode, Encoding.UTF8));
+
+            // Generate DictionarySchemaExtensions
+            var dictionaryExtensionsCode = DictionaryExtensionsGenerator.Generate();
+            ctx.AddSource("DictionarySchemaExtensions.g.cs", SourceText.From(dictionaryExtensionsCode, Encoding.UTF8));
         });
     }
 }
