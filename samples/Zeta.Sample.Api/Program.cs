@@ -8,7 +8,9 @@ using Zeta.Sample.Api.Validation;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add OpenAPI for Swagger support
+#if !NET8_0
 builder.Services.AddOpenApi();
+#endif
 
 // Register Zeta validation services
 builder.Services.AddZeta();
@@ -24,7 +26,9 @@ builder.Services.AddScoped<IOrderRepository, FakeOrderRepository>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+#if !NET8_0
     app.MapOpenApi();
+#endif
 
 // =====================
 // MINIMAL API ENDPOINTS

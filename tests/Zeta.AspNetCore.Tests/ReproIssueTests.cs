@@ -4,7 +4,7 @@ using Zeta.AspNetCore;
 using Zeta.Core;
 using Zeta.Schemas;
 
-namespace Zeta.Tests;
+namespace Zeta.AspNetCore.Tests;
 
 public class ReproIssueTests
 {

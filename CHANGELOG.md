@@ -2,6 +2,10 @@
 
 ## Next release
 
+### Removed
+
+- Removed `netstandard2.0` target from `Zeta`; supported targets are now .NET 6/7/8/9/10.
+
 ## 0.1.14
 
 ### Added
