@@ -2,6 +2,11 @@
 
 ## Next release
 
+### Added
+
+- **`RefineEachEntry`/`RefineEachEntryAsync` for dictionary schemas**: Per-entry predicate validation on `DictionaryContextlessSchema` and `DictionaryContextSchema`. Each failing entry produces one `ValidationError` at `$[keyString]` (bracket notation). Supports value-only, value+context, and async-with-CT predicate overloads. Entry refinements transfer automatically when calling `.Using<TContext>()`.
+- **`ValidationContext.PushKey(string)`**: New path method for bracket-notation dictionary key paths (e.g. `$.schedule[2024W15]`).
+
 ### Removed
 
 - Removed `netstandard2.0` target from `Zeta`; supported targets are now .NET 6/7/8/9/10.

@@ -88,6 +88,15 @@ public record ValidationContext<TData> : ValidationContext
             CancellationToken,
             ServiceProvider);
     }
+
+    /// <summary>
+    /// Creates a new context with a dictionary key appended to the path using bracket notation.
+    /// </summary>
+    public new ValidationContext<TData> PushKey(string keyString)
+    {
+        var newPath = string.IsNullOrEmpty(Path) ? $"[{keyString}]" : $"{Path}[{keyString}]";
+        return new ValidationContext<TData>(newPath, Data, TimeProvider, CancellationToken, ServiceProvider);
+    }
 }
 
 /// <summary>
@@ -162,6 +171,15 @@ public record ValidationContext
     public ValidationContext PushIndex(int index)
     {
         var newPath = string.IsNullOrEmpty(Path) ? $"[{index}]" : $"{Path}[{index}]";
+        return new ValidationContext(newPath, TimeProvider, CancellationToken, ServiceProvider);
+    }
+
+    /// <summary>
+    /// Creates a new context with a dictionary key appended to the path using bracket notation.
+    /// </summary>
+    public ValidationContext PushKey(string keyString)
+    {
+        var newPath = string.IsNullOrEmpty(Path) ? $"[{keyString}]" : $"{Path}[{keyString}]";
         return new ValidationContext(newPath, TimeProvider, CancellationToken, ServiceProvider);
     }
 
