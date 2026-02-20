@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using System.Text.Json;
 using Xunit;
 
 namespace Zeta.AspNetCore.Tests;
@@ -102,6 +105,69 @@ public class ValidationContextBuilderTests
     }
 
     [Fact]
+    public void Build_UsesJsonOptionsPropertyNamingPolicy_ForPathRendering()
+    {
+        var services = new ServiceCollection();
+        services.AddOptions<JsonOptions>()
+            .Configure(o => o.SerializerOptions.PropertyNamingPolicy = new PrefixNamingPolicy("p_"));
+        using var provider = services.BuildServiceProvider();
+
+        var context = new ValidationContextBuilder()
+            .WithServiceProvider(provider)
+            .Build();
+
+        Assert.Equal("p_FirstName", context.Push("FirstName").Path);
+    }
+
+    [Fact]
+    public void Build_UsesJsonOptionsDictionaryKeyPolicy_ForPathRendering()
+    {
+        var services = new ServiceCollection();
+        services.AddOptions<JsonOptions>()
+            .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = new PrefixNamingPolicy("k_"));
+        using var provider = services.BuildServiceProvider();
+
+        var context = new ValidationContextBuilder()
+            .WithServiceProvider(provider)
+            .Build();
+
+        Assert.Equal("[k_Alpha]", context.PushKey("Alpha").Path);
+    }
+
+    [Theory]
+    [MemberData(nameof(BuiltInPropertyPolicies))]
+    public void Build_UsesBuiltInJsonPropertyNamingPolicies(JsonNamingPolicy namingPolicy, string expectedSegment)
+    {
+        var services = new ServiceCollection();
+        services.AddOptions<JsonOptions>()
+            .Configure(o => o.SerializerOptions.PropertyNamingPolicy = namingPolicy);
+        using var provider = services.BuildServiceProvider();
+
+        var context = new ValidationContextBuilder()
+            .WithServiceProvider(provider)
+            .Build();
+
+        Assert.Equal(expectedSegment, context.Push("FirstName").Path);
+    }
+
+    [Theory]
+    [MemberData(nameof(BuiltInDictionaryPolicies))]
+    public void Build_UsesBuiltInJsonDictionaryKeyPolicies(JsonNamingPolicy namingPolicy, string expectedPath)
+    {
+        var services = new ServiceCollection();
+        services.AddOptions<JsonOptions>()
+            .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = namingPolicy);
+        using var provider = services.BuildServiceProvider();
+
+        var context = new ValidationContextBuilder()
+            .WithServiceProvider(provider)
+            .Build();
+
+        Assert.Equal(expectedPath, context.PushKey("FirstName").Path);
+    }
+
+
+    [Fact]
     public async Task ZetaValidator_ValidateAsync_Contextless_UsesBuilderContext()
     {
         var services = new ServiceCollection()
@@ -148,4 +214,23 @@ public class ValidationContextBuilderTests
     }
 
     private sealed record TestContext(bool IsStrict);
+
+    private sealed class PrefixNamingPolicy(string prefix) : System.Text.Json.JsonNamingPolicy
+    {
+        public override string ConvertName(string name) => prefix + name;
+    }
+
+    public static IEnumerable<object[]> BuiltInPropertyPolicies()
+    {
+        yield return [JsonNamingPolicy.CamelCase, "firstName"];
+        yield return [JsonNamingPolicy.SnakeCaseLower, "first_name"];
+        yield return [JsonNamingPolicy.KebabCaseLower, "first-name"];
+    }
+
+    public static IEnumerable<object[]> BuiltInDictionaryPolicies()
+    {
+        yield return [JsonNamingPolicy.CamelCase, "[firstName]"];
+        yield return [JsonNamingPolicy.SnakeCaseLower, "[first_name]"];
+        yield return [JsonNamingPolicy.KebabCaseLower, "[first-name]"];
+    }
 }

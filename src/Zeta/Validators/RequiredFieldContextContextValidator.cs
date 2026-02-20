@@ -11,8 +11,6 @@ internal sealed class RequiredFieldContextContextValidator<TInstance, TProperty,
     public RequiredFieldContextContextValidator(string name, Func<TInstance, TProperty> getter, string? message)
     {
         _name = name;
-        if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
-            _name = char.ToLower(_name[0]) + _name.Substring(1);
         _getter = getter;
         _message = message ?? $"{_name} is required";
     }
@@ -22,7 +20,7 @@ internal sealed class RequiredFieldContextContextValidator<TInstance, TProperty,
         var value = _getter(instance);
         if (value is null)
         {
-            var path = string.IsNullOrEmpty(context.Path) ? _name : $"{context.Path}.{_name}";
+            var path = context.Push(_name).Path;
             return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
         }
 

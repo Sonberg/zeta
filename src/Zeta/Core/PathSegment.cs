@@ -29,9 +29,8 @@ internal sealed class ValidationPath
 {
     private readonly ValidationPath? _parent;
     private readonly PathSegment _segment;
-    private string? _rendered;
-
-    private ValidationPath() { _rendered = ""; }   // root — pre-rendered to empty string
+    
+    private ValidationPath() { }   // root
 
     private ValidationPath(ValidationPath parent, PathSegment segment)
     { _parent = parent; _segment = segment; }
@@ -40,27 +39,38 @@ internal sealed class ValidationPath
 
     public ValidationPath Append(PathSegment segment) => new(this, segment);
 
-    /// <summary>Renders the full path as a string. Result is cached per node instance.</summary>
-    public string Render() => _rendered ??= BuildString();
+    /// <summary>Renders the full path as a string with the provided formatting options.</summary>
+    public string Render(PathFormattingOptions options) => BuildString(options);
 
-    private string BuildString()
+    private string BuildString(PathFormattingOptions options)
     {
-        var parent = _parent!.Render();   // _parent is non-null for all non-root nodes
+        if (_parent is null)
+            return string.Empty;
+
+        var parent = _parent.Render(options);
         return _segment.Kind switch
         {
             PathSegmentKind.Property =>
                 string.IsNullOrEmpty(parent)
-                    ? _segment.Name!
-                    : string.Concat(parent, ".", _segment.Name!),
+                    ? options.PropertyNameFormatter(_segment.Name!)
+                    : string.Concat(parent, ".", options.PropertyNameFormatter(_segment.Name!)),
             PathSegmentKind.Index =>
                 string.IsNullOrEmpty(parent)
                     ? $"[{_segment.IndexValue}]"
                     : $"{parent}[{_segment.IndexValue}]",
             PathSegmentKind.DictionaryKey =>
                 string.IsNullOrEmpty(parent)
-                    ? $"[{_segment.Key?.ToString() ?? ""}]"
-                    : $"{parent}[{_segment.Key?.ToString() ?? ""}]",
+                    ? $"[{FormatDictionaryKey(options)}]"
+                    : $"{parent}[{FormatDictionaryKey(options)}]",
             _ => parent
         };
+    }
+
+    private string FormatDictionaryKey(PathFormattingOptions options)
+    {
+        if (_segment.Key is null)
+            return string.Empty;
+
+        return options.DictionaryKeyFormatter(_segment.Key);
     }
 }

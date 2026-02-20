@@ -175,7 +175,8 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
             contextData,
             context.TimeProvider,
             context.CancellationToken,
-            context.ServiceProvider);
+            context.ServiceProvider,
+            context.PathFormattingOptions);
 
         var result = await ValidateAsync(value, typedContext);
         return result.IsSuccess

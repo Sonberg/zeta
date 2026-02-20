@@ -40,7 +40,8 @@ internal sealed class SelfResolvingSchema<T, TContext> : ISchema<T>
             contextData,
             context.TimeProvider,
             context.CancellationToken,
-            context.ServiceProvider);
+            context.ServiceProvider,
+            context.PathFormattingOptions);
 
         var result = await _inner.ValidateAsync(value, typedContext);
         return result.IsSuccess

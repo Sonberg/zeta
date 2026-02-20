@@ -18,12 +18,14 @@ public record ValidationContext<TData> : ValidationContext
     /// <param name="timeProvider">Optional time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="serviceProvider">Optional service provider for dependency injection.</param>
+    /// <param name="pathFormattingOptions">Optional path formatting options.</param>
     public ValidationContext(
         TData data,
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default,
-        IServiceProvider? serviceProvider = null)
-        : base(ValidationPath.Root, timeProvider, cancellationToken, serviceProvider)
+        IServiceProvider? serviceProvider = null,
+        PathFormattingOptions? pathFormattingOptions = null)
+        : base(ValidationPath.Root, timeProvider, cancellationToken, serviceProvider, pathFormattingOptions)
     {
         Data = data;
     }
@@ -33,8 +35,9 @@ public record ValidationContext<TData> : ValidationContext
         TData data,
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default,
-        IServiceProvider? serviceProvider = null)
-        : base(pathSegments, timeProvider, cancellationToken, serviceProvider)
+        IServiceProvider? serviceProvider = null,
+        PathFormattingOptions? pathFormattingOptions = null)
+        : base(pathSegments, timeProvider, cancellationToken, serviceProvider, pathFormattingOptions)
     {
         Data = data;
     }
@@ -43,19 +46,37 @@ public record ValidationContext<TData> : ValidationContext
     /// Creates a new context with the given path segment appended.
     /// </summary>
     public new ValidationContext<TData> Push(string segment)
-        => new(PathSegments.Append(PathSegment.Property(segment)), Data, TimeProvider, CancellationToken, ServiceProvider);
+        => new(
+            PathSegments.Append(PathSegment.Property(segment)),
+            Data,
+            TimeProvider,
+            CancellationToken,
+            ServiceProvider,
+            PathFormattingOptions);
 
     /// <summary>
     /// Creates a new context with an array index appended to the path.
     /// </summary>
     public new ValidationContext<TData> PushIndex(int index)
-        => new(PathSegments.Append(PathSegment.Index(index)), Data, TimeProvider, CancellationToken, ServiceProvider);
+        => new(
+            PathSegments.Append(PathSegment.Index(index)),
+            Data,
+            TimeProvider,
+            CancellationToken,
+            ServiceProvider,
+            PathFormattingOptions);
 
     /// <summary>
     /// Creates a new context with a dictionary key appended to the path using bracket notation.
     /// </summary>
     public new ValidationContext<TData> PushKey<TKey>(TKey key) where TKey : notnull
-        => new(PathSegments.Append(PathSegment.DictionaryKey(key)), Data, TimeProvider, CancellationToken, ServiceProvider);
+        => new(
+            PathSegments.Append(PathSegment.DictionaryKey(key)),
+            Data,
+            TimeProvider,
+            CancellationToken,
+            ServiceProvider,
+            PathFormattingOptions);
 }
 
 /// <summary>
@@ -64,12 +85,13 @@ public record ValidationContext<TData> : ValidationContext
 public record ValidationContext
 {
     private readonly ValidationPath _pathSegments;
+    private string? _path;
 
     /// <summary>
     /// The dot-notation path to the current value being validated (e.g., "user.address.street").
     /// Rendered lazily from structured path segments.
     /// </summary>
-    public string Path => _pathSegments.Render();
+    public string Path => _path ??= _pathSegments.Render(PathFormattingOptions);
 
     /// <summary>
     /// Internal structured path segments. Allows promotion to typed contexts without string rendering.
@@ -92,13 +114,19 @@ public record ValidationContext
     public IServiceProvider? ServiceProvider { get; }
 
     /// <summary>
+    /// Controls how path segments are rendered to a final path string.
+    /// </summary>
+    public PathFormattingOptions PathFormattingOptions { get; }
+
+    /// <summary>
     /// Creates a new validation execution context.
     /// </summary>
     public ValidationContext(
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default,
-        IServiceProvider? serviceProvider = null)
-        : this(ValidationPath.Root, timeProvider, cancellationToken, serviceProvider)
+        IServiceProvider? serviceProvider = null,
+        PathFormattingOptions? pathFormattingOptions = null)
+        : this(ValidationPath.Root, timeProvider, cancellationToken, serviceProvider, pathFormattingOptions)
     {
     }
 
@@ -109,35 +137,52 @@ public record ValidationContext
         ValidationPath? pathSegments,
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default,
-        IServiceProvider? serviceProvider = null)
+        IServiceProvider? serviceProvider = null,
+        PathFormattingOptions? pathFormattingOptions = null)
     {
         _pathSegments = pathSegments ?? ValidationPath.Root;
         CancellationToken = cancellationToken;
         TimeProvider = timeProvider ?? TimeProvider.System;
         ServiceProvider = serviceProvider;
+        PathFormattingOptions = pathFormattingOptions ?? PathFormattingOptions.Default;
     }
 
     /// <summary>
     /// Creates a new context with the given path segment appended.
     /// </summary>
     public ValidationContext Push(string segment)
-        => new(_pathSegments.Append(PathSegment.Property(segment)), TimeProvider, CancellationToken, ServiceProvider);
+        => new(
+            _pathSegments.Append(PathSegment.Property(segment)),
+            TimeProvider,
+            CancellationToken,
+            ServiceProvider,
+            PathFormattingOptions);
 
     /// <summary>
     /// Creates a new context with an array index appended to the path.
     /// </summary>
     public ValidationContext PushIndex(int index)
-        => new(_pathSegments.Append(PathSegment.Index(index)), TimeProvider, CancellationToken, ServiceProvider);
+        => new(
+            _pathSegments.Append(PathSegment.Index(index)),
+            TimeProvider,
+            CancellationToken,
+            ServiceProvider,
+            PathFormattingOptions);
 
     /// <summary>
     /// Creates a new context with a dictionary key appended to the path using bracket notation.
     /// </summary>
     public ValidationContext PushKey<TKey>(TKey key) where TKey : notnull
-        => new(_pathSegments.Append(PathSegment.DictionaryKey(key)), TimeProvider, CancellationToken, ServiceProvider);
+        => new(
+            _pathSegments.Append(PathSegment.DictionaryKey(key)),
+            TimeProvider,
+            CancellationToken,
+            ServiceProvider,
+            PathFormattingOptions);
 
     /// <summary>
     /// Gets default empty context (cached instance).
     /// </summary>
     public static ValidationContext Empty { get; } =
-        new(ValidationPath.Root, TimeProvider.System, CancellationToken.None);
+        new(ValidationPath.Root, TimeProvider.System, CancellationToken.None, null, PathFormattingOptions.Default);
 }
