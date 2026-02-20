@@ -6,6 +6,7 @@
 
 - **`RefineEachEntry`/`RefineEachEntryAsync` for dictionary schemas**: Per-entry predicate validation on `DictionaryContextlessSchema` and `DictionaryContextSchema`. Each failing entry produces one `ValidationError` at `$[keyString]` (bracket notation). Supports value-only, value+context, and async-with-CT predicate overloads. Entry refinements transfer automatically when calling `.Using<TContext>()`.
 - **`ValidationContext.PushKey(string)`**: New path method for bracket-notation dictionary key paths (e.g. `$.schedule[2024W15]`).
+- **Structured path segments**: `ValidationContext` now stores an immutable linked list of typed path segments (`Property`, `Index`, `DictionaryKey`) internally. Rendering to string is lazy and cached per node. Eliminates fragile raw string concatenation. `PushKey<TKey>(TKey key)` replaces the old `PushKey(string)` — the key is stored as-is; `ToString()` is only called at render time (when a `ValidationError` is created). No behavior change at the API surface.
 
 ### Removed
 

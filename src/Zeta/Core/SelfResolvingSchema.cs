@@ -36,7 +36,7 @@ internal sealed class SelfResolvingSchema<T, TContext> : ISchema<T>
 
         var contextData = await _factory(value, serviceProvider, context.CancellationToken);
         var typedContext = new ValidationContext<TContext>(
-            context.Path,
+            context.PathSegments,
             contextData,
             context.TimeProvider,
             context.CancellationToken,

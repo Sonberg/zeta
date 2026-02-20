@@ -171,7 +171,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
             serviceProvider,
             context.CancellationToken);
         var typedContext = new ValidationContext<TContext>(
-            context.Path,
+            context.PathSegments,
             contextData,
             context.TimeProvider,
             context.CancellationToken,
