@@ -29,8 +29,11 @@ internal sealed class ValidationPath
 {
     private readonly ValidationPath? _parent;
     private readonly PathSegment _segment;
+    private string? _defaultRendered;
+    private PathFormattingOptions? _lastOptions;
+    private string? _lastRendered;
     
-    private ValidationPath() { }   // root
+    private ValidationPath() { _defaultRendered = string.Empty; }   // root
 
     private ValidationPath(ValidationPath parent, PathSegment segment)
     { _parent = parent; _segment = segment; }
@@ -40,7 +43,19 @@ internal sealed class ValidationPath
     public ValidationPath Append(PathSegment segment) => new(this, segment);
 
     /// <summary>Renders the full path as a string with the provided formatting options.</summary>
-    public string Render(PathFormattingOptions options) => BuildString(options);
+    public string Render(PathFormattingOptions options)
+    {
+        if (ReferenceEquals(options, PathFormattingOptions.Default))
+            return _defaultRendered ??= BuildString(options);
+
+        if (ReferenceEquals(_lastOptions, options))
+            return _lastRendered!;
+
+        var rendered = BuildString(options);
+        _lastOptions = options;
+        _lastRendered = rendered;
+        return rendered;
+    }
 
     private string BuildString(PathFormattingOptions options)
     {

@@ -35,6 +35,14 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
     public DecimalContextlessSchema Max(decimal max, string? message = null)
         => Append(new MaxDecimalRule(max, message));
 
+    public DecimalContextlessSchema Range(decimal min, decimal max, string? message = null)
+    {
+        if (min > max)
+            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
+
+        return Min(min, message).Max(max, message);
+    }
+
     public DecimalContextlessSchema Positive(string? message = null)
         => Append(new PositiveDecimalRule(message));
 

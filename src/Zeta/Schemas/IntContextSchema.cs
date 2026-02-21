@@ -36,4 +36,12 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContex
 
     public IntContextSchema<TContext> Max(int max, string? message = null)
         => Append(new MaxIntRule<TContext>(max, message));
+
+    public IntContextSchema<TContext> Range(int min, int max, string? message = null)
+    {
+        if (min > max)
+            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
+
+        return Min(min, message).Max(max, message);
+    }
 }
