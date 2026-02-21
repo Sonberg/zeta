@@ -38,7 +38,7 @@ internal sealed class ContextlessTypeAssertion<T, TDerived> : ITypeAssertion<T>
     public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext context)
     {
         if (value is not TDerived derived)
-            return [new ValidationError(context.Path, "type_mismatch",
+            return [new ValidationError(context.PathSegments, "type_mismatch",
                 $"Expected value to be of type '{typeof(TDerived).Name}' but was '{value.GetType().Name}'")];
 
         var result = await _schema.ValidateAsync(derived, context);
@@ -63,7 +63,7 @@ internal sealed class ContextAwareTypeAssertion<T, TDerived, TContext> : ITypeAs
     public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
     {
         if (value is not TDerived derived)
-            return [new ValidationError(context.Path, "type_mismatch",
+            return [new ValidationError(context.PathSegments, "type_mismatch",
                 $"Expected value to be of type '{typeof(TDerived).Name}' but was '{value.GetType().Name}'")];
 
         var result = await _schema.ValidateAsync(derived, context);

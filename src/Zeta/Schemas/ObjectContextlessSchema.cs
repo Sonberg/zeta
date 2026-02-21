@@ -134,7 +134,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         {
             return AllowNull
                 ? Result<T>.Success(value!)
-                : Result<T>.Failure(new ValidationError(execution.Path, "null_value", "Value cannot be null"));
+                : Result<T>.Failure(new ValidationError(execution.PathSegments, "null_value", "Value cannot be null"));
         }
 
         List<ValidationError>? errors = null;
@@ -272,7 +272,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return Append(new RefinementRule<T>((val, ctx) =>
             predicate(val)
                 ? null
-                : new ValidationError(ctx.Push(propertyName).Path, code, messageFactory(val))));
+                : new ValidationError(ctx.PathSegments.Append(PathSegment.Property(propertyName)), code, messageFactory(val))));
     }
 
     /// <summary>

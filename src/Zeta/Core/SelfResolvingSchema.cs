@@ -26,7 +26,7 @@ internal sealed class SelfResolvingSchema<T, TContext> : ISchema<T>
         {
             return AllowNull
                 ? Result<T>.Success(value!)
-                : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                : Result<T>.Failure(new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
         var serviceProvider = context.ServiceProvider

@@ -20,7 +20,7 @@ public readonly struct MinLengthRule : IValidationRule<string>
     {
         var error = value.Length >= _min
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? $"Must be at least {_min} characters long");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must be at least {_min} characters long");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -44,7 +44,7 @@ public readonly struct MinLengthRule<TContext> : IValidationRule<string, TContex
     {
         var error = value.Length >= _min
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? $"Must be at least {_min} characters long");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must be at least {_min} characters long");
 
         return ValueTaskHelper.FromResult(error);
     }

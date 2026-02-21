@@ -26,7 +26,7 @@ internal sealed class NullableStructContextAdapter<T, TContext> : ISchema<T?, TC
         {
             return AllowNull
                 ? Result<T?, TContext>.Success(value!, context.Data)
-                : Result<T?, TContext>.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                : Result<T?, TContext>.Failure([new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
         var result = await _inner.ValidateAsync(value.Value, context);

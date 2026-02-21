@@ -24,16 +24,35 @@ internal sealed class NullableFieldContextContextValidator<TInstance, TProperty,
     public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext<TContext> context)
     {
         var value = _getter(instance);
-        var fieldContext = context.Push(_name);
+        var fieldPath = context.PathSegments.Append(PathSegment.Property(_name));
 
         if (!value.HasValue)
         {
             return _schema.AllowNull
                 ? EmptyErrors
-                : [new ValidationError(fieldContext.Path, "null_value", $"{_name} cannot be null")];
+                : [new ValidationError(fieldPath, "null_value", $"{_name} cannot be null")];
         }
 
-        var result = await _schema.ValidateAsync(value.Value, fieldContext);
-        return result.IsSuccess ? EmptyErrors : result.Errors;
+        var result = await _schema.ValidateAsync(value.Value, context);
+        if (result.IsSuccess)
+            return EmptyErrors;
+
+        return PrependFieldPath(context.PathSegments, fieldPath, result.Errors);
+    }
+
+    private static IReadOnlyList<ValidationError> PrependFieldPath(
+        ValidationPath basePath,
+        ValidationPath fieldPath,
+        IReadOnlyList<ValidationError> errors)
+    {
+        var mapped = new ValidationError[errors.Count];
+        for (var i = 0; i < errors.Count; i++)
+        {
+            var error = errors[i];
+            var relativePath = error.Path.RelativeTo(basePath);
+            mapped[i] = new ValidationError(fieldPath.Concat(relativePath), error.Code, error.Message);
+        }
+
+        return mapped;
     }
 }

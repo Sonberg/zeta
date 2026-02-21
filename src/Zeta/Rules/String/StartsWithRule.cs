@@ -22,7 +22,7 @@ public readonly struct StartsWithRule : IValidationRule<string>
     {
         var error = value.StartsWith(_prefix, _comparison)
             ? null
-            : new ValidationError(context.Path, "starts_with", _message ?? $"Must start with '{_prefix}'");
+            : new ValidationError(context.PathSegments, "starts_with", _message ?? $"Must start with '{_prefix}'");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -48,7 +48,7 @@ public readonly struct StartsWithRule<TContext> : IValidationRule<string, TConte
     {
         var error = value.StartsWith(_prefix, _comparison)
             ? null
-            : new ValidationError(context.Path, "starts_with", _message ?? $"Must start with '{_prefix}'");
+            : new ValidationError(context.PathSegments, "starts_with", _message ?? $"Must start with '{_prefix}'");
 
         return ValueTaskHelper.FromResult(error);
     }

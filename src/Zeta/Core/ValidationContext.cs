@@ -25,7 +25,7 @@ public record ValidationContext<TData> : ValidationContext
         CancellationToken cancellationToken = default,
         IServiceProvider? serviceProvider = null,
         PathFormattingOptions? pathFormattingOptions = null)
-        : base(ValidationPath.Root, timeProvider, cancellationToken, serviceProvider, pathFormattingOptions)
+        : base(null, timeProvider, cancellationToken, serviceProvider, pathFormattingOptions)
     {
         Data = data;
     }
@@ -126,7 +126,7 @@ public record ValidationContext
         CancellationToken cancellationToken = default,
         IServiceProvider? serviceProvider = null,
         PathFormattingOptions? pathFormattingOptions = null)
-        : this(ValidationPath.Root, timeProvider, cancellationToken, serviceProvider, pathFormattingOptions)
+        : this(null, timeProvider, cancellationToken, serviceProvider, pathFormattingOptions)
     {
     }
 
@@ -140,11 +140,12 @@ public record ValidationContext
         IServiceProvider? serviceProvider = null,
         PathFormattingOptions? pathFormattingOptions = null)
     {
-        _pathSegments = pathSegments ?? ValidationPath.Root;
+        var formatting = pathFormattingOptions ?? PathFormattingOptions.Default;
+        _pathSegments = pathSegments ?? ValidationPath.CreateRoot(formatting);
         CancellationToken = cancellationToken;
         TimeProvider = timeProvider ?? TimeProvider.System;
         ServiceProvider = serviceProvider;
-        PathFormattingOptions = pathFormattingOptions ?? PathFormattingOptions.Default;
+        PathFormattingOptions = formatting;
     }
 
     /// <summary>

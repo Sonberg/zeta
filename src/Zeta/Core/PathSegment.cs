@@ -48,23 +48,72 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
 {
     private readonly ValidationPath? _parent;
     private readonly PathSegment _segment;
+    private readonly PathFormattingOptions _formattingOptions;
     private string? _defaultRendered;
     private PathFormattingOptions? _lastOptions;
     private string? _lastRendered;
-    
-    private ValidationPath() { _defaultRendered = string.Empty; }   // root
+
+    private ValidationPath(PathFormattingOptions formattingOptions)
+    {
+        _formattingOptions = formattingOptions;
+        _defaultRendered = string.Empty;
+    }
 
     private ValidationPath(ValidationPath parent, PathSegment segment)
-    { _parent = parent; _segment = segment; }
+    {
+        _parent = parent;
+        _segment = segment;
+        _formattingOptions = parent._formattingOptions;
+    }
 
-    public static readonly ValidationPath Root = new();
+    public static readonly ValidationPath Root = new(PathFormattingOptions.Default);
+
+    public static ValidationPath CreateRoot(PathFormattingOptions formattingOptions)
+        => ReferenceEquals(formattingOptions, PathFormattingOptions.Default) ? Root : new ValidationPath(formattingOptions);
 
     internal ValidationPath Append(PathSegment segment) => new(this, segment);
+
+    internal ValidationPath Concat(ValidationPath suffix)
+    {
+        if (suffix._parent is null)
+            return this;
+
+        var current = this;
+        var suffixSegments = suffix.CollectSegments();
+        for (var i = 0; i < suffixSegments.Length; i++)
+            current = current.Append(suffixSegments[i]);
+
+        return current;
+    }
+
+    internal ValidationPath RelativeTo(ValidationPath prefix)
+    {
+        var pathSegments = CollectSegments();
+        var prefixSegments = prefix.CollectSegments();
+
+        if (prefixSegments.Length == 0)
+            return this;
+
+        if (pathSegments.Length < prefixSegments.Length)
+            return this;
+
+        for (var i = 0; i < prefixSegments.Length; i++)
+        {
+            if (!AreSame(pathSegments[i], prefixSegments[i]))
+                return this;
+        }
+
+        var relative = Root;
+        for (var i = prefixSegments.Length; i < pathSegments.Length; i++)
+            relative = relative.Append(pathSegments[i]);
+
+        return relative;
+    }
 
     /// <summary>Renders the full path as a string with the provided formatting options.</summary>
     internal string Render(PathFormattingOptions options)
     {
-        if (ReferenceEquals(options, PathFormattingOptions.Default))
+        if (ReferenceEquals(options, _formattingOptions))
             return _defaultRendered ??= BuildString(options);
 
         if (ReferenceEquals(_lastOptions, options))
@@ -136,7 +185,7 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
     /// </summary>
     public string ToPathString(PathFormattingOptions? formattingOptions = null)
     {
-        var rendered = Render(formattingOptions ?? PathFormattingOptions.Default);
+        var rendered = Render(formattingOptions ?? _formattingOptions);
         if (string.IsNullOrEmpty(rendered))
             return "$";
 
@@ -236,6 +285,20 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
             PathSegmentKind.DictionaryKey => new ValidationPathSegment(ValidationPathSegmentKind.DictionaryKey, null, -1, segment.Key),
             _ => default
         };
+
+    private static bool AreSame(PathSegment left, PathSegment right)
+    {
+        if (left.Kind != right.Kind)
+            return false;
+
+        return left.Kind switch
+        {
+            PathSegmentKind.Property => string.Equals(left.Name, right.Name, StringComparison.Ordinal),
+            PathSegmentKind.Index => left.IndexValue == right.IndexValue,
+            PathSegmentKind.DictionaryKey => Equals(left.Key, right.Key),
+            _ => false
+        };
+    }
 
     private static bool TryResolveSegment(object? current, PathSegment segment, out object? next)
     {

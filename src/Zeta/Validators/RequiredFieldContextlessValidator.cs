@@ -21,7 +21,7 @@ internal sealed class RequiredFieldContextlessValidator<TInstance, TProperty> : 
         var value = _getter(instance);
         if (value is null)
         {
-            var path = execution.Push(_name).Path;
+            var path = execution.PathSegments.Append(PathSegment.Property(_name));
             return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
         }
 

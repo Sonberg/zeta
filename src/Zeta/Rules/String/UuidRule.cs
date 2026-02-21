@@ -18,7 +18,7 @@ public readonly struct UuidRule : IValidationRule<string>
     {
         var error = Guid.TryParse(value, out _)
             ? null
-            : new ValidationError(context.Path, "uuid", _message ?? "Invalid UUID format");
+            : new ValidationError(context.PathSegments, "uuid", _message ?? "Invalid UUID format");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -40,7 +40,7 @@ public readonly struct UuidRule<TContext> : IValidationRule<string, TContext>
     {
         var error = Guid.TryParse(value, out _)
             ? null
-            : new ValidationError(context.Path, "uuid", _message ?? "Invalid UUID format");
+            : new ValidationError(context.PathSegments, "uuid", _message ?? "Invalid UUID format");
 
         return ValueTaskHelper.FromResult(error);
     }

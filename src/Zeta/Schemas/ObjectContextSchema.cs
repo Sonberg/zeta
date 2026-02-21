@@ -128,7 +128,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         {
             return AllowNull
                 ? Result<T, TContext>.Success(value!, context.Data)
-                : Result<T, TContext>.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                : Result<T, TContext>.Failure([new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
         List<ValidationError>? errors = null;
@@ -320,7 +320,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return Append(new RefinementRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Push(propertyName).Path, code, messageFactory(val, ctx.Data))));
+                : new ValidationError(ctx.PathSegments.Append(PathSegment.Property(propertyName)), code, messageFactory(val, ctx.Data))));
     }
 
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(

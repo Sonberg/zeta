@@ -24,7 +24,7 @@ public readonly struct EmailRule : IValidationRule<string>
     {
         var error = EmailRegex.IsMatch(value)
             ? null
-            : new ValidationError(context.Path, "email", _message ?? "Invalid email format");
+            : new ValidationError(context.PathSegments, "email", _message ?? "Invalid email format");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -51,7 +51,7 @@ public readonly struct EmailRule<TContext> : IValidationRule<string, TContext>
     {
         var error = EmailRegex.IsMatch(value)
             ? null
-            : new ValidationError(context.Path, "email", _message ?? "Invalid email format");
+            : new ValidationError(context.PathSegments, "email", _message ?? "Invalid email format");
 
         return ValueTaskHelper.FromResult(error);
     }

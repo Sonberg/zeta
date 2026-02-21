@@ -18,7 +18,7 @@ public readonly struct AlphanumericRule : IValidationRule<string>
     {
         var error = value.All(char.IsLetterOrDigit)
             ? null
-            : new ValidationError(context.Path, "alphanumeric", _message ?? "Must contain only letters and numbers");
+            : new ValidationError(context.PathSegments, "alphanumeric", _message ?? "Must contain only letters and numbers");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -40,7 +40,7 @@ public readonly struct AlphanumericRule<TContext> : IValidationRule<string, TCon
     {
         var error = value.All(char.IsLetterOrDigit)
             ? null
-            : new ValidationError(context.Path, "alphanumeric", _message ?? "Must contain only letters and numbers");
+            : new ValidationError(context.PathSegments, "alphanumeric", _message ?? "Must contain only letters and numbers");
 
         return ValueTaskHelper.FromResult(error);
     }

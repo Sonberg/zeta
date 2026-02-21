@@ -58,7 +58,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
             return AllowNull
                 ? Result<IDictionary<TKey, TValue>>.Success(value!)
                 : Result<IDictionary<TKey, TValue>>.Failure(
-                    new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                    new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
         var errors = await Rules.ExecuteAsync(value, context);

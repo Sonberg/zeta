@@ -95,7 +95,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
             return AllowNull
                 ? Result<IDictionary<TKey, TValue>, TContext>.Success(value!, context.Data)
                 : Result<IDictionary<TKey, TValue>, TContext>.Failure(
-                    [new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                    [new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
         var errors = await Rules.ExecuteAsync(value, context);

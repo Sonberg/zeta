@@ -34,11 +34,11 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolCon
         => Append(new RefinementRule<bool, TContext>((val, ctx) =>
             val
                 ? null
-                : new ValidationError(ctx.Path, "is_true", message ?? "Must be true")));
+                : new ValidationError(ctx.PathSegments, "is_true", message ?? "Must be true")));
 
     public BoolContextSchema<TContext> IsFalse(string? message = null)
         => Append(new RefinementRule<bool, TContext>((val, ctx) =>
             !val
                 ? null
-                : new ValidationError(ctx.Path, "is_false", message ?? "Must be false")));
+                : new ValidationError(ctx.PathSegments, "is_false", message ?? "Must be false")));
 }
