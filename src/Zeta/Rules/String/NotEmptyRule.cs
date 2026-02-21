@@ -18,7 +18,7 @@ public readonly struct NotEmptyRule : IValidationRule<string>
     {
         var error = !string.IsNullOrWhiteSpace(value)
             ? null
-            : new ValidationError(context.Path, "required", _message ?? "Value cannot be empty");
+            : new ValidationError(context.PathSegments, "required", _message ?? "Value cannot be empty");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -40,7 +40,7 @@ public readonly struct NotEmptyRule<TContext> : IValidationRule<string, TContext
     {
         var error = !string.IsNullOrWhiteSpace(value)
             ? null
-            : new ValidationError(context.Path, "required", _message ?? "Value cannot be empty");
+            : new ValidationError(context.PathSegments, "required", _message ?? "Value cannot be empty");
 
         return ValueTaskHelper.FromResult(error);
     }

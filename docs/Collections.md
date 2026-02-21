@@ -150,10 +150,10 @@ Z.Collection<int>()
     .MaxLength(50)
 ```
 
-**Validation Order:**
-1. Collection-level rules execute first
-2. Element validation runs if collection rules pass
-3. All errors are collected (no short-circuiting)
+**Validation behavior:**
+1. Collection-level rules and element rules are both evaluated.
+2. Validation does not short-circuit on first failure.
+3. All discovered errors are aggregated and returned.
 
 ## Collections in Object Schemas
 
@@ -391,35 +391,20 @@ Z.Schema<User>()
     ).MinLength(1))
 ```
 
-### 3. Apply Collection Rules First, Then Element Rules
+### 3. Prefer Readable Rule Grouping
+
+Rule order in code is mostly about readability because errors are aggregated.
 
 ```csharp
-// ✓ Good - Fails fast on empty collection
 Z.Collection<string>()
-    .NotEmpty()                    // Check size first
-    .Each(s => s.Email())          // Then validate elements
-
-// ✗ Avoid - Validates elements even if empty
-Z.Collection<string>()
-    .Each(s => s.Email())
     .NotEmpty()
+    .MaxLength(10)
+    .Each(s => s.Email());
 ```
 
-### 4. Use `List<T>` for Fluent Builders
+### 4. Use Materialized Collection Types for Property Builders
 
-```csharp
-// ✓ Good - Works with fluent builder
-public record User(string Name, List<string> Tags);
-
-Z.Schema<User>()
-    .Property(u => u.Tags, tags => tags.Each(t => t.MinLength(3)))
-
-// ✗ Avoid - Arrays don't work with fluent builders
-public record User(string Name, string[] Tags);
-
-Z.Schema<User>()
-    .Property(u => u.Tags, tags => tags.Each(t => t.MinLength(3)))  // Won't compile
-```
+Prefer materialized collection field types such as `List<T>`, arrays (`T[]`), `ICollection<T>`, or `IReadOnlyCollection<T>`.
 
 ### 5. Keep Element Validation Simple
 

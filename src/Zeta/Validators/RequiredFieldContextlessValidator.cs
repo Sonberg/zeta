@@ -12,8 +12,6 @@ internal sealed class RequiredFieldContextlessValidator<TInstance, TProperty> : 
     public RequiredFieldContextlessValidator(string name, Func<TInstance, TProperty> getter, string? message)
     {
         _name = name;
-        if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
-            _name = char.ToLower(_name[0]) + _name.Substring(1);
         _getter = getter;
         _message = message ?? $"{_name} is required";
     }
@@ -23,7 +21,7 @@ internal sealed class RequiredFieldContextlessValidator<TInstance, TProperty> : 
         var value = _getter(instance);
         if (value is null)
         {
-            var path = string.IsNullOrEmpty(execution.Path) ? _name : $"{execution.Path}.{_name}";
+            var path = execution.PathSegments.Append(PathSegment.Property(_name));
             return new ValueTask<IReadOnlyList<ValidationError>>([new ValidationError(path, "required", _message)]);
         }
 

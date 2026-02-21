@@ -21,7 +21,7 @@ public readonly struct MinLengthRule<T> : IValidationRule<ICollection<T>>
     {
         var error = value.Count >= _min
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} items");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must have at least {_min} items");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -45,7 +45,7 @@ public readonly struct MinLengthRule<T, TContext> : IValidationRule<ICollection<
     {
         var error = value.Count >= _min
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} items");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must have at least {_min} items");
 
         return ValueTaskHelper.FromResult(error);
     }

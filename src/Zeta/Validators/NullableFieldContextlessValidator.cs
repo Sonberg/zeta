@@ -17,8 +17,6 @@ internal sealed class NullableFieldContextlessValidator<TInstance, TProperty> : 
     public NullableFieldContextlessValidator(string name, Func<TInstance, TProperty?> getter, ISchema<TProperty> schema)
     {
         _name = name;
-        if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
-            _name = char.ToLower(_name[0]) + _name.Substring(1);
         _getter = getter;
         _schema = schema;
     }
@@ -26,16 +24,35 @@ internal sealed class NullableFieldContextlessValidator<TInstance, TProperty> : 
     public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext context)
     {
         var value = _getter(instance);
-        var fieldExecution = context.Push(_name);
+        var fieldPath = context.PathSegments.Append(PathSegment.Property(_name));
 
         if (!value.HasValue)
         {
             return _schema.AllowNull
                 ? EmptyErrors
-                : [new ValidationError(fieldExecution.Path, "null_value", $"{_name} cannot be null")];
+                : [new ValidationError(fieldPath, "null_value", $"{_name} cannot be null")];
         }
 
-        var result = await _schema.ValidateAsync(value.Value, fieldExecution);
-        return result.IsSuccess ? EmptyErrors : result.Errors;
+        var result = await _schema.ValidateAsync(value.Value, context);
+        if (result.IsSuccess)
+            return EmptyErrors;
+
+        return PrependFieldPath(context.PathSegments, fieldPath, result.Errors);
+    }
+
+    private static IReadOnlyList<ValidationError> PrependFieldPath(
+        ValidationPath basePath,
+        ValidationPath fieldPath,
+        IReadOnlyList<ValidationError> errors)
+    {
+        var mapped = new ValidationError[errors.Count];
+        for (var i = 0; i < errors.Count; i++)
+        {
+            var error = errors[i];
+            var relativePath = error.Path.RelativeTo(basePath);
+            mapped[i] = new ValidationError(fieldPath.Concat(relativePath), error.Code, error.Message);
+        }
+
+        return mapped;
     }
 }

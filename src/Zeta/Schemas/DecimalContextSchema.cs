@@ -39,6 +39,14 @@ public class DecimalContextSchema<TContext> : ContextSchema<decimal, TContext, D
     public DecimalContextSchema<TContext> Max(decimal max, string? message = null)
         => Append(new MaxDecimalRule<TContext>(max, message));
 
+    public DecimalContextSchema<TContext> Range(decimal min, decimal max, string? message = null)
+    {
+        if (min > max)
+            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
+
+        return Min(min, message).Max(max, message);
+    }
+
     public DecimalContextSchema<TContext> Positive(string? message = null)
         => Append(new PositiveDecimalRule<TContext>(message));
 

@@ -22,7 +22,7 @@ public readonly struct DictionaryMinLengthRule<TKey, TValue> : IValidationRule<I
     {
         var error = value.Count >= _min
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} entries");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must have at least {_min} entries");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -47,7 +47,7 @@ public readonly struct DictionaryMinLengthRule<TKey, TValue, TContext> : IValida
     {
         var error = value.Count >= _min
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? $"Must have at least {_min} entries");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must have at least {_min} entries");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -72,7 +72,7 @@ public readonly struct DictionaryMaxLengthRule<TKey, TValue> : IValidationRule<I
     {
         var error = value.Count <= _max
             ? null
-            : new ValidationError(context.Path, "max_length", _message ?? $"Must have at most {_max} entries");
+            : new ValidationError(context.PathSegments, "max_length", _message ?? $"Must have at most {_max} entries");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -97,7 +97,7 @@ public readonly struct DictionaryMaxLengthRule<TKey, TValue, TContext> : IValida
     {
         var error = value.Count <= _max
             ? null
-            : new ValidationError(context.Path, "max_length", _message ?? $"Must have at most {_max} entries");
+            : new ValidationError(context.PathSegments, "max_length", _message ?? $"Must have at most {_max} entries");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -120,7 +120,7 @@ public readonly struct DictionaryNotEmptyRule<TKey, TValue> : IValidationRule<ID
     {
         var error = value.Count > 0
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? "Must not be empty");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? "Must not be empty");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -143,7 +143,7 @@ public readonly struct DictionaryNotEmptyRule<TKey, TValue, TContext> : IValidat
     {
         var error = value.Count > 0
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? "Must not be empty");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? "Must not be empty");
 
         return ValueTaskHelper.FromResult(error);
     }

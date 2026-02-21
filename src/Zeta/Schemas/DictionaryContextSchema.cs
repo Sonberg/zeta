@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Zeta.Core;
 using Zeta.Rules;
 using Zeta.Rules.Dictionary;
@@ -14,12 +15,13 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
 {
     private ISchema<TKey, TContext>? KeySchema { get; }
     private ISchema<TValue, TContext>? ValueSchema { get; }
+    private readonly IReadOnlyList<EntryRefinement<TKey, TValue, TContext>>? _entryRefinements;
 
     internal DictionaryContextSchema() : this(
         (ISchema<TKey, TContext>?)null,
         (ISchema<TValue, TContext>?)null,
         new ContextRuleEngine<IDictionary<TKey, TValue>, TContext>(),
-        false, null, null)
+        false, null, null, null)
     {
     }
 
@@ -27,7 +29,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         ISchema<TKey, TContext>? keySchema,
         ISchema<TValue, TContext>? valueSchema,
         ContextRuleEngine<IDictionary<TKey, TValue>, TContext> rules)
-        : this(keySchema, valueSchema, rules, false, null, null)
+        : this(keySchema, valueSchema, rules, false, null, null, null)
     {
     }
 
@@ -39,7 +41,25 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
             keySchema is not null ? new SchemaAdapter<TKey, TContext>(keySchema) : null,
             valueSchema is not null ? new SchemaAdapter<TValue, TContext>(valueSchema) : null,
             rules.ToContext<TContext>(),
-            false, null, null)
+            false, null, null, null)
+    {
+    }
+
+    /// <summary>
+    /// Transfer constructor: called from <see cref="DictionaryContextlessSchema{TKey,TValue}.Using{TContext}()"/>
+    /// to promote contextless entry refinements.
+    /// </summary>
+    internal DictionaryContextSchema(
+        ISchema<TKey>? keySchema,
+        ISchema<TValue>? valueSchema,
+        ContextlessRuleEngine<IDictionary<TKey, TValue>> rules,
+        IReadOnlyList<EntryRefinement<TKey, TValue>>? contextlessEntryRefinements)
+        : this(
+            keySchema is not null ? new SchemaAdapter<TKey, TContext>(keySchema) : null,
+            valueSchema is not null ? new SchemaAdapter<TValue, TContext>(valueSchema) : null,
+            rules.ToContext<TContext>(),
+            false, null, null,
+            contextlessEntryRefinements?.Select(r => r.ToContextAware<TContext>()).ToList())
     {
     }
 
@@ -49,11 +69,13 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         ContextRuleEngine<IDictionary<TKey, TValue>, TContext> rules,
         bool allowNull,
         IReadOnlyList<ISchemaConditional<IDictionary<TKey, TValue>, TContext>>? conditionals,
-        Func<IDictionary<TKey, TValue>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
+        Func<IDictionary<TKey, TValue>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory,
+        IReadOnlyList<EntryRefinement<TKey, TValue, TContext>>? entryRefinements)
         : base(rules, allowNull, conditionals, contextFactory)
     {
         KeySchema = keySchema;
         ValueSchema = valueSchema;
+        _entryRefinements = entryRefinements;
     }
 
     protected override DictionaryContextSchema<TKey, TValue, TContext> CreateInstance() => new();
@@ -63,7 +85,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         bool allowNull,
         IReadOnlyList<ISchemaConditional<IDictionary<TKey, TValue>, TContext>>? conditionals,
         Func<IDictionary<TKey, TValue>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
-        => new(KeySchema, ValueSchema, rules, allowNull, conditionals, contextFactory);
+        => new(KeySchema, ValueSchema, rules, allowNull, conditionals, contextFactory, _entryRefinements);
 
     public override async ValueTask<Result<IDictionary<TKey, TValue>, TContext>> ValidateAsync(
         IDictionary<TKey, TValue>? value, ValidationContext<TContext> context)
@@ -73,7 +95,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
             return AllowNull
                 ? Result<IDictionary<TKey, TValue>, TContext>.Success(value!, context.Data)
                 : Result<IDictionary<TKey, TValue>, TContext>.Failure(
-                    [new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                    [new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
         var errors = await Rules.ExecuteAsync(value, context);
@@ -106,6 +128,24 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
             index++;
         }
 
+        if (_entryRefinements is not null)
+        {
+            foreach (var kvp in value)
+            {
+                foreach (var refinement in _entryRefinements)
+                {
+                    var passed = await refinement.Predicate(kvp.Key, kvp.Value, context.Data, context.CancellationToken);
+                    if (!passed)
+                    {
+                        errors ??= [];
+                        errors.Add(new ValidationError(
+                            context.PushKey(kvp.Key).PathSegments,
+                            refinement.Code, refinement.Message));
+                    }
+                }
+            }
+        }
+
         var conditionalErrors = await ExecuteConditionalsAsync(value, context);
         if (conditionalErrors != null)
         {
@@ -128,14 +168,72 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         => Append(new DictionaryNotEmptyRule<TKey, TValue, TContext>(message));
 
     public DictionaryContextSchema<TKey, TValue, TContext> EachKey(ISchema<TKey, TContext> keySchema)
-        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, _entryRefinements);
 
     public DictionaryContextSchema<TKey, TValue, TContext> EachValue(ISchema<TValue, TContext> valueSchema)
-        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, _entryRefinements);
 
     internal DictionaryContextSchema<TKey, TValue, TContext> WithKeySchema(ISchema<TKey, TContext> keySchema)
-        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, _entryRefinements);
 
     internal DictionaryContextSchema<TKey, TValue, TContext> WithValueSchema(ISchema<TValue, TContext> valueSchema)
-        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals(), ContextFactory);
+        => new(KeySchema, valueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, _entryRefinements);
+
+    /// <summary>
+    /// Validates each dictionary entry with the given sync value-only predicate, emitting one error per
+    /// failing entry at a bracket-notation path (e.g. <c>$[myKey]</c>).
+    /// </summary>
+    public DictionaryContextSchema<TKey, TValue, TContext> RefineEachEntry(
+        Func<TKey, TValue, bool> predicate, string message, string code = "entry_invalid")
+    {
+        var refinement = new EntryRefinement<TKey, TValue, TContext>(
+            (k, v, _, _) => ValueTaskHelper.FromResult(predicate(k, v)), message, code);
+        return new(KeySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, AppendRefinement(_entryRefinements, refinement));
+    }
+
+    /// <summary>
+    /// Validates each dictionary entry with the given sync value+context predicate, emitting one error per
+    /// failing entry at a bracket-notation path (e.g. <c>$[myKey]</c>).
+    /// </summary>
+    public DictionaryContextSchema<TKey, TValue, TContext> RefineEachEntry(
+        Func<TKey, TValue, TContext, bool> predicate, string message, string code = "entry_invalid")
+    {
+        var refinement = new EntryRefinement<TKey, TValue, TContext>(
+            (k, v, ctx, _) => ValueTaskHelper.FromResult(predicate(k, v, ctx)), message, code);
+        return new(KeySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, AppendRefinement(_entryRefinements, refinement));
+    }
+
+    /// <summary>
+    /// Validates each dictionary entry with the given async value-only predicate, emitting one error per
+    /// failing entry at a bracket-notation path (e.g. <c>$[myKey]</c>).
+    /// </summary>
+    public DictionaryContextSchema<TKey, TValue, TContext> RefineEachEntryAsync(
+        Func<TKey, TValue, CancellationToken, ValueTask<bool>> predicate, string message, string code = "entry_invalid")
+    {
+        var refinement = new EntryRefinement<TKey, TValue, TContext>(
+            (k, v, _, ct) => predicate(k, v, ct), message, code);
+        return new(KeySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, AppendRefinement(_entryRefinements, refinement));
+    }
+
+    /// <summary>
+    /// Validates each dictionary entry with the given async value+context+CT predicate, emitting one error per
+    /// failing entry at a bracket-notation path (e.g. <c>$[myKey]</c>).
+    /// </summary>
+    public DictionaryContextSchema<TKey, TValue, TContext> RefineEachEntryAsync(
+        Func<TKey, TValue, TContext, CancellationToken, ValueTask<bool>> predicate, string message, string code = "entry_invalid")
+    {
+        var refinement = new EntryRefinement<TKey, TValue, TContext>(predicate, message, code);
+        return new(KeySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, AppendRefinement(_entryRefinements, refinement));
+    }
+
+    private static List<EntryRefinement<TKey, TValue, TContext>> AppendRefinement(
+        IReadOnlyList<EntryRefinement<TKey, TValue, TContext>>? existing, EntryRefinement<TKey, TValue, TContext> next)
+    {
+        if (existing is null)
+            return [next];
+        var result = new List<EntryRefinement<TKey, TValue, TContext>>(existing.Count + 1);
+        result.AddRange(existing);
+        result.Add(next);
+        return result;
+    }
 }

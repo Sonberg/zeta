@@ -35,6 +35,14 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     public IntContextlessSchema Max(int max, string? message = null)
         => Append(new MaxIntRule(max, message));
 
+    public IntContextlessSchema Range(int min, int max, string? message = null)
+    {
+        if (min > max)
+            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
+
+        return Min(min, message).Max(max, message);
+    }
+
     /// <summary>
     /// Creates a context-aware int schema with all rules from this schema.
     /// </summary>

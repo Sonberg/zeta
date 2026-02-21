@@ -43,7 +43,7 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
         {
             return AllowNull
                 ? Result<ICollection<TElement>>.Success(value!)
-                : Result<ICollection<TElement>>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                : Result<ICollection<TElement>>.Failure(new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
         var errors = await Rules.ExecuteAsync(value, context);

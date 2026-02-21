@@ -80,7 +80,12 @@ public sealed class ZetaValidator : IZetaValidator
             execution.CancellationToken);
         return await schema.ValidateAsync(
             value,
-            new ValidationContext<TContext>(contextData, execution.TimeProvider, execution.CancellationToken, execution.ServiceProvider));
+            new ValidationContext<TContext>(
+                contextData,
+                execution.TimeProvider,
+                execution.CancellationToken,
+                execution.ServiceProvider,
+                execution.PathFormattingOptions));
     }
 
 }

@@ -35,6 +35,14 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     public DoubleContextlessSchema Max(double max, string? message = null)
         => Append(new MaxDoubleRule(max, message));
 
+    public DoubleContextlessSchema Range(double min, double max, string? message = null)
+    {
+        if (min > max)
+            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
+
+        return Min(min, message).Max(max, message);
+    }
+
     public DoubleContextlessSchema Positive(string? message = null)
         => Append(new PositiveDoubleRule(message));
 

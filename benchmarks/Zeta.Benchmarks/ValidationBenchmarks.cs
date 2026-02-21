@@ -22,7 +22,7 @@ public class ValidationBenchmarks
     private readonly ISchema<UserDto> _zetaSchema = Z.Object<UserDto>()
         .Field(u => u.Name, Z.String().MinLength(3).MaxLength(100))
         .Field(u => u.Email, Z.String().Email())
-        .Field(u => u.Age, Z.Int().Min(18).Max(120));
+        .Field(u => u.Age, Z.Int().Range(18, 120));
 
     // FluentValidation validator
     private readonly FluentUserValidator _fluentValidator = new();
@@ -64,6 +64,7 @@ public class ValidationBenchmarks
     public async Task<int> Zeta_Invalid()
     {
         var result = await _zetaSchema.ValidateAsync(_invalidUser, ValidationContext.Empty);
+        
         return result.Errors.Count;
     }
 

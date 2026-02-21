@@ -321,4 +321,5 @@ public class TypeAssertionTests
         Assert.False(lenientDog.IsSuccess);
         Assert.Contains(lenientDog.Errors, e => e.Message == "Strict context required for dogs");
     }
+
 }

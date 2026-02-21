@@ -31,19 +31,19 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, Time
         => Append(new RefinementRule<TimeOnly>((val, exec) =>
             val >= min
                 ? null
-                : new ValidationError(exec.Path, "min_time", message ?? $"Must be at or after {min:t}")));
+                : new ValidationError(exec.PathSegments, "min_time", message ?? $"Must be at or after {min:t}")));
 
     public TimeOnlyContextlessSchema Max(TimeOnly max, string? message = null)
         => Append(new RefinementRule<TimeOnly>((val, exec) =>
             val <= max
                 ? null
-                : new ValidationError(exec.Path, "max_time", message ?? $"Must be at or before {max:t}")));
+                : new ValidationError(exec.PathSegments, "max_time", message ?? $"Must be at or before {max:t}")));
 
     public TimeOnlyContextlessSchema Between(TimeOnly min, TimeOnly max, string? message = null)
         => Append(new RefinementRule<TimeOnly>((val, exec) =>
             val >= min && val <= max
                 ? null
-                : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:t} and {max:t}")));
+                : new ValidationError(exec.PathSegments, "between", message ?? $"Must be between {min:t} and {max:t}")));
 
     public TimeOnlyContextlessSchema BusinessHours(TimeOnly? start = null, TimeOnly? end = null, string? message = null)
     {
@@ -52,26 +52,26 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, Time
         return Append(new RefinementRule<TimeOnly>((val, exec) =>
             val >= businessStart && val <= businessEnd
                 ? null
-                : new ValidationError(exec.Path, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})")));
+                : new ValidationError(exec.PathSegments, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})")));
     }
 
     public TimeOnlyContextlessSchema Morning(string? message = null)
         => Append(new RefinementRule<TimeOnly>((val, exec) =>
             val.Hour < 12
                 ? null
-                : new ValidationError(exec.Path, "morning", message ?? "Must be in the morning (before 12:00)")));
+                : new ValidationError(exec.PathSegments, "morning", message ?? "Must be in the morning (before 12:00)")));
 
     public TimeOnlyContextlessSchema Afternoon(string? message = null)
         => Append(new RefinementRule<TimeOnly>((val, exec) =>
             val.Hour >= 12 && val.Hour < 18
                 ? null
-                : new ValidationError(exec.Path, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)")));
+                : new ValidationError(exec.PathSegments, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)")));
 
     public TimeOnlyContextlessSchema Evening(string? message = null)
         => Append(new RefinementRule<TimeOnly>((val, exec) =>
             val.Hour >= 18
                 ? null
-                : new ValidationError(exec.Path, "evening", message ?? "Must be in the evening (after 18:00)")));
+                : new ValidationError(exec.PathSegments, "evening", message ?? "Must be in the evening (after 18:00)")));
 
     /// <summary>
     /// Creates a context-aware TimeOnly schema with all rules from this schema.

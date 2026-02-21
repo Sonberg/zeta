@@ -37,13 +37,13 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext,
         => Append(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val >= min
                 ? null
-                : new ValidationError(ctx.Path, "min_date", message ?? $"Must be at or after {min:O}")));
+                : new ValidationError(ctx.PathSegments, "min_date", message ?? $"Must be at or after {min:O}")));
 
     public DateOnlyContextSchema<TContext> Max(DateOnly max, string? message = null)
         => Append(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val <= max
                 ? null
-                : new ValidationError(ctx.Path, "max_date", message ?? $"Must be at or before {max:O}")));
+                : new ValidationError(ctx.PathSegments, "max_date", message ?? $"Must be at or before {max:O}")));
 
     public DateOnlyContextSchema<TContext> Past(string? message = null)
         => Append(new RefinementRule<DateOnly, TContext>((val, ctx) =>
@@ -51,7 +51,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext,
             var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
                 ? null
-                : new ValidationError(ctx.Path, "past", message ?? "Must be in the past");
+                : new ValidationError(ctx.PathSegments, "past", message ?? "Must be in the past");
         }));
 
     public DateOnlyContextSchema<TContext> Future(string? message = null)
@@ -60,26 +60,26 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext,
             var today = DateOnly.FromDateTime(ctx.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
                 ? null
-                : new ValidationError(ctx.Path, "future", message ?? "Must be in the future");
+                : new ValidationError(ctx.PathSegments, "future", message ?? "Must be in the future");
         }));
 
     public DateOnlyContextSchema<TContext> Between(DateOnly min, DateOnly max, string? message = null)
         => Append(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val >= min && val <= max
                 ? null
-                : new ValidationError(ctx.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
+                : new ValidationError(ctx.PathSegments, "between", message ?? $"Must be between {min:O} and {max:O}")));
 
     public DateOnlyContextSchema<TContext> Weekday(string? message = null)
         => Append(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
-                : new ValidationError(ctx.Path, "weekday", message ?? "Must be a weekday")));
+                : new ValidationError(ctx.PathSegments, "weekday", message ?? "Must be a weekday")));
 
     public DateOnlyContextSchema<TContext> Weekend(string? message = null)
         => Append(new RefinementRule<DateOnly, TContext>((val, ctx) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
-                : new ValidationError(ctx.Path, "weekend", message ?? "Must be a weekend")));
+                : new ValidationError(ctx.PathSegments, "weekend", message ?? "Must be a weekend")));
 
     public DateOnlyContextSchema<TContext> MinAge(int years, string? message = null)
         => Append(new RefinementRule<DateOnly, TContext>((val, ctx) =>
@@ -90,7 +90,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext,
 
             return age >= years
                 ? null
-                : new ValidationError(ctx.Path, "min_age", message ?? $"Must be at least {years} years old");
+                : new ValidationError(ctx.PathSegments, "min_age", message ?? $"Must be at least {years} years old");
         }));
 
     public DateOnlyContextSchema<TContext> MaxAge(int years, string? message = null)
@@ -102,7 +102,7 @@ public class DateOnlyContextSchema<TContext> : ContextSchema<DateOnly, TContext,
 
             return age <= years
                 ? null
-                : new ValidationError(ctx.Path, "max_age", message ?? $"Must be at most {years} years old");
+                : new ValidationError(ctx.PathSegments, "max_age", message ?? $"Must be at most {years} years old");
         }));
 }
 #endif

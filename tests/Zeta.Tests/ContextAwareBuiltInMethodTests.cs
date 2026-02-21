@@ -23,16 +23,22 @@ public class ContextAwareBuiltInMethodTests
     [Fact]
     public async Task IntContextAwareMethods_AreCovered()
     {
-        var schema = Z.Int().Using<TestContext>().Min(1).Max(10);
+        var schema = Z.Int().Using<TestContext>().Range(1, 10);
 
         var result = await schema.ValidateAsync(5, new TestContext());
         Assert.True(result.IsSuccess);
     }
 
     [Fact]
+    public void IntContextAwareRange_InvalidBounds_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Z.Int().Using<TestContext>().Range(10, 1));
+    }
+
+    [Fact]
     public async Task DoubleContextAwareMethods_AreCovered()
     {
-        var rangeSchema = Z.Double().Using<TestContext>().Min(-10).Max(10).Finite();
+        var rangeSchema = Z.Double().Using<TestContext>().Range(-10, 10).Finite();
         var positiveSchema = Z.Double().Using<TestContext>().Positive();
         var negativeSchema = Z.Double().Using<TestContext>().Negative();
 
@@ -42,9 +48,15 @@ public class ContextAwareBuiltInMethodTests
     }
 
     [Fact]
+    public void DoubleContextAwareRange_InvalidBounds_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Z.Double().Using<TestContext>().Range(10, -10));
+    }
+
+    [Fact]
     public async Task DecimalContextAwareMethods_AreCovered()
     {
-        var rangeSchema = Z.Decimal().Using<TestContext>().Min(-10m).Max(10m).Precision(2);
+        var rangeSchema = Z.Decimal().Using<TestContext>().Range(-10m, 10m).Precision(2);
         var positiveSchema = Z.Decimal().Using<TestContext>().Positive();
         var negativeSchema = Z.Decimal().Using<TestContext>().Negative();
         var multipleOfSchema = Z.Decimal().Using<TestContext>().MultipleOf(0.25m);
@@ -53,6 +65,12 @@ public class ContextAwareBuiltInMethodTests
         Assert.True((await positiveSchema.ValidateAsync(2m, new TestContext())).IsSuccess);
         Assert.True((await negativeSchema.ValidateAsync(-2m, new TestContext())).IsSuccess);
         Assert.True((await multipleOfSchema.ValidateAsync(1.5m, new TestContext())).IsSuccess);
+    }
+
+    [Fact]
+    public void DecimalContextAwareRange_InvalidBounds_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Z.Decimal().Using<TestContext>().Range(10m, -10m));
     }
 
     [Fact]
