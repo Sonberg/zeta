@@ -77,7 +77,7 @@ Z.Schema<Event>()
     .Property(e => e.StartDate, s => s.Future().WithinDays(90))
     .Property(e => e.BirthDate, s => s.Past().MinAge(18))
     .Property(e => e.EventDate, s => s.Weekday().Between(minDate, maxDate))
-    .Property(e => e.StartTime, s => s.BusinessHours().After(minTime));
+    .Property(e => e.StartTime, s => s.BusinessHours().Min(minTime));
 ```
 
 ### Other Types

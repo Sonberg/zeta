@@ -500,12 +500,15 @@ For ASP.NET Core integration-specific guidance, see [`../Zeta.AspNetCore/README.
 
 ## Error Model
 
+`ValidationError` stores a structured path (`ValidationPath`) and exposes a rendered string via `PathString`.
+
 ```csharp
-public record ValidationError(
-    string Path,     // "$.user.address.street" or "$.items[0]"
-    string Code,     // "min_length", "email", "required"
-    string Message   // "Must be at least 3 characters"
-);
+foreach (var error in result.Errors)
+{
+    ValidationPath path = error.Path;        // Structured path segments
+    string pathText = error.PathString;      // Rendered path like "$.items[0].name"
+    Console.WriteLine($"{pathText}: {error.Code} - {error.Message}");
+}
 ```
 
 ### Standard Error Codes
@@ -572,6 +575,7 @@ dotnet run --project ../../benchmarks/Zeta.Benchmarks -c Release
 ## Documentation
 
 - [Collections](../../docs/Collections.md) - Arrays, lists, and element validation patterns
+- [Validation Paths](../../docs/Paths.md) - Structured paths, formatting, and value resolution
 - [Fluent Property Builders](../../docs/FluentFieldBuilders.md) - Inline schema definitions for schema properties
 - [Validation Context](../../docs/ValidationContext.md) - Async data loading and context-aware schemas
 - [Custom Rules](../../docs/CustomRules.md) - Creating reusable validation rules

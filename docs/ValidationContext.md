@@ -66,7 +66,7 @@ var ContextAwareEmailSchema = Z.String()
     .Refine((email, ctx) => !ctx.EmailExists, "Email already taken");
 ```
 
-Context-aware schemas are also assignable to `ISchema<T>` in this branch. They still resolve context through their configured factory when validated in a contextless flow that includes `IServiceProvider`.
+Context-aware schemas are also assignable to `ISchema<T>`. They still resolve context through their configured factory when validated in a contextless flow that includes `IServiceProvider`.
 
 Rules defined before `.Using()` are preserved:
 

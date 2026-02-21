@@ -115,7 +115,7 @@ public sealed class CreateUserHandler
     {
         // Input is guaranteed to be valid
         var user = new User(cmd.Email, cmd.Age);
-        return Result.Success(user);
+        return Result<User>.Success(user);
     }
 }
 ```
@@ -182,10 +182,8 @@ public sealed class CreateBookingHandler
     {
         var validation = await _validator.ValidateAsync(cmd, Schema, ct);
 
-        return await validation.ThenAsync(valid =>
-        {
-            return Task.FromResult(new Booking(valid.Date));
-        });
+        return await validation.Then(valid =>
+            Task.FromResult(Result<Booking>.Success(new Booking(valid.Date))));
     }
 }
 ```
