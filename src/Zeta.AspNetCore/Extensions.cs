@@ -36,7 +36,7 @@ public static class ZetaExtensions
         return result.Match(
             success: onSuccess,
             failure: errors => new BadRequestObjectResult(new ValidationProblemDetails(
-                errors.GroupBy(e => e.Path)
+                errors.GroupBy(e => e.PathString)
                     .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
             ))
         );
@@ -60,7 +60,7 @@ public static class ZetaExtensions
         return result.Match(
             success: onSuccess,
             failure: errors => Results.ValidationProblem(
-                errors.GroupBy(e => e.Path)
+                errors.GroupBy(e => e.PathString)
                     .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
             )
         );

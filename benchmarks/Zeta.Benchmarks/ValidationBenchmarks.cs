@@ -64,6 +64,7 @@ public class ValidationBenchmarks
     public async Task<int> Zeta_Invalid()
     {
         var result = await _zetaSchema.ValidateAsync(_invalidUser, ValidationContext.Empty);
+        
         return result.Errors.Count;
     }
 

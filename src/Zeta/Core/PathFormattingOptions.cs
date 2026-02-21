@@ -18,7 +18,12 @@ public sealed class PathFormattingOptions
     {
         if (string.IsNullOrEmpty(name) || !char.IsUpper(name[0]))
             return name;
-        return char.ToLowerInvariant(name[0]) + name.Substring(1);
+
+        return string.Create(name.Length, name, static (span, source) =>
+        {
+            span[0] = char.ToLowerInvariant(source[0]);
+            source.AsSpan(1).CopyTo(span[1..]);
+        });
     };
 
     /// <summary>

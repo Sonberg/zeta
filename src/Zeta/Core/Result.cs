@@ -176,7 +176,7 @@ public record Result<T> : Result
         if (IsSuccess) return _value!;
 
         var messages = string.Join("; ", Errors.Select(e =>
-            string.IsNullOrEmpty(e.Path) ? e.Message : $"{e.Path}: {e.Message}"));
+            string.IsNullOrEmpty(e.PathString) ? e.Message : $"{e.PathString}: {e.Message}"));
         throw new ValidationException(messages, Errors!);
     }
 
