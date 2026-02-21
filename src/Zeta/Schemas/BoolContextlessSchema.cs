@@ -32,13 +32,13 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
         => Append(new RefinementRule<bool>((val, exec) =>
             val
                 ? null
-                : new ValidationError(exec.Path, "is_true", message ?? "Must be true")));
+                : new ValidationError(exec.PathSegments, "is_true", message ?? "Must be true")));
 
     public BoolContextlessSchema IsFalse(string? message = null)
         => Append(new RefinementRule<bool>((val, exec) =>
             !val
                 ? null
-                : new ValidationError(exec.Path, "is_false", message ?? "Must be false")));
+                : new ValidationError(exec.PathSegments, "is_false", message ?? "Must be false")));
 
     /// <summary>
     /// Creates a context-aware bool schema with all rules from this schema.

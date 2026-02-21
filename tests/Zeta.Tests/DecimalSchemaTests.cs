@@ -39,6 +39,34 @@ public class DecimalSchemaTests
     }
 
     [Fact]
+    public async Task Range_Valid_ReturnsSuccess()
+    {
+        var schema = Z.Decimal().Range(10.5m, 100.0m);
+        var result = await schema.ValidateAsync(50m);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Range_Invalid_ReturnsMinOrMaxFailure()
+    {
+        var schema = Z.Decimal().Range(10.5m, 100.0m);
+        var below = await schema.ValidateAsync(10.4m);
+        var above = await schema.ValidateAsync(100.1m);
+
+        Assert.False(below.IsSuccess);
+        Assert.Contains(below.Errors, e => e.Code == "min_value");
+        Assert.False(above.IsSuccess);
+        Assert.Contains(above.Errors, e => e.Code == "max_value");
+    }
+
+    [Fact]
+    public void Range_MinGreaterThanMax_Throws()
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => Z.Decimal().Range(2m, 1m));
+        Assert.Equal("min", ex.ParamName);
+    }
+
+    [Fact]
     public async Task Negative_Valid_ReturnsSuccess()
     {
         var schema = Z.Decimal().Negative();

@@ -19,7 +19,7 @@ public readonly struct UrlRule : IValidationRule<string>
         var error = Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
                     (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
             ? null
-            : new ValidationError(context.Path, "url", _message ?? "Invalid URL format");
+            : new ValidationError(context.PathSegments, "url", _message ?? "Invalid URL format");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -42,7 +42,7 @@ public readonly struct UrlRule<TContext> : IValidationRule<string, TContext>
         var error = Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
                     (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
             ? null
-            : new ValidationError(context.Path, "url", _message ?? "Invalid URL format");
+            : new ValidationError(context.PathSegments, "url", _message ?? "Invalid URL format");
 
         return ValueTaskHelper.FromResult(error);
     }

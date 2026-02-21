@@ -22,7 +22,7 @@ public readonly struct EndsWithRule : IValidationRule<string>
     {
         var error = value.EndsWith(_suffix, _comparison)
             ? null
-            : new ValidationError(context.Path, "ends_with", _message ?? $"Must end with '{_suffix}'");
+            : new ValidationError(context.PathSegments, "ends_with", _message ?? $"Must end with '{_suffix}'");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -48,7 +48,7 @@ public readonly struct EndsWithRule<TContext> : IValidationRule<string, TContext
     {
         var error = value.EndsWith(_suffix, _comparison)
             ? null
-            : new ValidationError(context.Path, "ends_with", _message ?? $"Must end with '{_suffix}'");
+            : new ValidationError(context.PathSegments, "ends_with", _message ?? $"Must end with '{_suffix}'");
 
         return ValueTaskHelper.FromResult(error);
     }

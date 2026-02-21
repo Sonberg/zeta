@@ -6,9 +6,14 @@ namespace Zeta;
 public sealed record ValidationError
 {
     /// <summary>
-    /// JSONPath to the invalid value (e.g., "$.user.address.street", "$[0].name").
+    /// Structured path to the invalid value.
     /// </summary>
-    public string Path { get; } = "$";
+    public ValidationPath Path { get; } = ValidationPath.Root;
+
+    /// <summary>
+    /// JSONPath representation of <see cref="Path"/>.
+    /// </summary>
+    public string PathString => Path.ToPathString();
 
     /// <summary>
     /// Machine-readable error code (e.g., "min_length", "email").
@@ -23,24 +28,18 @@ public sealed record ValidationError
     /// <summary>
     /// Creates a validation error and normalizes its path to JSONPath.
     /// </summary>
-    public ValidationError(string? path, string code, string message)
+    public ValidationError(ValidationPath? path, string code, string message)
     {
-        Path = NormalizePath(path);
+        Path = path ?? ValidationPath.Root;
         Code = code;
         Message = message;
     }
 
-    private static string NormalizePath(string? path)
+    /// <summary>
+    /// Creates a validation error from a JSONPath-like string.
+    /// </summary>
+    public ValidationError(string? path, string code, string message)
+        : this(ValidationPath.Parse(path), code, message)
     {
-        if (string.IsNullOrWhiteSpace(path))
-            return "$";
-
-        if (path[0] == '$')
-            return path;
-
-        if (path[0] == '[')
-            return "$" + path;
-
-        return "$." + path;
     }
 }

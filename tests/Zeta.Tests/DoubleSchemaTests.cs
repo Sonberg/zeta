@@ -39,6 +39,34 @@ public class DoubleSchemaTests
     }
 
     [Fact]
+    public async Task Range_Valid_ReturnsSuccess()
+    {
+        var schema = Z.Double().Range(10.5, 100.0);
+        var result = await schema.ValidateAsync(20.0);
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Range_Invalid_ReturnsMinOrMaxFailure()
+    {
+        var schema = Z.Double().Range(10.5, 100.0);
+        var below = await schema.ValidateAsync(10.4);
+        var above = await schema.ValidateAsync(100.1);
+
+        Assert.False(below.IsSuccess);
+        Assert.Contains(below.Errors, e => e.Code == "min_value");
+        Assert.False(above.IsSuccess);
+        Assert.Contains(above.Errors, e => e.Code == "max_value");
+    }
+
+    [Fact]
+    public void Range_MinGreaterThanMax_Throws()
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => Z.Double().Range(2.0, 1.0));
+        Assert.Equal("min", ex.ParamName);
+    }
+
+    [Fact]
     public async Task Positive_Valid_ReturnsSuccess()
     {
         var schema = Z.Double().Positive();

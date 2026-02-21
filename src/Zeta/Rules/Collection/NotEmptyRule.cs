@@ -19,7 +19,7 @@ public readonly struct NotEmptyRule<T> : IValidationRule<ICollection<T>>
     {
         var error = value.Count > 0
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? "Must not be empty");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? "Must not be empty");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -41,7 +41,7 @@ public readonly struct NotEmptyRule<T, TContext> : IValidationRule<ICollection<T
     {
         var error = value.Count > 0
             ? null
-            : new ValidationError(context.Path, "min_length", _message ?? "Must not be empty");
+            : new ValidationError(context.PathSegments, "min_length", _message ?? "Must not be empty");
 
         return ValueTaskHelper.FromResult(error);
     }

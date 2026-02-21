@@ -88,6 +88,23 @@ var result = await _validator.ValidateAsync(
     b => b.WithCancellation(ct).WithTimeProvider(TimeProvider.System));
 ```
 
+### Path Formatting
+
+You can override path rendering per call:
+
+```csharp
+var result = await _validator.ValidateAsync(
+    request,
+    schema,
+    b => b.WithPathFormatting(new PathFormattingOptions
+    {
+        PropertyNameFormatter = static n => n,
+        DictionaryKeyFormatter = static k => k.ToString() ?? string.Empty
+    }));
+```
+
+If not overridden, `ValidationContextBuilder` can infer naming policies from `JsonOptions`.
+
 ## Notes
 - For Blazor and MAUI form validation without ASP.NET Core endpoints, `Zeta` alone is enough.
 - `WithValidation<T, TContext>(...)` expects a context-aware schema, typically with a built-in factory configured via `.Using<TContext>(factory)`.
@@ -95,4 +112,5 @@ var result = await _validator.ValidateAsync(
 ## Source and Samples
 
 - Core package docs: [`../Zeta/README.md`](../Zeta/README.md)
+- Path formatting and structured paths: [`../../docs/Paths.md`](../../docs/Paths.md)
 - API sample: [`../../samples/Zeta.Sample.Api`](../../samples/Zeta.Sample.Api)

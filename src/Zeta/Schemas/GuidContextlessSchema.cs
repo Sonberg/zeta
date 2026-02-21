@@ -32,7 +32,7 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextl
         => Append(new RefinementRule<Guid>((val, exec) =>
             val != Guid.Empty
                 ? null
-                : new ValidationError(exec.Path, "not_empty", message ?? "GUID cannot be empty")));
+                : new ValidationError(exec.PathSegments, "not_empty", message ?? "GUID cannot be empty")));
 
     public GuidContextlessSchema Version(int version, string? message = null)
         => Append(new RefinementRule<Guid>((val, exec) =>
@@ -41,7 +41,7 @@ public sealed class GuidContextlessSchema : ContextlessSchema<Guid, GuidContextl
             var guidVersion = (bytes[7] >> 4) & 0x0F;
             return guidVersion == version
                 ? null
-                : new ValidationError(exec.Path, "version", message ?? $"GUID must be version {version}");
+                : new ValidationError(exec.PathSegments, "version", message ?? $"GUID must be version {version}");
         }));
 
     /// <summary>

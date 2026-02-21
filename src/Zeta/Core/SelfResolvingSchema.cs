@@ -26,7 +26,7 @@ internal sealed class SelfResolvingSchema<T, TContext> : ISchema<T>
         {
             return AllowNull
                 ? Result<T>.Success(value!)
-                : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                : Result<T>.Failure(new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
         var serviceProvider = context.ServiceProvider
@@ -36,11 +36,12 @@ internal sealed class SelfResolvingSchema<T, TContext> : ISchema<T>
 
         var contextData = await _factory(value, serviceProvider, context.CancellationToken);
         var typedContext = new ValidationContext<TContext>(
-            context.Path,
+            context.PathSegments,
             contextData,
             context.TimeProvider,
             context.CancellationToken,
-            context.ServiceProvider);
+            context.ServiceProvider,
+            context.PathFormattingOptions);
 
         var result = await _inner.ValidateAsync(value, typedContext);
         return result.IsSuccess

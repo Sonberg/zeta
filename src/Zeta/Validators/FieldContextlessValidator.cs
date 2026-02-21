@@ -11,8 +11,6 @@ internal sealed class FieldContextlessValidator<TInstance, TProperty> : IFieldCo
     public FieldContextlessValidator(string name, Func<TInstance, TProperty> getter, ISchema<TProperty> schema)
     {
         _name = name;
-        if (!string.IsNullOrEmpty(_name) && char.IsUpper(_name[0]))
-            _name = char.ToLower(_name[0]) + _name.Substring(1);
         _getter = getter;
         _schema = schema;
     }
@@ -20,8 +18,28 @@ internal sealed class FieldContextlessValidator<TInstance, TProperty> : IFieldCo
     public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext execution)
     {
         var value = _getter(instance);
-        var fieldExecution = execution.Push(_name);
-        var result = await _schema.ValidateAsync(value, fieldExecution);
-        return result.IsSuccess ? EmptyErrors : result.Errors;
+        var result = await _schema.ValidateAsync(value, execution);
+        if (result.IsSuccess)
+            return EmptyErrors;
+
+        var basePath = execution.PathSegments;
+        var fieldPath = execution.PathSegments.Append(PathSegment.Property(_name));
+        return PrependFieldPath(basePath, fieldPath, result.Errors);
+    }
+
+    private static IReadOnlyList<ValidationError> PrependFieldPath(
+        ValidationPath basePath,
+        ValidationPath fieldPath,
+        IReadOnlyList<ValidationError> errors)
+    {
+        var mapped = new ValidationError[errors.Count];
+        for (var i = 0; i < errors.Count; i++)
+        {
+            var error = errors[i];
+            var relativePath = error.Path.RelativeTo(basePath);
+            mapped[i] = new ValidationError(fieldPath.Concat(relativePath), error.Code, error.Message);
+        }
+
+        return mapped;
     }
 }

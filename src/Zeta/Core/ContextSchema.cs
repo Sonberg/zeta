@@ -134,7 +134,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         {
             return AllowNull
                 ? Result<T, TContext>.Success(value!, context.Data)
-                : Result<T, TContext>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                : Result<T, TContext>.Failure(new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
         var errors = await Rules.ExecuteAsync(value, context);
@@ -157,7 +157,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         {
             return AllowNull
                 ? Result<T>.Success(value!)
-                : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                : Result<T>.Failure(new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
         var serviceProvider = context.ServiceProvider
@@ -171,11 +171,12 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
             serviceProvider,
             context.CancellationToken);
         var typedContext = new ValidationContext<TContext>(
-            context.Path,
+            context.PathSegments,
             contextData,
             context.TimeProvider,
             context.CancellationToken,
-            context.ServiceProvider);
+            context.ServiceProvider,
+            context.PathFormattingOptions);
 
         var result = await ValidateAsync(value, typedContext);
         return result.IsSuccess
@@ -225,7 +226,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return Append(new RefinementRule<T, TContext>((val, ctx) =>
             predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema RefineAsync(Func<T, TContext, ValueTask<bool>> predicate, string message, string code = "custom_error")
@@ -233,7 +234,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema RefineAsync(Func<T, TContext, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
@@ -241,7 +242,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.Data, ctx.CancellationToken)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema Refine(Func<T, bool> predicate, string message, string code = "custom_error")
@@ -254,7 +255,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema RefineAsync(Func<T, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
@@ -262,7 +263,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return Append(new RefinementRule<T, TContext>(async (val, ctx) =>
             await predicate(val, ctx.CancellationToken)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema If(Func<T, bool> predicate, Func<TSchema, TSchema> configure)

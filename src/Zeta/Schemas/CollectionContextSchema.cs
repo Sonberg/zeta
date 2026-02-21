@@ -57,7 +57,7 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         {
             return AllowNull
                 ? Result<ICollection<TElement>, TContext>.Success(value!, context.Data)
-                : Result<ICollection<TElement>, TContext>.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                : Result<ICollection<TElement>, TContext>.Failure([new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
         var errors = await Rules.ExecuteAsync(value, context);

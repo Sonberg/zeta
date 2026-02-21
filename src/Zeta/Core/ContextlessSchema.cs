@@ -49,7 +49,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         {
             return AllowNull
                 ? Result<T>.Success(value!)
-                : Result<T>.Failure(new ValidationError(context.Path, "null_value", "Value cannot be null"));
+                : Result<T>.Failure(new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
         var errors = await Rules.ExecuteAsync(value!, context);
@@ -81,7 +81,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         return Append(new RefinementRule<T>((val, ctx) =>
             predicate(val)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema RefineAsync(Func<T, ValueTask<bool>> predicate, string message, string code = "custom_error")
@@ -89,7 +89,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         return Append(new RefinementRule<T>(async (val, ctx) =>
             await predicate(val)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema RefineAsync(Func<T, CancellationToken, ValueTask<bool>> predicate, string message, string code = "custom_error")
@@ -97,7 +97,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         return Append(new RefinementRule<T>(async (val, ctx) =>
             await predicate(val, ctx.CancellationToken)
                 ? null
-                : new ValidationError(ctx.Path, code, message)));
+                : new ValidationError(ctx.PathSegments, code, message)));
     }
 
     public TSchema If(Func<T, bool> predicate, Func<TSchema, TSchema> configure)

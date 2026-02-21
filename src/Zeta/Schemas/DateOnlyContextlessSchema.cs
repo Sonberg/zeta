@@ -31,13 +31,13 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
         => Append(new RefinementRule<DateOnly>((val, exec) =>
             val >= min
                 ? null
-                : new ValidationError(exec.Path, "min_date", message ?? $"Must be at or after {min:O}")));
+                : new ValidationError(exec.PathSegments, "min_date", message ?? $"Must be at or after {min:O}")));
 
     public DateOnlyContextlessSchema Max(DateOnly max, string? message = null)
         => Append(new RefinementRule<DateOnly>((val, exec) =>
             val <= max
                 ? null
-                : new ValidationError(exec.Path, "max_date", message ?? $"Must be at or before {max:O}")));
+                : new ValidationError(exec.PathSegments, "max_date", message ?? $"Must be at or before {max:O}")));
 
     public DateOnlyContextlessSchema Past(string? message = null)
         => Append(new RefinementRule<DateOnly>((val, exec) =>
@@ -45,7 +45,7 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val < today
                 ? null
-                : new ValidationError(exec.Path, "past", message ?? "Must be in the past");
+                : new ValidationError(exec.PathSegments, "past", message ?? "Must be in the past");
         }));
 
     public DateOnlyContextlessSchema Future(string? message = null)
@@ -54,26 +54,26 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
             var today = DateOnly.FromDateTime(exec.TimeProvider.GetUtcNow().UtcDateTime);
             return val > today
                 ? null
-                : new ValidationError(exec.Path, "future", message ?? "Must be in the future");
+                : new ValidationError(exec.PathSegments, "future", message ?? "Must be in the future");
         }));
 
     public DateOnlyContextlessSchema Between(DateOnly min, DateOnly max, string? message = null)
         => Append(new RefinementRule<DateOnly>((val, exec) =>
             val >= min && val <= max
                 ? null
-                : new ValidationError(exec.Path, "between", message ?? $"Must be between {min:O} and {max:O}")));
+                : new ValidationError(exec.PathSegments, "between", message ?? $"Must be between {min:O} and {max:O}")));
 
     public DateOnlyContextlessSchema Weekday(string? message = null)
         => Append(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
                 ? null
-                : new ValidationError(exec.Path, "weekday", message ?? "Must be a weekday")));
+                : new ValidationError(exec.PathSegments, "weekday", message ?? "Must be a weekday")));
 
     public DateOnlyContextlessSchema Weekend(string? message = null)
         => Append(new RefinementRule<DateOnly>((val, exec) =>
             val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
                 ? null
-                : new ValidationError(exec.Path, "weekend", message ?? "Must be a weekend")));
+                : new ValidationError(exec.PathSegments, "weekend", message ?? "Must be a weekend")));
 
     public DateOnlyContextlessSchema MinAge(int years, string? message = null)
         => Append(new RefinementRule<DateOnly>((val, exec) =>
@@ -84,7 +84,7 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
 
             return age >= years
                 ? null
-                : new ValidationError(exec.Path, "min_age", message ?? $"Must be at least {years} years old");
+                : new ValidationError(exec.PathSegments, "min_age", message ?? $"Must be at least {years} years old");
         }));
 
     public DateOnlyContextlessSchema MaxAge(int years, string? message = null)
@@ -96,7 +96,7 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
 
             return age <= years
                 ? null
-                : new ValidationError(exec.Path, "max_age", message ?? $"Must be at most {years} years old");
+                : new ValidationError(exec.PathSegments, "max_age", message ?? $"Must be at most {years} years old");
         }));
 
     /// <summary>

@@ -21,7 +21,7 @@ internal sealed class NullableStructContextlessAdapter<T> : ISchema<T?>
         {
             return AllowNull 
                 ? Result<T?>.Success(null) 
-                : Result<T?>.Failure([new ValidationError(context.Path, "null_value", "Value cannot be null")]);
+                : Result<T?>.Failure([new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
         var result = await _inner.ValidateAsync(value.Value, context);

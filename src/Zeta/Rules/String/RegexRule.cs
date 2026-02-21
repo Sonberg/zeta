@@ -23,7 +23,7 @@ public readonly struct RegexRule : IValidationRule<string>
     {
         var error = _regex.IsMatch(value)
             ? null
-            : new ValidationError(context.Path, _code, _message ?? $"Must match pattern {_regex}");
+            : new ValidationError(context.PathSegments, _code, _message ?? $"Must match pattern {_regex}");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -49,7 +49,7 @@ public readonly struct RegexRule<TContext> : IValidationRule<string, TContext>
     {
         var error = _regex.IsMatch(value)
             ? null
-            : new ValidationError(context.Path, _code, _message ?? $"Must match pattern {_regex}");
+            : new ValidationError(context.PathSegments, _code, _message ?? $"Must match pattern {_regex}");
 
         return ValueTaskHelper.FromResult(error);
     }

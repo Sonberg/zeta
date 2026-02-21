@@ -20,7 +20,7 @@ public readonly struct LengthRule : IValidationRule<string>
     {
         var error = value.Length == _exact
             ? null
-            : new ValidationError(context.Path, "length", _message ?? $"Must be exactly {_exact} characters long");
+            : new ValidationError(context.PathSegments, "length", _message ?? $"Must be exactly {_exact} characters long");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -44,7 +44,7 @@ public readonly struct LengthRule<TContext> : IValidationRule<string, TContext>
     {
         var error = value.Length == _exact
             ? null
-            : new ValidationError(context.Path, "length", _message ?? $"Must be exactly {_exact} characters long");
+            : new ValidationError(context.PathSegments, "length", _message ?? $"Must be exactly {_exact} characters long");
 
         return ValueTaskHelper.FromResult(error);
     }

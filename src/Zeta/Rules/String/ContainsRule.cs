@@ -22,7 +22,7 @@ public readonly struct ContainsRule : IValidationRule<string>
     {
         var error = value.IndexOf(_substring, _comparison) >= 0
             ? null
-            : new ValidationError(context.Path, "contains", _message ?? $"Must contain '{_substring}'");
+            : new ValidationError(context.PathSegments, "contains", _message ?? $"Must contain '{_substring}'");
 
         return ValueTaskHelper.FromResult(error);
     }
@@ -48,7 +48,7 @@ public readonly struct ContainsRule<TContext> : IValidationRule<string, TContext
     {
         var error = value.IndexOf(_substring, _comparison) >= 0
             ? null
-            : new ValidationError(context.Path, "contains", _message ?? $"Must contain '{_substring}'");
+            : new ValidationError(context.PathSegments, "contains", _message ?? $"Must contain '{_substring}'");
 
         return ValueTaskHelper.FromResult(error);
     }

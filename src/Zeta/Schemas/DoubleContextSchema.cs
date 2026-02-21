@@ -38,6 +38,14 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext, Dou
     public DoubleContextSchema<TContext> Max(double max, string? message = null)
         => Append(new MaxDoubleRule<TContext>(max, message));
 
+    public DoubleContextSchema<TContext> Range(double min, double max, string? message = null)
+    {
+        if (min > max)
+            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
+
+        return Min(min, message).Max(max, message);
+    }
+
     public DoubleContextSchema<TContext> Positive(string? message = null)
         => Append(new PositiveDoubleRule<TContext>(message));
 

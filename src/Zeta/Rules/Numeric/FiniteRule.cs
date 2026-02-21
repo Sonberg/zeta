@@ -18,7 +18,7 @@ public readonly struct FiniteRule : IValidationRule<double>
     {
         var error = !double.IsNaN(value) && !double.IsInfinity(value)
             ? null
-            : new ValidationError(context.Path, "finite", _message ?? "Must be a finite number");
+            : new ValidationError(context.PathSegments, "finite", _message ?? "Must be a finite number");
         return ValueTaskHelper.FromResult(error);
     }
 }
@@ -39,7 +39,7 @@ public readonly struct FiniteRule<TContext> : IValidationRule<double, TContext>
     {
         var error = !double.IsNaN(value) && !double.IsInfinity(value)
             ? null
-            : new ValidationError(context.Path, "finite", _message ?? "Must be a finite number");
+            : new ValidationError(context.PathSegments, "finite", _message ?? "Must be a finite number");
         return ValueTaskHelper.FromResult(error);
     }
 }
