@@ -102,7 +102,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
                     {
                         errors ??= [];
                         errors.Add(new ValidationError(
-                            context.PushKey(kvp.Key).Path,
+                            context.PushKey(kvp.Key).PathSegments,
                             refinement.Code, refinement.Message));
                     }
                 }

@@ -30,6 +30,12 @@ public class ContextAwareBuiltInMethodTests
     }
 
     [Fact]
+    public void IntContextAwareRange_InvalidBounds_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Z.Int().Using<TestContext>().Range(10, 1));
+    }
+
+    [Fact]
     public async Task DoubleContextAwareMethods_AreCovered()
     {
         var rangeSchema = Z.Double().Using<TestContext>().Range(-10, 10).Finite();
@@ -39,6 +45,12 @@ public class ContextAwareBuiltInMethodTests
         Assert.True((await rangeSchema.ValidateAsync(1.5, new TestContext())).IsSuccess);
         Assert.True((await positiveSchema.ValidateAsync(2.0, new TestContext())).IsSuccess);
         Assert.True((await negativeSchema.ValidateAsync(-2.0, new TestContext())).IsSuccess);
+    }
+
+    [Fact]
+    public void DoubleContextAwareRange_InvalidBounds_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Z.Double().Using<TestContext>().Range(10, -10));
     }
 
     [Fact]
@@ -53,6 +65,12 @@ public class ContextAwareBuiltInMethodTests
         Assert.True((await positiveSchema.ValidateAsync(2m, new TestContext())).IsSuccess);
         Assert.True((await negativeSchema.ValidateAsync(-2m, new TestContext())).IsSuccess);
         Assert.True((await multipleOfSchema.ValidateAsync(1.5m, new TestContext())).IsSuccess);
+    }
+
+    [Fact]
+    public void DecimalContextAwareRange_InvalidBounds_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Z.Decimal().Using<TestContext>().Range(10m, -10m));
     }
 
     [Fact]

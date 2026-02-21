@@ -96,6 +96,12 @@ public class ValidationContextBuilderTests
     }
 
     [Fact]
+    public void WithPathFormatting_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => new ValidationContextBuilder().WithPathFormatting(null!));
+    }
+
+    [Fact]
     public void ImplicitOperator_BuildsValidationContext()
     {
         var timeProvider = new FakeTimeProvider();
@@ -132,6 +138,46 @@ public class ValidationContextBuilderTests
             .Build();
 
         Assert.Equal("[k_Alpha]", context.PushKey("Alpha").Path);
+    }
+
+    [Fact]
+    public void Build_ExplicitPathFormatting_OverridesJsonOptionsPolicies()
+    {
+        var services = new ServiceCollection();
+        services.AddOptions<JsonOptions>()
+            .Configure(o =>
+            {
+                o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                o.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            });
+        using var provider = services.BuildServiceProvider();
+
+        var context = new ValidationContextBuilder()
+            .WithServiceProvider(provider)
+            .WithPathFormatting(new PathFormattingOptions
+            {
+                PropertyNameFormatter = static name => $"prop_{name}",
+                DictionaryKeyFormatter = static key => $"key_{key}"
+            })
+            .Build();
+
+        Assert.Equal("prop_FirstName", context.Push("FirstName").Path);
+        Assert.Equal("[key_Alpha]", context.PushKey("Alpha").Path);
+    }
+
+    [Fact]
+    public void Build_JsonDictionaryPolicy_DoesNotTransformNonStringKeys()
+    {
+        var services = new ServiceCollection();
+        services.AddOptions<JsonOptions>()
+            .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase);
+        using var provider = services.BuildServiceProvider();
+
+        var context = new ValidationContextBuilder()
+            .WithServiceProvider(provider)
+            .Build();
+
+        Assert.Equal("[123]", context.PushKey(123).Path);
     }
 
     [Theory]

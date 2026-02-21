@@ -139,7 +139,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
                     {
                         errors ??= [];
                         errors.Add(new ValidationError(
-                            context.PushKey(kvp.Key).Path,
+                            context.PushKey(kvp.Key).PathSegments,
                             refinement.Code, refinement.Message));
                     }
                 }

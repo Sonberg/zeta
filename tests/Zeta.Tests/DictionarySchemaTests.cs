@@ -335,6 +335,33 @@ public class DictionarySchemaTests
         Assert.True(result.IsSuccess);
     }
 
+    [Fact]
+    public async Task Dictionary_UsingContext_CountRules_FailWithExpectedCodes()
+    {
+        var ctx = new ValidationContext<TestContext>(new TestContext(maxEntries: 10));
+
+        var minResult = await Z.Dictionary<string, int>()
+            .Using<TestContext>()
+            .MinLength(2)
+            .ValidateAsync(new Dictionary<string, int> { ["a"] = 1 }, ctx);
+        Assert.False(minResult.IsSuccess);
+        Assert.Contains(minResult.Errors, e => e.Code == "min_length");
+
+        var maxResult = await Z.Dictionary<string, int>()
+            .Using<TestContext>()
+            .MaxLength(1)
+            .ValidateAsync(new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 }, ctx);
+        Assert.False(maxResult.IsSuccess);
+        Assert.Contains(maxResult.Errors, e => e.Code == "max_length");
+
+        var notEmptyResult = await Z.Dictionary<string, int>()
+            .Using<TestContext>()
+            .NotEmpty()
+            .ValidateAsync(new Dictionary<string, int>(), ctx);
+        Assert.False(notEmptyResult.IsSuccess);
+        Assert.Contains(notEmptyResult.Errors, e => e.Code == "min_length");
+    }
+
     // ── custom message ─────────────────────────────────────────────────────
 
     [Fact]
