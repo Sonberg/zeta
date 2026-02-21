@@ -1,0 +1,264 @@
+Zeta Integration Guide (LLM-Oriented)
+
+Purpose
+- This file is a practical integration reference for using Zeta in applications and frameworks.
+- It is optimized for implementation assistants and code-generation workflows.
+
+--------------------------------------------------------------------------------
+1) What Zeta Is
+--------------------------------------------------------------------------------
+- Zeta is a schema-first validation framework for .NET.
+- Validation is async-first.
+- Validation failures are returned as Result values (not exceptions for normal invalid input).
+- Object, primitive, collection, dictionary, and context-aware validation are supported.
+
+Core design goals
+- Composable schemas
+- Predictable error paths
+- Context-aware validation with async data loading
+- ASP.NET Core integration with minimal boilerplate
+
+--------------------------------------------------------------------------------
+2) Repository Map
+--------------------------------------------------------------------------------
+- Core library: src/Zeta
+- ASP.NET Core integration: src/Zeta.AspNetCore
+- Source generators: src/Zeta.SourceGenerators
+- Core tests: tests/Zeta.Tests
+- ASP.NET integration tests: tests/Zeta.AspNetCore.Tests
+- User docs: docs/
+- Package overviews:
+  - src/Zeta/README.md
+  - src/Zeta.AspNetCore/README.md
+
+--------------------------------------------------------------------------------
+3) Install
+--------------------------------------------------------------------------------
+Core only
+- dotnet add package Zeta
+
+ASP.NET Core integration
+- dotnet add package Zeta.AspNetCore
+
+--------------------------------------------------------------------------------
+4) Main API Surface
+--------------------------------------------------------------------------------
+Entry point
+- static class Z
+
+Schema creation
+- Object schema: Z.Schema<T>()
+- Alias supported: Z.Object<T>()
+- Preferred naming in docs/examples: Z.Schema<T>()
+
+Object fields
+- Preferred: .Property(...)
+- Alias supported: .Field(...)
+
+Primitives and common types
+- Z.String(), Z.Int(), Z.Double(), Z.Decimal(), Z.Bool(), Z.Guid()
+- Z.DateTime(), Z.DateOnly(), Z.TimeOnly(), Z.Enum<TEnum>()
+
+Collections and dictionaries
+- Z.Collection<T>() with .Each(...)
+- Z.Dictionary<TKey, TValue>() with EachKey/EachValue and count rules
+
+Context-aware promotion
+- .Using<TContext>()
+- .Using<TContext>(factory)
+
+--------------------------------------------------------------------------------
+5) Validation Result Model
+--------------------------------------------------------------------------------
+Result types
+- Result<T>
+- Result<T, TContext>
+
+Common members
+- IsSuccess / IsFailure
+- Value (throws on failure)
+- Errors
+- Match(...)
+- Map(...)
+- Then(...)
+- GetOrDefault(...)
+- GetOrThrow() (throws ValidationException)
+
+Important
+- Prefer returning and handling failures, not exception-driven control flow.
+
+--------------------------------------------------------------------------------
+6) Error and Path Model
+--------------------------------------------------------------------------------
+ValidationError
+- Path: ValidationPath (structured)
+- PathString: string rendering of Path
+- Code: machine-readable error code
+- Message: user-readable message
+
+Use
+- Use error.PathString for API responses/logging.
+- Use error.Path for structured processing/tooling.
+
+ValidationPath capabilities
+- Parse path text: ValidationPath.Parse("$.items[0].quantity")
+- Render path text: path.ToPathString(...)
+- Get segments: path.GetSegments()
+- Resolve value from object graph: path.TryGetValue(root, out value)
+
+--------------------------------------------------------------------------------
+7) Path Formatting and Naming Policies
+--------------------------------------------------------------------------------
+PathFormattingOptions
+- PropertyNameFormatter
+- DictionaryKeyFormatter
+
+Default behavior
+- Property names are lower-camelized by default formatting.
+
+ASP.NET Core behavior
+- ValidationContextBuilder can derive naming behavior from JsonOptions
+  (PropertyNamingPolicy and DictionaryKeyPolicy)
+- You can override explicitly with WithPathFormatting(...)
+
+Recommendation
+- Align path rendering with your API JSON naming policy for consistency.
+
+--------------------------------------------------------------------------------
+8) Core Usage Patterns
+--------------------------------------------------------------------------------
+A) Basic object validation
+- Define schema once and reuse.
+
+B) Context-aware validation
+- Use .Using<TContext>(factory) to load external data asynchronously.
+- Apply .Refine / .RefineAsync rules using context.
+
+C) Collection validation
+- Use .Each(...) for per-element validation.
+- Use MinLength/MaxLength/Length/NotEmpty for collection-level constraints.
+- Errors are aggregated; validation does not short-circuit on first failure.
+
+D) Dictionary validation
+- Validate keys and values separately via EachKey/EachValue.
+- Use RefineEachEntry for key+value predicates.
+
+E) Property-targeted object-level rules
+- Use .RefineAt(...) when predicate needs whole object but error should attach to one property path.
+
+--------------------------------------------------------------------------------
+9) Nullability Semantics
+--------------------------------------------------------------------------------
+- Schemas are required by default.
+- Use .Nullable() to allow null for nullable reference-type flows.
+- Nullable value-type object fields (e.g., int?) are handled so null can skip inner value validation paths in object field validators.
+- Keep schema intent explicit in DTO contracts and tests.
+
+--------------------------------------------------------------------------------
+10) ASP.NET Core Integration
+--------------------------------------------------------------------------------
+Service registration
+- services.AddZeta()
+
+Minimal APIs
+- app.MapPost(...).WithValidation(schema)
+- For context-aware schemas, provide context factory via .Using<TContext>(factory)
+
+Controllers/manual validation
+- Inject IZetaValidator
+- Use ValidateAsync(value, schema, ...)
+- Convert results with ToActionResult(...) / ToResult(...)
+
+Validation context customization
+- ValidationContextBuilder supports cancellation token, time provider, service provider, path formatting
+
+--------------------------------------------------------------------------------
+11) Time-Dependent Validation
+--------------------------------------------------------------------------------
+- Zeta supports TimeProvider-based validation flows.
+- In tests, prefer FakeTimeProvider from Microsoft.Extensions.TimeProvider.Testing.
+- Pass via ValidationContext or ValidationContextBuilder to make time-based rules deterministic.
+
+--------------------------------------------------------------------------------
+12) Testing Strategy
+--------------------------------------------------------------------------------
+Unit tests
+- Validate schema behavior directly with valid/invalid samples.
+- Assert both Code and PathString for failures.
+
+Context tests
+- Test .Using(factory) with controlled services/fakes.
+- Verify context-dependent branches and error codes.
+
+ASP.NET tests
+- Use integration tests for endpoint filters and serialized validation output.
+
+Coverage focus
+- Path formatting and path rendering
+- Dictionary/collection nested paths
+- Context factory fallback and DI behavior
+- Result conversion helpers (ToActionResult/ToResult)
+
+--------------------------------------------------------------------------------
+13) Performance Guidance
+--------------------------------------------------------------------------------
+- Prefer structured path usage internally (ValidationPath) over string roundtrips.
+- In hot paths, avoid unnecessary Parse/ToString/Parse cycles.
+- Keep reusable schemas static/cached where practical.
+- Benchmark with benchmarks/Zeta.Benchmarks for regression checks.
+
+--------------------------------------------------------------------------------
+14) Recommended Conventions for New Code
+--------------------------------------------------------------------------------
+- Prefer Z.Schema<T>() and .Property(...).
+- Keep schemas near DTOs/commands, but extract reusable sub-schemas.
+- Use stable error codes for client logic.
+- Attach field-specific failures with RefineAt when appropriate.
+- In user-facing outputs, use PathString.
+- In internal mapping/tooling, use Path.
+
+--------------------------------------------------------------------------------
+15) Migration / Compatibility Notes
+--------------------------------------------------------------------------------
+- Legacy aliases remain supported:
+  - Z.Object<T>()
+  - .Field(...)
+- Prefer canonical naming in new docs/code to reduce ambiguity.
+
+--------------------------------------------------------------------------------
+16) Useful Doc Entry Points
+--------------------------------------------------------------------------------
+- Root: README.md
+- Core package: src/Zeta/README.md
+- ASP.NET package: src/Zeta.AspNetCore/README.md
+- Guides:
+  - docs/Collections.md
+  - docs/ValidationContext.md
+  - docs/CustomRules.md
+  - docs/FluentFieldBuilders.md
+  - docs/Paths.md
+  - docs/Testing.md
+  - docs/Mediator.md
+
+--------------------------------------------------------------------------------
+17) Quick Copy-Paste Snippets
+--------------------------------------------------------------------------------
+Minimal object schema
+- var schema = Z.Schema<User>()
+-     .Property(x => x.Email, s => s.Email())
+-     .Property(x => x.Age, s => s.Min(18));
+
+Context-aware schema
+- var schema = Z.Schema<RegisterRequest>()
+-     .Using<RegisterContext>(async (input, sp, ct) => ...)
+-     .Property(x => x.Email, s => s.Email())
+-     .Refine((x, ctx) => !ctx.EmailExists, "Email already exists", "email_exists");
+
+Collection schema
+- var schema = Z.Collection<Item>()
+-     .Each(i => i.Property(x => x.Name, s => s.MinLength(2)))
+-     .MinLength(1);
+
+--------------------------------------------------------------------------------
+End of guide
+--------------------------------------------------------------------------------
