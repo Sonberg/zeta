@@ -2,6 +2,8 @@
 
 ## Next release
 
+## 0.1.15
+
 ### Added
 
 - **`RefineEachEntry`/`RefineEachEntryAsync` for dictionary schemas**: Per-entry predicate validation on `DictionaryContextlessSchema` and `DictionaryContextSchema`. Each failing entry produces one `ValidationError` at `$[keyString]` (bracket notation). Supports value-only, value+context, and async-with-CT predicate overloads. Entry refinements transfer automatically when calling `.Using<TContext>()`.
