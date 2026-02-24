@@ -1,4 +1,3 @@
-using FastEndpoints;
 using Microsoft.Extensions.DependencyInjection;
 using Zeta.FastEndpoints;
 using Zeta.Sample.FastEndpoints.Api.Models;
@@ -10,11 +9,11 @@ public record UserContext(bool EmailExists);
 
 /// <summary>
 /// Registers a user with context-aware validation (async email uniqueness check).
-/// Demonstrates <see cref="ZetaPreProcessor{TRequest}"/> with a context-aware schema.
+/// Demonstrates <see cref="ZetaEndpoint{TRequest}"/> with a context-aware schema.
 /// Context-aware schemas with a factory delegate implement <see cref="ISchema{T}"/> directly,
-/// so no separate pre-processor type is needed.
+/// so no separate base class is needed.
 /// </summary>
-public class RegisterWithContextEndpoint : Endpoint<RegisterRequest>
+public class RegisterWithContextEndpoint : ZetaEndpoint<RegisterRequest>
 {
     private static readonly ISchema<RegisterRequest> Schema =
         Z.Object<RegisterRequest>()
@@ -33,7 +32,7 @@ public class RegisterWithContextEndpoint : Endpoint<RegisterRequest>
     {
         Post("/api/users/register-ctx");
         AllowAnonymous();
-        PreProcessors(new ZetaPreProcessor<RegisterRequest>(Schema));
+        Validate(Schema);
     }
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)

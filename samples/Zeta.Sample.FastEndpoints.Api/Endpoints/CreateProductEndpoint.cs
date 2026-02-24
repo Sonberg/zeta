@@ -1,12 +1,10 @@
-using FastEndpoints;
-using Zeta.FastEndpoints;
 using Zeta.Sample.FastEndpoints.Api.Models;
 
 namespace Zeta.Sample.FastEndpoints.Api.Endpoints;
 
 /// <summary>
 /// Creates a product with contextless validation.
-/// Demonstrates <see cref="ZetaPreProcessor{TRequest}"/> on a product endpoint.
+/// Demonstrates using <see cref="ZetaPreProcessor{TRequest}"/> directly via <c>PreProcessors()</c>.
 /// </summary>
 public class CreateProductEndpoint : Endpoint<CreateProductRequest>
 {

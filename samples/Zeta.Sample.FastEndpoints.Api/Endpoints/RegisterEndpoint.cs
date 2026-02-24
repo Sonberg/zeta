@@ -1,4 +1,3 @@
-using FastEndpoints;
 using Zeta.FastEndpoints;
 using Zeta.Sample.FastEndpoints.Api.Models;
 
@@ -6,9 +5,9 @@ namespace Zeta.Sample.FastEndpoints.Api.Endpoints;
 
 /// <summary>
 /// Registers a user with contextless (no DB lookup) validation.
-/// Demonstrates <see cref="ZetaPreProcessor{TRequest}"/>.
+/// Demonstrates <see cref="ZetaEndpoint{TRequest}"/>.
 /// </summary>
-public class RegisterEndpoint : Endpoint<RegisterRequest>
+public class RegisterEndpoint : ZetaEndpoint<RegisterRequest>
 {
     private static readonly ISchema<RegisterRequest> Schema =
         Z.Object<RegisterRequest>()
@@ -24,7 +23,7 @@ public class RegisterEndpoint : Endpoint<RegisterRequest>
     {
         Post("/api/users/register");
         AllowAnonymous();
-        PreProcessors(new ZetaPreProcessor<RegisterRequest>(Schema));
+        Validate(Schema);
     }
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)
