@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Zeta.AspNetCore;
 
-
 /// <summary>
 /// Extension methods for integrating Zeta validation with ASP.NET Core Minimal APIs and MVC.
 /// </summary>
@@ -28,6 +27,15 @@ public static class ZetaExtensions
     }
 
     /// <summary>
+    /// Adds validation to a minimal API endpoint using a context-aware schema that also implements ISchema&lt;T&gt;.
+    /// This overload resolves ambiguity for schemas that implement both ISchema&lt;T&gt; and ISchema&lt;T, TContext&gt;.
+    /// </summary>
+    public static RouteHandlerBuilder WithValidation<T, TContext>(this RouteHandlerBuilder builder, IContextSchema<T, TContext> schema)
+    {
+        return builder.AddEndpointFilter(new ValidationFilter<T, TContext>(schema));
+    }
+
+    /// <summary>
     /// Converts a validation Result to an IActionResult.
     /// Returns BadRequest with ValidationProblemDetails on failure, or invokes onSuccess on success.
     /// </summary>
@@ -40,6 +48,21 @@ public static class ZetaExtensions
                     .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
             ))
         );
+    }
+
+    /// <summary>
+    /// Converts a validation Result to an ActionResult&lt;TResult&gt;.
+    /// Returns BadRequest with ValidationProblemDetails on failure, or invokes onSuccess on success.
+    /// </summary>
+    public static ActionResult<TResult> ToActionResult<T, TResult>(this Result<T> result, Func<T, ActionResult<TResult>> onSuccess)
+    {
+        if (result.IsSuccess)
+            return onSuccess(result.Value);
+
+        return new BadRequestObjectResult(new ValidationProblemDetails(
+            result.Errors.GroupBy(e => e.PathString)
+                .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
+        ));
     }
 
     /// <summary>
@@ -72,6 +95,6 @@ public static class ZetaExtensions
     /// </summary>
     public static IResult ToResult<T>(this Result<T> result)
     {
-        return result.ToResult(value => Results.Ok(value));
+        return result.ToResult(Results.Ok);
     }
 }

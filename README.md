@@ -35,6 +35,9 @@ dotnet add package Zeta
 ```bash
 # Optional: ASP.NET Core integration (Minimal APIs / Controllers)
 dotnet add package Zeta.AspNetCore
+
+# Optional: FastEndpoints integration
+dotnet add package Zeta.FastEndpoints
 ```
 
 ## Core Examples
@@ -95,6 +98,7 @@ public sealed record OrderItem(string ProductId, int Quantity);
 This repository contains:
 - Core package source: [`src/Zeta`](./src/Zeta)
 - ASP.NET Core integration package source: [`src/Zeta.AspNetCore`](./src/Zeta.AspNetCore)
+- FastEndpoints integration package source: [`src/Zeta.FastEndpoints`](./src/Zeta.FastEndpoints)
 - Source generators: [`src/Zeta.SourceGenerators`](./src/Zeta.SourceGenerators)
 - Tests: [`tests`](./tests)
 - Samples: [`samples`](./samples)
@@ -104,12 +108,14 @@ This repository contains:
 
 - Core validation package (`Zeta`): [`src/Zeta/README.md`](./src/Zeta/README.md)
 - ASP.NET Core integration package (`Zeta.AspNetCore`): [`src/Zeta.AspNetCore/README.md`](./src/Zeta.AspNetCore/README.md)
+- FastEndpoints integration package (`Zeta.FastEndpoints`): [`src/Zeta.FastEndpoints/README.md`](./src/Zeta.FastEndpoints/README.md)
 - Guides: [`docs`](./docs)
 
 ## Which package should I use?
 
 - `Zeta`: Use in any .NET app (Console, Worker, Blazor, MAUI, libraries).
 - `Zeta.AspNetCore`: Add only when you need ASP.NET Core integration (Minimal APIs, Controllers, validation filters).
+- `Zeta.FastEndpoints`: Add when you use [FastEndpoints](https://fast-endpoints.com) as your web framework.
 
 ## Build and Test
 
@@ -126,6 +132,9 @@ dotnet run --project samples/Zeta.Sample.Api
 
 # Blazor sample
 dotnet run --project samples/Zeta.Sample.Blazor
+
+# FastEndpoints sample
+dotnet run --project samples/Zeta.Sample.FastEndpoints.Api
 ```
 
 ## Benchmarks
