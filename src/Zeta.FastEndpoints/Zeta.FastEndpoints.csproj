@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Zeta.FastEndpoints</PackageId>
+    <Title>Zeta.FastEndpoints</Title>
+    <Description>FastEndpoints integration for Zeta validation framework. Provides ZetaPreProcessor and ZetaEndpoint base classes for pre-processor pipeline validation — handles both contextless and context-aware schemas.</Description>
+    <Authors>Zeta Contributors</Authors>
+    <PackageTags>validation;schema;async;fastendpoints;webapi</PackageTags>
+    <PackageProjectUrl>https://github.com/sonberg/zeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sonberg/zeta</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>Copyright (c) 2025 Zeta Contributors</Copyright>
+
+    <!-- Build Settings -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FastEndpoints" Version="7.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zeta\Zeta.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

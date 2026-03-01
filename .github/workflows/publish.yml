@@ -46,6 +46,9 @@ jobs:
       - name: Pack Zeta.AspNetCore
         run: dotnet pack src/Zeta.AspNetCore/Zeta.AspNetCore.csproj --no-build --configuration Release -p:PackageVersion=${{ steps.version.outputs.VERSION }} --output ${{ env.NuGetDirectory }}
 
+      - name: Pack Zeta.FastEndpoints
+        run: dotnet pack src/Zeta.FastEndpoints/Zeta.FastEndpoints.csproj --no-build --configuration Release -p:PackageVersion=${{ steps.version.outputs.VERSION }} --output ${{ env.NuGetDirectory }}
+
       - name: Upload NuGet packages
         uses: actions/upload-artifact@v4
         with:

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta", "src\Zeta\Zeta.cspro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.AspNetCore", "src\Zeta.AspNetCore\Zeta.AspNetCore.csproj", "{AA062A40-264E-407C-9B53-8B39AF2ECA54}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.FastEndpoints", "src\Zeta.FastEndpoints\Zeta.FastEndpoints.csproj", "{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D6B88B91-6163-409E-9D1D-2C87DBE93B9E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.Tests", "tests\Zeta.Tests\Zeta.Tests.csproj", "{E13F840D-50D0-48F2-825E-618AD96947FE}"
@@ -19,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.Sample.Api", "samples\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.AspNetCore.Tests", "tests\Zeta.AspNetCore.Tests\Zeta.AspNetCore.Tests.csproj", "{C7496A47-3216-4FB5-9B2D-3C20D9D9FBB1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.FastEndpoints.Tests", "tests\Zeta.FastEndpoints.Tests\Zeta.FastEndpoints.Tests.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{750321A1-8ACA-427C-BF53-E34B17CB2F17}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.Benchmarks", "benchmarks\Zeta.Benchmarks\Zeta.Benchmarks.csproj", "{4C6F717F-4D1A-40E6-9BB0-820E639A4BFA}"
@@ -26,6 +30,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.SourceGenerators", "src\Zeta.SourceGenerators\Zeta.SourceGenerators.csproj", "{6210E1D0-0AF6-45FD-A68D-DCF6576210CB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.Sample.Blazor", "samples\Zeta.Sample.Blazor\Zeta.Sample.Blazor.csproj", "{2263C7FA-8357-490A-B76A-5C1DDAEDE804}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeta.Sample.FastEndpoints.Api", "samples\Zeta.Sample.FastEndpoints.Api\Zeta.Sample.FastEndpoints.Api.csproj", "{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -133,6 +139,42 @@ Global
 		{2263C7FA-8357-490A-B76A-5C1DDAEDE804}.Release|x64.Build.0 = Release|Any CPU
 		{2263C7FA-8357-490A-B76A-5C1DDAEDE804}.Release|x86.ActiveCfg = Release|Any CPU
 		{2263C7FA-8357-490A-B76A-5C1DDAEDE804}.Release|x86.Build.0 = Release|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Debug|x64.Build.0 = Debug|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Debug|x86.Build.0 = Debug|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Release|x64.ActiveCfg = Release|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Release|x64.Build.0 = Release|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Release|x86.ActiveCfg = Release|Any CPU
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F}.Release|x86.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x64.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x86.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x86.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x86.Build.0 = Release|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Debug|x64.Build.0 = Debug|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Debug|x86.Build.0 = Debug|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Release|x64.ActiveCfg = Release|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Release|x64.Build.0 = Release|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Release|x86.ActiveCfg = Release|Any CPU
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -146,5 +188,8 @@ Global
 		{4C6F717F-4D1A-40E6-9BB0-820E639A4BFA} = {750321A1-8ACA-427C-BF53-E34B17CB2F17}
 		{6210E1D0-0AF6-45FD-A68D-DCF6576210CB} = {1B6781DD-E086-4C73-A471-496C26464F31}
 		{2263C7FA-8357-490A-B76A-5C1DDAEDE804} = {3969A022-23F6-4749-8469-1DB6BE51B3A0}
+		{B3E5D2A1-7C4F-4E8B-9D2A-1A5B6C7D8E9F} = {1B6781DD-E086-4C73-A471-496C26464F31}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {D6B88B91-6163-409E-9D1D-2C87DBE93B9E}
+		{D4E5F6A7-B8C9-0DEF-1234-567890ABCDEF} = {3969A022-23F6-4749-8469-1DB6BE51B3A0}
 	EndGlobalSection
 EndGlobal
