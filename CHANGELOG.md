@@ -2,6 +2,8 @@
 
 ## Next release
 
+## 0.1.16
+
 ### Added
 - `Zeta.FastEndpoints` NuGet package: `ZetaPreProcessor<TRequest>` for FastEndpoints pre-processor pipeline integration. Handles both contextless and context-aware schemas — context-aware schemas with `.Using<TContext>(factory)` self-resolve context from `IServiceProvider`, requiring no separate pre-processor type. Includes `Zeta.Sample.FastEndpoints.Api` sample with inline schema definitions per endpoint.
 
