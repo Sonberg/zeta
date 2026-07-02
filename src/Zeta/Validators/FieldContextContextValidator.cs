@@ -24,22 +24,6 @@ internal sealed class FieldContextContextValidator<TInstance, TProperty, TContex
 
         var basePath = context.PathSegments;
         var fieldPath = context.PathSegments.Append(PathSegment.Property(_name));
-        return PrependFieldPath(basePath, fieldPath, result.Errors);
-    }
-
-    private static IReadOnlyList<ValidationError> PrependFieldPath(
-        ValidationPath basePath,
-        ValidationPath fieldPath,
-        IReadOnlyList<ValidationError> errors)
-    {
-        var mapped = new ValidationError[errors.Count];
-        for (var i = 0; i < errors.Count; i++)
-        {
-            var error = errors[i];
-            var relativePath = error.Path.RelativeTo(basePath);
-            mapped[i] = new ValidationError(fieldPath.Concat(relativePath), error.Code, error.Message);
-        }
-
-        return mapped;
+        return FieldError.PrependFieldPath(basePath, fieldPath, result.Errors);
     }
 }

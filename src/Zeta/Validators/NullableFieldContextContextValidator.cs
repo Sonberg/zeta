@@ -37,22 +37,6 @@ internal sealed class NullableFieldContextContextValidator<TInstance, TProperty,
         if (result.IsSuccess)
             return EmptyErrors;
 
-        return PrependFieldPath(context.PathSegments, fieldPath, result.Errors);
-    }
-
-    private static IReadOnlyList<ValidationError> PrependFieldPath(
-        ValidationPath basePath,
-        ValidationPath fieldPath,
-        IReadOnlyList<ValidationError> errors)
-    {
-        var mapped = new ValidationError[errors.Count];
-        for (var i = 0; i < errors.Count; i++)
-        {
-            var error = errors[i];
-            var relativePath = error.Path.RelativeTo(basePath);
-            mapped[i] = new ValidationError(fieldPath.Concat(relativePath), error.Code, error.Message);
-        }
-
-        return mapped;
+        return FieldError.PrependFieldPath(context.PathSegments, fieldPath, result.Errors);
     }
 }
