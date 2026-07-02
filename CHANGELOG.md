@@ -20,11 +20,17 @@
 - `PackageReadmeFile` now correctly packs `README.md` (FastEndpoints-specific) instead of the root `README.md`.
 - Context-aware collection and dictionary count rules (`MinLength`/`MaxLength`/`Length`/`NotEmpty`) now flow through the existing `ContextlessRuleAdapter<T, TContext>` via `AppendRule`, matching the value-schema rules. No public API change.
 
+### Fixed
+- `ValidationContext.Path` (and `ValidationContext<TData>.Path`) at the root now renders as `"$"` instead of `""`, matching the `"$"` root convention already used by `ValidationError.Path`/`PathString`. Non-root paths are unaffected (still bare dot/bracket notation, no `"$."` prefix).
+
 ### Removed
 - The nullable-adapter matrix (`NullableAdapterFactory` and the six `Nullable{Reference,Struct}Context{,less}{Adapter,Wrapper}` classes) and the reflection (`Activator.CreateInstance`) it relied on. This makes nullable field construction NativeAOT/trim-safe. Passing a **pre-built** `ISchema<TStruct>` for a nullable value-type field is no longer supported (it previously threw `ArgumentException` at runtime); use the fluent builder or a source-generated overload instead.
 - Redundant context-aware rule structs (`MinLengthRule<TContext>`, `MaxIntRule<TContext>`, `DefinedRule<TEnum, TContext>`, and the rest — 28 in total). Context-aware validation of these rules now flows through `ContextlessRuleAdapter<T, TContext>` — the same path `.Using<TContext>()` already used.
 - The remaining context-aware collection/dictionary count-rule twins (`MinLengthRule<T, TContext>`, `MaxLengthRule<T, TContext>`, `LengthRule<T, TContext>`, `NotEmptyRule<T, TContext>`, and the three `Dictionary*Rule<TKey, TValue, TContext>` variants). These were context-blind duplicates now served by `ContextlessRuleAdapter<T, TContext>`. (The context-*consuming* `RefinementRule<T, TContext>`, `StatefulRefinementRule<T, TContext, TState>`, and `EntryRefinement<…, TContext>` are unchanged.)
 - `RequiredFieldContextlessValidator` and `RequiredFieldContextContextValidator` — dead code with no production construction sites (nullable/required field validation is handled by the source-generated field overloads and `NullableField*Validator`).
+
+### Tests
+- Closed remaining public-API test gaps found by an audit against the "every public method must be tested" rule: the non-generic `Result.Success()`/`Result.Failure()`, `ValidationErrorExtensions.ToPathDictionary()`, `Z.Context()`, the `RefineAt` message-factory and value-only-predicate overloads on `ObjectContextlessSchema`/`ObjectContextSchema`, the `ZetaExtensions.ToActionResult`/`ToResult` callback overloads (including the `Result<T, TContext>` variant), `DependencyInjectionExtensions.AddZeta()`, and all three `ZetaExtensions.WithValidation` overloads (now covered end-to-end via an in-memory `TestServer`-backed minimal API).
 
 ## 0.1.16
 

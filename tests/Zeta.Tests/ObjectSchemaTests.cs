@@ -82,6 +82,48 @@ public class ObjectSchemaTests
     }
 
     [Fact]
+    public async Task RefineAt_Contextless_MessageFactory_UsesValueDrivenMessage()
+    {
+        var schema = Z.Schema<User>()
+            .RefineAt(u => u.Name, u => u.Name != "Forbidden", u => $"{u.Name} is forbidden");
+
+        var result = await schema.ValidateAsync(new User("Forbidden", 20, new Address("City", "12345")));
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Path == "$.name" && e.Message == "Forbidden is forbidden");
+    }
+
+    [Fact]
+    public async Task RefineAt_ContextAware_ValueOnlyPredicate_WithMessage_UsesSelectedPropertyPath()
+    {
+        var schema = Z.Schema<User>()
+            .Using<BanContext>()
+            .RefineAt(u => u.Name, u => u.Name != "Forbidden", "Name is forbidden");
+
+        var result = await schema.ValidateAsync(
+            new User("Forbidden", 20, new Address("City", "12345")),
+            new BanContext("Voldemort"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Path == "$.name" && e.Message == "Name is forbidden");
+    }
+
+    [Fact]
+    public async Task RefineAt_ContextAware_ValueOnlyPredicate_WithMessageFactory_UsesSelectedPropertyPath()
+    {
+        var schema = Z.Schema<User>()
+            .Using<BanContext>()
+            .RefineAt(u => u.Name, u => u.Name != "Forbidden", u => $"{u.Name} is forbidden");
+
+        var result = await schema.ValidateAsync(
+            new User("Forbidden", 20, new Address("City", "12345")),
+            new BanContext("Voldemort"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, e => e.Path == "$.name" && e.Message == "Forbidden is forbidden");
+    }
+
+    [Fact]
     public async Task RefineAt_ContextAware_UsesSelectedPropertyPathAndMessageFactory()
     {
         var schema = Z.Schema<User>()
