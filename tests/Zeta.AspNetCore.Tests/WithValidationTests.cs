@@ -19,15 +19,15 @@ public class WithValidationTests
         builder.WebHost.UseTestServer();
         builder.Services.AddZeta();
 
-        var contextlessSchema = Z.Object<Widget>()
-            .Field(w => w.Name, s => s.MinLength(3));
+        var contextlessSchema = Z.Schema<Widget>()
+            .Property(w => w.Name, s => s.MinLength(3));
 
         // Declared as ISchema<T, TContext> so the call site below resolves to the
         // WithValidation<T, TContext>(ISchema<T, TContext>) overload rather than the
         // IContextSchema<T, TContext> disambiguation overload (which wins by betterness
         // when the argument's static type is the concrete, IContextSchema-implementing class).
-        ISchema<Widget, WidgetContext> contextAwareSchema = Z.Object<Widget>()
-            .Field(w => w.Name, s => s.MinLength(3))
+        ISchema<Widget, WidgetContext> contextAwareSchema = Z.Schema<Widget>()
+            .Property(w => w.Name, s => s.MinLength(3))
             .Using<WidgetContext>(async (_, _, _) =>
             {
                 await Task.Yield();
@@ -35,8 +35,8 @@ public class WithValidationTests
             })
             .Refine((widget, ctx) => ctx.AllowAnyName || widget.Name != "Forbidden", "Name is forbidden");
 
-        ObjectContextSchema<Widget, WidgetContext> disambiguatedSchema = Z.Object<Widget>()
-            .Field(w => w.Name, s => s.MinLength(3))
+        ObjectContextSchema<Widget, WidgetContext> disambiguatedSchema = Z.Schema<Widget>()
+            .Property(w => w.Name, s => s.MinLength(3))
             .Using<WidgetContext>(async (_, _, _) =>
             {
                 await Task.Yield();
