@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Zeta.Adapters;
 using Zeta.Rules;
 using Zeta.Schemas;
-using Zeta.Validators;
 
 namespace Zeta.Tests;
 
@@ -12,7 +11,6 @@ public class LowCoverageInternalTests
     private interface IAnimal;
     private sealed record Dog(int WoofVolume) : IAnimal;
     private sealed record Cat(int ClawSharpness) : IAnimal;
-    private sealed record Person(string? Name);
 
     [Fact]
     public async Task StatefulRefinementRule_Contextless_SyncAndAsync_Validate()
@@ -52,27 +50,6 @@ public class LowCoverageInternalTests
         Assert.NotNull(await syncRule.ValidateAsync(11, context));
         Assert.Null(await asyncRule.ValidateAsync(9, context));
         Assert.NotNull(await asyncRule.ValidateAsync(50, context));
-    }
-
-    [Fact]
-    public async Task RequiredFieldValidators_ReturnExpectedErrors()
-    {
-        var contextless = new RequiredFieldContextlessValidator<Person, string?>("Name", p => p.Name, null);
-        var context = new ValidationContext();
-        var missingErrors = await contextless.ValidateAsync(new Person(null), context);
-        Assert.Single(missingErrors);
-        Assert.Equal("$.name", missingErrors[0].PathString);
-        Assert.Equal("required", missingErrors[0].Code);
-
-        var withValueErrors = await contextless.ValidateAsync(new Person("ok"), context);
-        Assert.Empty(withValueErrors);
-
-        var contextAware = new RequiredFieldContextContextValidator<Person, string?, Ctx>("Name", p => p.Name, "Name is required");
-        var typedContext = new ValidationContext<Ctx>(new Ctx(0));
-        var missingCtxErrors = await contextAware.ValidateAsync(new Person(null), typedContext);
-        Assert.Single(missingCtxErrors);
-        Assert.Equal("$.name", missingCtxErrors[0].PathString);
-        Assert.Equal("Name is required", missingCtxErrors[0].Message);
     }
 
     [Fact]

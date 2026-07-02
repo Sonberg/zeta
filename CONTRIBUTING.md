@@ -139,11 +139,11 @@ Keep error messages:
 
 When adding a new primitive schema type:
 
-1. Create contextless version: `MySchema`
-2. Create context-aware version: `MySchema<TContext>`
+1. Create contextless version: `MyContextlessSchema`
+2. Create context-aware version: `MyContextSchema<TContext>`
 3. Add static entry point to `Z` class: `Z.MyType()`
-4. Add `WithContext<TContext>()` method to contextless version
-5. Create static validators in `MyTypeValidators` class
+4. Ensure `.Using<TContext>()` on the contextless schema returns the context-aware variant (transferring rules, conditionals, etc.)
+5. Add rule structs in `src/Zeta/Rules/<Type>/` and validation methods as extension methods (see below)
 6. Add tests in `tests/Zeta.Tests/Schemas/MySchemaTests.cs`
 7. Update README.md with examples
 8. Add to `SchemaConsistencyTests.cs`
@@ -152,41 +152,48 @@ When adding a new primitive schema type:
 
 ## Adding Validation Methods
 
-When adding a new validation method to an existing schema:
+Value-schema validators (string, int, double, decimal, bool, Guid, enum, DateTime, DateOnly,
+TimeOnly) are **extension methods** written once and shared by both the contextless and
+context-aware variants. The extension hangs off `IValueSchema<T, TSelf>` and calls the inherited
+`AppendRule(...)` with a single **contextless** rule struct (implementing `IValidationRule<T>`).
+The context-aware base wraps that rule automatically — do **not** add `XRule<TContext>` variants
+or per-schema duplicates.
 
-1. Add validation logic to static validator class (e.g., `StringValidators`)
-2. Add method to contextless schema (e.g., `StringSchema`)
-3. Add same method to context-aware schema (e.g., `StringSchema<TContext>`)
-4. Write tests for both success and failure cases
-5. Update README.md with examples
-6. Update CLAUDE.md if it's a significant pattern
+1. Add a rule struct in `src/Zeta/Rules/<Type>/` implementing `IValidationRule<T>`
+2. Add one extension method to the matching `<Type>SchemaExtensions` class in `src/Zeta/Schemas/`
+3. Write tests for both success and failure cases
+4. Update README.md with examples
+5. Update CLAUDE.md if it's a significant pattern
 
 Example:
 ```csharp
-// In StringValidators.cs
-public static ValidationError? ValidateStartsWith(string value, string prefix, string path)
+// src/Zeta/Rules/String/StartsWithRule.cs
+public readonly struct StartsWithRule : IValidationRule<string>
 {
-    return value.StartsWith(prefix)
-        ? null
-        : new ValidationError(path, "starts_with", $"Must start with '{prefix}'");
+    private readonly string _prefix;
+    private readonly string? _message;
+
+    public StartsWithRule(string prefix, string? message = null)
+    {
+        _prefix = prefix;
+        _message = message;
+    }
+
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+        => ValueTaskHelper.FromResult(
+            value.StartsWith(_prefix, StringComparison.Ordinal)
+                ? null
+                : new ValidationError(context.PathSegments, "starts_with", _message ?? $"Must start with '{_prefix}'"));
 }
 
-// In StringSchema.cs
-public StringSchema StartsWith(string prefix)
-{
-    Use(new RefinementRule<string>(
-        (val, exec) => StringValidators.ValidateStartsWith(val, prefix, exec.Path)));
-    return this;
-}
-
-// In StringSchema<TContext>.cs
-public StringSchema<TContext> StartsWith(string prefix)
-{
-    Use(new RefinementRule<string, TContext>(
-        (val, ctx) => StringValidators.ValidateStartsWith(val, prefix, ctx.Execution.Path)));
-    return this;
-}
+// src/Zeta/Schemas/StringSchemaExtensions.cs  (namespace Zeta)
+public static TSelf StartsWith<TSelf>(this IValueSchema<string, TSelf> schema, string prefix, string? message = null)
+    where TSelf : IValueSchema<string, TSelf>
+    => schema.AppendRule(new StartsWithRule(prefix, message));
 ```
+
+`Object`/`Collection`/`Dictionary` schemas are not `IValueSchema` — their fluent methods stay as
+instance/generated members.
 
 ---
 

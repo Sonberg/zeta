@@ -94,16 +94,16 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
     }
 
     public CollectionContextSchema<TElement, TContext> MinLength(int min, string? message = null)
-        => Append(new MinLengthRule<TElement, TContext>(min, message));
+        => AppendRule(new MinLengthRule<TElement>(min, message));
 
     public CollectionContextSchema<TElement, TContext> MaxLength(int max, string? message = null)
-        => Append(new MaxLengthRule<TElement, TContext>(max, message));
+        => AppendRule(new MaxLengthRule<TElement>(max, message));
 
     public CollectionContextSchema<TElement, TContext> Length(int exact, string? message = null)
-        => Append(new LengthRule<TElement, TContext>(exact, message));
+        => AppendRule(new LengthRule<TElement>(exact, message));
 
     public CollectionContextSchema<TElement, TContext> NotEmpty(string? message = null)
-        => Append(new NotEmptyRule<TElement, TContext>(message));
+        => AppendRule(new NotEmptyRule<TElement>(message));
 
     public CollectionContextSchema<TElement, TContext> Each(ISchema<TElement, TContext> elementSchema)
         => new(elementSchema, Rules, AllowNull, GetConditionals(), ContextFactory);

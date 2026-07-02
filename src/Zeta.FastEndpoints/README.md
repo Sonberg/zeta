@@ -133,9 +133,10 @@ Use `.Refine()` for rules that span multiple fields:
 
 ```csharp
 var schema = Z.Object<DateRangeRequest>()
-    .Field(r => r.StartDate, s => s.LessThan(DateOnly.MaxValue))
-    .Field(r => r.EndDate, s => s.GreaterThan(DateOnly.MinValue))
-    .Refine(r => r.EndDate > r.StartDate, "End date must be after start date", "$.endDate");
+    .Field(r => r.StartDate, s => s.Future())
+    .Field(r => r.EndDate, s => s.Future())
+    // RefineAt attaches the cross-field error to a specific property ($.endDate)
+    .RefineAt(r => r.EndDate, r => r.EndDate > r.StartDate, "End date must be after start date");
 ```
 
 For async cross-field validation (e.g. database lookups), use `.Using<TContext>()`:

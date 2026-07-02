@@ -159,13 +159,13 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
     }
 
     public DictionaryContextSchema<TKey, TValue, TContext> MinLength(int min, string? message = null)
-        => Append(new DictionaryMinLengthRule<TKey, TValue, TContext>(min, message));
+        => AppendRule(new DictionaryMinLengthRule<TKey, TValue>(min, message));
 
     public DictionaryContextSchema<TKey, TValue, TContext> MaxLength(int max, string? message = null)
-        => Append(new DictionaryMaxLengthRule<TKey, TValue, TContext>(max, message));
+        => AppendRule(new DictionaryMaxLengthRule<TKey, TValue>(max, message));
 
     public DictionaryContextSchema<TKey, TValue, TContext> NotEmpty(string? message = null)
-        => Append(new DictionaryNotEmptyRule<TKey, TValue, TContext>(message));
+        => AppendRule(new DictionaryNotEmptyRule<TKey, TValue>(message));
 
     public DictionaryContextSchema<TKey, TValue, TContext> EachKey(ISchema<TKey, TContext> keySchema)
         => new(keySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, _entryRefinements);

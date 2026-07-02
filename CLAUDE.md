@@ -168,15 +168,17 @@ Z.String()
     .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 ```
 
-**Type Assertions**: `.As<TDerived>()` on Object schemas enables explicit type narrowing. Prefer branch schemas with `.If(predicate, schema)` or `.WhenType<TDerived>(...)`:
+**Type Assertions**: `.As<TDerived>()` on Object schemas enables explicit type narrowing. Prefer branch schemas with `.If(predicate, schema)`:
 ```csharp
 var dogSchema = Z.Object<Dog>()
     .Field(x => x.BarkVolume, x => x.Min(0).Max(100));
 
+var catSchema = Z.Object<Cat>()
+    .Field(x => x.ClawSharpness, x => x.Min(1).Max(10));
+
 Z.Object<IAnimal>()
     .If(x => x is Dog, dogSchema)
-    .WhenType<Cat>(cat => cat
-        .Field(x => x.ClawSharpness, x => x.Min(1).Max(10)));
+    .If(x => x is Cat, catSchema);
 ```
 
 ### ASP.NET Core Integration (src/Zeta.AspNetCore/)

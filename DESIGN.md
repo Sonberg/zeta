@@ -156,7 +156,8 @@ Z.String()
 Z.Int().Min(0).Max(100)
 
 // With context
-Z.String<MyContext>()
+Z.String()
+    .Using<MyContext>()
     .Refine((val, ctx) => val != ctx.ForbiddenValue, "Value not allowed")
 ```
 
@@ -170,8 +171,10 @@ Z.Schema<User>()
     .Refine((u, _) => u.Password != u.Email, "Password cannot be email");
 
 // With context
-Z.Schema<User, UserContext>()
-    .Property(u => u.Email, Z.String<UserContext>()
+Z.Schema<User>()
+    .Using<UserContext>()
+    .Property(u => u.Email, Z.String()
+        .Using<UserContext>()
         .Refine((email, ctx) => !ctx.EmailExists, "Email taken"));
 ```
 
@@ -193,7 +196,8 @@ Z.String()
 ### Context-Aware Refinement
 
 ```csharp
-Z.String<UserContext>()
+Z.String()
+    .Using<UserContext>()
     .Refine(
         (value, ctx) => !ctx.BannedEmails.Contains(value),
         message: "Email is banned",
@@ -201,25 +205,27 @@ Z.String<UserContext>()
     );
 ```
 
-### Custom Rule Class
+### Reusable Custom Logic
+
+For reusable rules, compose refinements in an extension method rather than implementing a
+rule interface directly:
 
 ```csharp
-public sealed class UniqueEmailRule : IRule<string>
+public static class StringSchemaExtensions
 {
-    public async ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext<object?> ctx)
-    {
-        var repo = ctx.Execution.Services.GetRequiredService<IUserRepository>();
-        var exists = await repo.EmailExistsAsync(value, ctx.Execution.CancellationToken);
-
-        return exists
-            ? new ValidationError(ctx.Execution.Path, "email_taken", "Email already taken")
-            : null;
-    }
+    public static StringContextlessSchema StartsWithUpper(this StringContextlessSchema schema)
+        => schema.Refine(
+            value => value.Length > 0 && char.IsUpper(value[0]),
+            "Must start with uppercase",
+            "starts_upper");
 }
 
 // Usage
-Z.String().Use(new UniqueEmailRule())
+Z.String().StartsWithUpper();
 ```
+
+For async data access (e.g. a uniqueness check against a repository), promote with
+`.Using<TContext>()` and use `RefineAsync`. See [`docs/CustomRules.md`](./docs/CustomRules.md).
 
 ---
 
