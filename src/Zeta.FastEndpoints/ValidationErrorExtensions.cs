@@ -5,7 +5,7 @@ namespace Zeta.FastEndpoints;
 /// <summary>
 /// Extensions for shaping Zeta <see cref="ValidationError"/>s into FastEndpoints validation failures.
 /// </summary>
-internal static class ValidationErrorExtensions
+public static class ValidationErrorExtensions
 {
     /// <summary>
     /// Projects Zeta errors into <see cref="ValidationFailure"/>s, preserving path, message and error code.

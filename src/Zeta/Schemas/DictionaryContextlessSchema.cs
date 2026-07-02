@@ -198,4 +198,13 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
     {
         return Using<TContext>().WithContextFactory(factory);
     }
+
+    /// <summary>
+    /// Creates a context-aware dictionary schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public DictionaryContextSchema<TKey, TValue, TContext> Using<TContext>(
+        Func<IDictionary<TKey, TValue>, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
+    }
 }

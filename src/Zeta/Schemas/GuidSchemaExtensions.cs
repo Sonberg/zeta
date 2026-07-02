@@ -9,21 +9,13 @@ namespace Zeta;
 /// </summary>
 public static class GuidSchemaExtensions
 {
+    /// <summary>Requires the value to not be <see cref="Guid.Empty"/>.</summary>
     public static TSelf NotEmpty<TSelf>(this IValueSchema<Guid, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<Guid, TSelf>
-        => schema.AppendRule(new RefinementRule<Guid>((val, exec) =>
-            val != Guid.Empty
-                ? null
-                : new ValidationError(exec.PathSegments, "not_empty", message ?? "GUID cannot be empty")));
+        => schema.AppendRule(new GuidNotEmptyRule(message));
 
+    /// <summary>Requires the value to be an RFC 4122 GUID of the given <paramref name="version"/>.</summary>
     public static TSelf Version<TSelf>(this IValueSchema<Guid, TSelf> schema, int version, string? message = null)
         where TSelf : IValueSchema<Guid, TSelf>
-        => schema.AppendRule(new RefinementRule<Guid>((val, exec) =>
-        {
-            var bytes = val.ToByteArray();
-            var guidVersion = (bytes[7] >> 4) & 0x0F;
-            return guidVersion == version
-                ? null
-                : new ValidationError(exec.PathSegments, "version", message ?? $"GUID must be version {version}");
-        }));
+        => schema.AppendRule(new GuidVersionRule(version, message));
 }

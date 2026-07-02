@@ -45,5 +45,14 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, Time
     {
         return Using<TContext>().WithContextFactory(factory);
     }
+
+    /// <summary>
+    /// Creates a context-aware TimeOnly schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public TimeOnlyContextSchema<TContext> Using<TContext>(
+        Func<TimeOnly, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
+    }
 }
 #endif

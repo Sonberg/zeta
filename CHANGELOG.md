@@ -3,14 +3,25 @@
 ## Next release
 
 ### Added
+- `Positive()`, `Negative()`, and `MultipleOf()` on `Int` schemas, and `MultipleOf()` on `Double` schemas — closes a numeric-validator parity gap versus `Decimal` (which already had all of these).
+- A synchronous `Using<TContext>(Func<T, IServiceProvider, TContext> factory)` overload on every scalar, `Collection`, and `Dictionary` contextless schema — previously only `ObjectContextlessSchema` had this convenience; other schemas required wrapping a sync factory in a `ValueTask`.
+- `Result.Failure(params ValidationError[] errors)` — brings the non-generic `Result` in line with `Result<T>`/`Result<T, TContext>`, which already had this overload alongside the `IReadOnlyList<ValidationError>` one.
+- `Result<T, TContext>` overloads of `ToActionResult`/`ToResult` (both the callback-taking and parameterless forms) on `ZetaExtensions` — context-aware validation results now have the same MVC/Minimal API helper parity that contextless `Result<T>` already had.
+- Enum `.Each()` (Collection) and `.EachKey()`/`.EachValue()` (Dictionary) generated overloads — enum was previously the only scalar type without generated collection/dictionary support (had to fall back to `.Each(Z.Enum<T>().Defined())` manually).
+- A contextless generic object `.Each(Func<ObjectContextlessSchema<TElement>, ObjectContextlessSchema<TElement>>)` overload for `Collection` schemas — the context-aware equivalent already existed, but the contextless one was missing, silently breaking the object-builder `.Each(i => i.Field(...))` pattern shown in the README's collection-validation example.
 - `IValueSchema<T, TSelf>` interface (namespace `Zeta.Core`) — the extension point for value-schema validators; implemented by every value schema, contextless and context-aware.
 - `IEnumerable<ValidationError>.ToPathDictionary()` extension (namespace `Zeta`) — the single home for grouping validation errors by JSONPath into the `Dictionary<string, string[]>` shape used by ASP.NET Core's `ValidationProblem` / `ValidationProblemDetails`.
 - `UseZetaValidation()` extension on `EndpointDefinition` for convention-based schema auto-discovery — scans static `ISchema<TRequest>` fields on endpoint classes and registers Zeta validation as a pre-processor without any per-endpoint boilerplate.
-- `ZetaGlobalPreProcessor<TRequest>` implementing `IGlobalPreProcessor` — used internally by `UseZetaValidation()`.
+- `ZetaGlobalPreProcessor<TRequest>` (internal, not public API) implementing `IGlobalPreProcessor` — used internally by `UseZetaValidation()`.
 - `HasStarted` guard on `ZetaPreProcessor<TRequest>` and `ZetaGlobalPreProcessor<TRequest>`: skips validation if the response has already been written (safe when using both the global configurator and per-endpoint `Validate()` on the same endpoint).
 - README: global registration guide (Option 3), `Refine()` cross-field validation examples, `Zeta.AspNetCore` migration guide.
 
 ### Changed
+- `SchemaExtensions.ValidateAsync<T>(this ISchema<T>, T? value)` no longer requires `where T : class` — it now also works for value-typed schemas (e.g. `Z.Int()`) accessed through the `ISchema<T>` interface, matching the unconstrained instance method already on the concrete schema classes.
+- Renamed `ValidationFilter<T, TContext>` to `ContextValidationFilter<T, TContext>` (`Zeta.AspNetCore`) so the context-aware/contextless endpoint filter pair follows the same `Context`/`Contextless` naming convention used everywhere else in the codebase (`ContextlessValidationFilter<T>` was already correctly named).
+- `Zeta.FastEndpoints.ValidationErrorExtensions.ToValidationFailures()` is now public (was `internal`), matching the core package's public `ToPathDictionary()` so FastEndpoints consumers can reuse the same error-shaping helper in custom pre-processors.
+- Object schema validation order is now **Fields → Type Assertions (`.As()`) → Conditionals (`.If()`) → Rules (`.Refine()`)**, matching documented behavior (previously rules ran first). This only affects the order errors appear within `Result.Errors` when multiple validation stages fail simultaneously — no errors are added or dropped.
+- `Bool`, `Guid`, `DateTime`, `DateOnly`, and `TimeOnly` validators now use dedicated rule structs (e.g. `DateTimeMinRule`, `GuidVersionRule`) instead of inline `RefinementRule<T>` closures, matching the zero-allocation pattern already used by `Int`/`Double`/`Decimal`/`String`. No behavior change — same error codes and default messages.
 - Nullable object-field handling no longer uses reflection. `Field`/`Property` overloads that take a pre-built schema (`ISchema<TProperty>`, `ISchema<TProperty, TContext>`, `IContextSchema<TProperty, TContext>`) for a nullable/nested property are now generic `where TProperty : class` methods that build their field validator directly — reference types need no null adapter (the inner schema already handles null). Nullable **value-type** fields continue to be served by the source generator's typed overloads (`int?`, `decimal?`, …) and the fluent builders. Call sites are unchanged.
 - The dedicated field-error path-remapping logic (`RelativeTo`/`Concat`) is now shared via `FieldError.PrependFieldPath` instead of being copy-pasted across the four field validators.
 - Value-schema validators (`string`, `int`, `double`, `decimal`, `bool`, `Guid`, enum, `DateTime`, `DateOnly`, `TimeOnly`) are now **extension methods** on `IValueSchema<T, TSelf>` (in `*SchemaExtensions` classes, namespace `Zeta`) instead of instance methods duplicated across the contextless and context-aware schema classes. Call sites are unchanged (`Z.String().Email()`, `Z.String().Using<Ctx>().Email()`); each validator is now defined once. `Object`/`Collection`/`Dictionary` schemas are unaffected.
@@ -21,6 +32,8 @@
 - Context-aware collection and dictionary count rules (`MinLength`/`MaxLength`/`Length`/`NotEmpty`) now flow through the existing `ContextlessRuleAdapter<T, TContext>` via `AppendRule`, matching the value-schema rules. No public API change.
 
 ### Fixed
+- `DateOnlyContextlessSchema`'s constructor is now `internal`, matching every other scalar schema. It was previously `public`, the sole exception among 20 scalar-schema classes, allowing construction that bypassed `Z.DateOnly()`.
+- CHANGELOG: clarified that `ZetaGlobalPreProcessor<TRequest>` is internal, not public API, and noted that the `AddZeta(Assembly[])` overload marked obsolete in 0.1.12 has since been fully removed (only `AddZeta()` remains).
 - `ValidationContext.Path` (and `ValidationContext<TData>.Path`) at the root now renders as `"$"` instead of `""`, matching the `"$"` root convention already used by `ValidationError.Path`/`PathString`. Non-root paths are unaffected (still bare dot/bracket notation, no `"$."` prefix).
 
 ### Removed

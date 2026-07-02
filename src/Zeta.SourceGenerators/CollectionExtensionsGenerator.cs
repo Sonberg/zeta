@@ -68,6 +68,39 @@ internal static class CollectionExtensionsGenerator
                         """);
         }
         sb.AppendLine("#endif");
+
+        // Enum
+        sb.AppendLine("""
+                          /// <summary>
+                          /// Applies transformations to the enum element schema for each item in the collection.
+                          /// </summary>
+                          public static CollectionContextlessSchema<TEnum> Each<TEnum>(
+                              this CollectionContextlessSchema<TEnum> schema,
+                              Func<EnumContextlessSchema<TEnum>, ISchema<TEnum>> elementTransform)
+                              where TEnum : struct, Enum
+                          {
+                              var newElementSchema = elementTransform(Z.Enum<TEnum>());
+                              return schema.WithElementSchema(newElementSchema);
+                          }
+
+                      """);
+
+        // Generic object builder
+        sb.AppendLine("""
+                          /// <summary>
+                          /// Applies transformations to the object element schema for each item in the collection.
+                          /// Allows inline object schema building for complex types.
+                          /// </summary>
+                          public static CollectionContextlessSchema<TElement> Each<TElement>(
+                              this CollectionContextlessSchema<TElement> schema,
+                              Func<ObjectContextlessSchema<TElement>, ObjectContextlessSchema<TElement>> elementTransform)
+                              where TElement : class
+                          {
+                              var newElementSchema = elementTransform(Z.Object<TElement>());
+                              return schema.WithElementSchema(newElementSchema);
+                          }
+
+                      """);
     }
 
     private static void GenerateContextAwareExtensions(StringBuilder sb)
@@ -110,6 +143,21 @@ internal static class CollectionExtensionsGenerator
         }
         sb.AppendLine("#endif");
 
+        // Enum
+        sb.AppendLine("""
+                          /// <summary>
+                          /// Applies transformations to the enum element schema for each item in the collection.
+                          /// </summary>
+                          public static CollectionContextSchema<TEnum, TContext> Each<TEnum, TContext>(
+                              this CollectionContextSchema<TEnum, TContext> schema,
+                              Func<EnumContextlessSchema<TEnum>, ISchema<TEnum, TContext>> elementTransform)
+                              where TEnum : struct, Enum
+                          {
+                              var newElementSchema = elementTransform(Z.Enum<TEnum>());
+                              return schema.WithElementSchema(newElementSchema);
+                          }
+
+                      """);
 
         // Generic object builder
         sb.AppendLine("""

@@ -46,15 +46,15 @@ public class ContextlessValidationFilter<T> : IEndpointFilter
 /// <summary>
 /// A minimal API endpoint filter that validates the request using a context-aware Zeta schema.
 /// </summary>
-public class ValidationFilter<T, TContext> : IEndpointFilter
+public class ContextValidationFilter<T, TContext> : IEndpointFilter
 {
     private readonly ISchema<T, TContext> _schema;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ValidationFilter{T, TContext}"/> class.
+    /// Initializes a new instance of the <see cref="ContextValidationFilter{T, TContext}"/> class.
     /// </summary>
     /// <param name="schema">The schema to use for validation.</param>
-    public ValidationFilter(ISchema<T, TContext> schema)
+    public ContextValidationFilter(ISchema<T, TContext> schema)
     {
         _schema = schema;
     }

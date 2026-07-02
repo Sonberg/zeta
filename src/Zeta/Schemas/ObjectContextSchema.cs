@@ -133,13 +133,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
 
         List<ValidationError>? errors = null;
 
-        var ruleErrors = await Rules.ExecuteAsync(value, context);
-        if (ruleErrors != null)
-        {
-            errors ??= [];
-            errors.AddRange(ruleErrors);
-        }
-
         foreach (var field in _fields)
         {
             var fieldErrors = await field.ValidateAsync(value, context);
@@ -166,6 +159,13 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
             errors.AddRange(conditionalErrors);
         }
 
+        var ruleErrors = await Rules.ExecuteAsync(value, context);
+        if (ruleErrors != null)
+        {
+            errors ??= [];
+            errors.AddRange(ruleErrors);
+        }
+
         return errors == null
             ? Result<T, TContext>.Success(value!, context.Data)
             : Result<T, TContext>.Failure(errors);
@@ -175,6 +175,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     // the inner schema already handles null (required-by-default, or passes when .Nullable()).
     // Nullable value-type fields are served by the source generator's typed overloads.
 
+    /// <summary>Adds a context-aware field validator for a reference-type or nested-object property, using a pre-built context-aware schema.</summary>
     public ObjectContextSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty, TContext> schema)
@@ -185,6 +186,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter!, schema));
     }
 
+    /// <summary>Alias of the context-aware <c>Field</c> overload.</summary>
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty, TContext> schema)
@@ -200,12 +202,14 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         where TProperty : class
         => Field(propertySelector, (ISchema<TProperty, TContext>)schema);
 
+    /// <summary>Alias of the disambiguating context-aware <c>Field</c> overload.</summary>
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         IContextSchema<TProperty, TContext> schema)
         where TProperty : class
         => Field(propertySelector, schema);
 
+    /// <summary>Adds a field validator for a reference-type or nested-object property, using a pre-built contextless schema.</summary>
     public ObjectContextSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
@@ -216,12 +220,14 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddContextlessField(new FieldContextlessValidator<T, TProperty>(propertyName, getter!, schema));
     }
 
+    /// <summary>Alias of the contextless-schema <c>Field</c> overload.</summary>
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
         where TProperty : class
         => Field(propertySelector, schema);
 
+    /// <summary>Adds a context-aware field validator for a non-nullable enum property, using a fluent builder that returns a context-aware schema.</summary>
     public ObjectContextSchema<T, TContext> Field<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
@@ -232,6 +238,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddField(new FieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, schema(Z.Enum<TEnum>())));
     }
 
+    /// <summary>Alias of the context-aware non-nullable-enum <c>Field</c> overload.</summary>
     public ObjectContextSchema<T, TContext> Property<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
@@ -240,6 +247,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return Field(propertySelector, schema);
     }
 
+    /// <summary>Adds a context-aware field validator for a non-nullable enum property, using a contextless fluent builder promoted to context-aware.</summary>
     public ObjectContextSchema<T, TContext> Field<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
@@ -251,6 +259,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddField(new FieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
     }
 
+    /// <summary>Alias of the promoted non-nullable-enum <c>Field</c> overload.</summary>
     public ObjectContextSchema<T, TContext> Property<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
@@ -259,6 +268,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return Field(propertySelector, schema);
     }
 
+    /// <summary>Adds a context-aware field validator for a nullable enum property, using a fluent builder that returns a context-aware schema. Null skips validation.</summary>
     public ObjectContextSchema<T, TContext> Field<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
@@ -269,6 +279,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddField(new NullableFieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, schema(Z.Enum<TEnum>())));
     }
 
+    /// <summary>Alias of the context-aware nullable-enum <c>Field</c> overload.</summary>
     public ObjectContextSchema<T, TContext> Property<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
@@ -277,6 +288,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return Field(propertySelector, schema);
     }
 
+    /// <summary>Adds a context-aware field validator for a nullable enum property, using a contextless fluent builder promoted to context-aware. Null skips validation.</summary>
     public ObjectContextSchema<T, TContext> Field<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
@@ -288,6 +300,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddField(new NullableFieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
     }
 
+    /// <summary>Alias of the promoted nullable-enum <c>Field</c> overload.</summary>
     public ObjectContextSchema<T, TContext> Property<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
@@ -296,6 +309,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return Field(propertySelector, schema);
     }
 
+    /// <summary>Attaches a context-aware object-level refinement error to a specific property path instead of the root ("$").</summary>
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, TContext, bool> predicate,
@@ -305,6 +319,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return RefineAt(propertySelector, predicate, (_, _) => message, code);
     }
 
+    /// <summary>Attaches a context-aware object-level refinement error, with a dynamic message, to a specific property path instead of the root ("$").</summary>
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, TContext, bool> predicate,
@@ -319,6 +334,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
                 : new ValidationError(ctx.PathSegments.Append(PathSegment.Property(propertyName)), code, messageFactory(val, ctx.Data))));
     }
 
+    /// <summary>Attaches a value-only (context-independent) refinement error to a specific property path instead of the root ("$").</summary>
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, bool> predicate,
@@ -328,6 +344,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return RefineAt(propertySelector, (val, _) => predicate(val), (_, _) => message, code);
     }
 
+    /// <summary>Attaches a value-only (context-independent) refinement error, with a dynamic message, to a specific property path instead of the root ("$").</summary>
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, bool> predicate,

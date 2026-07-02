@@ -9,89 +9,53 @@ namespace Zeta;
 /// </summary>
 public static class DateTimeSchemaExtensions
 {
+    /// <summary>Requires the value to be at or after <paramref name="min"/>.</summary>
     public static TSelf Min<TSelf>(this IValueSchema<DateTime, TSelf> schema, DateTime min, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-            val >= min
-                ? null
-                : new ValidationError(exec.PathSegments, "min_date", message ?? $"Must be at or after {min:O}")));
+        => schema.AppendRule(new DateTimeMinRule(min, message));
 
+    /// <summary>Requires the value to be at or before <paramref name="max"/>.</summary>
     public static TSelf Max<TSelf>(this IValueSchema<DateTime, TSelf> schema, DateTime max, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-            val <= max
-                ? null
-                : new ValidationError(exec.PathSegments, "max_date", message ?? $"Must be at or before {max:O}")));
+        => schema.AppendRule(new DateTimeMaxRule(max, message));
 
+    /// <summary>Requires the value to be earlier than the current time.</summary>
     public static TSelf Past<TSelf>(this IValueSchema<DateTime, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-            val < exec.TimeProvider.GetUtcNow().UtcDateTime
-                ? null
-                : new ValidationError(exec.PathSegments, "past", message ?? "Must be in the past")));
+        => schema.AppendRule(new DateTimePastRule(message));
 
+    /// <summary>Requires the value to be later than the current time.</summary>
     public static TSelf Future<TSelf>(this IValueSchema<DateTime, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-            val > exec.TimeProvider.GetUtcNow().UtcDateTime
-                ? null
-                : new ValidationError(exec.PathSegments, "future", message ?? "Must be in the future")));
+        => schema.AppendRule(new DateTimeFutureRule(message));
 
+    /// <summary>Requires the value to fall within the inclusive range [<paramref name="min"/>, <paramref name="max"/>].</summary>
     public static TSelf Between<TSelf>(this IValueSchema<DateTime, TSelf> schema, DateTime min, DateTime max, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-            val >= min && val <= max
-                ? null
-                : new ValidationError(exec.PathSegments, "between", message ?? $"Must be between {min:O} and {max:O}")));
+        => schema.AppendRule(new DateTimeBetweenRule(min, max, message));
 
+    /// <summary>Requires the value to fall on a Monday through Friday.</summary>
     public static TSelf Weekday<TSelf>(this IValueSchema<DateTime, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-            val.DayOfWeek != DayOfWeek.Saturday && val.DayOfWeek != DayOfWeek.Sunday
-                ? null
-                : new ValidationError(exec.PathSegments, "weekday", message ?? "Must be a weekday")));
+        => schema.AppendRule(new DateTimeWeekdayRule(message));
 
+    /// <summary>Requires the value to fall on a Saturday or Sunday.</summary>
     public static TSelf Weekend<TSelf>(this IValueSchema<DateTime, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-            val.DayOfWeek == DayOfWeek.Saturday || val.DayOfWeek == DayOfWeek.Sunday
-                ? null
-                : new ValidationError(exec.PathSegments, "weekend", message ?? "Must be a weekend")));
+        => schema.AppendRule(new DateTimeWeekendRule(message));
 
+    /// <summary>Requires the value to be within <paramref name="days"/> days of the current time, in either direction.</summary>
     public static TSelf WithinDays<TSelf>(this IValueSchema<DateTime, TSelf> schema, int days, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-        {
-            var now = exec.TimeProvider.GetUtcNow().UtcDateTime;
-            var diff = Math.Abs((val - now).TotalDays);
-            return diff <= days
-                ? null
-                : new ValidationError(exec.PathSegments, "within_days", message ?? $"Must be within {days} days from now");
-        }));
+        => schema.AppendRule(new DateTimeWithinDaysRule(days, message));
 
+    /// <summary>Requires the value, interpreted as a birth date, to represent an age of at least <paramref name="years"/>.</summary>
     public static TSelf MinAge<TSelf>(this IValueSchema<DateTime, TSelf> schema, int years, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-        {
-            var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
-            var age = today.Year - val.Year;
-            if (val.Date > today.AddYears(-age)) age--;
+        => schema.AppendRule(new DateTimeMinAgeRule(years, message));
 
-            return age >= years
-                ? null
-                : new ValidationError(exec.PathSegments, "min_age", message ?? $"Must be at least {years} years old");
-        }));
-
+    /// <summary>Requires the value, interpreted as a birth date, to represent an age of at most <paramref name="years"/>.</summary>
     public static TSelf MaxAge<TSelf>(this IValueSchema<DateTime, TSelf> schema, int years, string? message = null)
         where TSelf : IValueSchema<DateTime, TSelf>
-        => schema.AppendRule(new RefinementRule<DateTime>((val, exec) =>
-        {
-            var today = exec.TimeProvider.GetUtcNow().UtcDateTime.Date;
-            var age = today.Year - val.Year;
-            if (val.Date > today.AddYears(-age)) age--;
-
-            return age <= years
-                ? null
-                : new ValidationError(exec.PathSegments, "max_age", message ?? $"Must be at most {years} years old");
-        }));
+        => schema.AppendRule(new DateTimeMaxAgeRule(years, message));
 }

@@ -8,7 +8,7 @@ namespace Zeta.Schemas;
 /// </summary>
 public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, DateOnlyContextlessSchema>, IValueSchema<DateOnly, DateOnlyContextlessSchema>
 {
-    public DateOnlyContextlessSchema() { }
+    internal DateOnlyContextlessSchema() { }
 
     private DateOnlyContextlessSchema(
         ContextlessRuleEngine<DateOnly> rules,
@@ -44,6 +44,15 @@ public sealed class DateOnlyContextlessSchema : ContextlessSchema<DateOnly, Date
         Func<DateOnly, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
     {
         return Using<TContext>().WithContextFactory(factory);
+    }
+
+    /// <summary>
+    /// Creates a context-aware DateOnly schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public DateOnlyContextSchema<TContext> Using<TContext>(
+        Func<DateOnly, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
     }
 }
 #endif
