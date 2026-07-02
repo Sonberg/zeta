@@ -46,4 +46,13 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
     {
         return Using<TContext>().WithContextFactory(factory);
     }
+
+    /// <summary>
+    /// Creates a context-aware double schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public DoubleContextSchema<TContext> Using<TContext>(
+        Func<double, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
+    }
 }

@@ -139,14 +139,6 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
 
         List<ValidationError>? errors = null;
 
-        // Validate rules
-        var ruleErrors = await Rules.ExecuteAsync(value, execution);
-        if (ruleErrors != null)
-        {
-            errors ??= [];
-            errors.AddRange(ruleErrors);
-        }
-
         // Validate fields
         foreach (var field in _fields)
         {
@@ -176,6 +168,14 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
             errors.AddRange(conditionalErrors);
         }
 
+        // Validate rules
+        var ruleErrors = await Rules.ExecuteAsync(value, execution);
+        if (ruleErrors != null)
+        {
+            errors ??= [];
+            errors.AddRange(ruleErrors);
+        }
+
         return errors == null
             ? Result<T>.Success(value)
             : Result<T>.Failure(errors);
@@ -184,6 +184,10 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     // Nullable reference / nested-object fields. Reference types need no null adapter:
     // the inner schema already handles null. Nullable value-type fields are served by the
     // source generator's typed overloads.
+
+    /// <summary>
+    /// Adds a field validator for a reference-type or nested-object property, using a pre-built schema.
+    /// </summary>
     public ObjectContextlessSchema<T> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
@@ -194,6 +198,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return AddField(new FieldContextlessValidator<T, TProperty>(propertyName, getter!, schema));
     }
 
+    /// <summary>Adds a field validator for a non-nullable enum property, using a fluent builder.</summary>
     public ObjectContextlessSchema<T> Property<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
@@ -204,6 +209,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return AddField(new FieldContextlessValidator<T, TEnum>(propertyName, getter, schema(Z.Enum<TEnum>())));
     }
 
+    /// <summary>Adds a field validator for a nullable enum property, using a fluent builder. Null skips validation.</summary>
     public ObjectContextlessSchema<T> Property<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
@@ -216,6 +222,9 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
 
     // A context-aware property schema promotes this contextless object to context-aware.
 
+    /// <summary>
+    /// Adds a context-aware property validator, promoting this schema to context-aware (see <see cref="Using{TContext}()"/>).
+    /// </summary>
     public ObjectContextSchema<T, TContext> Property<TProperty, TContext>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty, TContext> schema)
@@ -232,6 +241,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         where TProperty : class
         => Using<TContext>().Property(propertySelector, (ISchema<TProperty, TContext>)schema);
 
+    /// <summary>Attaches an object-level refinement error to a specific property path instead of the root ("$").</summary>
     public ObjectContextlessSchema<T> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, bool> predicate,
@@ -241,6 +251,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return RefineAt(propertySelector, predicate, _ => message, code);
     }
 
+    /// <summary>Attaches an object-level refinement error, with a dynamic message, to a specific property path instead of the root ("$").</summary>
     public ObjectContextlessSchema<T> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         Func<T, bool> predicate,

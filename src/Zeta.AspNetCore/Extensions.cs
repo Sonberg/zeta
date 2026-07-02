@@ -23,7 +23,7 @@ public static class ZetaExtensions
     /// </summary>
     public static RouteHandlerBuilder WithValidation<T, TContext>(this RouteHandlerBuilder builder, ISchema<T, TContext> schema)
     {
-        return builder.AddEndpointFilter(new ValidationFilter<T, TContext>(schema));
+        return builder.AddEndpointFilter(new ContextValidationFilter<T, TContext>(schema));
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public static class ZetaExtensions
     /// </summary>
     public static RouteHandlerBuilder WithValidation<T, TContext>(this RouteHandlerBuilder builder, IContextSchema<T, TContext> schema)
     {
-        return builder.AddEndpointFilter(new ValidationFilter<T, TContext>(schema));
+        return builder.AddEndpointFilter(new ContextValidationFilter<T, TContext>(schema));
     }
 
     /// <summary>
@@ -85,6 +85,27 @@ public static class ZetaExtensions
     }
 
     /// <summary>
+    /// Converts a context-aware validation Result to an IActionResult.
+    /// Returns BadRequest with ValidationProblemDetails on failure, or invokes onSuccess on success.
+    /// </summary>
+    public static IActionResult ToActionResult<T, TContext>(this Result<T, TContext> result, Func<T, IActionResult> onSuccess)
+    {
+        return result.Match(
+            success: onSuccess,
+            failure: errors => new BadRequestObjectResult(new ValidationProblemDetails(errors.ToPathDictionary()))
+        );
+    }
+
+    /// <summary>
+    /// Converts a context-aware validation Result to an IActionResult.
+    /// Returns BadRequest with ValidationProblemDetails on failure, or Ok with the value on success.
+    /// </summary>
+    public static IActionResult ToActionResult<T, TContext>(this Result<T, TContext> result)
+    {
+        return result.ToActionResult(value => new OkObjectResult(value));
+    }
+
+    /// <summary>
     /// Converts a validation Result to a Minimal API IResult.
     /// Returns ValidationProblem on failure, or invokes onSuccess on success.
     /// </summary>
@@ -101,6 +122,27 @@ public static class ZetaExtensions
     /// Returns ValidationProblem on failure, or Ok with the value on success.
     /// </summary>
     public static IResult ToResult<T>(this Result<T> result)
+    {
+        return result.ToResult(Results.Ok);
+    }
+
+    /// <summary>
+    /// Converts a context-aware validation Result to a Minimal API IResult.
+    /// Returns ValidationProblem on failure, or invokes onSuccess on success.
+    /// </summary>
+    public static IResult ToResult<T, TContext>(this Result<T, TContext> result, Func<T, IResult> onSuccess)
+    {
+        return result.Match(
+            success: onSuccess,
+            failure: errors => Results.ValidationProblem(errors.ToPathDictionary())
+        );
+    }
+
+    /// <summary>
+    /// Converts a context-aware validation Result to a Minimal API IResult.
+    /// Returns ValidationProblem on failure, or Ok with the value on success.
+    /// </summary>
+    public static IResult ToResult<T, TContext>(this Result<T, TContext> result)
     {
         return result.ToResult(Results.Ok);
     }

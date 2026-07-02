@@ -111,6 +111,18 @@ public static class DictionarySchemaExtensions
 
 #endif
     /// <summary>
+    /// Applies transformations to the enum key schema for each key in the dictionary.
+    /// </summary>
+    public static DictionaryContextlessSchema<TEnum, TValue> EachKey<TEnum, TValue>(
+        this DictionaryContextlessSchema<TEnum, TValue> schema,
+        Func<EnumContextlessSchema<TEnum>, ISchema<TEnum>> keyTransform)
+        where TEnum : struct, Enum
+    {
+        var newKeySchema = keyTransform(Z.Enum<TEnum>());
+        return schema.WithKeySchema(newKeySchema);
+    }
+
+    /// <summary>
     /// Applies transformations to the string value schema for each value in the dictionary.
     /// </summary>
     public static DictionaryContextlessSchema<TKey, string> EachValue<TKey>(
@@ -221,6 +233,19 @@ public static class DictionarySchemaExtensions
 
 #endif
     /// <summary>
+    /// Applies transformations to the enum value schema for each value in the dictionary.
+    /// </summary>
+    public static DictionaryContextlessSchema<TKey, TEnum> EachValue<TKey, TEnum>(
+        this DictionaryContextlessSchema<TKey, TEnum> schema,
+        Func<EnumContextlessSchema<TEnum>, ISchema<TEnum>> valueTransform)
+        where TKey : notnull
+        where TEnum : struct, Enum
+    {
+        var newValueSchema = valueTransform(Z.Enum<TEnum>());
+        return schema.WithValueSchema(newValueSchema);
+    }
+
+    /// <summary>
     /// Applies transformations to the string key schema for each key in the dictionary.
     /// </summary>
     public static DictionaryContextSchema<string, TValue, TContext> EachKey<TValue, TContext>(
@@ -321,6 +346,18 @@ public static class DictionarySchemaExtensions
     }
 
 #endif
+    /// <summary>
+    /// Applies transformations to the enum key schema for each key in the dictionary.
+    /// </summary>
+    public static DictionaryContextSchema<TEnum, TValue, TContext> EachKey<TEnum, TValue, TContext>(
+        this DictionaryContextSchema<TEnum, TValue, TContext> schema,
+        Func<EnumContextlessSchema<TEnum>, ISchema<TEnum, TContext>> keyTransform)
+        where TEnum : struct, Enum
+    {
+        var newKeySchema = keyTransform(Z.Enum<TEnum>());
+        return schema.WithKeySchema(newKeySchema);
+    }
+
     /// <summary>
     /// Applies transformations to the string value schema for each value in the dictionary.
     /// </summary>
@@ -431,4 +468,16 @@ public static class DictionarySchemaExtensions
     }
 
 #endif
+    /// <summary>
+    /// Applies transformations to the enum value schema for each value in the dictionary.
+    /// </summary>
+    public static DictionaryContextSchema<TKey, TEnum, TContext> EachValue<TKey, TEnum, TContext>(
+        this DictionaryContextSchema<TKey, TEnum, TContext> schema,
+        Func<EnumContextlessSchema<TEnum>, ISchema<TEnum, TContext>> valueTransform)
+        where TKey : notnull
+        where TEnum : struct, Enum
+    {
+        var newValueSchema = valueTransform(Z.Enum<TEnum>());
+        return schema.WithValueSchema(newValueSchema);
+    }
 }

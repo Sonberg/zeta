@@ -46,4 +46,13 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
     {
         return Using<TContext>().WithContextFactory(factory);
     }
+
+    /// <summary>
+    /// Creates a context-aware int schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public IntContextSchema<TContext> Using<TContext>(
+        Func<int, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
+    }
 }

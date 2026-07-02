@@ -117,4 +117,13 @@ public sealed class CollectionContextlessSchema<TElement> : ContextlessSchema<IC
     {
         return Using<TContext>().WithContextFactory(factory);
     }
+
+    /// <summary>
+    /// Creates a context-aware collection schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public CollectionContextSchema<TElement, TContext> Using<TContext>(
+        Func<ICollection<TElement>, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
+    }
 }

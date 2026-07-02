@@ -3,6 +3,26 @@ using Zeta.Core;
 namespace Zeta.Rules.Numeric;
 
 /// <summary>
+/// Validates that an int value is negative (less than 0).
+/// </summary>
+public readonly struct NegativeIntRule : IValidationRule<int>
+{
+    private readonly string? _message;
+
+    public NegativeIntRule(string? message = null)
+    {
+        _message = message;
+    }
+
+    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
+    {
+        var error = value < 0
+            ? null
+            : new ValidationError(context.PathSegments, "negative", _message ?? "Must be negative");
+        return ValueTaskHelper.FromResult(error);
+    }
+}
+/// <summary>
 /// Validates that a double value is negative (less than 0).
 /// </summary>
 public readonly struct NegativeDoubleRule : IValidationRule<double>

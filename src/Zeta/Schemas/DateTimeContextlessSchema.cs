@@ -46,4 +46,13 @@ public sealed class DateTimeContextlessSchema : ContextlessSchema<DateTime, Date
     {
         return Using<TContext>().WithContextFactory(factory);
     }
+
+    /// <summary>
+    /// Creates a context-aware DateTime schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public DateTimeContextSchema<TContext> Using<TContext>(
+        Func<DateTime, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
+    }
 }

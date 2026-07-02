@@ -9,56 +9,42 @@ namespace Zeta;
 /// </summary>
 public static class TimeOnlySchemaExtensions
 {
+    /// <summary>Requires the value to be at or after <paramref name="min"/>.</summary>
     public static TSelf Min<TSelf>(this IValueSchema<TimeOnly, TSelf> schema, TimeOnly min, string? message = null)
         where TSelf : IValueSchema<TimeOnly, TSelf>
-        => schema.AppendRule(new RefinementRule<TimeOnly>((val, exec) =>
-            val >= min
-                ? null
-                : new ValidationError(exec.PathSegments, "min_time", message ?? $"Must be at or after {min:t}")));
+        => schema.AppendRule(new TimeOnlyMinRule(min, message));
 
+    /// <summary>Requires the value to be at or before <paramref name="max"/>.</summary>
     public static TSelf Max<TSelf>(this IValueSchema<TimeOnly, TSelf> schema, TimeOnly max, string? message = null)
         where TSelf : IValueSchema<TimeOnly, TSelf>
-        => schema.AppendRule(new RefinementRule<TimeOnly>((val, exec) =>
-            val <= max
-                ? null
-                : new ValidationError(exec.PathSegments, "max_time", message ?? $"Must be at or before {max:t}")));
+        => schema.AppendRule(new TimeOnlyMaxRule(max, message));
 
+    /// <summary>Requires the value to fall within the inclusive range [<paramref name="min"/>, <paramref name="max"/>].</summary>
     public static TSelf Between<TSelf>(this IValueSchema<TimeOnly, TSelf> schema, TimeOnly min, TimeOnly max, string? message = null)
         where TSelf : IValueSchema<TimeOnly, TSelf>
-        => schema.AppendRule(new RefinementRule<TimeOnly>((val, exec) =>
-            val >= min && val <= max
-                ? null
-                : new ValidationError(exec.PathSegments, "between", message ?? $"Must be between {min:t} and {max:t}")));
+        => schema.AppendRule(new TimeOnlyBetweenRule(min, max, message));
 
+    /// <summary>Requires the value to fall within business hours (defaults to 09:00-17:00).</summary>
     public static TSelf BusinessHours<TSelf>(this IValueSchema<TimeOnly, TSelf> schema, TimeOnly? start = null, TimeOnly? end = null, string? message = null)
         where TSelf : IValueSchema<TimeOnly, TSelf>
     {
         var businessStart = start ?? new TimeOnly(9, 0);
         var businessEnd = end ?? new TimeOnly(17, 0);
-        return schema.AppendRule(new RefinementRule<TimeOnly>((val, exec) =>
-            val >= businessStart && val <= businessEnd
-                ? null
-                : new ValidationError(exec.PathSegments, "business_hours", message ?? $"Must be during business hours ({businessStart:t} - {businessEnd:t})")));
+        return schema.AppendRule(new TimeOnlyBusinessHoursRule(businessStart, businessEnd, message));
     }
 
+    /// <summary>Requires the value to be before 12:00.</summary>
     public static TSelf Morning<TSelf>(this IValueSchema<TimeOnly, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<TimeOnly, TSelf>
-        => schema.AppendRule(new RefinementRule<TimeOnly>((val, exec) =>
-            val.Hour < 12
-                ? null
-                : new ValidationError(exec.PathSegments, "morning", message ?? "Must be in the morning (before 12:00)")));
+        => schema.AppendRule(new TimeOnlyMorningRule(message));
 
+    /// <summary>Requires the value to be between 12:00 and 18:00.</summary>
     public static TSelf Afternoon<TSelf>(this IValueSchema<TimeOnly, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<TimeOnly, TSelf>
-        => schema.AppendRule(new RefinementRule<TimeOnly>((val, exec) =>
-            val.Hour >= 12 && val.Hour < 18
-                ? null
-                : new ValidationError(exec.PathSegments, "afternoon", message ?? "Must be in the afternoon (12:00 - 18:00)")));
+        => schema.AppendRule(new TimeOnlyAfternoonRule(message));
 
+    /// <summary>Requires the value to be at or after 18:00.</summary>
     public static TSelf Evening<TSelf>(this IValueSchema<TimeOnly, TSelf> schema, string? message = null)
         where TSelf : IValueSchema<TimeOnly, TSelf>
-        => schema.AppendRule(new RefinementRule<TimeOnly>((val, exec) =>
-            val.Hour >= 18
-                ? null
-                : new ValidationError(exec.PathSegments, "evening", message ?? "Must be in the evening (after 18:00)")));
+        => schema.AppendRule(new TimeOnlyEveningRule(message));
 }

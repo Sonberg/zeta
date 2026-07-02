@@ -46,4 +46,13 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
     {
         return Using<TContext>().WithContextFactory(factory);
     }
+
+    /// <summary>
+    /// Creates a context-aware bool schema with a synchronous factory delegate for creating context data.
+    /// </summary>
+    public BoolContextSchema<TContext> Using<TContext>(
+        Func<bool, IServiceProvider, TContext> factory)
+    {
+        return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
+    }
 }
