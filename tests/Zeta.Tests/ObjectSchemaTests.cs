@@ -8,8 +8,8 @@ public class ObjectSchemaTests
     [Fact]
     public async Task Field_PropagatesValidation()
     {
-        var schema = Z.Object<User>()
-            .Field(u => u.Name, Z.String().MinLength(3));
+        var schema = Z.Schema<User>()
+            .Property(u => u.Name, Z.String().MinLength(3));
 
         var valid = await schema.ValidateAsync(new User("Joe", 20, new Address("City", "12345")));
         Assert.True(valid.IsSuccess);
@@ -36,11 +36,11 @@ public class ObjectSchemaTests
     [Fact]
     public async Task NestedField_PropagatesPath()
     {
-        var addressSchema = Z.Object<Address>()
-            .Field(a => a.Zip, Z.String().MinLength(5));
+        var addressSchema = Z.Schema<Address>()
+            .Property(a => a.Zip, Z.String().MinLength(5));
 
-        var userSchema = Z.Object<User>()
-            .Field(u => u.Address, addressSchema);
+        var userSchema = Z.Schema<User>()
+            .Property(u => u.Address, addressSchema);
 
         var user = new User("Joe", 20, new Address("City", "123")); // Invalid Zip
 
@@ -56,8 +56,8 @@ public class ObjectSchemaTests
     [Fact]
     public async Task Context_PropagatesToFields()
     {
-        var schema = Z.Object<User>()
-            .Field(u => u.Name, Z.String())
+        var schema = Z.Schema<User>()
+            .Property(u => u.Name, Z.String())
             .Using<BanContext>()
             .Refine((user, ctx) => user.Name != ctx.BannedName, "Name is banned");
 
@@ -155,8 +155,8 @@ public class ObjectSchemaTests
             .Using<EmailContext>()
             .Refine((email, ctx) => !email.EndsWith($"@{ctx.BannedDomain}"), "Email domain is banned");
 
-        var schema = Z.Object<User>()
-            .Field(u => u.Name, contextAwareEmailSchema);
+        var schema = Z.Schema<User>()
+            .Property(u => u.Name, contextAwareEmailSchema);
 
         var context = new EmailContext("banned.com");
 
@@ -196,9 +196,9 @@ public class ObjectSchemaTests
             .Refine((email, ctx) => !email.EndsWith($"@{ctx.BannedDomain}"), "Email domain is banned");
 
         // After implicit promotion, we should be able to chain more fields and refinements
-        var schema = Z.Object<User>()
-            .Field(u => u.Name, contextAwareEmailSchema)
-            .Field(u => u.Age, Z.Int().Min(18))
+        var schema = Z.Schema<User>()
+            .Property(u => u.Name, contextAwareEmailSchema)
+            .Property(u => u.Age, Z.Int().Min(18))
             .Refine((user, ctx) => user.Age >= 21 || !user.Name.EndsWith($"@{ctx.BannedDomain}"),
                 "Must be 21+ for this domain");
 
@@ -214,9 +214,9 @@ public class ObjectSchemaTests
     public async Task Using_SingleParameter_AllowsContextInference()
     {
         // The new .Using<TContext>() syntax infers T from the ObjectSchema<T>
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .Using<BanContext>()
-            .Field(u => u.Name, Z.String().MinLength(2))
+            .Property(u => u.Name, Z.String().MinLength(2))
             .Refine((user, ctx) => user.Name != ctx.BannedName, "Name is banned");
 
         var context = new BanContext("BadName");
@@ -232,11 +232,11 @@ public class ObjectSchemaTests
     [Fact]
     public async Task Using_SingleParameter_ChainsWithContextAwareFields()
     {
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .Using<BanContext>()
-            .Field(u => u.Name, Z.String().Using<BanContext>()
+            .Property(u => u.Name, Z.String().Using<BanContext>()
                 .Refine((name, ctx) => name != ctx.BannedName, "Field name is banned"))
-            .Field(u => u.Age, Z.Int().Min(0));
+            .Property(u => u.Age, Z.Int().Min(0));
 
         var context = new BanContext("Forbidden");
 
@@ -252,7 +252,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_Contextless_StringProperty_ValidatesWithInlineBuilder()
     // {
-    //     var schema = Z.Object<UserProfile>()
+    //     var schema = Z.Schema<UserProfile>()
     //         .When(
     //             u => u.RequiresPassword,
     //             then => then.Select(u => u.Password, s => s.MinLength(8).MaxLength(100)));
@@ -266,7 +266,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_Contextless_StringProperty_PassesValidation()
     // {
-    //     var schema = Z.Object<UserProfile>()
+    //     var schema = Z.Schema<UserProfile>()
     //         .When(
     //             u => u.RequiresPassword,
     //             then => then.Select(u => u.Password, s => s.MinLength(8).MaxLength(100)));
@@ -279,7 +279,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_Contextless_SkipsWhenConditionFalse()
     // {
-    //     var schema = Z.Object<UserProfile>()
+    //     var schema = Z.Schema<UserProfile>()
     //         .When(
     //             u => u.RequiresPassword,
     //             then => then.Select(u => u.Password, s => s.MinLength(8)));
@@ -295,7 +295,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_ContextAware_DecimalProperty_ValidatesWithInlineBuilder()
     // {
-    //     var schema = Z.Object<Product>()
+    //     var schema = Z.Schema<Product>()
     //         .Using<ProductContext>()
     //         .When(
     //             (_, ctx) => ctx.EnforceMinPrice,
@@ -312,7 +312,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_ContextAware_IntProperty_ValidatesWithInlineBuilder()
     // {
-    //     var schema = Z.Object<Product>()
+    //     var schema = Z.Schema<Product>()
     //         .Using<ProductContext>()
     //         .When(
     //             p => p.Name != null,
@@ -329,7 +329,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_ContextAware_DoubleProperty_ValidatesWithInlineBuilder()
     // {
-    //     var schema = Z.Object<Product>()
+    //     var schema = Z.Schema<Product>()
     //         .Using<ProductContext>()
     //         .When(
     //             p => p.Name != null,
@@ -346,7 +346,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_MultipleFieldsChained_ValidatesAll()
     // {
-    //     var schema = Z.Object<UserProfile>()
+    //     var schema = Z.Schema<UserProfile>()
     //         .When(
     //             u => u.RequiresPassword,
     //             then => then
@@ -366,7 +366,7 @@ public class ObjectSchemaTests
     // [Fact]
     // public async Task Select_WithElseBranch_ExecutesCorrectBranch()
     // {
-    //     var schema = Z.Object<UserProfile>()
+    //     var schema = Z.Schema<UserProfile>()
     //         .When(
     //             u => u.RequiresPassword,
     //             then => then.Select(u => u.Password, s => s.MinLength(8)),

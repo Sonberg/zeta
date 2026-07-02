@@ -155,8 +155,8 @@ public class UsingTests
     [Fact]
     public async Task Using_InObjectSchema_Works()
     {
-        var userSchema = Z.Object<User>()
-            .Field(u => u.Email, Z.String().Email())
+        var userSchema = Z.Schema<User>()
+            .Property(u => u.Email, Z.String().Email())
             .Using<UserContext>()
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned", "banned_email");
 
@@ -272,8 +272,8 @@ public class UsingTests
     [Fact]
     public async Task Using_ObjectSchema_Works()
     {
-        var innerSchema = Z.Object<User>()
-            .Field(u => u.Email, Z.String().Email());
+        var innerSchema = Z.Schema<User>()
+            .Property(u => u.Email, Z.String().Email());
 
         var schema = innerSchema
             .Using<UserContext>()
@@ -379,9 +379,9 @@ public class UsingTests
     public async Task Using_FieldAfterUsing_Works()
     {
         // Can add fields after WithContext
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .Using<UserContext>()
-            .Field(u => u.Email, Z.String().Email())
+            .Property(u => u.Email, Z.String().Email())
             .Refine((user, ctx) => user.Email != ctx.BannedEmail, "Email is banned");
 
         var context = new UserContext("banned@example.com", 100);
@@ -404,9 +404,9 @@ public class UsingTests
     public async Task Using_FieldsTransferFromContextless()
     {
         // Fields TRANSFER when calling Using() - they can be added before
-        var schema = Z.Object<Person>()
-            .Field(p => p.Name, Z.String().MinLength(2))
-            .Field(p => p.Age, Z.Int().Min(0))
+        var schema = Z.Schema<Person>()
+            .Property(p => p.Name, Z.String().MinLength(2))
+            .Property(p => p.Age, Z.Int().Min(0))
             .Using<UserContext>()
             .Refine((person, ctx) => person.Age <= ctx.MaxValue, "Age exceeds maximum");
 
@@ -434,9 +434,9 @@ public class UsingTests
     [Fact]
     public async Task Using_WhenAfterUsing_Works()
     {
-        var schema = Z.Object<Order>()
+        var schema = Z.Schema<Order>()
             .Using<UserContext>()
-            .Field(o => o.Total, Z.Decimal().Min(0));
+            .Property(o => o.Total, Z.Decimal().Min(0));
             // .When(
             //     o => o.Total > 100,
             //     then => then.Require(o => o.DiscountCode));
@@ -495,7 +495,7 @@ public class UsingTests
         Func<User, IServiceProvider, CancellationToken, ValueTask<UserContext>> factory =
             (value, sp, ct) => ValueTask.FromResult(new UserContext(value.Email, 100));
 
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .Using(factory);
 
         var factorySchema = schema as IContextFactorySchema<User, UserContext>;

@@ -55,8 +55,6 @@ public class RegisterEndpoint : ZetaEndpoint<RegisterRequest>
 
 A `ZetaEndpoint<TRequest, TResponse>` overload is also available for endpoints with a typed response.
 
-`Z.Schema<T>()` / `.Property()` are the preferred names. `Z.Object<T>()` / `.Field()` are supported aliases.
-
 ### Option 2 — `ZetaPreProcessor<TRequest>` directly
 
 If you need to keep your own base class, register the pre-processor explicitly:
@@ -102,9 +100,9 @@ no `Validate(Schema)` or `PreProcessors(...)` call needed in `Configure()`:
 public class CreateOrderEndpoint : Endpoint<CreateOrderRequest>
 {
     private static readonly ISchema<CreateOrderRequest> Schema =
-        Z.Object<CreateOrderRequest>()
-            .Field(r => r.ProductId, s => s.NotEmpty())
-            .Field(r => r.Quantity, s => s.Min(1));
+        Z.Schema<CreateOrderRequest>()
+            .Property(r => r.ProductId, s => s.NotEmpty())
+            .Property(r => r.Quantity, s => s.Min(1));
 
     public override void Configure()
     {
@@ -132,9 +130,9 @@ sent the error response.
 Use `.Refine()` for rules that span multiple fields:
 
 ```csharp
-var schema = Z.Object<DateRangeRequest>()
-    .Field(r => r.StartDate, s => s.Future())
-    .Field(r => r.EndDate, s => s.Future())
+var schema = Z.Schema<DateRangeRequest>()
+    .Property(r => r.StartDate, s => s.Future())
+    .Property(r => r.EndDate, s => s.Future())
     // RefineAt attaches the cross-field error to a specific property ($.endDate)
     .RefineAt(r => r.EndDate, r => r.EndDate > r.StartDate, "End date must be after start date");
 ```
@@ -142,14 +140,14 @@ var schema = Z.Object<DateRangeRequest>()
 For async cross-field validation (e.g. database lookups), use `.Using<TContext>()`:
 
 ```csharp
-var schema = Z.Object<CheckoutRequest>()
+var schema = Z.Schema<CheckoutRequest>()
     .Using<InventoryContext>(async (req, sp, ct) =>
     {
         var svc = sp.GetRequiredService<IInventoryService>();
         return new InventoryContext(await svc.IsAvailableAsync(req.ProductId, req.Quantity, ct));
     })
-    .Field(r => r.ProductId, s => s.NotEmpty())
-    .Field(r => r.Quantity, s => s.Min(1))
+    .Property(r => r.ProductId, s => s.NotEmpty())
+    .Property(r => r.Quantity, s => s.Min(1))
     .Refine((r, ctx) => ctx.IsAvailable, "Product not available in requested quantity");
 ```
 

@@ -37,14 +37,13 @@ internal static class ObjectSchemaFieldGenerator
         GenerateDictionaryOverloads(methods);
 
         var fieldMethods = methods.ToString();
-        sb.Append(fieldMethods);
-        sb.Append(GeneratePropertyAliases(fieldMethods));
+        sb.Append(RenameFieldToProperty(fieldMethods));
 
         sb.AppendLine("}");
         return sb.ToString();
     }
 
-    private static string GeneratePropertyAliases(string fieldMethods)
+    private static string RenameFieldToProperty(string fieldMethods)
     {
         return fieldMethods
             .Replace(" Field(", " Property(")
@@ -163,7 +162,7 @@ internal static class ObjectSchemaFieldGenerator
                           {
                               var propertyName = GetPropertyName(propertySelector);
                               var getter = CreateGetter(propertySelector);
-                              return AddField(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema(Z.Object<TProperty>())));
+                              return AddField(new FieldContextlessValidator<T, TProperty>(propertyName, getter, schema(Z.Schema<TProperty>())));
                           }
                       """);
     }

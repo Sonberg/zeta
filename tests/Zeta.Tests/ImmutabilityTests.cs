@@ -59,8 +59,8 @@ public class ImmutabilityTests
     [Fact]
     public async Task ObjectSchema_Field_ReturnsNewInstance()
     {
-        var baseSchema = Z.Object<User>();
-        var withName = baseSchema.Field(u => u.Name, s => s.MinLength(3));
+        var baseSchema = Z.Schema<User>();
+        var withName = baseSchema.Property(u => u.Name, s => s.MinLength(3));
 
         // baseSchema should have no field validation
         var baseResult = await baseSchema.ValidateAsync(new User("", 25, null));
@@ -74,10 +74,10 @@ public class ImmutabilityTests
     [Fact]
     public async Task ObjectSchema_MultipleFields_ChainCorrectly()
     {
-        var schema1 = Z.Object<User>()
-            .Field(u => u.Name, s => s.MinLength(3));
+        var schema1 = Z.Schema<User>()
+            .Property(u => u.Name, s => s.MinLength(3));
         var schema2 = schema1
-            .Field(u => u.Age, s => s.Min(18));
+            .Property(u => u.Age, s => s.Min(18));
 
         // schema1 only validates Name
         var result1 = await schema1.ValidateAsync(new User("Alice", 10, null));

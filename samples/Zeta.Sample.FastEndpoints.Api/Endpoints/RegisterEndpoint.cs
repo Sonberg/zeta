@@ -10,14 +10,14 @@ namespace Zeta.Sample.FastEndpoints.Api.Endpoints;
 public class RegisterEndpoint : ZetaEndpoint<RegisterRequest>
 {
     private static readonly ISchema<RegisterRequest> Schema =
-        Z.Object<RegisterRequest>()
-            .Field(r => r.Email, Z.String().Email())
-            .Field(r => r.Password, Z.String()
+        Z.Schema<RegisterRequest>()
+            .Property(r => r.Email, Z.String().Email())
+            .Property(r => r.Password, Z.String()
                 .MinLength(8)
                 .Regex(@"[A-Z]", "Password must contain at least one uppercase letter")
                 .Regex(@"[a-z]", "Password must contain at least one lowercase letter")
                 .Regex(@"[0-9]", "Password must contain at least one digit"))
-            .Field(r => r.Age, Z.Int().Min(18).Max(120));
+            .Property(r => r.Age, Z.Int().Min(18).Max(120));
 
     public override void Configure()
     {

@@ -38,8 +38,8 @@ public class SchemaExtensionsMethodTests
             .Using<TestContext>()
             .MinLength(3);
 
-        var schema = Z.Object<Person>()
-            .Field(x => x.Nickname, fieldSchema);
+        var schema = Z.Schema<Person>()
+            .Property(x => x.Nickname, fieldSchema);
 
         var result = await schema.ValidateAsync(new Person("abcd", 10), new TestContext(99));
         Assert.True(result.IsSuccess);
@@ -48,8 +48,8 @@ public class SchemaExtensionsMethodTests
     [Fact]
     public async Task Field_ContextAwareNullableReference_IsCovered()
     {
-        var schema = Z.Object<Person>().Using<TestContext>()
-            .Field(x => x.Nickname, Z.String().MinLength(3));
+        var schema = Z.Schema<Person>().Using<TestContext>()
+            .Property(x => x.Nickname, Z.String().MinLength(3));
 
         var result = await schema.ValidateAsync(new Person("ab", 10), new TestContext(99));
         Assert.False(result.IsSuccess);
@@ -59,8 +59,8 @@ public class SchemaExtensionsMethodTests
     [Fact]
     public async Task Field_ContextlessNullableReference_IsCovered()
     {
-        var schema = Z.Object<Person>()
-            .Field(x => x.Nickname, Z.String().MinLength(3));
+        var schema = Z.Schema<Person>()
+            .Property(x => x.Nickname, Z.String().MinLength(3));
 
         var result = await schema.ValidateAsync(new Person("ab", 10));
         Assert.False(result.IsSuccess);

@@ -28,8 +28,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Nullable().Min(10).Max(100));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Nullable().Min(10).Max(100));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -42,8 +42,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_InlineBuilder_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10).Max(100));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10).Max(100));
 
         var result = await schema.ValidateAsync(new TestModel(5, 50, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -56,8 +56,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10).Max(100));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10).Max(100));
 
         var result = await schema.ValidateAsync(new TestModel(5, 5, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -72,8 +72,8 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_PrebuiltSchema_NullValue_Succeeds()
     {
         var intSchema = Z.Int().Min(10).Max(100);
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, intSchema.Nullable());
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, intSchema.Nullable());
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -87,8 +87,8 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_PrebuiltSchema_ValidValue_Succeeds()
     {
         var intSchema = Z.Int().Min(10).Max(100);
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, intSchema);
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, intSchema);
 
         var result = await schema.ValidateAsync(new TestModel(5, 50, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -102,8 +102,8 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_PrebuiltSchema_InvalidValue_Fails()
     {
         var intSchema = Z.Int().Min(10).Max(100);
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, intSchema);
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, intSchema);
 
         var result = await schema.ValidateAsync(new TestModel(5, 5, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -121,8 +121,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDouble_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDouble, s => s.Nullable().Min(1.5).Max(10.5));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDouble, s => s.Nullable().Min(1.5).Max(10.5));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -135,8 +135,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDouble_InlineBuilder_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDouble, s => s.Min(1.5).Max(10.5));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDouble, s => s.Min(1.5).Max(10.5));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, 5.0, null, null, null, null
 #if !NETSTANDARD2_0
@@ -149,8 +149,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDouble_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDouble, s => s.Min(1.5).Max(10.5));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDouble, s => s.Min(1.5).Max(10.5));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, 0.5, null, null, null, null
 #if !NETSTANDARD2_0
@@ -168,8 +168,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDecimal_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDecimal, s => s.Nullable().Positive().Precision(2));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDecimal, s => s.Nullable().Positive().Precision(2));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -182,8 +182,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDecimal_InlineBuilder_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDecimal, s => s.Positive().Precision(2));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDecimal, s => s.Positive().Precision(2));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, 10.5m, null, null, null
 #if !NETSTANDARD2_0
@@ -196,8 +196,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDecimal_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDecimal, s => s.Positive().Precision(2));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDecimal, s => s.Positive().Precision(2));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, -5.0m, null, null, null
 #if !NETSTANDARD2_0
@@ -215,8 +215,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableBool_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableBool, s => s.Refine(b => b, "Must be true").Nullable());
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableBool, s => s.Refine(b => b, "Must be true").Nullable());
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -229,8 +229,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableBool_InlineBuilder_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableBool, s => s.Refine(b => b, "Must be true"));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableBool, s => s.Refine(b => b, "Must be true"));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, true, null, null
 #if !NETSTANDARD2_0
@@ -243,8 +243,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableBool_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableBool, s => s.Refine(b => b == true, "Must be true"));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableBool, s => s.Refine(b => b == true, "Must be true"));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, false, null, null
 #if !NETSTANDARD2_0
@@ -262,8 +262,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableGuid_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableGuid, s => s.Nullable().Refine(g => g != Guid.Empty, "Must not be empty"));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableGuid, s => s.Nullable().Refine(g => g != Guid.Empty, "Must not be empty"));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -277,8 +277,8 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableGuid_InlineBuilder_ValidValue_Succeeds()
     {
         var validGuid = Guid.NewGuid();
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableGuid, s => s.Refine(g => g != Guid.Empty, "Must not be empty"));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableGuid, s => s.Refine(g => g != Guid.Empty, "Must not be empty"));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, validGuid, null
 #if !NETSTANDARD2_0
@@ -291,8 +291,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableGuid_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableGuid, s => s.Refine(g => g != Guid.Empty, "Must not be empty"));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableGuid, s => s.Refine(g => g != Guid.Empty, "Must not be empty"));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, Guid.Empty, null
 #if !NETSTANDARD2_0
@@ -310,8 +310,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateTime_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateTime, s => s.Nullable().Min(new DateTime(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateTime, s => s.Nullable().Min(new DateTime(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -324,8 +324,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateTime_InlineBuilder_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateTime, s => s.Min(new DateTime(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateTime, s => s.Min(new DateTime(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, new DateTime(2023, 1, 1)
 #if !NETSTANDARD2_0
@@ -338,8 +338,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateTime_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateTime, s => s.Min(new DateTime(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateTime, s => s.Min(new DateTime(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, new DateTime(2019, 1, 1)
 #if !NETSTANDARD2_0
@@ -358,8 +358,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateOnly_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateOnly, s => s.Nullable().Min(new DateOnly(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateOnly, s => s.Nullable().Min(new DateOnly(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, null));
         Assert.True(result.IsSuccess);
@@ -368,8 +368,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateOnly_InlineBuilder_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateOnly, s => s.Min(new DateOnly(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateOnly, s => s.Min(new DateOnly(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, new DateOnly(2023, 1, 1), null));
         Assert.True(result.IsSuccess);
@@ -378,8 +378,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateOnly_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateOnly, s => s.Min(new DateOnly(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateOnly, s => s.Min(new DateOnly(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, new DateOnly(2019, 1, 1), null));
         Assert.False(result.IsSuccess);
@@ -393,8 +393,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableTimeOnly_InlineBuilder_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableTimeOnly, s => s.Nullable().Min(new TimeOnly(9, 0)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableTimeOnly, s => s.Nullable().Min(new TimeOnly(9, 0)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, null));
         Assert.True(result.IsSuccess);
@@ -403,8 +403,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableTimeOnly_InlineBuilder_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableTimeOnly, s => s.Min(new TimeOnly(9, 0)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableTimeOnly, s => s.Min(new TimeOnly(9, 0)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, new TimeOnly(10, 0)));
         Assert.True(result.IsSuccess);
@@ -413,8 +413,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableTimeOnly_InlineBuilder_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableTimeOnly, s => s.Min(new TimeOnly(9, 0)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableTimeOnly, s => s.Min(new TimeOnly(9, 0)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, new TimeOnly(8, 0)));
         Assert.False(result.IsSuccess);
@@ -429,10 +429,10 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_MultipleNullableFields_AllNull_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10).Nullable())
-            .Field(x => x.NullableDouble, s => s.Min(1.5).Nullable())
-            .Field(x => x.NullableDecimal, s => s.Positive().Nullable());
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10).Nullable())
+            .Property(x => x.NullableDouble, s => s.Min(1.5).Nullable())
+            .Property(x => x.NullableDecimal, s => s.Positive().Nullable());
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -445,10 +445,10 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_MultipleNullableFields_AllValid_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10))
-            .Field(x => x.NullableDouble, s => s.Min(1.5))
-            .Field(x => x.NullableDecimal, s => s.Positive());
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10))
+            .Property(x => x.NullableDouble, s => s.Min(1.5))
+            .Property(x => x.NullableDecimal, s => s.Positive());
 
         var result = await schema.ValidateAsync(new TestModel(5, 20, 5.0, 10.5m, null, null, null
 #if !NETSTANDARD2_0
@@ -461,10 +461,10 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_MultipleNullableFields_MultipleInvalid_ReturnsAllErrors()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10))
-            .Field(x => x.NullableDouble, s => s.Min(1.5))
-            .Field(x => x.NullableDecimal, s => s.Positive());
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10))
+            .Property(x => x.NullableDouble, s => s.Min(1.5))
+            .Property(x => x.NullableDecimal, s => s.Positive());
 
         var result = await schema.ValidateAsync(new TestModel(5, 5, 0.5, -10.5m, null, null, null
 #if !NETSTANDARD2_0
@@ -485,8 +485,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -501,8 +501,8 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_PrebuiltSchema_NullWithoutNullable_Fails()
     {
         var intSchema = Z.Int().Min(10);
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, intSchema);
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, intSchema);
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -516,8 +516,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDouble_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDouble, s => s.Min(1.5));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDouble, s => s.Min(1.5));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -531,8 +531,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDecimal_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDecimal, s => s.Positive());
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDecimal, s => s.Positive());
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -546,8 +546,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableBool_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableBool, s => s.Refine(b => b, "Must be true"));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableBool, s => s.Refine(b => b, "Must be true"));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -561,8 +561,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableGuid_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableGuid, s => s.Refine(g => g != Guid.Empty, "Must not be empty"));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableGuid, s => s.Refine(g => g != Guid.Empty, "Must not be empty"));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -576,8 +576,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateTime_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateTime, s => s.Min(new DateTime(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateTime, s => s.Min(new DateTime(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -592,8 +592,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableDateOnly_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableDateOnly, s => s.Min(new DateOnly(2020, 1, 1)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableDateOnly, s => s.Min(new DateOnly(2020, 1, 1)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, null));
         Assert.False(result.IsSuccess);
@@ -603,8 +603,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableTimeOnly_InlineBuilder_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableTimeOnly, s => s.Min(new TimeOnly(9, 0)));
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableTimeOnly, s => s.Min(new TimeOnly(9, 0)));
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null, null, null));
         Assert.False(result.IsSuccess);
@@ -615,10 +615,10 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_MultipleNullableFields_AllNullWithoutNullable_ReturnsAllErrors()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10))
-            .Field(x => x.NullableDouble, s => s.Min(1.5))
-            .Field(x => x.NullableDecimal, s => s.Positive());
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10))
+            .Property(x => x.NullableDouble, s => s.Min(1.5))
+            .Property(x => x.NullableDecimal, s => s.Positive());
 
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
 #if !NETSTANDARD2_0
@@ -641,8 +641,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_NullValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Nullable().Min(10).Max(100))
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Nullable().Min(10).Max(100))
             .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
@@ -657,8 +657,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_ValidValue_Succeeds()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10).Max(100))
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10).Max(100))
             .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
@@ -673,8 +673,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_InvalidValue_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10).Max(100))
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10).Max(100))
             .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
@@ -690,8 +690,8 @@ public class ObjectSchemaNullableFieldTests
     [Fact]
     public async Task Field_NullableInt_ContextAware_NullWithoutNullable_Fails()
     {
-        var schema = Z.Object<TestModel>()
-            .Field(x => x.NullableInt, s => s.Min(10).Max(100))
+        var schema = Z.Schema<TestModel>()
+            .Property(x => x.NullableInt, s => s.Min(10).Max(100))
             .Using<UserContext>();
 
         var context = Z.Context(new UserContext("banned@test.com"));
@@ -708,9 +708,9 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_NullWithoutNullable_Fails()
     {
         var intSchema = Z.Int().Min(10).Using<UserContext>();
-        var schema = Z.Object<TestModel>()
+        var schema = Z.Schema<TestModel>()
             .Using<UserContext>()
-            .Field(x => x.NullableInt, intSchema);
+            .Property(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
@@ -726,9 +726,9 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_NullValue_Succeeds()
     {
         var intSchema = Z.Int().Nullable().Min(10).Using<UserContext>();
-        var schema = Z.Object<TestModel>()
+        var schema = Z.Schema<TestModel>()
             .Using<UserContext>()
-            .Field(x => x.NullableInt, intSchema);
+            .Property(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, null, null, null, null, null, null
@@ -743,9 +743,9 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_ValidValue_Succeeds()
     {
         var intSchema = Z.Int().Min(10).Using<UserContext>();
-        var schema = Z.Object<TestModel>()
+        var schema = Z.Schema<TestModel>()
             .Using<UserContext>()
-            .Field(x => x.NullableInt, intSchema);
+            .Property(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, 50, null, null, null, null, null
@@ -760,9 +760,9 @@ public class ObjectSchemaNullableFieldTests
     public async Task Field_NullableInt_ContextAware_PrebuiltSchema_InvalidValue_Fails()
     {
         var intSchema = Z.Int().Min(10).Using<UserContext>();
-        var schema = Z.Object<TestModel>()
+        var schema = Z.Schema<TestModel>()
             .Using<UserContext>()
-            .Field(x => x.NullableInt, intSchema);
+            .Property(x => x.NullableInt, intSchema);
 
         var context = Z.Context(new UserContext("banned@test.com"));
         var result = await schema.ValidateAsync(new TestModel(5, 5, null, null, null, null, null

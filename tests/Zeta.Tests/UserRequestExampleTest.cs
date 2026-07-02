@@ -13,9 +13,9 @@ public class UserRequestExampleTest
     [Fact]
     public async Task OriginalExample_InlineBuilder_WithNullBar_Succeeds()
     {
-        var schema = Z.Object<FooBar>()
-            .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, x => x.Min(1).Nullable());
+        var schema = Z.Schema<FooBar>()
+            .Property(x => x.Foo, x => x.Min(10).Max(100))
+            .Property(x => x.Bar, x => x.Min(1).Nullable());
 
         var result = await schema.ValidateAsync(new FooBar(50, null));
         Assert.True(result.IsSuccess);
@@ -24,9 +24,9 @@ public class UserRequestExampleTest
     [Fact]
     public async Task OriginalExample_InlineBuilder_WithValidBar_Succeeds()
     {
-        var schema = Z.Object<FooBar>()
-            .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, x => x.Min(1));
+        var schema = Z.Schema<FooBar>()
+            .Property(x => x.Foo, x => x.Min(10).Max(100))
+            .Property(x => x.Bar, x => x.Min(1));
 
         var result = await schema.ValidateAsync(new FooBar(50, 5));
         Assert.True(result.IsSuccess);
@@ -35,9 +35,9 @@ public class UserRequestExampleTest
     [Fact]
     public async Task OriginalExample_InlineBuilder_WithInvalidBar_Fails()
     {
-        var schema = Z.Object<FooBar>()
-            .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, x => x.Min(1));
+        var schema = Z.Schema<FooBar>()
+            .Property(x => x.Foo, x => x.Min(10).Max(100))
+            .Property(x => x.Bar, x => x.Min(1));
 
         var result = await schema.ValidateAsync(new FooBar(50, 0));
         Assert.False(result.IsSuccess);
@@ -47,9 +47,9 @@ public class UserRequestExampleTest
     [Fact]
     public async Task OriginalExample_PrebuiltSchema_WithNullBar_Succeeds()
     {
-        var schema = Z.Object<FooBar>()
-            .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, Z.Int().Nullable().Min(1));
+        var schema = Z.Schema<FooBar>()
+            .Property(x => x.Foo, x => x.Min(10).Max(100))
+            .Property(x => x.Bar, Z.Int().Nullable().Min(1));
 
         var result = await schema.ValidateAsync(new FooBar(50, null));
         Assert.True(result.IsSuccess);
@@ -58,9 +58,9 @@ public class UserRequestExampleTest
     [Fact]
     public async Task OriginalExample_PrebuiltSchema_WithValidBar_Succeeds()
     {
-        var schema = Z.Object<FooBar>()
-            .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, Z.Int().Min(1));
+        var schema = Z.Schema<FooBar>()
+            .Property(x => x.Foo, x => x.Min(10).Max(100))
+            .Property(x => x.Bar, Z.Int().Min(1));
 
         var result = await schema.ValidateAsync(new FooBar(50, 5));
         Assert.True(result.IsSuccess);
@@ -69,9 +69,9 @@ public class UserRequestExampleTest
     [Fact]
     public async Task OriginalExample_PrebuiltSchema_WithInvalidBar_Fails()
     {
-        var schema = Z.Object<FooBar>()
-            .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, Z.Int().Min(1));
+        var schema = Z.Schema<FooBar>()
+            .Property(x => x.Foo, x => x.Min(10).Max(100))
+            .Property(x => x.Bar, Z.Int().Min(1));
 
         var result = await schema.ValidateAsync(new FooBar(50, 0));
         Assert.False(result.IsSuccess);
@@ -81,9 +81,9 @@ public class UserRequestExampleTest
     [Fact]
     public async Task OriginalExample_BothFieldsInvalid_ReturnsAllErrors()
     {
-        var schema = Z.Object<FooBar>()
-            .Field(x => x.Foo, x => x.Min(10).Max(100))
-            .Field(x => x.Bar, x => x.Min(1));
+        var schema = Z.Schema<FooBar>()
+            .Property(x => x.Foo, x => x.Min(10).Max(100))
+            .Property(x => x.Bar, x => x.Min(1));
 
         var result = await schema.ValidateAsync(new FooBar(5, 0));
         Assert.False(result.IsSuccess);

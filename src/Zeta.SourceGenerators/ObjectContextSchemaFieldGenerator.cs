@@ -37,14 +37,13 @@ internal static class ObjectContextSchemaFieldGenerator
         GenerateDictionaryOverloads(methods);
 
         var fieldMethods = methods.ToString();
-        sb.Append(fieldMethods);
-        sb.Append(GeneratePropertyAliases(fieldMethods));
+        sb.Append(RenameFieldToProperty(fieldMethods));
 
         sb.AppendLine("}");
         return sb.ToString();
     }
 
-    private static string GeneratePropertyAliases(string fieldMethods)
+    private static string RenameFieldToProperty(string fieldMethods)
     {
         return fieldMethods
             .Replace(" Field(", " Property(")
@@ -220,7 +219,7 @@ internal static class ObjectContextSchemaFieldGenerator
                           {
                               var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                               var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                              return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema(Z.Object<TProperty>())));
+                              return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, schema(Z.Schema<TProperty>())));
                           }
 
                           /// <summary>
@@ -233,7 +232,7 @@ internal static class ObjectContextSchemaFieldGenerator
                           {
                               var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
                               var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-                              var configuredSchema = schema(Z.Object<TProperty>());
+                              var configuredSchema = schema(Z.Schema<TProperty>());
                               return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
                           }
                       """);

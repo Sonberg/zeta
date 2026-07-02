@@ -14,8 +14,8 @@ public class ValidationPathTests
     [Fact]
     public async Task ValidationError_ExposesStructuredPath()
     {
-        var schema = Z.Object<Container>()
-            .Field(x => x.Items, s => s.Each(Z.Object<Item>().Field(i => i.Quantity, q => q.Min(1))));
+        var schema = Z.Schema<Container>()
+            .Property(x => x.Items, s => s.Each(Z.Schema<Item>().Property(i => i.Quantity, q => q.Min(1))));
 
         var result = await schema.ValidateAsync(new Container([new Item(0)], []));
 

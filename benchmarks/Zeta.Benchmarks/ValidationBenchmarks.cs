@@ -19,10 +19,10 @@ public class ValidationBenchmarks
     private readonly UserDtoAnnotated _invalidUserAnnotated = new() { Name = "Jo", Email = "invalid-email", Age = 15 };
 
     // Zeta schemas
-    private readonly ISchema<UserDto> _zetaSchema = Z.Object<UserDto>()
-        .Field(u => u.Name, Z.String().MinLength(3).MaxLength(100))
-        .Field(u => u.Email, Z.String().Email())
-        .Field(u => u.Age, Z.Int().Range(18, 120));
+    private readonly ISchema<UserDto> _zetaSchema = Z.Schema<UserDto>()
+        .Property(u => u.Name, Z.String().MinLength(3).MaxLength(100))
+        .Property(u => u.Email, Z.String().Email())
+        .Property(u => u.Age, Z.Int().Range(18, 120));
 
     // FluentValidation validator
     private readonly FluentUserValidator _fluentValidator = new();

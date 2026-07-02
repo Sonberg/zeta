@@ -20,9 +20,9 @@ public class ReproIssueTests
     [Fact]
     public void ContextAwareSchema_WithFactory_CanBeAssignedToContextless()
     {
-        ISchema<Dog> schema = Z.Object<Dog>()
+        ISchema<Dog> schema = Z.Schema<Dog>()
             .Using<CatContext>(async (_, _, _) => new CatContext(true))
-            .Field(d => d.BarkVolum, v => v.Min(0).Max(100));
+            .Property(d => d.BarkVolum, v => v.Min(0).Max(100));
         Assert.NotNull(schema);
     }
 
@@ -36,17 +36,17 @@ public class ReproIssueTests
         var scope = provider.CreateScope();
         var zeta = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
-        var dogSchema = Z.Object<Dog>()
+        var dogSchema = Z.Schema<Dog>()
             .Using<CatContext>(async (_, _, _) => new CatContext(false))
-            .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
+            .Property(d => d.BarkVolum, v => v.Min(0).Max(100))
             .Refine((_, ctx) => ctx.Value, "Dog context value must be true");
 
-        var catSchema = Z.Object<Cat>()
-            .Field(c => c.ClawSharpness, v => v.Min(0).Max(100));
+        var catSchema = Z.Schema<Cat>()
+            .Property(c => c.ClawSharpness, v => v.Min(0).Max(100));
 
         // Schema stays contextless — context resolution happens via SelfResolvingSchema
-        var schema = Z.Object<IAnimal>()
-            .Field(x => x.Name, n => n.MinLength(3))
+        var schema = Z.Schema<IAnimal>()
+            .Property(x => x.Name, n => n.MinLength(3))
             .If(x => x is Dog, dogSchema)
             .If(x => x is Cat, catSchema);
 

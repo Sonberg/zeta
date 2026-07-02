@@ -29,8 +29,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_StringWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Name, s => s.MinLength(3).MaxLength(50));
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Name, s => s.MinLength(3).MaxLength(50));
 
         var validUser = new TestUser
         {
@@ -51,8 +51,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_IntWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Age, s => s.Min(18).Max(100));
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Age, s => s.Min(18).Max(100));
 
         var validUser = new TestUser
         {
@@ -73,8 +73,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_DecimalWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Balance, s => s.Positive().Precision(2));
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Balance, s => s.Positive().Precision(2));
 
         var validUser = new TestUser
         {
@@ -95,8 +95,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_DoubleWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Rating, s => s.Min(0.0).Max(5.0));
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Rating, s => s.Min(0.0).Max(5.0));
 
         var validUser = new TestUser
         {
@@ -117,11 +117,11 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_ObjectWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Address, u => u
-                .Field(x => x.Street, ss => ss.MinLength(5))
-                .Field(x => x.City, ss => ss.MinLength(2))
-                .Field(x => x.ZipCode, ss => ss.MinLength(4).MaxLength(10)));
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Address, u => u
+                .Property(x => x.Street, ss => ss.MinLength(5))
+                .Property(x => x.City, ss => ss.MinLength(2))
+                .Property(x => x.ZipCode, ss => ss.MinLength(4).MaxLength(10)));
 
         var validUser = new TestUser
         {
@@ -150,8 +150,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_CollectionWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Roles, u => u.MinLength(1));
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Roles, u => u.MinLength(1));
 
         var validUser = new TestUser
         {
@@ -176,11 +176,11 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_MultipleFieldsWithFluentBuilders_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Name, s => s.MinLength(2))
-            .Field(u => u.Age, s => s.Min(18))
-            .Field(u => u.Balance, s => s.Positive())
-            .Field(u => u.IsActive, s => s);
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Name, s => s.MinLength(2))
+            .Property(u => u.Age, s => s.Min(18))
+            .Property(u => u.Balance, s => s.Positive())
+            .Property(u => u.IsActive, s => s);
 
         var validUser = new TestUser
         {
@@ -197,8 +197,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_WithUsingPromotion_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Name, s => s.MinLength(3))
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Name, s => s.MinLength(3))
             .Using<TestContext>()
             .Refine((user, ctx) => user.Name != ctx.MagicWord, "Name cannot be magic word");
 
@@ -225,8 +225,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_BoolWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.IsActive, s => s.IsTrue());
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.IsActive, s => s.IsTrue());
 
         var validUser = new TestUser { IsActive = true };
         var result = await schema.ValidateAsync(validUser);
@@ -241,8 +241,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_GuidWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.Id, s => s.NotEmpty());
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.Id, s => s.NotEmpty());
 
         var validUser = new TestUser { Id = Guid.NewGuid() };
         var result = await schema.ValidateAsync(validUser);
@@ -257,8 +257,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_DateTimeWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.CreatedAt, s => s.Past());
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.CreatedAt, s => s.Past());
 
         var validUser = new TestUser { CreatedAt = DateTime.UtcNow.AddDays(-1) };
         var result = await schema.ValidateAsync(validUser);
@@ -273,8 +273,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_DateOnlyWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.BirthDate, s => s.Past());
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.BirthDate, s => s.Past());
 
         var validUser = new TestUser { BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)) };
         var result = await schema.ValidateAsync(validUser);
@@ -289,8 +289,8 @@ public class SourceGeneratedFieldTests
     [Fact]
     public async Task Field_TimeOnlyWithFluentBuilder_Works()
     {
-        var schema = Z.Object<TestUser>()
-            .Field(u => u.WakeUpTime, s => s.Morning());
+        var schema = Z.Schema<TestUser>()
+            .Property(u => u.WakeUpTime, s => s.Morning());
 
         var validUser = new TestUser { WakeUpTime = new TimeOnly(8, 0) };
         var result = await schema.ValidateAsync(validUser);

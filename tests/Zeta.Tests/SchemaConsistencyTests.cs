@@ -93,7 +93,7 @@ public class SchemaConsistencyTests
     [Fact]
     public void Using_ObjectSchema_ReturnsTypedContextAwareSchema()
     {
-        var contextless = Z.Object<TestClass>();
+        var contextless = Z.Schema<TestClass>();
         var contextAware = contextless.Using<object>();
 
         Assert.IsType<ObjectContextSchema<TestClass, object>>(contextAware);
@@ -315,7 +315,7 @@ public class SchemaConsistencyTests
         var objectSchemaType = typeof(ObjectContextlessSchema<>);
 
         var fieldMethods = objectSchemaType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Where(m => m.Name == "Field" && !m.IsGenericMethod)
+            .Where(m => m.Name == "Property" && !m.IsGenericMethod)
             .ToList();
 
         var missingOverloads = new List<PrimitiveSchemaInfo>();
@@ -348,7 +348,7 @@ public class SchemaConsistencyTests
         var objectSchemaType = typeof(ObjectContextSchema<,>);
 
         var fieldMethods = objectSchemaType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Where(m => m.Name == "Field" && !m.IsGenericMethod)
+            .Where(m => m.Name == "Property" && !m.IsGenericMethod)
             .ToList();
 
         var missingOverloads = new List<PrimitiveSchemaInfo>();
@@ -426,7 +426,7 @@ public class SchemaConsistencyTests
     private static HashSet<Type> GetFieldOverloadValueTypes(Type objectSchemaType)
     {
         var fieldMethods = objectSchemaType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Where(m => m.Name == "Field" && !m.IsGenericMethod);
+            .Where(m => m.Name == "Property" && !m.IsGenericMethod);
 
         var valueTypes = new HashSet<Type>();
 

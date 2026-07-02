@@ -12,7 +12,7 @@ builder.Services.AddZeta();
 builder.Services.AddScoped<IUserRepository, FakeUserRepository>();
 builder.Services.AddScoped<IFeatureFlags, FakeFeatureFlags>();
 
-var schema = Z.Object<UserRegistrationRequest>()
+var schema = Z.Schema<UserRegistrationRequest>()
     .Using<UserRegistrationContext>(async (value, sp, ct) =>
     {
         var userRepository = sp.GetRequiredService<IUserRepository>();
@@ -25,10 +25,10 @@ var schema = Z.Object<UserRegistrationRequest>()
 
         return new UserRegistrationContext(allowCreationTask.Result, userExistsTask.Result);
     })
-    .Field(x => x.FirstName, x => x.MinLength(2).MaxLength(50).Alphanumeric())
-    .Field(x => x.LastName, x => x.MinLength(2).Alphanumeric())
-    .Field(x => x.Email, x => x.Email())
-    .Field(x => x.Password, x => x.MinLength(8).MaxLength(100).Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$", "Password must contain at least one uppercase letter, one lowercase letter, and one digit."))
+    .Property(x => x.FirstName, x => x.MinLength(2).MaxLength(50).Alphanumeric())
+    .Property(x => x.LastName, x => x.MinLength(2).Alphanumeric())
+    .Property(x => x.Email, x => x.Email())
+    .Property(x => x.Password, x => x.MinLength(8).MaxLength(100).Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$", "Password must contain at least one uppercase letter, one lowercase letter, and one digit."))
     .Refine(x => x.Password == x.RepeatedPassword, "Passwords do not match.", "passwords_do_not_match")
     .Refine((_, ctx) => !ctx.AllowCreation, "User creation is not allowed.", "user_creation_not_allowed")
     .Refine((_, ctx) => ctx.Exists, "User with this email already exists.", "user_already_exists");

@@ -32,14 +32,7 @@ public static class Z
     /// Creates a schema for validating object values of type <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">The type of object to validate.</typeparam>
-    public static ObjectContextlessSchema<T> Object<T>() where T : class => new();
-
-    /// <summary>
-    /// Creates a schema for validating object values of type <typeparamref name="T"/>.
-    /// Alias of <see cref="Object{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">The type of object to validate.</typeparam>
-    public static ObjectContextlessSchema<T> Schema<T>() where T : class => Object<T>();
+    public static ObjectContextlessSchema<T> Schema<T>() where T : class => new();
 
     /// <summary>
     /// Creates a schema for validating collections of elements of type <typeparamref name="TElement"/>.

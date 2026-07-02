@@ -107,8 +107,8 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Array_NestedInObject_PropagatesPath()
     {
-        var schema = Z.Object<Order>()
-            .Field(o => o.Items, items => items.Each(s => s.MinLength(3)));
+        var schema = Z.Schema<Order>()
+            .Property(o => o.Items, items => items.Each(s => s.MinLength(3)));
 
         var order = new Order(new List<string>
         {
@@ -180,8 +180,8 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_IntegrationWithObjectField_WorksCorrectly()
     {
-        var schema = Z.Object<UserWithRoles>()
-            .Field(u => u.Roles, roles => roles
+        var schema = Z.Schema<UserWithRoles>()
+            .Property(u => u.Roles, roles => roles
                 .Each(r => r.Refine(v => v == "Admin" || v == "User", "Invalid role"))
                 .NotEmpty());
 
@@ -197,8 +197,8 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_IntegrationWithObjectField_InvalidRole_ReturnsFailure()
     {
-        var schema = Z.Object<UserWithRoles>()
-            .Field(u => u.Roles, roles => roles
+        var schema = Z.Schema<UserWithRoles>()
+            .Property(u => u.Roles, roles => roles
                 .Each(r => r.Refine(v => v == "Admin", "Must be Admin"))
                 .NotEmpty());
 
@@ -285,9 +285,9 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_ValidElements_ReturnsSuccess()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var schema = Z.Collection<OrderItem>()
             .Each(itemSchema);
@@ -304,9 +304,9 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_InvalidElement_ReturnsFailure()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var schema = Z.Collection<OrderItem>()
             .Each(itemSchema);
@@ -327,9 +327,9 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_MultipleInvalidElements_ReturnsAllErrors()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100));
 
         var schema = Z.Collection<OrderItem>()
             .Each(itemSchema);
@@ -352,9 +352,9 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_WithObjectBuilder_ChainedWithCollectionValidation()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var schema = Z.Collection<OrderItem>()
             .Each(itemSchema)
@@ -374,17 +374,17 @@ public class CollectionSchemaTests
     public async Task Each_WithObjectBuilder_InObjectField_ValidatesCorrectly()
     {
         // Build the item schema using .Each() with object builder
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var itemsSchema = Z.Collection<OrderItem>()
             .Each(itemSchema)
             .MinLength(1);
 
-        var schema = Z.Object<CreateOrderRequest>()
-            .Field(o => o.CustomerId, Z.Guid())
-            .Field(o => o.Items, itemsSchema);
+        var schema = Z.Schema<CreateOrderRequest>()
+            .Property(o => o.CustomerId, Z.Guid())
+            .Property(o => o.Items, itemsSchema);
 
         var order = new CreateOrderRequest(
             Guid.NewGuid(),
@@ -401,16 +401,16 @@ public class CollectionSchemaTests
     public async Task Each_WithObjectBuilder_InObjectField_InvalidElement_PropagatesPath()
     {
         // Build the item schema using .Each() with object builder
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100));
 
         var itemsSchema = Z.Collection<OrderItem>()
             .Each(itemSchema);
 
-        var schema = Z.Object<CreateOrderRequest>()
-            .Field(o => o.CustomerId, Z.Guid())
-            .Field(o => o.Items, itemsSchema);
+        var schema = Z.Schema<CreateOrderRequest>()
+            .Property(o => o.CustomerId, Z.Guid())
+            .Property(o => o.Items, itemsSchema);
 
         var order = new CreateOrderRequest(
             Guid.NewGuid(),
@@ -432,13 +432,13 @@ public class CollectionSchemaTests
     {
         // Test that array properties get the correct CollectionContextlessSchema type
         // This verifies the fix for array field overloads
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100));
 
-        var schema = Z.Object<CreateOrderRequest>()
-            .Field(o => o.CustomerId, Z.Guid())
-            .Field(o => o.Items, items => items // items should be CollectionContextlessSchema<OrderItem>
+        var schema = Z.Schema<CreateOrderRequest>()
+            .Property(o => o.CustomerId, Z.Guid())
+            .Property(o => o.Items, items => items // items should be CollectionContextlessSchema<OrderItem>
                 .Each(itemSchema)
                 .MinLength(1)
                 .MaxLength(10));
@@ -458,13 +458,13 @@ public class CollectionSchemaTests
     public async Task Each_InlineArrayField_WithObjectBuilder_InvalidElement_PropagatesPath()
     {
         // Test that errors are properly propagated with inline array field builders
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100));
             
-        var schema = Z.Object<CreateOrderRequest>()
-            .Field(o => o.CustomerId, Z.Guid())
-            .Field(o => o.Items, items => items
+        var schema = Z.Schema<CreateOrderRequest>()
+            .Property(o => o.CustomerId, Z.Guid())
+            .Property(o => o.Items, items => items
                 .Each(itemSchema)
                 .MinLength(1));
 
@@ -487,8 +487,8 @@ public class CollectionSchemaTests
     public async Task Each_InlineArrayField_WithPrimitiveTypes_ValidatesCorrectly()
     {
         // Test that primitive array types work with inline builders
-        var schema = Z.Object<UserProfile>()
-            .Field(u => u.Tags, tags => tags
+        var schema = Z.Schema<UserProfile>()
+            .Property(u => u.Tags, tags => tags
                 .Each(t => t.MinLength(3).MaxLength(20))
                 .MinLength(1)
                 .MaxLength(5));
@@ -501,8 +501,8 @@ public class CollectionSchemaTests
     [Fact]
     public async Task Each_InlineArrayField_WithPrimitiveTypes_InvalidElement_ReturnsError()
     {
-        var schema = Z.Object<UserProfile>()
-            .Field(u => u.Tags, tags => tags
+        var schema = Z.Schema<UserProfile>()
+            .Property(u => u.Tags, tags => tags
                 .Each(t => t.MinLength(3))
                 .MinLength(1));
 

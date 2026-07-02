@@ -1,254 +1,91 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repository.
 
 ## Project Overview
 
-Zeta is a composable, type-safe, async-first validation framework for .NET inspired by Zod. It uses schema-first validation with a Result pattern (no exceptions for validation failures).
+Zeta is a composable, type-safe, async-first validation framework for .NET inspired by Zod. Schema-first validation with a Result pattern — no exceptions for validation failures.
 
-## Build and Test Commands
+## Build and Test
 
 ```bash
-# Build the entire solution
 dotnet build
-
-# Run all tests
 dotnet test
-
-# Run a single test by name
-dotnet test --filter "FullyQualifiedName~StringSchemaTests.Email_ValidEmail_Succeeds"
-
-# Run tests in a specific project
-dotnet test tests/Zeta.Tests
-
-# Run benchmarks
-dotnet run --project benchmarks/Zeta.Benchmarks -c Release
-
-# Run the sample API
-dotnet run --project samples/Zeta.Sample.Api
+dotnet test --filter "FullyQualifiedName~StringSchemaTests.Email_ValidEmail_Succeeds"  # single test
+dotnet run --project benchmarks/Zeta.Benchmarks -c Release                             # benchmarks
+dotnet run --project samples/Zeta.Sample.Api                                           # sample API
 ```
 
-## Architecture
+## Solution Structure
+- `src/Zeta/` — core library (no dependencies)
+- `src/Zeta.AspNetCore/`, `src/Zeta.FastEndpoints/` — web integrations
+- `tests/`, `samples/`, `benchmarks/`
 
-### Solution Structure
-- `src/Zeta/` - Core validation library (no dependencies)
-- `src/Zeta.AspNetCore/` - ASP.NET Core integration (Minimal APIs and Controllers)
-- `tests/Zeta.Tests/` - Core library tests (xUnit)
-- `tests/Zeta.AspNetCore.Tests/` - ASP.NET integration tests
-- `samples/Zeta.Sample.Api/` - Example API demonstrating usage
-- `benchmarks/Zeta.Benchmarks/` - Performance benchmarks vs FluentValidation/DataAnnotations
+## Core Concepts
 
-### Core Types (src/Zeta/Core/)
-- `ISchema<T>` - Contextless validation interface. Returns `Result<T>`.
-- `ISchema<T, TContext>` - Context-aware validation interface (separate, no inheritance from `ISchema<T>`). Returns `Result`.
-- `Result<T>` - Discriminated result type with `IsSuccess`, `Value`, `Errors`, and monadic operations (`Map`, `Then`, `Match`)
-- `ValidationError(Path, Code, Message)` - Error record with JSONPath (e.g., `$.user.address.street`)
-- `ValidationContext<TData>` - Contains typed context data, path tracking, CancellationToken & TimeProvider
-- `ValidationContext` - Contains path tracking, CancellationToken & TimeProvider
+- `ISchema<T>` (contextless, returns `Result<T>`) and `ISchema<T, TContext>` (context-aware, returns `Result`) are **completely separate** interfaces — no inheritance. Use `SchemaAdapter<T, TContext>` to bridge.
+- `Result<T>` — discriminated type with `IsSuccess`, `Value`, `Errors`, and `Map`/`Then`/`Match`.
+- `ValidationError(Path, Code, Message)` — JSONPath-aware errors (`$.items[0].name`).
+- Schemas are created contextless via the static `Z` entry point (`Z.String()`, `Z.Schema<T>()`, `Z.Collection<T>()`, …). Call `.Using<TContext>()` to promote to context-aware — rules, properties, and conditionals transfer automatically.
 
-### Rule System (src/Zeta/Rules/)
-- `IValidationRule<T>` - Context-free async validation rule using `ValidationContext`
-- `IValidationRule<T, TContext>` - Context-aware async validation rule using `ValidationContext<TContext>`
-- `RuleEngine<T>` - Executes context-free rules for contextless schemas
-- `ContextRuleEngine<T, TContext>` - Executes context-aware rules
-- `DelegateValidationRule<T>` / `DelegateValidationRule<T, TContext>` - Delegate wrappers for inline rules
+## Key Patterns
 
-### Static Validators (src/Zeta/Validation/)
-Shared validation logic used by both contextless and context-aware schemas:
-- `StringValidators` - MinLength, MaxLength, Email, Url, Regex, etc.
-- `NumericValidators` - Min, Max, Positive, Negative, Precision, etc.
-- `CollectionValidators` - MinLength, MaxLength, NotEmpty for arrays/lists
-
-### Schema Types (src/Zeta/Schemas/)
-All schemas are created via the static `Z` class entry point as contextless schemas:
-- `Z.String()` returns `StringSchema` which implements `ISchema<string>`
-- Use `.Using<TContext>()` to promote to context-aware when needed
-
-Schema types: `StringSchema`, `IntSchema`, `DoubleSchema`, `DecimalSchema`, `BoolSchema`, `GuidSchema`, `DateTimeSchema`, `DateOnlySchema`, `TimeOnlySchema`, `ObjectSchema`, `CollectionSchema`
-
-### Key Patterns
-
-**Fluent Method Chaining**: Schemas return `this` from validation methods for chaining:
+**Object schemas** — `.Property(...)` uses expression trees to extract names, auto-camelCased for error paths:
 ```csharp
-Z.String().MinLength(3).MaxLength(100).Email()
+Z.Schema<User>()
+    .Property(u => u.Email, s => s.Email().MinLength(5))     // "$.email"
+    .Property(u => u.Age, s => s.Min(18).Max(100))
+    .Property(u => u.OptionalAge, s => s.Min(0).Max(120))    // int? — null skips validation
+    .Property(u => u.Bio, s => s.MaxLength(500).Nullable())  // string? — call .Nullable() to allow null
+    .Property(u => u.Address, addressSchema)                 // reuse a pre-built nested schema
 ```
 
-**ObjectSchema Field Validation**: Uses expression trees to extract property names, auto-camelCases them for error paths. Use fluent inline builders for most fields:
+**Collections / dictionaries** — `.Each()` (and `.EachKey()`/`.EachValue()`) for elements, plus collection-level rules:
 ```csharp
-// Default: Fluent inline builders
-Z.Object<User>()
-    .Field(u => u.Email, s => s.Email().MinLength(5))  // Error path: "$.email"
-    .Field(u => u.Age, s => s.Min(18).Max(100))
-    .Field(u => u.Price, s => s.Positive().Precision(2))
-
-// Nullable value types — null skips validation automatically
-Z.Object<User>()
-    .Field(u => u.OptionalAge, s => s.Min(0).Max(120))     // int? — null OK
-    .Field(u => u.OptionalBalance, s => s.Positive())        // decimal? — null OK
-    .Field(u => u.Bio, s => s.MaxLength(500).Nullable())     // string? — call .Nullable()
-
-// Supported types: string, int, double, decimal, bool, Guid, DateTime, DateOnly, TimeOnly
-
-// For composability: pre-built schemas when reusing across multiple objects
-var addressSchema = Z.Object<Address>()
-    .Field(a => a.Street, s => s.MinLength(3))
-    .Field(a => a.ZipCode, s => s.Regex(@"^\d{5}$"));
-
-Z.Object<User>()
-    .Field(u => u.Email, s => s.Email())
-    .Field(u => u.Address, addressSchema)  // Reuse nested schema, path: "$.address.street"
-
-// Collection fields with .Each() for element validation (RFC 003)
-Z.Object<User>()
-    .Field(u => u.Roles, roles => roles
-        .Each(r => r.MinLength(3).MaxLength(50))  // Validate each string element
-        .MinLength(1).MaxLength(10))  // Validate collection size
-
-// Standalone collections
-Z.Collection<string>()  // Parameterless, generic type parameter
-    .Each(s => s.Email())  // Apply validation to each element
-    .MinLength(1)          // Collection-level validation
-
-// For complex nested objects, pass a pre-built schema
-var orderItemSchema = Z.Object<OrderItem>()
-    .Field(i => i.ProductId, s => s /* Guid validation */)
-    .Field(i => i.Quantity, s => s.Min(1));
-
-Z.Collection(orderItemSchema)  // Pass element schema for complex types
-    .MinLength(1)
+Z.Collection<string>().Each(s => s.Email()).MinLength(1)
 ```
 
-**Context Promotion**: Use `.Using<TContext>()` to create a context-aware schema. Rules, fields, and conditionals from the contextless schema are automatically transferred:
+**Context promotion & factory**:
 ```csharp
-Z.String()
-    .Email()
-    .MinLength(5)
-    .Using<UserContext>()  // Email and MinLength rules are preserved
+Z.String().Email().Using<UserContext>()
     .Refine((email, ctx) => email != ctx.BannedEmail, "Email banned")
-    .RefineAsync(async (email, ctx, ct) =>
-        !await ctx.Repo.EmailExistsAsync(email, ct), "Email exists");
+    .RefineAsync(async (email, ctx, ct) => !await ctx.Repo.EmailExistsAsync(email, ct), "Email exists");
+
+Z.Schema<CreateOrderRequest>()
+    .Using<OrderContext>(async (value, sp, ct) => new OrderContext { /* resolve services */ })
+    .Property(x => x.CustomerId, x => x.NotEmpty());
 ```
+Factory signature: `Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>`. Contextless `Refine` takes `Func<T, bool>`; context-aware takes `(val, ctx)`.
 
-**Context Factory Delegate**: Use `.Using<TContext>(factory)` to embed context creation directly on the schema:
-```csharp
-Z.Object<CreateOrderRequest>()
-    .Using<OrderContext>(async (value, sp, ct) => new OrderContext {
-        HasAccess = await sp.GetRequiredService<IPermissionService>().CheckAccessAsync(value.CustomerId, ct)
-    })
-    .Field(x => x.CustomerId, x => x.NotEmpty())
-```
+**Conditionals** — `.If(predicate, schema)` on every schema type (value/object/collection), nestable; context-aware variants accept value-only or `(v, ctx)` predicates.
 
-**Async Refinement**: Context-aware schemas support `RefineAsync` for async validation with access to context data and CancellationToken.
-
-**Schema Bridging**: `SchemaAdapter<T, TContext>` wraps contextless `ISchema<T>` for use in context-aware object schemas.
-
-**Conditional Validation**: `.If()` on all schema types enables guard-style conditional validation:
-```csharp
-// Value schemas — apply rules only when predicate matches
-Z.Int()
-    .If(v => v >= 18, s => s.Max(65));
-
-// Object schemas — conditional field validation
-Z.Object<User>()
-    .If(u => u.Type == "admin", s => s
-        .Field(u => u.Name, n => n.MinLength(5)));
-
-// Collection schemas — conditional collection rules
-Z.Collection<string>()
-    .If(items => items.Count > 0, s => s.MinLength(2));
-
-// Multiple guards and nesting
-Z.Int()
-    .If(v => v >= 0, s => s
-        .If(v => v >= 18, inner => inner.Max(100)));
-
-// Context-aware: value-only or value+context predicates
-Z.String()
-    .Using<StrictContext>()
-    .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
-```
-
-**Type Assertions**: `.As<TDerived>()` on Object schemas enables explicit type narrowing. Prefer branch schemas with `.If(predicate, schema)`:
-```csharp
-var dogSchema = Z.Object<Dog>()
-    .Field(x => x.BarkVolume, x => x.Min(0).Max(100));
-
-var catSchema = Z.Object<Cat>()
-    .Field(x => x.ClawSharpness, x => x.Min(1).Max(10));
-
-Z.Object<IAnimal>()
-    .If(x => x is Dog, dogSchema)
-    .If(x => x is Cat, catSchema);
-```
-
-### ASP.NET Core Integration (src/Zeta.AspNetCore/)
-- `IZetaValidator` - Injectable service for manual validation in controllers
-- `ContextlessValidationFilter<T>` - Minimal API endpoint filter for contextless schemas
-- `ValidationFilter<T, TContext>` - Minimal API endpoint filter for context-aware schemas
-- Context creation is handled by inline factory delegates on schemas via `.Using<TContext>(factory)`
-- `IZetaValidator.ValidateAsync(...)` supports a builder function overload: `Func<ValidationContextBuilder, ValidationContextBuilder>`
+**Type assertions** — `.As<TDerived>()` on object schemas; prefer branch schemas: `Z.Schema<IAnimal>().If(x => x is Dog, dogSchema)`.
 
 ## Design Principles
-
-1. **Async by default** - All validation uses `ValueTask<Result<T>>`, no separate sync paths
-2. **No exceptions for control flow** - Validation failures return `Result<T>.Failure()`, never throw
-3. **Required by default** - Use `.Nullable()` to allow null values. Nullable value type fields (`int?`, etc.) in object schemas automatically skip validation when null
-4. **Path-aware errors** - Errors include full path: `"$.items[0].name"`, `"$.address.street"`
-5. **Error aggregation** - Collects all errors, no short-circuiting
+1. Async by default — all validation is `ValueTask<Result<T>>`, no sync paths.
+2. No exceptions for control flow — return `Result<T>.Failure()`.
+3. Required by default — `.Nullable()` allows null. Nullable value-type properties (`int?`, etc.) skip validation when null automatically.
+4. Path-aware errors and full aggregation (no short-circuiting).
 
 ## Known Behaviors
 
-### Nullable Handling
-- `.Nullable()` on any schema makes null a valid value (skips inner validation when null)
-- **Nullable value type fields** (`int?`, `double?`, `decimal?`, `bool?`, `Guid?`, `DateTime?`, `DateOnly?`, `TimeOnly?`): Null values automatically skip validation. No `.Nullable()` needed. Non-null values are validated normally.
-- **Nullable reference type fields** (`string?`): Null flows through to the schema's `ValidateAsync`. Call `.Nullable()` on the schema if null should pass.
-- `ISchema<T>` type parameter is always non-nullable (`ISchema<int>`, never `ISchema<int?>`)
-- Field validators bridge the gap for value types via an `isNull` predicate (source-generated)
+- **Nullable**: `.Nullable()` makes null valid on any schema. Nullable value-type properties (`int?`, `Guid?`, …) skip validation when null with no `.Nullable()` needed. Nullable reference types (`string?`) flow null through — call `.Nullable()` to pass. `ISchema<T>` is always non-nullable (`ISchema<int>`, never `ISchema<int?>`).
+- **Validation order** (object schemas): Properties → Type Assertions (`.As()`) → Conditionals (`.If()`) → Rules (`.Refine()`).
+- **Context factory failures** propagate as HTTP 500, not validation errors — return a context that fails validation for soft failures.
+- **`.NotEmpty()` on strings** = not whitespace.
 
-### Validation Order
-ObjectSchema validates in order: Fields → Type Assertions (`.As()`) → Conditionals (`.If()`) → Rules (`.Refine()`)
+## Adding Validation Methods
 
-### Context Factory Failures
-Factory exceptions propagate as HTTP 500, not validation errors. Handle soft failures by returning a context that causes validation to fail.
+Value-schema validators (string, int, double, decimal, bool, Guid, enum, DateTime, DateOnly, TimeOnly) are **extension methods** shared by both variants — add to the matching `*SchemaExtensions` class in `src/Zeta/Schemas/` (namespace `Zeta`). The extension hangs off `IValueSchema<T, TSelf>` (in `src/Zeta/Core/`); its `AppendRule(IValidationRule<T>)` is inherited from the base classes. A single **contextless** rule struct (or inline `RefinementRule<T>`) backs both flavours — the context-aware base wraps it in `ContextlessRuleAdapter<T, TContext>`. Do not add `XRule<TContext>` variants.
 
-### Required Semantics
-- Fields are required (non-null) by default
-- Exception: nullable value type fields (`int?`, etc.) — null skips validation automatically
-- `.Nullable()` on a schema allows null to pass validation
-- `.NotEmpty()` on strings = not whitespace
-
-### Context Promotion
-- Schemas are always created contextless via `Z.String()`, `Z.Int()`, etc.
-- Contextless `Refine()` uses `Func<T, bool>` (single argument)
-- Use `.Using<TContext>()` to create a context-aware schema
-- Use `.Using<TContext>(factory)` to also embed a factory delegate for creating context data
-- `.Using<TContext>()` is an **instance method** on each schema class (e.g., `StringSchema.Using<TContext>()`)
-- **Rules, fields, and conditionals are automatically transferred** when calling `.Using()`
-- For ObjectSchema: `.Using<TContext>()` requires only the context type parameter (T is already known)
-- After calling `.Using()`, use context-aware `Refine((val, ctx) => ...)` with two arguments
-- `.Using()` returns typed schemas: `StringSchema<TContext>`, `IntSchema<TContext>`, `ObjectSchema<T, TContext>`, etc.
-- Factory delegate signature: `Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>`
-
-### Interface Separation
-- `ISchema<T>` and `ISchema<T, TContext>` are completely separate interfaces (no inheritance relationship)
-- Contextless schemas implement `ISchema<T>` only
-- Context-aware schemas implement `ISchema<T, TContext>` only
-- Use `SchemaAdapter<T, TContext>` to bridge contextless schemas into context-aware contexts
-
-### Adding Validation Methods
-Value-schema validators (string, int, double, decimal, bool, Guid, enum, DateTime, DateOnly, TimeOnly) are **extension methods**, written once and shared by both the contextless and context-aware variant. Add a new one to the matching `*SchemaExtensions` class in `src/Zeta/Schemas/` (namespace `Zeta`, so consumers who reach `Z` also see it). No per-variant duplication.
-
-The extension hangs off `IValueSchema<T, TSelf>` (in `src/Zeta/Core/`), implemented by every value schema; its `AppendRule(IValidationRule<T>)` is inherited from the base classes. The context-aware base wraps the contextless rule in `ContextlessRuleAdapter<T, TContext>`, so a single **contextless** rule struct (or inline `RefinementRule<T>`) backs both flavours — do not add `XRule<TContext>` variants.
-
-Example — add `Foo()` to `StringSchemaExtensions`:
 ```csharp
 public static TSelf Foo<TSelf>(this IValueSchema<string, TSelf> schema, string? message = null)
     where TSelf : IValueSchema<string, TSelf>
     => schema.AppendRule(new FooRule(message));
 ```
 
-Note: `Object`/`Collection`/`Dictionary` schemas are **not** `IValueSchema` — their fluent methods stay as instance/generated members (adding `IValueSchema` to the shared base collides with the generated `Field`/`Property`/`Each` overloads).
+`Object`/`Collection`/`Dictionary` schemas are **not** `IValueSchema` — their fluent methods stay as instance/generated members (`Property`/`Each` overloads are source-generated).
 
-### After changes
-- Then adding schema features all features should support fluent builder for primativ types. And accepts ISchema<T> and ISchema<T, TContext> for object fields. If context aware schema is provided, the full schema must be context aware too.
-- Add a section in CHANGELOG.md below "Next release". Versions are managed with tags in git
+## After Changes
+- New schema features must support fluent builders for primitive types and accept `ISchema<T>` / `ISchema<T, TContext>` for object properties. A context-aware property makes the whole schema context-aware.
+- Add a note under "Next release" in CHANGELOG.md. Versions are managed with git tags.

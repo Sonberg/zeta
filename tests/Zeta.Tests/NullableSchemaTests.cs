@@ -110,9 +110,9 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableObject_NullValue_ReturnsSuccess()
     {
-        var schema = Z.Object<Person>()
-            .Field(p => p.Name, Z.String().MinLength(1))
-            .Field(p => p.Age, Z.Int().Min(0))
+        var schema = Z.Schema<Person>()
+            .Property(p => p.Name, Z.String().MinLength(1))
+            .Property(p => p.Age, Z.Int().Min(0))
             .Nullable();
 
         var result = await schema.ValidateAsync(null);
@@ -124,9 +124,9 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableObject_ValidValue_ReturnsSuccess()
     {
-        var schema = Z.Object<Person>()
-            .Field(p => p.Name, Z.String().MinLength(1))
-            .Field(p => p.Age, Z.Int().Min(0))
+        var schema = Z.Schema<Person>()
+            .Property(p => p.Name, Z.String().MinLength(1))
+            .Property(p => p.Age, Z.Int().Min(0))
             .Nullable();
 
         var person = new Person("John", 30);
@@ -139,9 +139,9 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableObject_InvalidValue_ReturnsFailure()
     {
-        var schema = Z.Object<Person>()
-            .Field(p => p.Name, Z.String().MinLength(1))
-            .Field(p => p.Age, Z.Int().Min(0))
+        var schema = Z.Schema<Person>()
+            .Property(p => p.Name, Z.String().MinLength(1))
+            .Property(p => p.Age, Z.Int().Min(0))
             .Nullable();
 
         var person = new Person("", -1);
@@ -274,10 +274,10 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableFieldInObject_NullField_ReturnsSuccess()
     {
-        var schema = Z.Object<UserProfile>()
-            .Field(u => u.Name, Z.String().MinLength(1))
-            .Field(u => u.Age, Z.Int().Min(0).Nullable())
-            .Field(u => u.Bio, Z.String().MaxLength(500).Nullable());
+        var schema = Z.Schema<UserProfile>()
+            .Property(u => u.Name, Z.String().MinLength(1))
+            .Property(u => u.Age, Z.Int().Min(0).Nullable())
+            .Property(u => u.Bio, Z.String().MaxLength(500).Nullable());
 
         var profile = new UserProfile("John", null, null);
         var result = await schema.ValidateAsync(profile);
@@ -288,10 +288,10 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableFieldInObject_ValidFields_ReturnsSuccess()
     {
-        var schema = Z.Object<UserProfile>()
-            .Field(u => u.Name, Z.String().MinLength(1))
-            .Field(u => u.Age, Z.Int().Min(0))
-            .Field(u => u.Bio, Z.String().MaxLength(500).Nullable());
+        var schema = Z.Schema<UserProfile>()
+            .Property(u => u.Name, Z.String().MinLength(1))
+            .Property(u => u.Age, Z.Int().Min(0))
+            .Property(u => u.Bio, Z.String().MaxLength(500).Nullable());
 
         var profile = new UserProfile("John", 30, "Hello world");
         var result = await schema.ValidateAsync(profile);
@@ -302,10 +302,10 @@ public class NullableSchemaTests
     [Fact]
     public async Task NullableFieldInObject_InvalidField_ReturnsFailure()
     {
-        var schema = Z.Object<UserProfile>()
-            .Field(u => u.Name, Z.String().MinLength(1))
-            .Field(u => u.Age, Z.Int().Min(0))
-            .Field(u => u.Bio, Z.String().MaxLength(10).Nullable());
+        var schema = Z.Schema<UserProfile>()
+            .Property(u => u.Name, Z.String().MinLength(1))
+            .Property(u => u.Age, Z.Int().Min(0))
+            .Property(u => u.Bio, Z.String().MaxLength(10).Nullable());
 
         var profile = new UserProfile("John", -5, "This bio is way too long");
         var result = await schema.ValidateAsync(profile);

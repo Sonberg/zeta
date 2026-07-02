@@ -71,9 +71,9 @@ public class IfConditionalTests
     [Fact]
     public async Task ObjectSchema_ConditionalFieldValidation()
     {
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .If(u => u.Type == "admin", s => s
-                .Field(u => u.Name, n => n.MinLength(5)));
+                .Property(u => u.Name, n => n.MinLength(5)));
 
         // Admin with short name fails
         var adminShort = await schema.ValidateAsync(new User("Jo", 30, null, "admin"));
@@ -88,9 +88,9 @@ public class IfConditionalTests
     [Fact]
     public async Task ObjectSchema_ConditionFalse_SkipsValidation()
     {
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .If(u => u.Type == "admin", s => s
-                .Field(u => u.Name, n => n.MinLength(5)));
+                .Property(u => u.Name, n => n.MinLength(5)));
 
         // Non-admin with short name passes (condition not met)
         var result = await schema.ValidateAsync(new User("Jo", 30, null, "user"));
@@ -186,9 +186,9 @@ public class IfConditionalTests
     [Fact]
     public async Task ContextPromotion_ObjectSchema_TransfersConditionals()
     {
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .If(u => u.Type == "admin", s => s
-                .Field(u => u.Name, n => n.MinLength(5)))
+                .Property(u => u.Name, n => n.MinLength(5)))
             .Using<StrictContext>();
 
         var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
@@ -248,12 +248,12 @@ public class IfConditionalTests
     [Fact]
     public async Task ObjectSchema_If_ContextAwareBranch_SelfResolves()
     {
-        var adminSchema = Z.Object<User>()
-            .Field(x => x.Name, n => n.MinLength(5))
+        var adminSchema = Z.Schema<User>()
+            .Property(x => x.Name, n => n.MinLength(5))
             .Using<StrictContext>((_, _, _) => new ValueTask<StrictContext>(new StrictContext(false)))
             .Refine((_, ctx) => ctx.IsStrict, "Strict context required for admins");
 
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .If(u => u.Type == "admin", adminSchema);
 
         var ctx = new ValidationContext(serviceProvider: new ServiceCollection().BuildServiceProvider());
@@ -275,11 +275,11 @@ public class IfConditionalTests
             .Using<StrictContext>()
             .Refine((name, ctx) => !ctx.IsStrict || name.Length >= 5, "Name must be at least 5 in strict mode");
 
-        var adminSchema = Z.Object<User>()
+        var adminSchema = Z.Schema<User>()
             .Using<StrictContext>((_, _, _) => new ValueTask<StrictContext>(new StrictContext(true)))
-            .Field(x => x.Name, contextAwareName);
+            .Property(x => x.Name, contextAwareName);
 
-        var schema = Z.Object<User>()
+        var schema = Z.Schema<User>()
             .If(u => u.Type == "admin", adminSchema);
 
         var ctx = new ValidationContext(serviceProvider: new ServiceCollection().BuildServiceProvider());

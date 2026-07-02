@@ -96,7 +96,7 @@ internal static class CollectionExtensionsGenerator
                               Func<ObjectContextlessSchema<TElement>, ObjectContextlessSchema<TElement>> elementTransform)
                               where TElement : class
                           {
-                              var newElementSchema = elementTransform(Z.Object<TElement>());
+                              var newElementSchema = elementTransform(Z.Schema<TElement>());
                               return schema.WithElementSchema(newElementSchema);
                           }
 
@@ -170,7 +170,7 @@ internal static class CollectionExtensionsGenerator
                               Func<ObjectContextlessSchema<TElement>, ObjectContextSchema<TElement, TContext>> elementTransform)
                               where TElement : class
                           {
-                              var newElementSchema = elementTransform(Z.Object<TElement>());
+                              var newElementSchema = elementTransform(Z.Schema<TElement>());
                               return schema.WithElementSchema(newElementSchema);
                           }
 
