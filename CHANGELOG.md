@@ -2,6 +2,9 @@
 
 ## Next release
 
+### Changed
+- Context-aware schemas (`ContextSchema<T, TContext, TSchema>`) now cache the resolved context-factory chain on the schema instance after the first `GetContextFactories()` call instead of re-walking conditionals/type-assertions and re-yielding on every `ValidateAsync`. `ContextFactoryResolver.ResolveAsync` also skips re-copying an already-materialized list. No public API or behavior change — schemas are immutable after construction (RFC 007), so caching is safe.
+
 ## 0.1.17
 
 ### Added

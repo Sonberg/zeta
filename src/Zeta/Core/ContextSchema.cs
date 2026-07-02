@@ -97,6 +97,8 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
 
     private readonly IReadOnlyList<ISchemaConditional<T, TContext>>? _conditionals;
 
+    private Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>[]? _materializedFactories;
+
     protected ContextSchema() : this(new ContextRuleEngine<T, TContext>(), false, null, null)
     {
     }
@@ -186,7 +188,11 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
 
     IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> ISchema<T, TContext>.GetContextFactories()
     {
-        return GetContextFactoriesCore();
+        // The schema instance is immutable once constructed (see RFC 007), so the resolved
+        // factory chain never changes after the first call. A benign race that recomputes
+        // the same array is fine — cheaper than re-walking conditionals/type-assertions on
+        // every ValidateAsync call.
+        return _materializedFactories ??= GetContextFactoriesCore().ToArray();
     }
 
     protected virtual IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactoriesCore()
