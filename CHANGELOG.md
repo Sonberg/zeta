@@ -2,6 +2,8 @@
 
 ## Next release
 
+## 0.1.17
+
 ### Added
 - `Positive()`, `Negative()`, and `MultipleOf()` on `Int` schemas, and `MultipleOf()` on `Double` schemas — closes a numeric-validator parity gap versus `Decimal` (which already had all of these).
 - A synchronous `Using<TContext>(Func<T, IServiceProvider, TContext> factory)` overload on every scalar, `Collection`, and `Dictionary` contextless schema — previously only `ObjectContextlessSchema` had this convenience; other schemas required wrapping a sync factory in a `ValueTask`.
