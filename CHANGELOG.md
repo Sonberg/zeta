@@ -20,6 +20,9 @@
 - `PackageReadmeFile` now correctly packs `README.md` (FastEndpoints-specific) instead of the root `README.md`.
 - Context-aware collection and dictionary count rules (`MinLength`/`MaxLength`/`Length`/`NotEmpty`) now flow through the existing `ContextlessRuleAdapter<T, TContext>` via `AppendRule`, matching the value-schema rules. No public API change.
 
+### Fixed
+- `ValidationContext.Path` (and `ValidationContext<TData>.Path`) at the root now renders as `"$"` instead of `""`, matching the `"$"` root convention already used by `ValidationError.Path`/`PathString`. Non-root paths are unaffected (still bare dot/bracket notation, no `"$."` prefix).
+
 ### Removed
 - The nullable-adapter matrix (`NullableAdapterFactory` and the six `Nullable{Reference,Struct}Context{,less}{Adapter,Wrapper}` classes) and the reflection (`Activator.CreateInstance`) it relied on. This makes nullable field construction NativeAOT/trim-safe. Passing a **pre-built** `ISchema<TStruct>` for a nullable value-type field is no longer supported (it previously threw `ArgumentException` at runtime); use the fluent builder or a source-generated overload instead.
 - Redundant context-aware rule structs (`MinLengthRule<TContext>`, `MaxIntRule<TContext>`, `DefinedRule<TEnum, TContext>`, and the rest — 28 in total). Context-aware validation of these rules now flows through `ContextlessRuleAdapter<T, TContext>` — the same path `.Using<TContext>()` already used.

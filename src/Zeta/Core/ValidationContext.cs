@@ -88,10 +88,10 @@ public record ValidationContext
     private string? _path;
 
     /// <summary>
-    /// The dot-notation path to the current value being validated (e.g., "user.address.street").
+    /// The dot-notation path to the current value being validated (e.g., "user.address.street"; "$" at the root).
     /// Rendered lazily from structured path segments.
     /// </summary>
-    public string Path => _path ??= _pathSegments.Render(PathFormattingOptions);
+    public string Path => _path ??= _pathSegments.Render(PathFormattingOptions) is { Length: > 0 } rendered ? rendered : "$";
 
     /// <summary>
     /// Internal structured path segments. Allows promotion to typed contexts without string rendering.
