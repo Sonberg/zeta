@@ -24,15 +24,15 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         using var scope = provider.CreateScope();
         var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
-        var dogSchema = Z.Object<Dog>()
+        var dogSchema = Z.Schema<Dog>()
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
-            .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
+            .Property(d => d.BarkVolum, v => v.Min(0).Max(100))
             .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context");
 
-        var schema = Z.Object<IAnimal>()
-            .Field(x => x.Name, n => n.MinLength(3))
+        var schema = Z.Schema<IAnimal>()
+            .Property(x => x.Name, n => n.MinLength(3))
             .If(x => x is Dog, dogSchema)
-            .If(x => x is Cat, x => x.As<Cat>().Field(c => c.ClawSharpness, v => v.Min(0).Max(100)));
+            .If(x => x is Cat, x => x.As<Cat>().Property(c => c.ClawSharpness, v => v.Min(0).Max(100)));
 
         var result = await validator.ValidateAsync(new Dog("Rex", 50), schema);
 
@@ -50,16 +50,16 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         using var scope = provider.CreateScope();
         var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
-        var dogSchema = Z.Object<Dog>()
+        var dogSchema = Z.Schema<Dog>()
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(true)))
-            .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
+            .Property(d => d.BarkVolum, v => v.Min(0).Max(100))
             .Refine((_, ctx) => ctx.Value, "dog branch context must be true", "dog_context");
 
-        var catSchema = Z.Object<Cat>()
+        var catSchema = Z.Schema<Cat>()
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
-            .Field(c => c.ClawSharpness, v => v.Min(0).Max(100));
+            .Property(c => c.ClawSharpness, v => v.Min(0).Max(100));
 
-        var schema = Z.Object<IAnimal>()
+        var schema = Z.Schema<IAnimal>()
             .If(x => x is Dog, dogSchema)
             .If(x => x is Cat, catSchema);
 
@@ -78,11 +78,11 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         using var scope = provider.CreateScope();
         var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
-        var dogBranchSchema = Z.Object<Dog>()
+        var dogBranchSchema = Z.Schema<Dog>()
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(true)))
-            .Field(d => d.BarkVolum, v => v.Min(0).Max(100));
+            .Property(d => d.BarkVolum, v => v.Min(0).Max(100));
 
-        var schema = Z.Object<IAnimal>()
+        var schema = Z.Schema<IAnimal>()
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(true)))
             .If(x => x is Dog, dogBranchSchema);
 
@@ -102,16 +102,16 @@ public class ZetaValidatorContextFactoryDiscoveryTests
         using var scope = provider.CreateScope();
         var validator = scope.ServiceProvider.GetRequiredService<IZetaValidator>();
 
-        var dogSchema = Z.Object<Dog>()
-            .Field(d => d.BarkVolum, v => v.Min(0).Max(100))
+        var dogSchema = Z.Schema<Dog>()
+            .Property(d => d.BarkVolum, v => v.Min(0).Max(100))
             .Using<DogContext>((_, _, _) => ValueTask.FromResult(new DogContext(false)))
             .Refine((_, ctx) => ctx.Value, "Dog context value must be true", "dog_context");
 
-        var catSchema = Z.Object<Cat>()
-            .Field(c => c.ClawSharpness, v => v.Min(0).Max(100));
+        var catSchema = Z.Schema<Cat>()
+            .Property(c => c.ClawSharpness, v => v.Min(0).Max(100));
 
-        var schema = Z.Object<IAnimal>()
-            .Field(x => x.Name, n => n.MinLength(3))
+        var schema = Z.Schema<IAnimal>()
+            .Property(x => x.Name, n => n.MinLength(3))
             .If(x => x is Dog, dogSchema)
             .If(x => x is Cat, catSchema);
 

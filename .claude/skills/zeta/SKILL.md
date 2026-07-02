@@ -17,7 +17,7 @@ Everything starts contextless from `Z`:
 ```csharp
 Z.String()  Z.Int()  Z.Double()  Z.Decimal()  Z.Bool()  Z.Guid()
 Z.DateTime()  Z.DateOnly()  Z.TimeOnly()  Z.Enum<TEnum>()
-Z.Object<T>()        // T : class   (Z.Schema<T>() is an alias)
+Z.Schema<T>()        // T : class   (Z.Schema<T>() is an alias)
 Z.Collection<TElement>()             // or Z.Collection(elementSchema) for complex elements
 Z.Dictionary<TKey, TValue>()         // or Z.Dictionary(keySchema, valueSchema)
 ```
@@ -30,23 +30,23 @@ var age   = Z.Int().Min(18).Max(120);
 var price = Z.Decimal().Positive().Precision(2);
 ```
 
-Objects use `.Field(selector, configure)` — property name is auto-camelCased into the error path
+Objects use `.Property(selector, configure)` — property name is auto-camelCased into the error path
 (`$.email`, `$.address.street`):
 
 ```csharp
-var schema = Z.Object<User>()
-    .Field(u => u.Email, s => s.Email().MinLength(5))
-    .Field(u => u.Age, s => s.Min(18).Max(100))
-    .Field(u => u.Bio, s => s.MaxLength(500).Nullable())   // string? — call .Nullable()
-    .Field(u => u.OptionalAge, s => s.Min(0))              // int? — null skips automatically
-    .Field(u => u.Address, addressSchema);                 // reuse a pre-built nested schema
+var schema = Z.Schema<User>()
+    .Property(u => u.Email, s => s.Email().MinLength(5))
+    .Property(u => u.Age, s => s.Min(18).Max(100))
+    .Property(u => u.Bio, s => s.MaxLength(500).Nullable())   // string? — call .Nullable()
+    .Property(u => u.OptionalAge, s => s.Min(0))              // int? — null skips automatically
+    .Property(u => u.Address, addressSchema);                 // reuse a pre-built nested schema
 ```
 
 Collections use `.Each()` for elements plus collection-level rules:
 
 ```csharp
-Z.Object<User>()
-    .Field(u => u.Roles, r => r.Each(x => x.MinLength(3)).MinLength(1).MaxLength(10));
+Z.Schema<User>()
+    .Property(u => u.Roles, r => r.Each(x => x.MinLength(3)).MinLength(1).MaxLength(10));
 
 Z.Collection<string>().Each(s => s.Email()).MinLength(1);
 Z.Collection(orderItemSchema).MinLength(1);   // complex element type
@@ -61,14 +61,14 @@ Nullable **value type** fields (`int?`, `decimal?`, `Guid?`, …) skip validatio
 
 ```csharp
 Z.Int().If(v => v >= 18, s => s.Max(65));
-Z.Object<User>().If(u => u.Type == "admin", s => s.Field(u => u.Name, n => n.MinLength(5)));
+Z.Schema<User>().If(u => u.Type == "admin", s => s.Property(u => u.Name, n => n.MinLength(5)));
 ```
 
 Type narrowing on object schemas:
 
 ```csharp
-var catSchema = Z.Object<Cat>().Field(x => x.ClawSharpness, x => x.Min(1).Max(10));
-Z.Object<IAnimal>()
+var catSchema = Z.Schema<Cat>().Property(x => x.ClawSharpness, x => x.Min(1).Max(10));
+Z.Schema<IAnimal>()
     .If(x => x is Dog, dogSchema)
     .If(x => x is Cat, catSchema);
 ```
@@ -94,11 +94,11 @@ Z.String()
 Embed context creation with a factory so the schema stays usable as `ISchema<T>`:
 
 ```csharp
-Z.Object<CreateOrderRequest>()
+Z.Schema<CreateOrderRequest>()
     .Using<OrderContext>(async (value, sp, ct) => new OrderContext {
         HasAccess = await sp.GetRequiredService<IPermissionService>().CheckAccessAsync(value.CustomerId, ct)
     })
-    .Field(x => x.CustomerId, x => x.NotEmpty());
+    .Property(x => x.CustomerId, x => x.NotEmpty());
 ```
 
 ## Run validation & read the result

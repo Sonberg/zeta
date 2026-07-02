@@ -10,9 +10,9 @@ namespace Zeta.Sample.FastEndpoints.Api.Endpoints;
 public class OrderEndpoint : Endpoint<OrderRequest>
 {
     private static readonly ISchema<OrderRequest> Schema =
-        Z.Object<OrderRequest>()
-            .Field(r => r.ProductId, s => s.NotEmpty())
-            .Field(r => r.Quantity, s => s.Min(1).Max(1000));
+        Z.Schema<OrderRequest>()
+            .Property(r => r.ProductId, s => s.NotEmpty())
+            .Property(r => r.Quantity, s => s.Min(1).Max(1000));
 
     public override void Configure()
     {

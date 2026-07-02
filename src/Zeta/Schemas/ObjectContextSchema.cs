@@ -175,7 +175,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     // the inner schema already handles null (required-by-default, or passes when .Nullable()).
     // Nullable value-type fields are served by the source generator's typed overloads.
 
-    public ObjectContextSchema<T, TContext> Field<TProperty>(
+    public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty, TContext> schema)
         where TProperty : class
@@ -185,28 +185,16 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter!, schema));
     }
 
-    public ObjectContextSchema<T, TContext> Property<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        ISchema<TProperty, TContext> schema)
-        where TProperty : class
-        => Field(propertySelector, schema);
-
     /// <summary>
     /// Disambiguation overload for a concrete Zeta context schema that is also assignable to ISchema&lt;TProperty&gt;.
     /// </summary>
-    public ObjectContextSchema<T, TContext> Field<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        IContextSchema<TProperty, TContext> schema)
-        where TProperty : class
-        => Field(propertySelector, (ISchema<TProperty, TContext>)schema);
-
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         IContextSchema<TProperty, TContext> schema)
         where TProperty : class
-        => Field(propertySelector, schema);
+        => Property(propertySelector, (ISchema<TProperty, TContext>)schema);
 
-    public ObjectContextSchema<T, TContext> Field<TProperty>(
+    public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
         where TProperty : class
@@ -216,13 +204,7 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return AddContextlessField(new FieldContextlessValidator<T, TProperty>(propertyName, getter!, schema));
     }
 
-    public ObjectContextSchema<T, TContext> Property<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        ISchema<TProperty> schema)
-        where TProperty : class
-        => Field(propertySelector, schema);
-
-    public ObjectContextSchema<T, TContext> Field<TEnum>(
+    public ObjectContextSchema<T, TContext> Property<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
         where TEnum : struct, Enum
@@ -234,14 +216,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
 
     public ObjectContextSchema<T, TContext> Property<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
-        Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
-        where TEnum : struct, Enum
-    {
-        return Field(propertySelector, schema);
-    }
-
-    public ObjectContextSchema<T, TContext> Field<TEnum>(
-        Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
         where TEnum : struct, Enum
     {
@@ -252,14 +226,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
     }
 
     public ObjectContextSchema<T, TContext> Property<TEnum>(
-        Expression<Func<T, TEnum>> propertySelector,
-        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
-        where TEnum : struct, Enum
-    {
-        return Field(propertySelector, schema);
-    }
-
-    public ObjectContextSchema<T, TContext> Field<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
         where TEnum : struct, Enum
@@ -271,14 +237,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
 
     public ObjectContextSchema<T, TContext> Property<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
-        Func<EnumContextlessSchema<TEnum>, EnumContextSchema<TEnum, TContext>> schema)
-        where TEnum : struct, Enum
-    {
-        return Field(propertySelector, schema);
-    }
-
-    public ObjectContextSchema<T, TContext> Field<TEnum>(
-        Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
         where TEnum : struct, Enum
     {
@@ -286,14 +244,6 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
         var configuredSchema = schema(Z.Enum<TEnum>());
         return AddField(new NullableFieldContextContextValidator<T, TEnum, TContext>(propertyName, getter, configuredSchema.Using<TContext>()));
-    }
-
-    public ObjectContextSchema<T, TContext> Property<TEnum>(
-        Expression<Func<T, TEnum?>> propertySelector,
-        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
-        where TEnum : struct, Enum
-    {
-        return Field(propertySelector, schema);
     }
 
     public ObjectContextSchema<T, TContext> RefineAt<TProperty>(
@@ -337,5 +287,5 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
         return RefineAt(propertySelector, (val, _) => predicate(val), (val, _) => messageFactory(val), code);
     }
 
-    // Field overloads for primitive types with fluent builders are generated by SchemaFactoryGenerator
+    // Property overloads for primitive types with fluent builders are generated by SchemaFactoryGenerator
 }

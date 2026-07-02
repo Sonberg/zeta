@@ -22,9 +22,9 @@ public class ZetaValidatorTimeProviderTests
         var serviceProvider = services.BuildServiceProvider();
 
         var validator = serviceProvider.GetRequiredService<IZetaValidator>();
-        var schema = Z.Object<UserRegistration>()
-            .Field(x => x.Email, Z.String().Email())
-            .Field(x => x.BirthDate, Z.DateTime().MinAge(18));
+        var schema = Z.Schema<UserRegistration>()
+            .Property(x => x.Email, Z.String().Email())
+            .Property(x => x.BirthDate, Z.DateTime().MinAge(18));
 
         // Someone born 2006-06-16 is 17 years old on 2024-06-15
         var request = new UserRegistration("test@example.com", new DateTime(2006, 6, 16, 0, 0, 0, DateTimeKind.Utc));
@@ -48,9 +48,9 @@ public class ZetaValidatorTimeProviderTests
         services.AddScoped<IZetaValidator, ZetaValidator>();
         var serviceProvider = services.BuildServiceProvider();
 
-        var schema = Z.Object<UserRegistration>()
-            .Field(x => x.Email, Z.String().Email())
-            .Field(x => x.BirthDate, Z.DateTime().MinAge(18));
+        var schema = Z.Schema<UserRegistration>()
+            .Property(x => x.Email, Z.String().Email())
+            .Property(x => x.BirthDate, Z.DateTime().MinAge(18));
 
         // Someone born 2006-06-16 is 17 on 2024-06-15, but 18 on 2024-06-16
         var request = new UserRegistration("test@example.com", new DateTime(2006, 6, 16, 0, 0, 0, DateTimeKind.Utc));

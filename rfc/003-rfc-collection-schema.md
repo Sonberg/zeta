@@ -27,7 +27,7 @@ Z.Collection(
 
 ```csharp
 var schema =
-    Z.Object<User>()
+    Z.Schema<User>()
         .Property(
             u => u.Roles,
             roles => roles.Each(item =>
@@ -41,10 +41,10 @@ await schema.ValidateAsync(new User { Roles = ["Reader"] });
 Make this work:
 
 ```csharp
-var schema = Z.Object<CreateOrderRequest>()
+var schema = Z.Schema<CreateOrderRequest>()
     .WithContext<CreateOrderContext>()
-    .Field(x => x.CustomerId, x => x.NotEmpty())
-    .Field(x => x.Items, x => x.Each(item => item
-        .Field(i => i.ProductId, Z.Guid())
-        .Field(i => i.Quantity, Z.Int().Min(1).Max(100))));
+    .Property(x => x.CustomerId, x => x.NotEmpty())
+    .Property(x => x.Items, x => x.Each(item => item
+        .Property(i => i.ProductId, Z.Guid())
+        .Property(i => i.Quantity, Z.Int().Min(1).Max(100))));
 ```

@@ -7,8 +7,8 @@ public class PathFormattingOptionsTests
     [Fact]
     public async Task ObjectField_UsesCustomPropertyNameFormatter()
     {
-        var schema = Z.Object<Person>()
-            .Field(x => x.FirstName, s => s.MinLength(5));
+        var schema = Z.Schema<Person>()
+            .Property(x => x.FirstName, s => s.MinLength(5));
 
         var context = new ValidationContext(pathFormattingOptions: new PathFormattingOptions
         {

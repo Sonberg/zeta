@@ -9,12 +9,12 @@ namespace Zeta.Sample.FastEndpoints.Api.Endpoints;
 public class CreateProductEndpoint : Endpoint<CreateProductRequest>
 {
     private static readonly ISchema<CreateProductRequest> Schema =
-        Z.Object<CreateProductRequest>()
-            .Field(p => p.Name, Z.String().MinLength(2).MaxLength(200))
-            .Field(p => p.Sku, Z.String()
+        Z.Schema<CreateProductRequest>()
+            .Property(p => p.Name, Z.String().MinLength(2).MaxLength(200))
+            .Property(p => p.Sku, Z.String()
                 .Regex(@"^[A-Z0-9\-]+$", "SKU must contain only uppercase letters, numbers, and hyphens"))
-            .Field(p => p.Price, Z.Decimal().Min(0.01m))
-            .Field(p => p.StockQuantity, Z.Int().Min(0));
+            .Property(p => p.Price, Z.Decimal().Min(0.01m))
+            .Property(p => p.StockQuantity, Z.Int().Min(0));
 
     public override void Configure()
     {

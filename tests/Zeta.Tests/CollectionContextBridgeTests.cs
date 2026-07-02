@@ -16,14 +16,14 @@ public class CollectionContextBridgeTests
     public async Task ContextAwareObjectWithArrayField_UsingEach_ShouldCompile()
     {
         // This is the exact example from the RFC/problem statement
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(x => x.ProductId, Z.Guid())
-            .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(x => x.ProductId, Z.Guid())
+            .Property(x => x.Quantity, Z.Int().Min(1).Max(100));
 
-        var schema = Z.Object<CreateOrderRequest>()
+        var schema = Z.Schema<CreateOrderRequest>()
             .Using<CreateOrderContext>()
-            .Field(x => x.CustomerId, x => x.NotEmpty())
-            .Field(x => x.Items, x => x.Each(itemSchema));
+            .Property(x => x.CustomerId, x => x.NotEmpty())
+            .Property(x => x.Items, x => x.Each(itemSchema));
 
         var context = new CreateOrderContext(100);
         var order = new CreateOrderRequest(
@@ -40,14 +40,14 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithListField_UsingEach_ShouldCompile()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(x => x.ProductId, Z.Guid())
-            .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(x => x.ProductId, Z.Guid())
+            .Property(x => x.Quantity, Z.Int().Min(1).Max(100));
 
-        var schema = Z.Object<CreateOrderRequestWithList>()
+        var schema = Z.Schema<CreateOrderRequestWithList>()
             .Using<CreateOrderContext>()
-            .Field(x => x.CustomerId, x => x.NotEmpty())
-            .Field(x => x.Items, x => x.Each(itemSchema));
+            .Property(x => x.CustomerId, x => x.NotEmpty())
+            .Property(x => x.Items, x => x.Each(itemSchema));
 
         var context = new CreateOrderContext(100);
         var order = new CreateOrderRequestWithList(
@@ -64,14 +64,14 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithArrayField_InvalidElement_ReturnsError()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(x => x.ProductId, Z.Guid())
-            .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(x => x.ProductId, Z.Guid())
+            .Property(x => x.Quantity, Z.Int().Min(1).Max(100));
 
-        var schema = Z.Object<CreateOrderRequest>()
+        var schema = Z.Schema<CreateOrderRequest>()
             .Using<CreateOrderContext>()
-            .Field(x => x.CustomerId, x => x.NotEmpty())
-            .Field(x => x.Items, x => x.Each(itemSchema));
+            .Property(x => x.CustomerId, x => x.NotEmpty())
+            .Property(x => x.Items, x => x.Each(itemSchema));
 
         var context = new CreateOrderContext(100);
         var order = new CreateOrderRequest(
@@ -91,9 +91,9 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithPrimitiveArray_UsingEach_ShouldCompile()
     {
-        var schema = Z.Object<TaggedItem>()
+        var schema = Z.Schema<TaggedItem>()
             .Using<CreateOrderContext>()
-            .Field(x => x.Tags, x => x.Each(t => t.MinLength(3).MaxLength(20)));
+            .Property(x => x.Tags, x => x.Each(t => t.MinLength(3).MaxLength(20)));
 
         var context = new CreateOrderContext(100);
         var item = new TaggedItem(["coding", "music", "sports"]);
@@ -105,9 +105,9 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithPrimitiveArray_InvalidElement_ReturnsError()
     {
-        var schema = Z.Object<TaggedItem>()
+        var schema = Z.Schema<TaggedItem>()
             .Using<CreateOrderContext>()
-            .Field(x => x.Tags, x => x.Each(t => t.MinLength(3)));
+            .Property(x => x.Tags, x => x.Each(t => t.MinLength(3)));
 
         var context = new CreateOrderContext(100);
         var item = new TaggedItem(["coding", "ab"]); // "ab" is too short
@@ -122,9 +122,9 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithPrimitiveList_UsingEach_ShouldCompile()
     {
-        var schema = Z.Object<TaggedItemWithList>()
+        var schema = Z.Schema<TaggedItemWithList>()
             .Using<CreateOrderContext>()
-            .Field(x => x.Tags, x => x.Each(t => t.MinLength(3).MaxLength(20)));
+            .Property(x => x.Tags, x => x.Each(t => t.MinLength(3).MaxLength(20)));
 
         var context = new CreateOrderContext(100);
         var item = new TaggedItemWithList(["coding", "music", "sports"]);
@@ -136,9 +136,9 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithIntArray_UsingEach_ShouldCompile()
     {
-        var schema = Z.Object<NumberContainer>()
+        var schema = Z.Schema<NumberContainer>()
             .Using<CreateOrderContext>()
-            .Field(x => x.Numbers, x => x.Each(n => n.Min(0).Max(100)));
+            .Property(x => x.Numbers, x => x.Each(n => n.Min(0).Max(100)));
 
         var context = new CreateOrderContext(100);
         var container = new NumberContainer([1, 50, 100]);
@@ -150,9 +150,9 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithIntArray_InvalidElement_ReturnsError()
     {
-        var schema = Z.Object<NumberContainer>()
+        var schema = Z.Schema<NumberContainer>()
             .Using<CreateOrderContext>()
-            .Field(x => x.Numbers, x => x.Each(n => n.Min(0).Max(100)));
+            .Property(x => x.Numbers, x => x.Each(n => n.Min(0).Max(100)));
 
         var context = new CreateOrderContext(100);
         var container = new NumberContainer([1, 150]); // 150 exceeds max
@@ -167,14 +167,14 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithCollectionValidation_ShouldWork()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(x => x.ProductId, Z.Guid())
-            .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(x => x.ProductId, Z.Guid())
+            .Property(x => x.Quantity, Z.Int().Min(1).Max(100));
 
-        var schema = Z.Object<CreateOrderRequest>()
+        var schema = Z.Schema<CreateOrderRequest>()
             .Using<CreateOrderContext>()
-            .Field(x => x.CustomerId, x => x.NotEmpty())
-            .Field(x => x.Items, x => x
+            .Property(x => x.CustomerId, x => x.NotEmpty())
+            .Property(x => x.Items, x => x
                 .Each(itemSchema)
                 .MinLength(1)
                 .MaxLength(10));
@@ -193,13 +193,13 @@ public class CollectionContextBridgeTests
     [Fact]
     public async Task ContextAwareObjectWithEmptyArray_FailsMinLength()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(x => x.ProductId, Z.Guid())
-            .Field(x => x.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(x => x.ProductId, Z.Guid())
+            .Property(x => x.Quantity, Z.Int().Min(1));
 
-        var schema = Z.Object<CreateOrderRequest>()
+        var schema = Z.Schema<CreateOrderRequest>()
             .Using<CreateOrderContext>()
-            .Field(x => x.Items, x => x
+            .Property(x => x.Items, x => x
                 .Each(itemSchema)
                 .MinLength(1));
 
@@ -215,13 +215,13 @@ public class CollectionContextBridgeTests
     public async Task ExplicitUsing_StillWorks()
     {
         // Users should still be able to call .Using<TContext>() explicitly
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(x => x.ProductId, Z.Guid())
-            .Field(x => x.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(x => x.ProductId, Z.Guid())
+            .Property(x => x.Quantity, Z.Int().Min(1).Max(100));
 
-        var schema = Z.Object<CreateOrderRequest>()
+        var schema = Z.Schema<CreateOrderRequest>()
             .Using<CreateOrderContext>()
-            .Field(x => x.Items, x => x
+            .Property(x => x.Items, x => x
                 .Each(itemSchema)
                 .Using<CreateOrderContext>());
 

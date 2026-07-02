@@ -24,8 +24,6 @@ if(!result.IsSuccess)
 }
 ```
 
-`Z.Schema<T>()`/`.Property(...)` are the preferred names. `Z.Object<T>()`/`.Field(...)` remain supported aliases.
-
 Use `.Using<TContext>(factory)` to inject async services into validation:
 
 ```csharp

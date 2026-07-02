@@ -202,8 +202,8 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_NestedInObject_ValidatesCorrectly()
     {
-        var schema = Z.Object<Request>()
-            .Field(r => r.Metadata, dict => dict.EachValue(v => v.MaxLength(50)));
+        var schema = Z.Schema<Request>()
+            .Property(r => r.Metadata, dict => dict.EachValue(v => v.MaxLength(50)));
 
         var request = new Request(new Dictionary<string, string> { ["city"] = "New York" });
         var result = await schema.ValidateAsync(request);
@@ -213,8 +213,8 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_NestedInObject_InvalidValue_PropagatesPath()
     {
-        var schema = Z.Object<Request>()
-            .Field(r => r.Metadata, dict => dict.EachValue(v => v.MaxLength(3)));
+        var schema = Z.Schema<Request>()
+            .Property(r => r.Metadata, dict => dict.EachValue(v => v.MaxLength(3)));
 
         var request = new Request(new Dictionary<string, string> { ["city"] = "New York" });
         var result = await schema.ValidateAsync(request);
@@ -228,8 +228,8 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_NestedInObject_InvalidKey_PropagatesPath()
     {
-        var schema = Z.Object<Request>()
-            .Field(r => r.Metadata, dict => dict.EachKey(k => k.MinLength(5)));
+        var schema = Z.Schema<Request>()
+            .Property(r => r.Metadata, dict => dict.EachKey(k => k.MinLength(5)));
 
         var request = new Request(new Dictionary<string, string> { ["city"] = "New York" });
         var result = await schema.ValidateAsync(request);
@@ -246,8 +246,8 @@ public class DictionarySchemaTests
             .EachValue(v => v.Min(0))
             .NotEmpty();
 
-        var schema = Z.Object<Scores>()
-            .Field(s => s.Points, dictSchema);
+        var schema = Z.Schema<Scores>()
+            .Property(s => s.Points, dictSchema);
 
         var scores = new Scores(new Dictionary<string, int> { ["alice"] = 10, ["bob"] = 20 });
         var result = await schema.ValidateAsync(scores);
@@ -259,8 +259,8 @@ public class DictionarySchemaTests
     {
         var dictSchema = Z.Dictionary<string, int>().EachValue(v => v.Min(0));
 
-        var schema = Z.Object<Scores>()
-            .Field(s => s.Points, dictSchema);
+        var schema = Z.Schema<Scores>()
+            .Property(s => s.Points, dictSchema);
 
         var scores = new Scores(new Dictionary<string, int> { ["alice"] = -1 });
         var result = await schema.ValidateAsync(scores);
@@ -390,9 +390,9 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexValues_AllValid_ReturnsSuccess()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var schema = Z.Dictionary(Z.String(), itemSchema);
 
@@ -409,9 +409,9 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexValues_InvalidField_ReturnsFailureWithCorrectPath()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.ProductId, Z.Guid())
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.ProductId, Z.Guid())
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var schema = Z.Dictionary(Z.String(), itemSchema);
 
@@ -431,8 +431,8 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexValues_MultipleEntries_MultipleErrors_ReturnsAllErrors()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100));
 
         var schema = Z.Dictionary(Z.String(), itemSchema);
 
@@ -454,9 +454,9 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexValues_MultipleInvalidFieldsInSameEntry_ReturnsAllErrors()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100))
-            .Field(i => i.Label, Z.String().MinLength(3));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100))
+            .Property(i => i.Label, Z.String().MinLength(3));
 
         var schema = Z.Dictionary(Z.String(), itemSchema);
 
@@ -477,7 +477,7 @@ public class DictionarySchemaTests
     public async Task Dictionary_ComplexValues_InlineBuilder_ValidatesCorrectly()
     {
         var schema = Z.Dictionary<string, OrderItem>()
-            .EachValue(Z.Object<OrderItem>().Field(i => i.Quantity, Z.Int().Min(1)));
+            .EachValue(Z.Schema<OrderItem>().Property(i => i.Quantity, Z.Int().Min(1)));
 
         var dict = new Dictionary<string, OrderItem>
         {
@@ -491,11 +491,11 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexValues_NestedInObject_PropagatesFullPath()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100));
 
-        var schema = Z.Object<Catalog>()
-            .Field(c => c.Items, dict => dict.EachValue(itemSchema).NotEmpty());
+        var schema = Z.Schema<Catalog>()
+            .Property(c => c.Items, dict => dict.EachValue(itemSchema).NotEmpty());
 
         var catalog = new Catalog(new Dictionary<string, OrderItem>
         {
@@ -513,13 +513,13 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexValues_NestedInObject_PreBuiltSchema_PropagatesFullPath()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.Quantity, Z.Int().Min(1).Max(100));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.Quantity, Z.Int().Min(1).Max(100));
 
         var dictSchema = Z.Dictionary(Z.String(), itemSchema).NotEmpty();
 
-        var schema = Z.Object<Catalog>()
-            .Field(c => c.Items, dictSchema);
+        var schema = Z.Schema<Catalog>()
+            .Property(c => c.Items, dictSchema);
 
         var catalog = new Catalog(new Dictionary<string, OrderItem>
         {
@@ -538,8 +538,8 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexValues_ChainedWithCountRules_BothFail_ReturnsAllErrors()
     {
-        var itemSchema = Z.Object<OrderItem>()
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var itemSchema = Z.Schema<OrderItem>()
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var schema = Z.Dictionary(Z.String(), itemSchema).MinLength(3);
 
@@ -561,9 +561,9 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexKey_AllValid_ReturnsSuccess()
     {
-        var keySchema = Z.Object<ProductKey>()
-            .Field(k => k.Category, Z.String().MinLength(1))
-            .Field(k => k.Code, Z.String().MinLength(3));
+        var keySchema = Z.Schema<ProductKey>()
+            .Property(k => k.Category, Z.String().MinLength(1))
+            .Property(k => k.Code, Z.String().MinLength(3));
 
         var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
 
@@ -580,9 +580,9 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexKey_InvalidField_ReturnsFailureWithCorrectPath()
     {
-        var keySchema = Z.Object<ProductKey>()
-            .Field(k => k.Category, Z.String().MinLength(1))
-            .Field(k => k.Code, Z.String().MinLength(5));
+        var keySchema = Z.Schema<ProductKey>()
+            .Property(k => k.Category, Z.String().MinLength(1))
+            .Property(k => k.Code, Z.String().MinLength(5));
 
         var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
 
@@ -602,8 +602,8 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexKey_MultipleInvalidKeys_ReturnsAllErrors()
     {
-        var keySchema = Z.Object<ProductKey>()
-            .Field(k => k.Code, Z.String().MinLength(5));
+        var keySchema = Z.Schema<ProductKey>()
+            .Property(k => k.Code, Z.String().MinLength(5));
 
         var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
 
@@ -624,9 +624,9 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexKey_MultipleInvalidFieldsInSameKey_ReturnsAllErrors()
     {
-        var keySchema = Z.Object<ProductKey>()
-            .Field(k => k.Category, Z.String().MinLength(3))
-            .Field(k => k.Code, Z.String().MinLength(5));
+        var keySchema = Z.Schema<ProductKey>()
+            .Property(k => k.Category, Z.String().MinLength(3))
+            .Property(k => k.Code, Z.String().MinLength(5));
 
         var schema = Z.Dictionary(keySchema, Z.Int().Min(0));
 
@@ -646,11 +646,11 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexKey_NestedInObject_PropagatesFullPath()
     {
-        var keySchema = Z.Object<ProductKey>()
-            .Field(k => k.Code, Z.String().MinLength(5));
+        var keySchema = Z.Schema<ProductKey>()
+            .Property(k => k.Code, Z.String().MinLength(5));
 
-        var schema = Z.Object<Inventory>()
-            .Field(inv => inv.Stock, dict => dict.EachKey(keySchema));
+        var schema = Z.Schema<Inventory>()
+            .Property(inv => inv.Stock, dict => dict.EachKey(keySchema));
 
         var inventory = new Inventory(new Dictionary<ProductKey, int>
         {
@@ -667,11 +667,11 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_ComplexKey_AndComplexValue_BothInvalid_ReturnsAllErrors()
     {
-        var keySchema = Z.Object<ProductKey>()
-            .Field(k => k.Code, Z.String().MinLength(5));
+        var keySchema = Z.Schema<ProductKey>()
+            .Property(k => k.Code, Z.String().MinLength(5));
 
-        var valueSchema = Z.Object<OrderItem>()
-            .Field(i => i.Quantity, Z.Int().Min(1));
+        var valueSchema = Z.Schema<OrderItem>()
+            .Property(i => i.Quantity, Z.Int().Min(1));
 
         var schema = Z.Dictionary(keySchema, valueSchema);
 
@@ -893,8 +893,8 @@ public class DictionarySchemaTests
     [Fact]
     public async Task RefineEachEntry_NestedInObjectField_PathIncludesFieldName()
     {
-        var schema = Z.Object<Schedule>()
-            .Field(s => s.Slots, dict => dict.RefineEachEntry((k, v) => v >= 0, "Must be non-negative"));
+        var schema = Z.Schema<Schedule>()
+            .Property(s => s.Slots, dict => dict.RefineEachEntry((k, v) => v >= 0, "Must be non-negative"));
 
         var schedule = new Schedule(new Dictionary<string, int> { ["2024W15"] = -1 });
         var result = await schema.ValidateAsync(schedule);

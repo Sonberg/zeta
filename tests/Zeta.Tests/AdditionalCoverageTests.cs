@@ -39,10 +39,10 @@ public class AdditionalCoverageTests
     [Fact]
     public void ObjectContextlessSchema_If_ContextSchemaWithoutFactory_Throws()
     {
-        var branch = Z.Object<Dog>().Using<Ctx>();
+        var branch = Z.Schema<Dog>().Using<Ctx>();
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            Z.Object<IAnimal>().If<Dog, Ctx>(_ => true, branch));
+            Z.Schema<IAnimal>().If<Dog, Ctx>(_ => true, branch));
 
         Assert.Contains("No context factory found", exception.Message);
     }
@@ -50,12 +50,12 @@ public class AdditionalCoverageTests
     [Fact]
     public void ObjectContextlessSchema_If_ContextSchemaWithMultipleFactories_Throws()
     {
-        var branch = Z.Object<Dog>()
+        var branch = Z.Schema<Dog>()
             .Using<Ctx>((dog, _, _) => ValueTask.FromResult(new Ctx(dog.Age)))
-            .If(_ => true, Z.Object<Dog>().Using<Ctx>((dog, _, _) => ValueTask.FromResult(new Ctx(dog.Age + 1))));
+            .If(_ => true, Z.Schema<Dog>().Using<Ctx>((dog, _, _) => ValueTask.FromResult(new Ctx(dog.Age + 1))));
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            Z.Object<IAnimal>().If<Dog, Ctx>(_ => true, branch));
+            Z.Schema<IAnimal>().If<Dog, Ctx>(_ => true, branch));
 
         Assert.Contains("Multiple context factories found", exception.Message);
     }
@@ -143,7 +143,7 @@ public class AdditionalCoverageTests
     public async Task TypeAssertion_ToContext_Validates()
     {
         var assertion = new ContextlessTypeAssertion<IAnimal, Dog>(
-            Z.Object<Dog>().Field(x => x.Age, s => s.Min(1)));
+            Z.Schema<Dog>().Property(x => x.Age, s => s.Min(1)));
 
         var contextAware = assertion.ToContext<Ctx>();
         var context = new ValidationContext<Ctx>(new Ctx(0));

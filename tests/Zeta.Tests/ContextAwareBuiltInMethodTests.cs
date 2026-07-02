@@ -208,8 +208,8 @@ public class ContextAwareBuiltInMethodTests
             .Using<TestContext>()
             .MinLength(3);
 
-        var schema = Z.Object<User>()
-            .Field(x => x.Name, nameSchema);
+        var schema = Z.Schema<User>()
+            .Property(x => x.Name, nameSchema);
 
         var result = await schema.ValidateAsync(new User("abc"), new TestContext());
         Assert.True(result.IsSuccess);

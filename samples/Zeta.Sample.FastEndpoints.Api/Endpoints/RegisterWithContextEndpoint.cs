@@ -16,16 +16,16 @@ public record UserContext(bool EmailExists);
 public class RegisterWithContextEndpoint : ZetaEndpoint<RegisterRequest>
 {
     private static readonly ISchema<RegisterRequest> Schema =
-        Z.Object<RegisterRequest>()
+        Z.Schema<RegisterRequest>()
             .Using<UserContext>(async (value, sp, ct) =>
             {
                 var repo = sp.GetRequiredService<IUserRepository>();
                 var emailExists = await repo.EmailExistsAsync(value.Email, ct);
                 return new UserContext(emailExists);
             })
-            .Field(r => r.Email, Z.String().Email())
-            .Field(r => r.Password, Z.String().MinLength(8))
-            .Field(r => r.Age, Z.Int().Min(18).Max(120))
+            .Property(r => r.Email, Z.String().Email())
+            .Property(r => r.Password, Z.String().MinLength(8))
+            .Property(r => r.Age, Z.Int().Min(18).Max(120))
             .Refine((r, ctx) => !ctx.EmailExists, "Email is already registered", "email_taken");
 
     public override void Configure()

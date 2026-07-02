@@ -123,7 +123,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         Func<ObjectContextlessSchema<T>, ObjectContextlessSchema<TTarget>> configure)
         where TTarget : class, T
     {
-        var branchSchema = configure(Z.Object<T>());
+        var branchSchema = configure(Z.Schema<T>());
         return base.If(predicate, (ISchema<T>)new TypeNarrowingContextlessSchemaAdapter<T, TTarget>(branchSchema));
     }
 
@@ -184,7 +184,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     // Nullable reference / nested-object fields. Reference types need no null adapter:
     // the inner schema already handles null. Nullable value-type fields are served by the
     // source generator's typed overloads.
-    public ObjectContextlessSchema<T> Field<TProperty>(
+    public ObjectContextlessSchema<T> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
         where TProperty : class
@@ -194,13 +194,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return AddField(new FieldContextlessValidator<T, TProperty>(propertyName, getter!, schema));
     }
 
-    public ObjectContextlessSchema<T> Property<TProperty>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        ISchema<TProperty> schema)
-        where TProperty : class
-        => Field(propertySelector, schema);
-
-    public ObjectContextlessSchema<T> Field<TEnum>(
+    public ObjectContextlessSchema<T> Property<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
         where TEnum : struct, Enum
@@ -211,14 +205,6 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
     public ObjectContextlessSchema<T> Property<TEnum>(
-        Expression<Func<T, TEnum>> propertySelector,
-        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
-        where TEnum : struct, Enum
-    {
-        return Field(propertySelector, schema);
-    }
-
-    public ObjectContextlessSchema<T> Field<TEnum>(
         Expression<Func<T, TEnum?>> propertySelector,
         Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
         where TEnum : struct, Enum
@@ -228,43 +214,23 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return AddField(new NullableFieldContextlessValidator<T, TEnum>(propertyName, getter, schema(Z.Enum<TEnum>())));
     }
 
-    public ObjectContextlessSchema<T> Property<TEnum>(
-        Expression<Func<T, TEnum?>> propertySelector,
-        Func<EnumContextlessSchema<TEnum>, EnumContextlessSchema<TEnum>> schema)
-        where TEnum : struct, Enum
-    {
-        return Field(propertySelector, schema);
-    }
-
-    // A context-aware field schema promotes this contextless object to context-aware.
-
-    public ObjectContextSchema<T, TContext> Field<TProperty, TContext>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        ISchema<TProperty, TContext> schema)
-        where TProperty : class
-        => Using<TContext>().Field(propertySelector, schema);
+    // A context-aware property schema promotes this contextless object to context-aware.
 
     public ObjectContextSchema<T, TContext> Property<TProperty, TContext>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty, TContext> schema)
         where TProperty : class
-        => Field(propertySelector, schema);
+        => Using<TContext>().Property(propertySelector, schema);
 
     /// <summary>
     /// Promotes this schema to context-aware using a concrete Zeta context schema.
     /// This overload avoids ambiguity when a context-aware schema is also assignable to ISchema&lt;TProperty&gt;.
     /// </summary>
-    public ObjectContextSchema<T, TContext> Field<TProperty, TContext>(
-        Expression<Func<T, TProperty?>> propertySelector,
-        IContextSchema<TProperty, TContext> schema)
-        where TProperty : class
-        => Using<TContext>().Field(propertySelector, (ISchema<TProperty, TContext>)schema);
-
     public ObjectContextSchema<T, TContext> Property<TProperty, TContext>(
         Expression<Func<T, TProperty?>> propertySelector,
         IContextSchema<TProperty, TContext> schema)
         where TProperty : class
-        => Field(propertySelector, schema);
+        => Using<TContext>().Property(propertySelector, (ISchema<TProperty, TContext>)schema);
 
     public ObjectContextlessSchema<T> RefineAt<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
