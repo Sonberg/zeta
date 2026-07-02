@@ -480,4 +480,5 @@ public static class DictionarySchemaExtensions
         var newValueSchema = valueTransform(Z.Enum<TEnum>());
         return schema.WithValueSchema(newValueSchema);
     }
+
 }
