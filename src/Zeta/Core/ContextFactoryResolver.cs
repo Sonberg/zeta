@@ -8,7 +8,8 @@ internal static class ContextFactoryResolver
         IServiceProvider serviceProvider,
         CancellationToken ct)
     {
-        var factoryList = factories.ToList();
+        var factoryList = factories as IReadOnlyList<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>>
+            ?? factories.ToList();
         if (factoryList.Count == 0)
         {
             throw new InvalidOperationException(
