@@ -16,7 +16,7 @@ public class ContextResultTests
         var context = Z.Context();
 
         Assert.Same(ValidationContext.Empty, context);
-        Assert.Equal("$", context.Path);
+        Assert.Equal(string.Empty, context.Path);
     }
 
     [Fact]
