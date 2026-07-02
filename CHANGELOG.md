@@ -26,6 +26,9 @@
 - The remaining context-aware collection/dictionary count-rule twins (`MinLengthRule<T, TContext>`, `MaxLengthRule<T, TContext>`, `LengthRule<T, TContext>`, `NotEmptyRule<T, TContext>`, and the three `Dictionary*Rule<TKey, TValue, TContext>` variants). These were context-blind duplicates now served by `ContextlessRuleAdapter<T, TContext>`. (The context-*consuming* `RefinementRule<T, TContext>`, `StatefulRefinementRule<T, TContext, TState>`, and `EntryRefinement<…, TContext>` are unchanged.)
 - `RequiredFieldContextlessValidator` and `RequiredFieldContextContextValidator` — dead code with no production construction sites (nullable/required field validation is handled by the source-generated field overloads and `NullableField*Validator`).
 
+### Tests
+- Closed remaining public-API test gaps found by an audit against the "every public method must be tested" rule: the non-generic `Result.Success()`/`Result.Failure()`, `ValidationErrorExtensions.ToPathDictionary()`, `Z.Context()`, the `RefineAt` message-factory and value-only-predicate overloads on `ObjectContextlessSchema`/`ObjectContextSchema`, the `ZetaExtensions.ToActionResult`/`ToResult` callback overloads (including the `Result<T, TContext>` variant), `DependencyInjectionExtensions.AddZeta()`, and all three `ZetaExtensions.WithValidation` overloads (now covered end-to-end via an in-memory `TestServer`-backed minimal API).
+
 ## 0.1.16
 
 ### Added

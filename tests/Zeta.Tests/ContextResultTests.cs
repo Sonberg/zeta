@@ -11,6 +11,15 @@ public class ContextResultTests
     private sealed record Payload(string Type, List<string> Tags);
 
     [Fact]
+    public void Z_Context_Parameterless_ReturnsEmptyContext()
+    {
+        var context = Z.Context();
+
+        Assert.Same(ValidationContext.Empty, context);
+        Assert.Equal("$", context.Path);
+    }
+
+    [Fact]
     public async Task ContextAwareSchema_ValidateAsync_ReturnsResultWithValueAndContext()
     {
         ISchema<int, TestContext> schema = Z.Int()
