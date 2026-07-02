@@ -76,65 +76,6 @@ public class LowCoverageInternalTests
     }
 
     [Fact]
-    public async Task NullableStructAdapters_HandleNullAndInvalidValues()
-    {
-        var inner = Z.Int().Min(5);
-
-        var contextlessAdapter = new NullableStructContextlessAdapter<int>(inner);
-        var contextlessNull = await contextlessAdapter.ValidateAsync(null, new ValidationContext());
-        Assert.True(contextlessNull.IsFailure);
-        Assert.Equal("null_value", contextlessNull.Errors[0].Code);
-
-        var contextlessInvalid = await contextlessAdapter.ValidateAsync(1, new ValidationContext());
-        Assert.True(contextlessInvalid.IsFailure);
-
-        var contextAdapter = new NullableStructContextAdapter<int, Ctx>(inner);
-        var typedContext = new ValidationContext<Ctx>(new Ctx(0));
-        var contextNull = await contextAdapter.ValidateAsync(null, typedContext);
-        Assert.True(contextNull.IsFailure);
-        Assert.Equal("null_value", contextNull.Errors[0].Code);
-
-        var contextValid = await contextAdapter.ValidateAsync(10, typedContext);
-        Assert.True(contextValid.IsSuccess);
-    }
-
-    [Fact]
-    public async Task NullableWrappers_HandleNullFactoriesAndValidation()
-    {
-        var intSchema = Z.Int()
-            .Using<Ctx>((value, _, _) => ValueTask.FromResult(new Ctx(value)))
-            .Min(5);
-        var intWrapper = new NullableStructContextWrapper<int, Ctx>(intSchema);
-
-        var intFactories = ((ISchema<int?, Ctx>)intWrapper).GetContextFactories().ToList();
-        Assert.Single(intFactories);
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await intFactories[0](null, new ServiceCollection().BuildServiceProvider(), CancellationToken.None));
-
-        var intTypedContext = new ValidationContext<Ctx>(new Ctx(0));
-        var intNullResult = await intWrapper.ValidateAsync(null, intTypedContext);
-        Assert.True(intNullResult.IsFailure);
-        var intValidResult = await intWrapper.ValidateAsync(10, intTypedContext);
-        Assert.True(intValidResult.IsSuccess);
-
-        var stringSchema = Z.String()
-            .Using<Ctx>((value, _, _) => ValueTask.FromResult(new Ctx(value.Length)))
-            .MinLength(3);
-        var stringWrapper = new NullableReferenceContextWrapper<string, Ctx>(stringSchema);
-
-        var stringFactories = ((ISchema<string?, Ctx>)stringWrapper).GetContextFactories().ToList();
-        Assert.Single(stringFactories);
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await stringFactories[0](null, new ServiceCollection().BuildServiceProvider(), CancellationToken.None));
-
-        var stringTypedContext = new ValidationContext<Ctx>(new Ctx(0));
-        var stringInvalid = await stringWrapper.ValidateAsync("a", stringTypedContext);
-        Assert.True(stringInvalid.IsFailure);
-        var stringValid = await stringWrapper.ValidateAsync("abcd", stringTypedContext);
-        Assert.True(stringValid.IsSuccess);
-    }
-
-    [Fact]
     public async Task TypeAssertion_InternalTypes_CoverMismatchAndFactories()
     {
         var contextlessDogSchema = Z.Object<Dog>()

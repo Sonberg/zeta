@@ -171,60 +171,56 @@ public partial class ObjectContextSchema<T, TContext> : ContextSchema<T, TContex
             : Result<T, TContext>.Failure(errors);
     }
 
+    // Nullable reference / nested-object fields. Reference types need no null adapter:
+    // the inner schema already handles null (required-by-default, or passes when .Nullable()).
+    // Nullable value-type fields are served by the source generator's typed overloads.
+
     public ObjectContextSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty, TContext> schema)
+        where TProperty : class
     {
         var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-
-        // This validates nullable property TProperty? using schema for TProperty.
-        var wrapper = NullableAdapterFactory.CreateContextWrapper(schema);
-
-        return AddField(new FieldContextContextValidator<T, TProperty?, TContext>(propertyName, getter, wrapper));
+        return AddField(new FieldContextContextValidator<T, TProperty, TContext>(propertyName, getter!, schema));
     }
 
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty, TContext> schema)
-    {
-        return Field(propertySelector, schema);
-    }
+        where TProperty : class
+        => Field(propertySelector, schema);
 
     /// <summary>
-    /// Adds a nullable field with a concrete context-aware schema type from Zeta.
-    /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;TProperty&gt;.
+    /// Disambiguation overload for a concrete Zeta context schema that is also assignable to ISchema&lt;TProperty&gt;.
     /// </summary>
     public ObjectContextSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         IContextSchema<TProperty, TContext> schema)
-    {
-        return Field(propertySelector, (ISchema<TProperty, TContext>)schema);
-    }
+        where TProperty : class
+        => Field(propertySelector, (ISchema<TProperty, TContext>)schema);
 
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         IContextSchema<TProperty, TContext> schema)
-    {
-        return Field(propertySelector, schema);
-    }
+        where TProperty : class
+        => Field(propertySelector, schema);
 
     public ObjectContextSchema<T, TContext> Field<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
+        where TProperty : class
     {
         var propertyName = ObjectContextlessSchema<T>.GetPropertyName(propertySelector);
         var getter = ObjectContextlessSchema<T>.CreateGetter(propertySelector);
-        var wrapper = NullableAdapterFactory.CreateContextlessWrapper(schema);
-        return AddContextlessField(new FieldContextlessValidator<T, TProperty?>(propertyName, getter, wrapper));
+        return AddContextlessField(new FieldContextlessValidator<T, TProperty>(propertyName, getter!, schema));
     }
 
     public ObjectContextSchema<T, TContext> Property<TProperty>(
         Expression<Func<T, TProperty?>> propertySelector,
         ISchema<TProperty> schema)
-    {
-        return Field(propertySelector, schema);
-    }
+        where TProperty : class
+        => Field(propertySelector, schema);
 
     public ObjectContextSchema<T, TContext> Field<TEnum>(
         Expression<Func<T, TEnum>> propertySelector,

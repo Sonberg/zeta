@@ -11,6 +11,8 @@
 - README: global registration guide (Option 3), `Refine()` cross-field validation examples, `Zeta.AspNetCore` migration guide.
 
 ### Changed
+- Nullable object-field handling no longer uses reflection. `Field`/`Property` overloads that take a pre-built schema (`ISchema<TProperty>`, `ISchema<TProperty, TContext>`, `IContextSchema<TProperty, TContext>`) for a nullable/nested property are now generic `where TProperty : class` methods that build their field validator directly — reference types need no null adapter (the inner schema already handles null). Nullable **value-type** fields continue to be served by the source generator's typed overloads (`int?`, `decimal?`, …) and the fluent builders. Call sites are unchanged.
+- The dedicated field-error path-remapping logic (`RelativeTo`/`Concat`) is now shared via `FieldError.PrependFieldPath` instead of being copy-pasted across the four field validators.
 - Value-schema validators (`string`, `int`, `double`, `decimal`, `bool`, `Guid`, enum, `DateTime`, `DateOnly`, `TimeOnly`) are now **extension methods** on `IValueSchema<T, TSelf>` (in `*SchemaExtensions` classes, namespace `Zeta`) instead of instance methods duplicated across the contextless and context-aware schema classes. Call sites are unchanged (`Z.String().Email()`, `Z.String().Using<Ctx>().Email()`); each validator is now defined once. `Object`/`Collection`/`Dictionary` schemas are unaffected.
 - Context factory resolution ("resolve factory → promote to `ValidationContext<TContext>` → validate") is now centralized in `ContextFactoryResolver.ResolveAndValidateAsync`, shared by the contextless `ISchema<T>` self-resolving bridge and `ZetaValidator`. No public API change.
 - ASP.NET Core filters/result helpers and FastEndpoints pre-processors now route error shaping through single extensions (`ToPathDictionary()` / `ToValidationFailures()`) instead of inline `GroupBy`/`ValidationFailure` loops.
@@ -18,6 +20,7 @@
 - `PackageReadmeFile` now correctly packs `README.md` (FastEndpoints-specific) instead of the root `README.md`.
 
 ### Removed
+- The nullable-adapter matrix (`NullableAdapterFactory` and the six `Nullable{Reference,Struct}Context{,less}{Adapter,Wrapper}` classes) and the reflection (`Activator.CreateInstance`) it relied on. This makes nullable field construction NativeAOT/trim-safe. Passing a **pre-built** `ISchema<TStruct>` for a nullable value-type field is no longer supported (it previously threw `ArgumentException` at runtime); use the fluent builder or a source-generated overload instead.
 - Redundant context-aware rule structs (`MinLengthRule<TContext>`, `MaxIntRule<TContext>`, `DefinedRule<TEnum, TContext>`, and the rest — 28 in total). Context-aware validation of these rules now flows through `ContextlessRuleAdapter<T, TContext>` — the same path `.Using<TContext>()` already used.
 
 ## 0.1.16

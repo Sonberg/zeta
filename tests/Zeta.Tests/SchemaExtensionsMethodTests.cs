@@ -46,12 +46,10 @@ public class SchemaExtensionsMethodTests
     }
 
     [Fact]
-    public async Task Field_ContextAwareNullableReferenceExtension_IsCovered()
+    public async Task Field_ContextAwareNullableReference_IsCovered()
     {
-        var schema = SchemaExtensions.Field(
-            Z.Object<Person>().Using<TestContext>(),
-            x => x.Nickname,
-            Z.String().MinLength(3));
+        var schema = Z.Object<Person>().Using<TestContext>()
+            .Field(x => x.Nickname, Z.String().MinLength(3));
 
         var result = await schema.ValidateAsync(new Person("ab", 10), new TestContext(99));
         Assert.False(result.IsSuccess);
@@ -59,33 +57,13 @@ public class SchemaExtensionsMethodTests
     }
 
     [Fact]
-    public async Task Field_ContextAwareNullableStructExtension_CurrentlyThrowsForNullableStruct()
+    public async Task Field_ContextlessNullableReference_IsCovered()
     {
-        Assert.Throws<ArgumentException>(() => SchemaExtensions.Field(
-            Z.Object<Person>().Using<TestContext>(),
-            x => x.Age,
-            Z.Int().Min(18)));
-    }
-
-    [Fact]
-    public async Task Field_ContextlessNullableReferenceExtension_IsCovered()
-    {
-        var schema = SchemaExtensions.Field(
-            Z.Object<Person>(),
-            x => x.Nickname,
-            Z.String().MinLength(3));
+        var schema = Z.Object<Person>()
+            .Field(x => x.Nickname, Z.String().MinLength(3));
 
         var result = await schema.ValidateAsync(new Person("ab", 10));
         Assert.False(result.IsSuccess);
         Assert.Contains(result.Errors, e => e.Path == "$.nickname" && e.Code == "min_length");
-    }
-
-    [Fact]
-    public async Task Field_ContextlessNullableStructExtension_CurrentlyThrowsForNullableStruct()
-    {
-        Assert.Throws<ArgumentException>(() => SchemaExtensions.Field(
-            Z.Object<Person>(),
-            x => x.Age,
-            Z.Int().Min(18)));
     }
 }

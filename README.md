@@ -143,20 +143,20 @@ Comparing Zeta against FluentValidation and DataAnnotations on .NET 10 (Apple M2
 
 | Method | Mean | Allocated |
 |--------|-----:|----------:|
-| FluentValidation | 131.2 ns | 600 B |
-| FluentValidation (Async) | 230.1 ns | 672 B |
-| **Zeta** | **353.2 ns** | **216 B** |
-| Zeta (Invalid) | 442.2 ns | 1,048 B |
-| DataAnnotations | 627.9 ns | 1,848 B |
-| DataAnnotations (Invalid) | 990.5 ns | 2,672 B |
-| FluentValidation (Invalid) | 1,923.9 ns | 7,728 B |
-| FluentValidation (Invalid Async) | 2,095.5 ns | 7,800 B |
+| FluentValidation | 134.0 ns | 600 B |
+| FluentValidation (Async) | 228.2 ns | 672 B |
+| **Zeta** | **283.1 ns** | **72 B** |
+| Zeta (Invalid) | 517.8 ns | 1,424 B |
+| DataAnnotations | 606.4 ns | 1,848 B |
+| DataAnnotations (Invalid) | 1,024.6 ns | 2,672 B |
+| FluentValidation (Invalid) | 1,855.9 ns | 7,312 B |
+| FluentValidation (Invalid Async) | 2,028.4 ns | 7,384 B |
 
 **Key findings:**
-- Allocates **64% less memory** than FluentValidation on valid input (216 B vs 600 B)
-- Allocates **7.4x less memory** than FluentValidation on invalid input (1,048 B vs 7,728 B)
-- **4.4x faster** than FluentValidation when validation fails (442 ns vs 1,924 ns)
-- **2.2x faster** than DataAnnotations when validation fails (442 ns vs 991 ns)
+- Allocates **88% less memory** than FluentValidation on valid input (72 B vs 600 B)
+- Allocates **5.1x less memory** than FluentValidation on invalid input (1,424 B vs 7,312 B)
+- **3.6x faster** than FluentValidation when validation fails (518 ns vs 1,856 ns)
+- **2.0x faster** than DataAnnotations when validation fails (518 ns vs 1,025 ns)
 
 Run benchmarks:
 
