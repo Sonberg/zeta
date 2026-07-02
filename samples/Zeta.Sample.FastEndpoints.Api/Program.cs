@@ -10,7 +10,10 @@ builder.Services.AddScoped<IUserRepository, FakeUserRepository>();
 
 var app = builder.Build();
 
-app.UseFastEndpoints();
+app.UseFastEndpoints(c =>
+{
+    c.Endpoints.Configurator = ep => ep.UseZetaValidation();
+});
 
 app.Run();
 

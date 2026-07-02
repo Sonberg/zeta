@@ -84,6 +84,74 @@ public class RegisterEndpoint : Endpoint<RegisterRequest>
 }
 ```
 
+### Option 3 — Global configurator (zero per-endpoint boilerplate)
+
+Enable convention-based auto-discovery in `Program.cs`:
+
+```csharp
+app.UseFastEndpoints(c =>
+{
+    c.Endpoints.Configurator = ep => ep.UseZetaValidation();
+});
+```
+
+Any endpoint with a static `ISchema<TRequest>` field will have validation wired automatically —
+no `Validate(Schema)` or `PreProcessors(...)` call needed in `Configure()`:
+
+```csharp
+public class CreateOrderEndpoint : Endpoint<CreateOrderRequest>
+{
+    private static readonly ISchema<CreateOrderRequest> Schema =
+        Z.Object<CreateOrderRequest>()
+            .Field(r => r.ProductId, s => s.NotEmpty())
+            .Field(r => r.Quantity, s => s.Min(1));
+
+    public override void Configure()
+    {
+        Post("/api/orders");
+        AllowAnonymous();
+        // No Validate() call needed — global configurator discovers Schema automatically
+    }
+
+    public override async Task HandleAsync(CreateOrderRequest req, CancellationToken ct)
+        => await HttpContext.Response.SendOkAsync(ct);
+}
+```
+
+**Convention:** the first static field of type `ISchema<TRequest>` found on the endpoint class
+(or any base class up to but not including the FastEndpoints `Endpoint<T>` base) is used.
+Fields on derived classes take priority over base class fields.
+
+**Safe for mixed codebases:** endpoints with no `ISchema<TRequest>` field are silently skipped.
+Endpoints that already call `Validate(Schema)` will run Zeta validation only once — the
+pre-processors check `Response.HasStarted` and skip if a previous pre-processor already
+sent the error response.
+
+## Cross-Field Validation with Refine()
+
+Use `.Refine()` for rules that span multiple fields:
+
+```csharp
+var schema = Z.Object<DateRangeRequest>()
+    .Field(r => r.StartDate, s => s.LessThan(DateOnly.MaxValue))
+    .Field(r => r.EndDate, s => s.GreaterThan(DateOnly.MinValue))
+    .Refine(r => r.EndDate > r.StartDate, "End date must be after start date", "$.endDate");
+```
+
+For async cross-field validation (e.g. database lookups), use `.Using<TContext>()`:
+
+```csharp
+var schema = Z.Object<CheckoutRequest>()
+    .Using<InventoryContext>(async (req, sp, ct) =>
+    {
+        var svc = sp.GetRequiredService<IInventoryService>();
+        return new InventoryContext(await svc.IsAvailableAsync(req.ProductId, req.Quantity, ct));
+    })
+    .Field(r => r.ProductId, s => s.NotEmpty())
+    .Field(r => r.Quantity, s => s.Min(1))
+    .Refine((r, ctx) => ctx.IsAvailable, "Product not available in requested quantity");
+```
+
 ## Context-Aware Validation
 
 Use `.Using<TContext>(factory)` to load async data before validation runs (e.g. database lookups). The factory receives the request and `IServiceProvider`, so no additional setup is needed.
@@ -138,12 +206,55 @@ Validation failures return `400 Bad Request` in FastEndpoints' standard format:
 
 `ValidationError.Code` is mapped to `ValidationFailure.ErrorCode`. Error codes are not included in the default FastEndpoints response body, but are available when customising error response serialisation.
 
+## Migrating from Zeta.AspNetCore
+
+If moving from `Zeta.AspNetCore` (Minimal APIs or Controllers) to `Zeta.FastEndpoints`:
+
+| Before (`Zeta.AspNetCore`) | After (`Zeta.FastEndpoints`) |
+|---|---|
+| `builder.Services.AddZeta()` | No service registration needed |
+| `IZetaValidator` constructor injection | Remove from constructor |
+| Manual `validator.ValidateAsync(req, ...)` | Remove — pre-processor handles it |
+| `.WithValidation(schema)` on `MapPost(...)` | `Validate(Schema)` in `Configure()` |
+| `ValidationProblem` in `Results<>` return | Remove — validation short-circuits before handler |
+
+**Before (`Zeta.AspNetCore`):**
+```csharp
+app.MapPost("/api/users", async (IZetaValidator validator, UserRequest req, CancellationToken ct) =>
+{
+    var result = await validator.ValidateAsync(req, schema, ct);
+    if (!result.IsSuccess) return Results.ValidationProblem(...);
+    return Results.Ok();
+}).WithValidation(schema);
+```
+
+**After (`Zeta.FastEndpoints`):**
+```csharp
+public class CreateUserEndpoint : ZetaEndpoint<UserRequest>
+{
+    private static readonly ISchema<UserRequest> Schema = ...;
+
+    public override void Configure()
+    {
+        Post("/api/users");
+        Validate(Schema);
+    }
+
+    public override async Task HandleAsync(UserRequest req, CancellationToken ct)
+    {
+        // Only reaches here if validation passed — no manual check needed
+        await SendOkAsync(ct);
+    }
+}
+```
+
 ## Notes
 
 - `Validate(schema)` registers a `ZetaPreProcessor<TRequest>` under the hood.
 - Validation short-circuits with a 400 before the handler runs if validation fails.
 - Schemas are typically static. The `.Using<TContext>()` factory runs per-request — route params or headers can be accessed there if needed.
 - Context factory exceptions propagate as HTTP 500. For expected failures (e.g. entity not found), return a context value and fail with `.Refine(...)` instead.
+- Minimum FastEndpoints version: `7.2.0`.
 - For Minimal APIs and Controllers, use [`Zeta.AspNetCore`](../Zeta.AspNetCore/README.md) instead.
 
 ## Source and Samples

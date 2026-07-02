@@ -54,10 +54,29 @@ public static class ZetaExtensions
     /// Converts a validation Result to an ActionResult&lt;TResult&gt;.
     /// Returns BadRequest with ValidationProblemDetails on failure, or invokes onSuccess on success.
     /// </summary>
-    public static ActionResult<TResult> ToActionResult<T, TResult>(this Result<T> result, Func<T, ActionResult<TResult>> onSuccess)
+    public static ActionResult<TResult> ToActionResult<T, TResult>(this Result<T> result, Func<T, ActionResult<TResult>>? onSuccess)
     {
         if (result.IsSuccess)
-            return onSuccess(result.Value);
+            return onSuccess is not null
+                ? onSuccess(result.Value)
+                : new OkObjectResult(result.Value);
+
+        return new BadRequestObjectResult(new ValidationProblemDetails(
+            result.Errors.GroupBy(e => e.PathString)
+                .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
+        ));
+    }
+
+    /// <summary>
+    /// Converts a validation Result to an ActionResult&lt;TResult&gt;.
+    /// Returns BadRequest with ValidationProblemDetails on failure, or invokes onSuccess on success.
+    /// </summary>
+    public static ActionResult<TResult> ToActionResult<T, TContext, TResult>(this Result<T, TContext> result, Func<T, ActionResult<TResult>>? onSuccess)
+    {
+        if (result.IsSuccess)
+            return onSuccess is not null
+                ? onSuccess(result.Value)
+                : new OkObjectResult(result.Value);
 
         return new BadRequestObjectResult(new ValidationProblemDetails(
             result.Errors.GroupBy(e => e.PathString)

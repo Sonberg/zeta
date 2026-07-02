@@ -10,3 +10,7 @@ public record CreateProductRequest(
     string Sku,
     decimal Price,
     int StockQuantity);
+
+public record OrderRequest(
+    string ProductId,
+    int Quantity);

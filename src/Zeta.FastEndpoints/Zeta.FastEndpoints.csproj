@@ -8,7 +8,7 @@
     <!-- NuGet Package Metadata -->
     <PackageId>Zeta.FastEndpoints</PackageId>
     <Title>Zeta.FastEndpoints</Title>
-    <Description>FastEndpoints integration for Zeta validation framework. Provides ZetaPreProcessor and ZetaEndpoint base classes for pre-processor pipeline validation — handles both contextless and context-aware schemas.</Description>
+    <Description>FastEndpoints pre-processor integration for the Zeta validation framework. Wire Zeta schemas into the FastEndpoints pre-processor pipeline — not middleware, not DI-based validators. Supports contextless and context-aware schemas with inline async context factories.</Description>
     <Authors>Zeta Contributors</Authors>
     <PackageTags>validation;schema;async;fastendpoints;webapi</PackageTags>
     <PackageProjectUrl>https://github.com/sonberg/zeta</PackageProjectUrl>
@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>

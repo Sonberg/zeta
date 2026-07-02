@@ -2,6 +2,16 @@
 
 ## Next release
 
+### Added
+- `UseZetaValidation()` extension on `EndpointDefinition` for convention-based schema auto-discovery — scans static `ISchema<TRequest>` fields on endpoint classes and registers Zeta validation as a pre-processor without any per-endpoint boilerplate.
+- `ZetaGlobalPreProcessor<TRequest>` implementing `IGlobalPreProcessor` — used internally by `UseZetaValidation()`.
+- `HasStarted` guard on `ZetaPreProcessor<TRequest>` and `ZetaGlobalPreProcessor<TRequest>`: skips validation if the response has already been written (safe when using both the global configurator and per-endpoint `Validate()` on the same endpoint).
+- README: global registration guide (Option 3), `Refine()` cross-field validation examples, `Zeta.AspNetCore` migration guide.
+
+### Changed
+- NuGet package description updated to clarify pre-processor (not middleware) integration model.
+- `PackageReadmeFile` now correctly packs `README.md` (FastEndpoints-specific) instead of the root `README.md`.
+
 ## 0.1.16
 
 ### Added

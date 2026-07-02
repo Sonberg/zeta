@@ -23,7 +23,7 @@ public sealed class ZetaPreProcessor<TRequest> : IPreProcessor<TRequest>
     /// </summary>
     public async Task PreProcessAsync(IPreProcessorContext<TRequest> ctx, CancellationToken ct)
     {
-        if (ctx.Request is null) return;
+        if (ctx.Request is null || ctx.HttpContext.Response.HasStarted) return;
 
         var validationContext = new ValidationContext(
             cancellationToken: ct,
