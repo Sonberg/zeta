@@ -128,6 +128,9 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
     protected TSchema Append(IValidationRule<T, TContext> rule)
         => CreateInstance(Rules.Add(rule), AllowNull, _conditionals, ContextFactory);
 
+    public TSchema AppendRule(IValidationRule<T> rule)
+        => Append(new ContextlessRuleAdapter<T, TContext>(rule));
+
     public virtual async ValueTask<Result<T, TContext>> ValidateAsync(T? value, ValidationContext<TContext> context)
     {
         if (value is null)

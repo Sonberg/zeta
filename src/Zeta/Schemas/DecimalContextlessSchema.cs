@@ -1,13 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules;
-using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A contextless schema for validating decimal values.
 /// </summary>
-public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, DecimalContextlessSchema>
+public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, DecimalContextlessSchema>, IValueSchema<decimal, DecimalContextlessSchema>
 {
     internal DecimalContextlessSchema()
     {
@@ -28,32 +26,6 @@ public sealed class DecimalContextlessSchema : ContextlessSchema<decimal, Decima
         bool allowNull,
         IReadOnlyList<(Func<decimal, bool>, ISchema<decimal>)>? conditionals)
         => new(rules, allowNull, conditionals);
-
-    public DecimalContextlessSchema Min(decimal min, string? message = null)
-        => Append(new MinDecimalRule(min, message));
-
-    public DecimalContextlessSchema Max(decimal max, string? message = null)
-        => Append(new MaxDecimalRule(max, message));
-
-    public DecimalContextlessSchema Range(decimal min, decimal max, string? message = null)
-    {
-        if (min > max)
-            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
-
-        return Min(min, message).Max(max, message);
-    }
-
-    public DecimalContextlessSchema Positive(string? message = null)
-        => Append(new PositiveDecimalRule(message));
-
-    public DecimalContextlessSchema Negative(string? message = null)
-        => Append(new NegativeDecimalRule(message));
-
-    public DecimalContextlessSchema Precision(int maxDecimalPlaces, string? message = null)
-        => Append(new PrecisionRule(maxDecimalPlaces, message));
-
-    public DecimalContextlessSchema MultipleOf(decimal step, string? message = null)
-        => Append(new MultipleOfRule(step, message));
 
     /// <summary>
     /// Creates a context-aware decimal schema with all rules from this schema.

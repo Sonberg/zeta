@@ -1,12 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A contextless schema for validating boolean values.
 /// </summary>
-public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextlessSchema>
+public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextlessSchema>, IValueSchema<bool, BoolContextlessSchema>
 {
     internal BoolContextlessSchema()
     {
@@ -27,18 +26,6 @@ public sealed class BoolContextlessSchema : ContextlessSchema<bool, BoolContextl
         bool allowNull,
         IReadOnlyList<(Func<bool, bool>, ISchema<bool>)>? conditionals)
         => new(rules, allowNull, conditionals);
-
-    public BoolContextlessSchema IsTrue(string? message = null)
-        => Append(new RefinementRule<bool>((val, exec) =>
-            val
-                ? null
-                : new ValidationError(exec.PathSegments, "is_true", message ?? "Must be true")));
-
-    public BoolContextlessSchema IsFalse(string? message = null)
-        => Append(new RefinementRule<bool>((val, exec) =>
-            !val
-                ? null
-                : new ValidationError(exec.PathSegments, "is_false", message ?? "Must be false")));
 
     /// <summary>
     /// Creates a context-aware bool schema with all rules from this schema.

@@ -38,6 +38,8 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
     protected TSchema Append(IValidationRule<T> rule)
         => CreateInstance(Rules.Add(rule), AllowNull, _conditionals);
 
+    public TSchema AppendRule(IValidationRule<T> rule) => Append(rule);
+
     public ValueTask<Result<T>> ValidateAsync(T? value)
     {
         return ValidateAsync(value, ValidationContext.Empty);

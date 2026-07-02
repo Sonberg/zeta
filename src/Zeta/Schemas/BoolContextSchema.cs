@@ -1,12 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A context-aware schema for validating boolean values.
 /// </summary>
-public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolContextSchema<TContext>>
+public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolContextSchema<TContext>>, IValueSchema<bool, BoolContextSchema<TContext>>
 {
     internal BoolContextSchema() { }
 
@@ -29,16 +28,4 @@ public class BoolContextSchema<TContext> : ContextSchema<bool, TContext, BoolCon
         IReadOnlyList<ISchemaConditional<bool, TContext>>? conditionals,
         Func<bool, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(rules, allowNull, conditionals, contextFactory);
-
-    public BoolContextSchema<TContext> IsTrue(string? message = null)
-        => Append(new RefinementRule<bool, TContext>((val, ctx) =>
-            val
-                ? null
-                : new ValidationError(ctx.PathSegments, "is_true", message ?? "Must be true")));
-
-    public BoolContextSchema<TContext> IsFalse(string? message = null)
-        => Append(new RefinementRule<bool, TContext>((val, ctx) =>
-            !val
-                ? null
-                : new ValidationError(ctx.PathSegments, "is_false", message ?? "Must be false")));
 }

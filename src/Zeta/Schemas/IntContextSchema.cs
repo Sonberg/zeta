@@ -1,13 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules;
-using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A context-aware schema for validating integer values.
 /// </summary>
-public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContextSchema<TContext>>
+public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContextSchema<TContext>>, IValueSchema<int, IntContextSchema<TContext>>
 {
     internal IntContextSchema() { }
 
@@ -30,18 +28,4 @@ public class IntContextSchema<TContext> : ContextSchema<int, TContext, IntContex
         IReadOnlyList<ISchemaConditional<int, TContext>>? conditionals,
         Func<int, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(rules, allowNull, conditionals, contextFactory);
-
-    public IntContextSchema<TContext> Min(int min, string? message = null)
-        => Append(new MinIntRule<TContext>(min, message));
-
-    public IntContextSchema<TContext> Max(int max, string? message = null)
-        => Append(new MaxIntRule<TContext>(max, message));
-
-    public IntContextSchema<TContext> Range(int min, int max, string? message = null)
-    {
-        if (min > max)
-            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
-
-        return Min(min, message).Max(max, message);
-    }
 }

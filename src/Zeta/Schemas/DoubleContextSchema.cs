@@ -1,12 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A context-aware schema for validating double values.
 /// </summary>
-public class DoubleContextSchema<TContext> : ContextSchema<double, TContext, DoubleContextSchema<TContext>>
+public class DoubleContextSchema<TContext> : ContextSchema<double, TContext, DoubleContextSchema<TContext>>, IValueSchema<double, DoubleContextSchema<TContext>>
 {
     internal DoubleContextSchema() { }
 
@@ -31,27 +30,4 @@ public class DoubleContextSchema<TContext> : ContextSchema<double, TContext, Dou
         IReadOnlyList<ISchemaConditional<double, TContext>>? conditionals,
         Func<double, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(rules, allowNull, conditionals, contextFactory);
-
-    public DoubleContextSchema<TContext> Min(double min, string? message = null)
-        => Append(new MinDoubleRule<TContext>(min, message));
-
-    public DoubleContextSchema<TContext> Max(double max, string? message = null)
-        => Append(new MaxDoubleRule<TContext>(max, message));
-
-    public DoubleContextSchema<TContext> Range(double min, double max, string? message = null)
-    {
-        if (min > max)
-            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
-
-        return Min(min, message).Max(max, message);
-    }
-
-    public DoubleContextSchema<TContext> Positive(string? message = null)
-        => Append(new PositiveDoubleRule<TContext>(message));
-
-    public DoubleContextSchema<TContext> Negative(string? message = null)
-        => Append(new NegativeDoubleRule<TContext>(message));
-
-    public DoubleContextSchema<TContext> Finite(string? message = null)
-        => Append(new FiniteRule<TContext>(message));
 }

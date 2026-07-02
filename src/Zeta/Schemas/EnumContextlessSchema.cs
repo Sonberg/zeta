@@ -1,13 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules;
-using Zeta.Rules.Enum;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A contextless schema for validating enum values.
 /// </summary>
-public sealed class EnumContextlessSchema<TEnum> : ContextlessSchema<TEnum, EnumContextlessSchema<TEnum>>
+public sealed class EnumContextlessSchema<TEnum> : ContextlessSchema<TEnum, EnumContextlessSchema<TEnum>>, IValueSchema<TEnum, EnumContextlessSchema<TEnum>>
     where TEnum : struct, Enum
 {
     internal EnumContextlessSchema()
@@ -29,15 +27,6 @@ public sealed class EnumContextlessSchema<TEnum> : ContextlessSchema<TEnum, Enum
         bool allowNull,
         IReadOnlyList<(Func<TEnum, bool>, ISchema<TEnum>)>? conditionals)
         => new(rules, allowNull, conditionals);
-
-    public EnumContextlessSchema<TEnum> Defined(string? message = null)
-        => Append(new DefinedRule<TEnum>(message));
-
-    public EnumContextlessSchema<TEnum> OneOf(params TEnum[] allowed)
-        => OneOf((IReadOnlyCollection<TEnum>)allowed, null);
-
-    public EnumContextlessSchema<TEnum> OneOf(IReadOnlyCollection<TEnum> allowed, string? message = null)
-        => Append(new OneOfRule<TEnum>(allowed, message));
 
     /// <summary>
     /// Creates a context-aware enum schema with all rules from this schema.

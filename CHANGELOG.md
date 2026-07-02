@@ -3,6 +3,7 @@
 ## Next release
 
 ### Added
+- `IValueSchema<T, TSelf>` interface (namespace `Zeta.Core`) — the extension point for value-schema validators; implemented by every value schema, contextless and context-aware.
 - `IEnumerable<ValidationError>.ToPathDictionary()` extension (namespace `Zeta`) — the single home for grouping validation errors by JSONPath into the `Dictionary<string, string[]>` shape used by ASP.NET Core's `ValidationProblem` / `ValidationProblemDetails`.
 - `UseZetaValidation()` extension on `EndpointDefinition` for convention-based schema auto-discovery — scans static `ISchema<TRequest>` fields on endpoint classes and registers Zeta validation as a pre-processor without any per-endpoint boilerplate.
 - `ZetaGlobalPreProcessor<TRequest>` implementing `IGlobalPreProcessor` — used internally by `UseZetaValidation()`.
@@ -10,10 +11,14 @@
 - README: global registration guide (Option 3), `Refine()` cross-field validation examples, `Zeta.AspNetCore` migration guide.
 
 ### Changed
+- Value-schema validators (`string`, `int`, `double`, `decimal`, `bool`, `Guid`, enum, `DateTime`, `DateOnly`, `TimeOnly`) are now **extension methods** on `IValueSchema<T, TSelf>` (in `*SchemaExtensions` classes, namespace `Zeta`) instead of instance methods duplicated across the contextless and context-aware schema classes. Call sites are unchanged (`Z.String().Email()`, `Z.String().Using<Ctx>().Email()`); each validator is now defined once. `Object`/`Collection`/`Dictionary` schemas are unaffected.
 - Context factory resolution ("resolve factory → promote to `ValidationContext<TContext>` → validate") is now centralized in `ContextFactoryResolver.ResolveAndValidateAsync`, shared by the contextless `ISchema<T>` self-resolving bridge and `ZetaValidator`. No public API change.
 - ASP.NET Core filters/result helpers and FastEndpoints pre-processors now route error shaping through single extensions (`ToPathDictionary()` / `ToValidationFailures()`) instead of inline `GroupBy`/`ValidationFailure` loops.
 - NuGet package description updated to clarify pre-processor (not middleware) integration model.
 - `PackageReadmeFile` now correctly packs `README.md` (FastEndpoints-specific) instead of the root `README.md`.
+
+### Removed
+- Redundant context-aware rule structs (`MinLengthRule<TContext>`, `MaxIntRule<TContext>`, `DefinedRule<TEnum, TContext>`, and the rest — 28 in total). Context-aware validation of these rules now flows through `ContextlessRuleAdapter<T, TContext>` — the same path `.Using<TContext>()` already used.
 
 ## 0.1.16
 

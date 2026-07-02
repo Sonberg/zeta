@@ -234,16 +234,18 @@ Factory exceptions propagate as HTTP 500, not validation errors. Handle soft fai
 - Use `SchemaAdapter<T, TContext>` to bridge contextless schemas into context-aware contexts
 
 ### Adding Validation Methods
-When adding a new validation method to a contextless schema type (e.g., `StringSchema.MyMethod()`), you should also add the same method to the corresponding context-aware schema type (e.g., `StringSchema<TContext>.MyMethod()`). This ensures API consistency between contextless and context-aware schemas.
+Value-schema validators (string, int, double, decimal, bool, Guid, enum, DateTime, DateOnly, TimeOnly) are **extension methods**, written once and shared by both the contextless and context-aware variant. Add a new one to the matching `*SchemaExtensions` class in `src/Zeta/Schemas/` (namespace `Zeta`, so consumers who reach `Z` also see it). No per-variant duplication.
 
-Example: If adding `StringSchema.Foo()`, also add to `StringSchema<TContext>`:
+The extension hangs off `IValueSchema<T, TSelf>` (in `src/Zeta/Core/`), implemented by every value schema; its `AppendRule(IValidationRule<T>)` is inherited from the base classes. The context-aware base wraps the contextless rule in `ContextlessRuleAdapter<T, TContext>`, so a single **contextless** rule struct (or inline `RefinementRule<T>`) backs both flavours — do not add `XRule<TContext>` variants.
+
+Example — add `Foo()` to `StringSchemaExtensions`:
 ```csharp
-public StringSchema<TContext> Foo(...)
-{
-    Use(new RefinementRule<string, TContext>((val, ctx) => ...));
-    return this;
-}
+public static TSelf Foo<TSelf>(this IValueSchema<string, TSelf> schema, string? message = null)
+    where TSelf : IValueSchema<string, TSelf>
+    => schema.AppendRule(new FooRule(message));
 ```
+
+Note: `Object`/`Collection`/`Dictionary` schemas are **not** `IValueSchema` — their fluent methods stay as instance/generated members (adding `IValueSchema` to the shared base collides with the generated `Field`/`Property`/`Each` overloads).
 
 ### After changes
 - Then adding schema features all features should support fluent builder for primativ types. And accepts ISchema<T> and ISchema<T, TContext> for object fields. If context aware schema is provided, the full schema must be context aware too.

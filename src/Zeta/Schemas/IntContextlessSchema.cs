@@ -1,13 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules;
-using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A contextless schema for validating integer values.
 /// </summary>
-public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextlessSchema>
+public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextlessSchema>, IValueSchema<int, IntContextlessSchema>
 {
     internal IntContextlessSchema()
     {
@@ -28,20 +26,6 @@ public sealed class IntContextlessSchema : ContextlessSchema<int, IntContextless
         bool allowNull,
         IReadOnlyList<(Func<int, bool>, ISchema<int>)>? conditionals)
         => new(rules, allowNull, conditionals);
-
-    public IntContextlessSchema Min(int min, string? message = null)
-        => Append(new MinIntRule(min, message));
-
-    public IntContextlessSchema Max(int max, string? message = null)
-        => Append(new MaxIntRule(max, message));
-
-    public IntContextlessSchema Range(int min, int max, string? message = null)
-    {
-        if (min > max)
-            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
-
-        return Min(min, message).Max(max, message);
-    }
 
     /// <summary>
     /// Creates a context-aware int schema with all rules from this schema.

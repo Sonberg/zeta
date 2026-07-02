@@ -1,13 +1,11 @@
 using Zeta.Core;
-using Zeta.Rules;
-using Zeta.Rules.Numeric;
 
 namespace Zeta.Schemas;
 
 /// <summary>
 /// A contextless schema for validating double values.
 /// </summary>
-public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleContextlessSchema>
+public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleContextlessSchema>, IValueSchema<double, DoubleContextlessSchema>
 {
     internal DoubleContextlessSchema()
     {
@@ -28,29 +26,6 @@ public sealed class DoubleContextlessSchema : ContextlessSchema<double, DoubleCo
         bool allowNull,
         IReadOnlyList<(Func<double, bool>, ISchema<double>)>? conditionals)
         => new(rules, allowNull, conditionals);
-
-    public DoubleContextlessSchema Min(double min, string? message = null)
-        => Append(new MinDoubleRule(min, message));
-
-    public DoubleContextlessSchema Max(double max, string? message = null)
-        => Append(new MaxDoubleRule(max, message));
-
-    public DoubleContextlessSchema Range(double min, double max, string? message = null)
-    {
-        if (min > max)
-            throw new ArgumentOutOfRangeException(nameof(min), "min must be less than or equal to max.");
-
-        return Min(min, message).Max(max, message);
-    }
-
-    public DoubleContextlessSchema Positive(string? message = null)
-        => Append(new PositiveDoubleRule(message));
-
-    public DoubleContextlessSchema Negative(string? message = null)
-        => Append(new NegativeDoubleRule(message));
-
-    public DoubleContextlessSchema Finite(string? message = null)
-        => Append(new FiniteRule(message));
 
     /// <summary>
     /// Creates a context-aware double schema with all rules from this schema.
