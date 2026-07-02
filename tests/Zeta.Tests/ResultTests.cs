@@ -316,6 +316,32 @@ public class ResultTests
         Assert.Equal("$: Value is required", exception.Message);
     }
 
+    // ==================== Non-Generic Result Tests ====================
+
+    [Fact]
+    public void Result_Success_ReturnsSuccessWithNoErrors()
+    {
+        var result = Result.Success();
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public void Result_Failure_ReturnsFailureWithGivenErrors()
+    {
+        var error1 = new ValidationError("name", "required", "Name is required");
+        var error2 = new ValidationError("email", "email", "Invalid email");
+        var result = Result.Failure([error1, error2]);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Equal(2, result.Errors.Count);
+        Assert.Contains(result.Errors, e => e.Path == "$.name");
+        Assert.Contains(result.Errors, e => e.Path == "$.email");
+    }
+
     // ==================== Implicit Operator Tests ====================
 
     [Fact]
