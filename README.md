@@ -141,27 +141,41 @@ dotnet run --project samples/Zeta.Sample.FastEndpoints.Api
 
 Comparing Zeta against FluentValidation and DataAnnotations on .NET 10 (Apple M2 Pro).
 
+### Simple object (3 flat properties)
+
 | Method | Mean | Allocated |
 |--------|-----:|----------:|
-| FluentValidation | 134.0 ns | 600 B |
-| FluentValidation (Async) | 228.2 ns | 672 B |
-| **Zeta** | **283.1 ns** | **72 B** |
-| Zeta (Invalid) | 517.8 ns | 1,424 B |
-| DataAnnotations | 606.4 ns | 1,848 B |
-| DataAnnotations (Invalid) | 1,024.6 ns | 2,672 B |
-| FluentValidation (Invalid) | 1,855.9 ns | 7,312 B |
-| FluentValidation (Invalid Async) | 2,028.4 ns | 7,384 B |
+| FluentValidation | 137.6 ns | 600 B |
+| FluentValidation (Async) | 236.3 ns | 672 B |
+| **Zeta** | **287.6 ns** | **72 B** |
+| Zeta (Invalid) | 515.9 ns | 1,424 B |
+| DataAnnotations | 605.3 ns | 1,848 B |
+| DataAnnotations (Invalid) | 1,015.9 ns | 2,672 B |
+| FluentValidation (Invalid) | 1,913.6 ns | 7,312 B |
+| FluentValidation (Invalid Async) | 2,068.4 ns | 7,384 B |
 
-**Key findings:**
 - Allocates **88% less memory** than FluentValidation on valid input (72 B vs 600 B)
-- Allocates **5.1x less memory** than FluentValidation on invalid input (1,424 B vs 7,312 B)
-- **3.6x faster** than FluentValidation when validation fails (518 ns vs 1,856 ns)
-- **2.0x faster** than DataAnnotations when validation fails (518 ns vs 1,025 ns)
+- **3.7x faster** than FluentValidation when validation fails (516 ns vs 1,914 ns), with **5.1x less** memory (1,424 B vs 7,312 B)
+
+### Complex object graph (nested object + collection of objects + conditional + cross-field rule)
+
+A realistic e-commerce order: email, nested shipping address, a list of line items, a nullable discount code, and a cross-field total rule. DataAnnotations is excluded — `TryValidateObject` does not recurse into nested objects or collection elements.
+
+| Method | Mean | Allocated |
+|--------|-----:|----------:|
+| **Zeta** | **1.606 µs** | **952 B** |
+| FluentValidation | 1.778 µs | 4,904 B |
+| Zeta (Invalid) | 2.280 µs | 6,856 B |
+| FluentValidation (Invalid) | 5.806 µs | 18,136 B |
+
+- **5.1x less** memory than FluentValidation on valid input (952 B vs 4,904 B)
+- **2.5x faster** than FluentValidation when validation fails (2.28 µs vs 5.81 µs), with **2.6x less** memory (6,856 B vs 18,136 B)
 
 Run benchmarks:
 
 ```bash
-dotnet run --project benchmarks/Zeta.Benchmarks -c Release
+dotnet run --project benchmarks/Zeta.Benchmarks -c Release              # all
+dotnet run --project benchmarks/Zeta.Benchmarks -c Release -- --filter '*Complex*'
 ```
 
 ## Changelog

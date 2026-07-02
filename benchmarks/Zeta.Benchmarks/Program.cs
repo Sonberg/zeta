@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Running;
-using Zeta.Benchmarks;
 
-BenchmarkRunner.Run<ValidationBenchmarks>();
+// Run all *Benchmarks in this assembly; pass --filter to pick one, e.g.
+//   dotnet run -c Release -- --filter *ComplexValidationBenchmarks*
+BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
