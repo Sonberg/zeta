@@ -43,10 +43,7 @@ public static class ZetaExtensions
     {
         return result.Match(
             success: onSuccess,
-            failure: errors => new BadRequestObjectResult(new ValidationProblemDetails(
-                errors.GroupBy(e => e.PathString)
-                    .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
-            ))
+            failure: errors => new BadRequestObjectResult(new ValidationProblemDetails(errors.ToPathDictionary()))
         );
     }
 
@@ -61,10 +58,7 @@ public static class ZetaExtensions
                 ? onSuccess(result.Value)
                 : new OkObjectResult(result.Value);
 
-        return new BadRequestObjectResult(new ValidationProblemDetails(
-            result.Errors.GroupBy(e => e.PathString)
-                .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
-        ));
+        return new BadRequestObjectResult(new ValidationProblemDetails(result.Errors.ToPathDictionary()));
     }
 
     /// <summary>
@@ -78,10 +72,7 @@ public static class ZetaExtensions
                 ? onSuccess(result.Value)
                 : new OkObjectResult(result.Value);
 
-        return new BadRequestObjectResult(new ValidationProblemDetails(
-            result.Errors.GroupBy(e => e.PathString)
-                .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
-        ));
+        return new BadRequestObjectResult(new ValidationProblemDetails(result.Errors.ToPathDictionary()));
     }
 
     /// <summary>
@@ -101,10 +92,7 @@ public static class ZetaExtensions
     {
         return result.Match(
             success: onSuccess,
-            failure: errors => Results.ValidationProblem(
-                errors.GroupBy(e => e.PathString)
-                    .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray())
-            )
+            failure: errors => Results.ValidationProblem(errors.ToPathDictionary())
         );
     }
 

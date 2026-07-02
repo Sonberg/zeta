@@ -51,6 +51,39 @@ internal static class ContextFactoryResolver
             "Provide a matching factory via .Using<TContext>(factory).");
     }
 
+    /// <summary>
+    /// Resolves the context data for a context-aware schema from the service provider on
+    /// <paramref name="context"/>, promotes the context to a typed <see cref="ValidationContext{TContext}"/>,
+    /// and validates. This is the single home for the "resolve factory then validate" dance shared by the
+    /// contextless <see cref="ISchema{T}"/> bridge and the injectable validator.
+    /// </summary>
+    internal static async ValueTask<Result<T, TContext>> ResolveAndValidateAsync<T, TContext>(
+        ISchema<T, TContext> schema,
+        T value,
+        ValidationContext context)
+    {
+        var serviceProvider = context.ServiceProvider
+            ?? throw new InvalidOperationException(
+                "IServiceProvider is required for context factory resolution. " +
+                "Ensure the validation context includes a service provider.");
+
+        var contextData = await ResolveAsync(
+            value,
+            schema.GetContextFactories(),
+            serviceProvider,
+            context.CancellationToken);
+
+        var typedContext = new ValidationContext<TContext>(
+            context.PathSegments,
+            contextData,
+            context.TimeProvider,
+            context.CancellationToken,
+            context.ServiceProvider,
+            context.PathFormattingOptions);
+
+        return await schema.ValidateAsync(value, typedContext);
+    }
+
     private static bool IsTypeNarrowingMismatch(InvalidOperationException ex)
         => ex.GetType().Name == "TypeNarrowingContextFactoryMismatchException";
 }

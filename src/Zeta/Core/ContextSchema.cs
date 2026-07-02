@@ -160,25 +160,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
                 : Result<T>.Failure(new ValidationError(context.PathSegments, "null_value", "Value cannot be null"));
         }
 
-        var serviceProvider = context.ServiceProvider
-            ?? throw new InvalidOperationException(
-                "IServiceProvider is required for context factory resolution. " +
-                "Ensure the validation context includes a service provider.");
-
-        var contextData = await ContextFactoryResolver.ResolveAsync(
-            value,
-            GetContextFactoriesCore(),
-            serviceProvider,
-            context.CancellationToken);
-        var typedContext = new ValidationContext<TContext>(
-            context.PathSegments,
-            contextData,
-            context.TimeProvider,
-            context.CancellationToken,
-            context.ServiceProvider,
-            context.PathFormattingOptions);
-
-        var result = await ValidateAsync(value, typedContext);
+        var result = await ContextFactoryResolver.ResolveAndValidateAsync(this, value, context);
         return result.IsSuccess
             ? Result<T>.Success(value)
             : Result<T>.Failure(result.Errors);

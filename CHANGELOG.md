@@ -3,12 +3,15 @@
 ## Next release
 
 ### Added
+- `IEnumerable<ValidationError>.ToPathDictionary()` extension (namespace `Zeta`) — the single home for grouping validation errors by JSONPath into the `Dictionary<string, string[]>` shape used by ASP.NET Core's `ValidationProblem` / `ValidationProblemDetails`.
 - `UseZetaValidation()` extension on `EndpointDefinition` for convention-based schema auto-discovery — scans static `ISchema<TRequest>` fields on endpoint classes and registers Zeta validation as a pre-processor without any per-endpoint boilerplate.
 - `ZetaGlobalPreProcessor<TRequest>` implementing `IGlobalPreProcessor` — used internally by `UseZetaValidation()`.
 - `HasStarted` guard on `ZetaPreProcessor<TRequest>` and `ZetaGlobalPreProcessor<TRequest>`: skips validation if the response has already been written (safe when using both the global configurator and per-endpoint `Validate()` on the same endpoint).
 - README: global registration guide (Option 3), `Refine()` cross-field validation examples, `Zeta.AspNetCore` migration guide.
 
 ### Changed
+- Context factory resolution ("resolve factory → promote to `ValidationContext<TContext>` → validate") is now centralized in `ContextFactoryResolver.ResolveAndValidateAsync`, shared by the contextless `ISchema<T>` self-resolving bridge and `ZetaValidator`. No public API change.
+- ASP.NET Core filters/result helpers and FastEndpoints pre-processors now route error shaping through single extensions (`ToPathDictionary()` / `ToValidationFailures()`) instead of inline `GroupBy`/`ValidationFailure` loops.
 - NuGet package description updated to clarify pre-processor (not middleware) integration model.
 - `PackageReadmeFile` now correctly packs `README.md` (FastEndpoints-specific) instead of the root `README.md`.
 

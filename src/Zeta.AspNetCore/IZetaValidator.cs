@@ -69,23 +69,11 @@ public sealed class ZetaValidator : IZetaValidator
 
 
     /// <inheritdoc />
-    public async ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
+    public ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         var execution = builder(new ValidationContextBuilder().WithServiceProvider(_services)).Build();
-        var contextData = await ContextFactoryResolver.ResolveAsync(
-            value,
-            schema.GetContextFactories(),
-            _services,
-            execution.CancellationToken);
-        return await schema.ValidateAsync(
-            value,
-            new ValidationContext<TContext>(
-                contextData,
-                execution.TimeProvider,
-                execution.CancellationToken,
-                execution.ServiceProvider,
-                execution.PathFormattingOptions));
+        return ContextFactoryResolver.ResolveAndValidateAsync(schema, value, execution);
     }
 
 }

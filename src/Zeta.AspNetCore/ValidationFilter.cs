@@ -39,14 +39,7 @@ public class ContextlessValidationFilter<T> : IEndpointFilter
 
         if (!result.IsFailure) return await next(context);
 
-        var errors = result.Errors
-            .GroupBy(e => e.PathString)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(e => e.Message).ToArray()
-            );
-
-        return Results.ValidationProblem(errors);
+        return Results.ValidationProblem(result.Errors.ToPathDictionary());
     }
 }
 
@@ -86,13 +79,6 @@ public class ValidationFilter<T, TContext> : IEndpointFilter
 
         if (!result.IsFailure) return await next(context);
 
-        var errors = result.Errors
-            .GroupBy(e => e.PathString)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(e => e.Message).ToArray()
-            );
-
-        return Results.ValidationProblem(errors);
+        return Results.ValidationProblem(result.Errors.ToPathDictionary());
     }
 }

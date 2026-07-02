@@ -1,5 +1,4 @@
 using FastEndpoints;
-using FluentValidation.Results;
 
 namespace Zeta.FastEndpoints;
 
@@ -32,8 +31,7 @@ public sealed class ZetaPreProcessor<TRequest> : IPreProcessor<TRequest>
         var result = await _schema.ValidateAsync(ctx.Request, validationContext);
         if (result.IsSuccess) return;
 
-        foreach (var error in result.Errors)
-            ctx.ValidationFailures.Add(new ValidationFailure(error.PathString, error.Message) { ErrorCode = error.Code });
+        ctx.ValidationFailures.AddRange(result.Errors.ToValidationFailures());
 
         await ctx.HttpContext.Response.SendErrorsAsync(ctx.ValidationFailures, cancellation: ct);
     }
