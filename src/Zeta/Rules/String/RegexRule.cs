@@ -19,7 +19,7 @@ public readonly struct RegexRule : IValidationRule<string>
         _code = code;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationRun context)
     {
         var error = _regex.IsMatch(value)
             ? null

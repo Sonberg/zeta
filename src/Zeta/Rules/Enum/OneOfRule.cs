@@ -17,7 +17,7 @@ public readonly struct OneOfRule<TEnum> : IValidationRule<TEnum>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TEnum value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TEnum value, ValidationRun context)
     {
         var error = _allowed.Contains(value)
             ? null

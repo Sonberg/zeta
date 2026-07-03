@@ -16,7 +16,7 @@ public readonly struct MinIntRule : IValidationRule<int>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationRun context)
     {
         var error = value >= _min
             ? null
@@ -38,7 +38,7 @@ public readonly struct MinDoubleRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationRun context)
     {
         var error = value >= _min
             ? null
@@ -60,7 +60,7 @@ public readonly struct MinDecimalRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationRun context)
     {
         var error = value >= _min
             ? null

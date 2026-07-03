@@ -13,7 +13,7 @@ relationships, and flagged ambiguities.
 | **Context-aware schema** | A schema that validates against external `Data` and returns `Result<T, TContext>` (`ISchema<T, TContext>`) | Stateful schema, contextful schema |
 | **Context promotion** | Turning a contextless schema into a context-aware one via `.Using<TContext>()`, transferring rules, conditionals, and assertions | Upgrade, conversion                  |
 | **Context factory**   | A delegate that builds the `TContext` data during validation from the value + `IServiceProvider`    | Provider, resolver, builder          |
-| **Validation context**| The per-validation execution record carrying path, cancellation, time, and service provider         | Execution, environment, state        |
+| **Validation run**| The per-validation execution record carrying path, cancellation, time, and service provider         | Execution, environment, state        |
 
 ## Validation execution
 
@@ -63,8 +63,8 @@ relationships, and flagged ambiguities.
 
 ## Flagged ambiguities
 
-- **"Context"** was overloaded three ways: the **validation context** (execution record with path/cancellation/services), the **context data** (`TContext`, the external data a context-aware schema validates against), and the **context factory** (delegate that builds that data). Keep them distinct — "context" alone should mean the validation context.
+- **"Context"** was overloaded three ways: the **validation run** (execution record with path/cancellation/services), the **context data** (`TContext`, the external data a context-aware schema validates against), and the **context factory** (delegate that builds that data). Keep them distinct — "context" alone should mean the validation run.
 - **"Rule" vs "stage"** — a **rule** is one unit of logic (`.Min(1)`); the **rules stage** is the single **stage** in which the **rule engine** runs *all* of a schema's rules. Don't call an individual stage a "rule".
-- **"Order"** was used for both **stage order** (sequence of stages) and the sample-domain `OrderDto` (a purchase) in the benchmarks. In this codebase "order" means **stage order** unless a purchase is clearly meant.
+- **"Order"** was used for both **stage order** (sequence of stages) and the sample-domain `PurchaseDto` (a purchase) in the benchmarks. In this codebase "order" means **stage order** unless a purchase is clearly meant.
 - **"Engine"** — reserve **rule engine** for the per-schema rule executor; do not call the **validation pipeline** an "engine".
 - **"Materialize"** — specifically the lazy conversion of the **rule chain**'s linked list into an insertion-order array; not a general term for building schemas.

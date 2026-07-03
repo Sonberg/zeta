@@ -18,7 +18,7 @@ public readonly struct DictionaryMinLengthRule<TKey, TValue> : IValidationRule<I
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(IDictionary<TKey, TValue> value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(IDictionary<TKey, TValue> value, ValidationRun context)
     {
         var error = value.Count >= _min
             ? null
@@ -43,7 +43,7 @@ public readonly struct DictionaryMaxLengthRule<TKey, TValue> : IValidationRule<I
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(IDictionary<TKey, TValue> value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(IDictionary<TKey, TValue> value, ValidationRun context)
     {
         var error = value.Count <= _max
             ? null
@@ -66,7 +66,7 @@ public readonly struct DictionaryNotEmptyRule<TKey, TValue> : IValidationRule<ID
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(IDictionary<TKey, TValue> value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(IDictionary<TKey, TValue> value, ValidationRun context)
     {
         var error = value.Count > 0
             ? null

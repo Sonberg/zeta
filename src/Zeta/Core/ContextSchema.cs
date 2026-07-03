@@ -4,7 +4,7 @@ namespace Zeta.Core;
 
 internal interface ISchemaConditional<T, TContext>
 {
-    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context);
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun<TContext> context);
 
     IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
 }
@@ -20,7 +20,7 @@ internal sealed class ContextlessSchemaConditional<T, TContext> : ISchemaConditi
         _schema = schema;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun<TContext> context)
     {
         if (!_predicate(value)) return [];
 
@@ -45,7 +45,7 @@ internal sealed class ContextAwareSchemaConditional<T, TContext> : ISchemaCondit
         _schema = schema;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun<TContext> context)
     {
         if (!_predicate(value, context.Data)) return [];
 
@@ -70,7 +70,7 @@ internal sealed class ValueOnlySchemaConditional<T, TContext> : ISchemaCondition
         _schema = schema;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun<TContext> context)
     {
         if (!_predicate(value)) return [];
 
@@ -131,7 +131,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
     public TSchema AppendRule(IValidationRule<T> rule)
         => Append(new ContextlessRuleAdapter<T, TContext>(rule));
 
-    public virtual async ValueTask<Result<T, TContext>> ValidateAsync(T? value, ValidationContext<TContext> context)
+    public virtual async ValueTask<Result<T, TContext>> ValidateAsync(T? value, ValidationRun<TContext> context)
     {
         if (value is null)
         {
@@ -154,7 +154,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
             : Result<T, TContext>.Failure(errors);
     }
 
-    async ValueTask<Result<T>> ISchema<T>.ValidateAsync(T? value, ValidationContext context)
+    async ValueTask<Result<T>> ISchema<T>.ValidateAsync(T? value, ValidationRun context)
     {
         if (value is null)
         {
@@ -302,7 +302,7 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return AppendConditional(new ValueOnlySchemaConditional<T, TContext>(predicate, schema));
     }
 
-    protected async ValueTask<List<ValidationError>?> ExecuteConditionalsAsync(T value, ValidationContext<TContext> context)
+    protected async ValueTask<List<ValidationError>?> ExecuteConditionalsAsync(T value, ValidationRun<TContext> context)
     {
         if (_conditionals == null) return null;
 

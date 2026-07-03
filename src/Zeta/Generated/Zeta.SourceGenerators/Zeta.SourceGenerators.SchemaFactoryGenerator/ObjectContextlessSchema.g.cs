@@ -723,7 +723,7 @@ public partial class ObjectContextlessSchema<T>
     }
 
     /// <summary>
-    /// Adds a property validator with fluent schema builder for System.Collections.Generic.List<TElement> properties.
+    /// Adds a property validator with fluent schema builder for System.Collections.Generic.List&lt;TElement&gt; properties.
     /// </summary>
     public ObjectContextlessSchema<T> Property<TElement>(
         Expression<Func<T, System.Collections.Generic.List<TElement>>> propertySelector,
@@ -737,7 +737,7 @@ public partial class ObjectContextlessSchema<T>
     }
 
     /// <summary>
-    /// Adds a property validator with fluent schema builder for System.Collections.Generic.ICollection<TElement> properties.
+    /// Adds a property validator with fluent schema builder for System.Collections.Generic.ICollection&lt;TElement&gt; properties.
     /// </summary>
     public ObjectContextlessSchema<T> Property<TElement>(
         Expression<Func<T, System.Collections.Generic.ICollection<TElement>>> propertySelector,

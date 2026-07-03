@@ -21,7 +21,7 @@ internal sealed class NullableFieldContextlessValidator<TInstance, TProperty> : 
         _schema = schema;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationRun context)
     {
         var value = _getter(instance);
         var fieldPath = context.PathSegments.Append(PathSegment.Property(_name));

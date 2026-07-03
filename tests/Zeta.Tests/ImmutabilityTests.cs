@@ -124,7 +124,7 @@ public class ImmutabilityTests
         var required = Z.String().MinLength(3).Using<StrictContext>();
         var optional = required.Nullable();
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(true));
 
         // Null should fail on required
         var requiredResult = await required.ValidateAsync(null, ctx);
@@ -141,7 +141,7 @@ public class ImmutabilityTests
         var baseSchema = Z.Int().Using<StrictContext>();
         var conditionalSchema = baseSchema.If((v, ctx) => ctx.IsStrict, s => s.Max(65));
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(true));
 
         // baseSchema should not have the conditional
         var baseResult = await baseSchema.ValidateAsync(70, ctx);

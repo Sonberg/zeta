@@ -8,7 +8,7 @@ namespace Zeta.Schemas;
 /// </summary>
 internal interface ITypeAssertion<T>
 {
-    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext context);
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun context);
     
     ITypeAssertion<T, TContext> ToContext<TContext>();
 }
@@ -19,7 +19,7 @@ internal interface ITypeAssertion<T>
 /// </summary>
 internal interface ITypeAssertion<T, TContext>
 {
-    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context);
+    ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun<TContext> context);
 
     IEnumerable<Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>>> GetContextFactories();
 }
@@ -35,7 +35,7 @@ internal sealed class ContextlessTypeAssertion<T, TDerived> : ITypeAssertion<T>
         _schema = schema;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun context)
     {
         if (value is not TDerived derived)
             return [new ValidationError(context.PathSegments, "type_mismatch",
@@ -60,7 +60,7 @@ internal sealed class ContextAwareTypeAssertion<T, TDerived, TContext> : ITypeAs
         _schema = schema;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(T value, ValidationRun<TContext> context)
     {
         if (value is not TDerived derived)
             return [new ValidationError(context.PathSegments, "type_mismatch",

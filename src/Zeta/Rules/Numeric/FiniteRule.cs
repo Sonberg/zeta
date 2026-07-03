@@ -14,7 +14,7 @@ public readonly struct FiniteRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationRun context)
     {
         var error = !double.IsNaN(value) && !double.IsInfinity(value)
             ? null

@@ -77,7 +77,7 @@ public class TypeAssertionTests
             .Using<StrictContext>();
         schema.As<Dog>(); // return value not captured
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(true));
 
         // Parent schema should not have type assertion — Cat passes
         var result = await schema.ValidateAsync(new Cat(5), ctx);
@@ -117,7 +117,7 @@ public class TypeAssertionTests
             .If(x => x is Dog, dogSchema)
             .Using<StrictContext>();
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(true));
 
         // Dog should pass
         var dogResult = await schema.ValidateAsync(new Dog(50), ctx);
@@ -157,7 +157,7 @@ public class TypeAssertionTests
             .If(x => x is Dog, c => c.As<Dog>()
                 .Property(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(true));
 
         // Dog with valid volume
         var validDog = await schema.ValidateAsync(new Dog(50), ctx);
@@ -215,7 +215,7 @@ public class TypeAssertionTests
             .Using<StrictContext>()
             .If(x => x is Dog, dog => dog.As<Dog>().Property(x => x.WoofVolume, x => x.Min(0).Max(100)));
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(true));
 
         var validDog = await schema.ValidateAsync(new Dog(50), ctx);
         Assert.True(validDog.IsSuccess);
@@ -239,8 +239,8 @@ public class TypeAssertionTests
             .Using<StrictContext>()
             .If(x => x is Dog, dogSchema);
 
-        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
-        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+        var strictCtx = new ValidationRun<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationRun<StrictContext>(new StrictContext(false));
 
         var strictDog = await schema.ValidateAsync(new Dog(50), strictCtx);
         Assert.True(strictDog.IsSuccess);
@@ -292,7 +292,7 @@ public class TypeAssertionTests
             .If(x => x is Dog, dogSchema)
             .If(x => x is Cat, catSchema);
 
-        var ctx = new ValidationContext(serviceProvider: services);
+        var ctx = new ValidationRun(serviceProvider: services);
 
         var validDog = await schema.ValidateAsync(new Dog(50), ctx);
         Assert.True(validDog.IsSuccess);
@@ -315,7 +315,7 @@ public class TypeAssertionTests
         var schema = Z.Schema<IAnimal>()
             .If(x => x is Dog, dogSchema);
 
-        var ctx = new ValidationContext(serviceProvider: services);
+        var ctx = new ValidationRun(serviceProvider: services);
 
         var lenientDog = await schema.ValidateAsync(new Dog(50), ctx);
         Assert.False(lenientDog.IsSuccess);

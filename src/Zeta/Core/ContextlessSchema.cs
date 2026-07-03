@@ -42,10 +42,10 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
 
     public ValueTask<Result<T>> ValidateAsync(T? value)
     {
-        return ValidateAsync(value, ValidationContext.Empty);
+        return ValidateAsync(value, ValidationRun.Empty);
     }
 
-    public virtual async ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext context)
+    public virtual async ValueTask<Result<T>> ValidateAsync(T? value, ValidationRun context)
     {
         if (value is null)
         {
@@ -123,7 +123,7 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
 
     internal IReadOnlyList<(Func<T, bool>, ISchema<T>)>? GetConditionals() => _conditionals;
 
-    protected async ValueTask<List<ValidationError>?> ExecuteConditionalsAsync(T value, ValidationContext context)
+    protected async ValueTask<List<ValidationError>?> ExecuteConditionalsAsync(T value, ValidationRun context)
     {
         if (_conditionals == null) return null;
 

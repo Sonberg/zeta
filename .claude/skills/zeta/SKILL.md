@@ -115,7 +115,7 @@ else
 result.Match(ok => ..., errors => ...);
 ```
 
-Errors are **aggregated** (no short-circuit) with JSONPath paths. Context-aware schemas that carry a factory can also be validated as `ISchema<T>` (the factory resolves via the `IServiceProvider` on the validation context).
+Errors are **aggregated** (no short-circuit) with JSONPath paths. Context-aware schemas that carry a factory can also be validated as `ISchema<T>` (the factory resolves via the `IServiceProvider` on the validation run).
 
 ## Integrations
 

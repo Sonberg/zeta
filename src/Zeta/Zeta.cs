@@ -99,14 +99,14 @@ public static class Z
     public static EnumContextlessSchema<TEnum> Enum<TEnum>() where TEnum : struct, Enum => new();
 
     /// <summary>
-    /// Creates an empty validation context.
+    /// Creates an empty validation run.
     /// </summary>
-    public static ValidationContext Context() => ValidationContext.Empty;
+    public static ValidationRun Context() => ValidationRun.Empty;
 
     /// <summary>
-    /// Creates a validation context with the specified context data.
+    /// Creates a validation run with the specified context data.
     /// </summary>
     /// <typeparam name="TContext">The type of context data.</typeparam>
     /// <param name="value">The context data value.</param>
-    public static ValidationContext<TContext> Context<TContext>(TContext value) => new(value);
+    public static ValidationRun<TContext> Context<TContext>(TContext value) => new(value);
 }

@@ -8,12 +8,12 @@ namespace Zeta.Rules;
 /// </summary>
 public readonly struct RefinementRule<T> : IValidationRule<T>
 {
-    private readonly Func<T, ValidationContext, ValueTask<ValidationError?>> _validate;
+    private readonly Func<T, ValidationRun, ValueTask<ValidationError?>> _validate;
 
     /// <summary>
     /// Creates a rule from a synchronous delegate.
     /// </summary>
-    public RefinementRule(Func<T, ValidationContext, ValidationError?> validate)
+    public RefinementRule(Func<T, ValidationRun, ValidationError?> validate)
     {
         _validate = (val, exec) => ValueTask.FromResult(validate(val, exec));
     }
@@ -21,12 +21,12 @@ public readonly struct RefinementRule<T> : IValidationRule<T>
     /// <summary>
     /// Creates a rule from an asynchronous delegate.
     /// </summary>
-    public RefinementRule(Func<T, ValidationContext, ValueTask<ValidationError?>> validate)
+    public RefinementRule(Func<T, ValidationRun, ValueTask<ValidationError?>> validate)
     {
         _validate = validate;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationRun context)
     {
         return _validate(value, context);
     }
@@ -38,12 +38,12 @@ public readonly struct RefinementRule<T> : IValidationRule<T>
 /// </summary>
 public readonly struct RefinementRule<T, TContext> : IValidationRule<T, TContext>
 {
-    private readonly Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> _validate;
+    private readonly Func<T, ValidationRun<TContext>, ValueTask<ValidationError?>> _validate;
 
     /// <summary>
     /// Creates a rule from a synchronous delegate.
     /// </summary>
-    public RefinementRule(Func<T, ValidationContext<TContext>, ValidationError?> validate)
+    public RefinementRule(Func<T, ValidationRun<TContext>, ValidationError?> validate)
     {
         _validate = (val, ctx) => ValueTask.FromResult(validate(val, ctx));
     }
@@ -51,12 +51,12 @@ public readonly struct RefinementRule<T, TContext> : IValidationRule<T, TContext
     /// <summary>
     /// Creates a rule from an asynchronous delegate.
     /// </summary>
-    public RefinementRule(Func<T, ValidationContext<TContext>, ValueTask<ValidationError?>> validate)
+    public RefinementRule(Func<T, ValidationRun<TContext>, ValueTask<ValidationError?>> validate)
     {
         _validate = validate;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationRun<TContext> context)
     {
         return _validate(value, context);
     }

@@ -16,7 +16,7 @@ public readonly struct DateOnlyMinRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var error = value >= _min
             ? null
@@ -39,7 +39,7 @@ public readonly struct DateOnlyMaxRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var error = value <= _max
             ? null
@@ -60,7 +60,7 @@ public readonly struct DateOnlyPastRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var today = DateOnly.FromDateTime(context.TimeProvider.GetUtcNow().UtcDateTime);
         var error = value < today
@@ -82,7 +82,7 @@ public readonly struct DateOnlyFutureRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var today = DateOnly.FromDateTime(context.TimeProvider.GetUtcNow().UtcDateTime);
         var error = value > today
@@ -108,7 +108,7 @@ public readonly struct DateOnlyBetweenRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var error = value >= _min && value <= _max
             ? null
@@ -129,7 +129,7 @@ public readonly struct DateOnlyWeekdayRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var error = value.DayOfWeek != DayOfWeek.Saturday && value.DayOfWeek != DayOfWeek.Sunday
             ? null
@@ -150,7 +150,7 @@ public readonly struct DateOnlyWeekendRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var error = value.DayOfWeek == DayOfWeek.Saturday || value.DayOfWeek == DayOfWeek.Sunday
             ? null
@@ -173,7 +173,7 @@ public readonly struct DateOnlyMinAgeRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var today = DateOnly.FromDateTime(context.TimeProvider.GetUtcNow().UtcDateTime);
         var age = today.Year - value.Year;
@@ -200,7 +200,7 @@ public readonly struct DateOnlyMaxAgeRule : IValidationRule<DateOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateOnly value, ValidationRun context)
     {
         var today = DateOnly.FromDateTime(context.TimeProvider.GetUtcNow().UtcDateTime);
         var age = today.Year - value.Year;

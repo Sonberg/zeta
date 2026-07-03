@@ -5,7 +5,7 @@ namespace Zeta.Tests;
 
 public class StringRuleTests
 {
-    private static ValidationContext Context => new();
+    private static ValidationRun Context => new();
 
     [Theory]
     [InlineData("abc", 3, true)]

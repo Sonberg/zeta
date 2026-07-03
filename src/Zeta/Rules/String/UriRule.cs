@@ -16,7 +16,7 @@ public readonly struct UriRule : IValidationRule<string>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationRun context)
     {
         var error = Uri.TryCreate(value, _kind, out _)
             ? null

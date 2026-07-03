@@ -7,7 +7,7 @@ ASP.NET Core integration package for Zeta.
 Use this package when you want validation integrated with:
 - Minimal APIs (`WithValidation(...)`)
 - MVC Controllers (`IZetaValidator`)
-- Validation context builder utilities
+- Validation run builder utilities
 
 ## Installation
 
@@ -103,7 +103,7 @@ var result = await _validator.ValidateAsync(
     }));
 ```
 
-If not overridden, `ValidationContextBuilder` can infer naming policies from `JsonOptions`.
+If not overridden, `ValidationRunBuilder` can infer naming policies from `JsonOptions`.
 
 ## Notes
 - For Blazor and MAUI form validation without ASP.NET Core endpoints, `Zeta` alone is enough.

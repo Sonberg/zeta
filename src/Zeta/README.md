@@ -207,7 +207,7 @@ Context-aware message mapping:
 
 ```csharp
 Z.Schema<GetOrCreateQuantificationQuery>()
-    .Using<GetOrCreateQuantificationValidationContext>(BuildContextAsync)
+    .Using<GetOrCreateQuantificationValidationRun>(BuildContextAsync)
     .RefineAt(
         x => x.PlanningCode,
         (_, ctx) => ctx.Errors.Count == 0,
@@ -492,7 +492,7 @@ var UserSchema = Z.Schema<User>()
                 "Username already taken"));
 ```
 
-See the [Validation Context guide](../../docs/ValidationContext.md) for more details.
+See the [Validation Context guide](../../docs/ValidationRun.md) for more details.
 
 For ASP.NET Core integration-specific guidance, see [`../Zeta.AspNetCore/README.md`](../Zeta.AspNetCore/README.md).
 
@@ -575,7 +575,7 @@ dotnet run --project ../../benchmarks/Zeta.Benchmarks -c Release
 - [Collections](../../docs/Collections.md) - Arrays, lists, and element validation patterns
 - [Validation Paths](../../docs/Paths.md) - Structured paths, formatting, and value resolution
 - [Fluent Property Builders](../../docs/FluentFieldBuilders.md) - Inline schema definitions for schema properties
-- [Validation Context](../../docs/ValidationContext.md) - Async data loading and context-aware schemas
+- [Validation Context](../../docs/ValidationRun.md) - Async data loading and context-aware schemas
 - [Custom Rules](../../docs/CustomRules.md) - Creating reusable validation rules
 - [Testing](../../docs/Testing.md) - Testing strategies and TimeProvider support
 - [Mediator Integration](../../docs/Mediator.md) - Using Zeta with MediatR pipelines

@@ -14,7 +14,7 @@ public readonly struct NegativeIntRule : IValidationRule<int>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationRun context)
     {
         var error = value < 0
             ? null
@@ -34,7 +34,7 @@ public readonly struct NegativeDoubleRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationRun context)
     {
         var error = value < 0
             ? null
@@ -54,7 +54,7 @@ public readonly struct NegativeDecimalRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationRun context)
     {
         var error = value < 0
             ? null

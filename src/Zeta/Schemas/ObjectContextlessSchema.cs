@@ -88,7 +88,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     /// <summary>
     /// Adds a conditional branch with a context-aware schema. The schema must have a context factory
     /// defined via <c>.Using&lt;TContext&gt;(factory)</c>. The factory is resolved during validation
-    /// using <see cref="IServiceProvider"/> from the <see cref="ValidationContext"/>.
+    /// using <see cref="IServiceProvider"/> from the <see cref="ValidationRun"/>.
     /// The root schema remains contextless.
     /// </summary>
     public ObjectContextlessSchema<T> If<TTarget, TContext>(
@@ -129,10 +129,10 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
 
 
     // Stage order for object schemas: fields, then type assertion, then conditionals, then rules.
-    // Memoized per instance (schemas are immutable), mirroring the rule engine's materialized cache,
+    // Memoized per instance (schemas are immutable), mirroring the rule engine's array cache,
     // so a hot ValidateAsync allocates no stage array or delegates.
-    private Func<T, ValidationContext, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
-    private Func<T, ValidationContext, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
+    private Func<T, ValidationRun, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
+    private Func<T, ValidationRun, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
     [
         ValidateFieldsAsync,
         ValidateTypeAssertionAsync,
@@ -140,7 +140,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         ValidateRulesAsync,
     ];
 
-    public override async ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext execution)
+    public override async ValueTask<Result<T>> ValidateAsync(T? value, ValidationRun execution)
     {
         if (value is null)
         {
@@ -155,7 +155,7 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
             : Result<T>.Failure(errors);
     }
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateFieldsAsync(T value, ValidationContext execution)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateFieldsAsync(T value, ValidationRun execution)
     {
         List<ValidationError>? errors = null;
         foreach (var field in _fields)
@@ -169,13 +169,13 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return errors;
     }
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateTypeAssertionAsync(T value, ValidationContext execution)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateTypeAssertionAsync(T value, ValidationRun execution)
         => _typeAssertion is null ? null : await _typeAssertion.ValidateAsync(value, execution);
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(T value, ValidationContext execution)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(T value, ValidationRun execution)
         => await ExecuteConditionalsAsync(value, execution);
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(T value, ValidationContext execution)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(T value, ValidationRun execution)
         => await Rules.ExecuteAsync(value, execution);
 
     // Nullable reference / nested-object fields. Reference types need no null adapter:

@@ -18,7 +18,7 @@ public class AdditionalCoverageTests
         var contextlessSchema = (ISchema<int>)schema;
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            contextlessSchema.ValidateAsync(1, new ValidationContext()).AsTask());
+            contextlessSchema.ValidateAsync(1, new ValidationRun()).AsTask());
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public class AdditionalCoverageTests
         var contextlessSchema = (ISchema<int>)schema;
         var result = await contextlessSchema.ValidateAsync(
             7,
-            new ValidationContext(serviceProvider: new ServiceCollection().BuildServiceProvider()));
+            new ValidationRun(serviceProvider: new ServiceCollection().BuildServiceProvider()));
 
         Assert.True(result.IsSuccess);
     }
@@ -92,7 +92,7 @@ public class AdditionalCoverageTests
     [Fact]
     public async Task DictionaryContextSchema_RefineEachEntry_OverloadsWork()
     {
-        var context = new ValidationContext<Ctx>(new Ctx(1));
+        var context = new ValidationRun<Ctx>(new Ctx(1));
 
         var sync = Z.Dictionary<string, int>()
             .Using<Ctx>()
@@ -146,7 +146,7 @@ public class AdditionalCoverageTests
             Z.Schema<Dog>().Property(x => x.Age, s => s.Min(1)));
 
         var contextAware = assertion.ToContext<Ctx>();
-        var context = new ValidationContext<Ctx>(new Ctx(0));
+        var context = new ValidationRun<Ctx>(new Ctx(0));
 
         var valid = await contextAware.ValidateAsync(new Dog(2), context);
         Assert.Empty(valid);

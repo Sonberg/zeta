@@ -123,7 +123,7 @@ public class IfConditionalTests
             .Using<StrictContext>()
             .If(v => v.Length > 0, s => s.MinLength(3));
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(true));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(true));
 
         // Non-empty string too short
         var result = await schema.ValidateAsync("ab", ctx);
@@ -145,8 +145,8 @@ public class IfConditionalTests
             .Using<StrictContext>()
             .If((v, ctx) => ctx.IsStrict, s => s.MinLength(10));
 
-        var strictCtx = new ValidationContext<StrictContext>(new StrictContext(true));
-        var lenientCtx = new ValidationContext<StrictContext>(new StrictContext(false));
+        var strictCtx = new ValidationRun<StrictContext>(new StrictContext(true));
+        var lenientCtx = new ValidationRun<StrictContext>(new StrictContext(false));
 
         // Strict mode, too short
         var strictShort = await schema.ValidateAsync("abc", strictCtx);
@@ -168,7 +168,7 @@ public class IfConditionalTests
             .If(v => v.StartsWith("A"), s => s.MinLength(5))
             .Using<StrictContext>();
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(false));
 
         // Starts with A, too short -> fails
         var result = await schema.ValidateAsync("Abc", ctx);
@@ -191,7 +191,7 @@ public class IfConditionalTests
                 .Property(u => u.Name, n => n.MinLength(5)))
             .Using<StrictContext>();
 
-        var ctx = new ValidationContext<StrictContext>(new StrictContext(false));
+        var ctx = new ValidationRun<StrictContext>(new StrictContext(false));
 
         // Admin with short name fails
         var result = await schema.ValidateAsync(new User("Jo", 30, null, "admin"), ctx);
@@ -256,7 +256,7 @@ public class IfConditionalTests
         var schema = Z.Schema<User>()
             .If(u => u.Type == "admin", adminSchema);
 
-        var ctx = new ValidationContext(serviceProvider: new ServiceCollection().BuildServiceProvider());
+        var ctx = new ValidationRun(serviceProvider: new ServiceCollection().BuildServiceProvider());
 
         // Admin: factory returns strict=false, refine fails
         var admin = await schema.ValidateAsync(new User("Admin", 30, null, "admin"), ctx);
@@ -282,7 +282,7 @@ public class IfConditionalTests
         var schema = Z.Schema<User>()
             .If(u => u.Type == "admin", adminSchema);
 
-        var ctx = new ValidationContext(serviceProvider: new ServiceCollection().BuildServiceProvider());
+        var ctx = new ValidationRun(serviceProvider: new ServiceCollection().BuildServiceProvider());
 
         // Admin with short name, strict mode from factory
         var strictShort = await schema.ValidateAsync(new User("Joe", 30, null, "admin"), ctx);

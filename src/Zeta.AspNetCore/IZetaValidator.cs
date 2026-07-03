@@ -15,7 +15,7 @@ public interface IZetaValidator
     /// <summary>
     /// Validates a value using the provided schema and execution context builder.
     /// </summary>
-    ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder);
+    ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, Func<ValidationRunBuilder, ValidationRunBuilder> builder);
 
     /// <summary>
     /// Validates a value with context using the provided schema.
@@ -27,7 +27,7 @@ public interface IZetaValidator
     /// Validates a value with context using the provided schema and execution context builder.
     /// Uses the schema's built-in factory delegate to create context data.
     /// </summary>
-    ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder);
+    ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationRunBuilder, ValidationRunBuilder> builder);
 
     /// <summary>
     /// Validates a value with context using a Zeta context schema.
@@ -40,7 +40,7 @@ public interface IZetaValidator
     /// Validates a value with context using a Zeta context schema and execution context builder.
     /// This overload avoids ambiguity when the schema is also assignable to ISchema&lt;T&gt;.
     /// </summary>
-    ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, IContextSchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
+    ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, IContextSchema<T, TContext> schema, Func<ValidationRunBuilder, ValidationRunBuilder> builder)
         => ValidateAsync(value, (ISchema<T, TContext>)schema, builder);
 }
 
@@ -61,18 +61,18 @@ public sealed class ZetaValidator : IZetaValidator
     }
 
     /// <inheritdoc />
-    public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
+    public ValueTask<Result<T>> ValidateAsync<T>(T value, ISchema<T> schema, Func<ValidationRunBuilder, ValidationRunBuilder> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return schema.ValidateAsync(value, builder(new ValidationContextBuilder().WithServiceProvider(_services)).Build());
+        return schema.ValidateAsync(value, builder(new ValidationRunBuilder().WithServiceProvider(_services)).Build());
     }
 
 
     /// <inheritdoc />
-    public ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationContextBuilder, ValidationContextBuilder> builder)
+    public ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationRunBuilder, ValidationRunBuilder> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        var execution = builder(new ValidationContextBuilder().WithServiceProvider(_services)).Build();
+        var execution = builder(new ValidationRunBuilder().WithServiceProvider(_services)).Build();
         return ContextFactoryResolver.ResolveAndValidateAsync(schema, value, execution);
     }
 

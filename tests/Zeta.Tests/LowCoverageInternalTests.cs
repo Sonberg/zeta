@@ -20,11 +20,11 @@ public class LowCoverageInternalTests
             .Property(x => x.WoofVolume, s => s.Min(0).Max(100));
         var contextlessAssertion = new ContextlessTypeAssertion<IAnimal, Dog>(contextlessDogSchema);
 
-        var mismatch = await contextlessAssertion.ValidateAsync(new Cat(5), new ValidationContext());
+        var mismatch = await contextlessAssertion.ValidateAsync(new Cat(5), new ValidationRun());
         Assert.Single(mismatch);
         Assert.Equal("type_mismatch", mismatch[0].Code);
 
-        var valid = await contextlessAssertion.ValidateAsync(new Dog(50), new ValidationContext());
+        var valid = await contextlessAssertion.ValidateAsync(new Dog(50), new ValidationRun());
         Assert.Empty(valid);
 
         var contextDogSchema = Z.Schema<Dog>()
@@ -32,7 +32,7 @@ public class LowCoverageInternalTests
             .Property(x => x.WoofVolume, s => s.Min(0).Max(100));
         var contextAwareAssertion = new ContextAwareTypeAssertion<IAnimal, Dog, Ctx>(contextDogSchema);
 
-        var typedMismatch = await contextAwareAssertion.ValidateAsync(new Cat(1), new ValidationContext<Ctx>(new Ctx(0)));
+        var typedMismatch = await contextAwareAssertion.ValidateAsync(new Cat(1), new ValidationRun<Ctx>(new Ctx(0)));
         Assert.Single(typedMismatch);
         Assert.Equal("type_mismatch", typedMismatch[0].Code);
 
@@ -43,18 +43,18 @@ public class LowCoverageInternalTests
     }
 
     [Fact]
-    public void RuleChain_Materialize_PreservesInsertionOrder_AndIsImmutable()
+    public void RuleChain_ToArray_PreservesInsertionOrder_AndIsImmutable()
     {
         var empty = new RuleChain<string>();
-        Assert.Empty(empty.Materialize());
+        Assert.Empty(empty.ToArray());
 
         var ab = empty.Add("a").Add("b");
         var abc = ab.Add("c");
 
         // LIFO chain must materialize back to insertion order.
-        Assert.Equal(["a", "b", "c"], abc.Materialize());
+        Assert.Equal(["a", "b", "c"], abc.ToArray());
         // Append is non-mutating: the shorter chain is unaffected.
-        Assert.Equal(["a", "b"], ab.Materialize());
-        Assert.Empty(empty.Materialize());
+        Assert.Equal(["a", "b"], ab.ToArray());
+        Assert.Empty(empty.ToArray());
     }
 }

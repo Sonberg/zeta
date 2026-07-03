@@ -16,7 +16,7 @@ public readonly struct TimeOnlyMinRule : IValidationRule<TimeOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationRun context)
     {
         var error = value >= _min
             ? null
@@ -39,7 +39,7 @@ public readonly struct TimeOnlyMaxRule : IValidationRule<TimeOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationRun context)
     {
         var error = value <= _max
             ? null
@@ -64,7 +64,7 @@ public readonly struct TimeOnlyBetweenRule : IValidationRule<TimeOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationRun context)
     {
         var error = value >= _min && value <= _max
             ? null
@@ -89,7 +89,7 @@ public readonly struct TimeOnlyBusinessHoursRule : IValidationRule<TimeOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationRun context)
     {
         var error = value >= _start && value <= _end
             ? null
@@ -110,7 +110,7 @@ public readonly struct TimeOnlyMorningRule : IValidationRule<TimeOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationRun context)
     {
         var error = value.Hour < 12
             ? null
@@ -131,7 +131,7 @@ public readonly struct TimeOnlyAfternoonRule : IValidationRule<TimeOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationRun context)
     {
         var error = value.Hour >= 12 && value.Hour < 18
             ? null
@@ -152,7 +152,7 @@ public readonly struct TimeOnlyEveningRule : IValidationRule<TimeOnly>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TimeOnly value, ValidationRun context)
     {
         var error = value.Hour >= 18
             ? null

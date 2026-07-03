@@ -16,7 +16,7 @@ public readonly struct MaxLengthRule : IValidationRule<string>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationRun context)
     {
         var error = value.Length <= _max
             ? null

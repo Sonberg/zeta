@@ -227,7 +227,7 @@ public class NullableSchemaTests
             .Refine((val, _) => val.Length <= 10, "Too long")
             .Nullable();
 
-        var context = new ValidationContext<LimitContext>(new LimitContext(100));
+        var context = new ValidationRun<LimitContext>(new LimitContext(100));
 
         var result = await schema.ValidateAsync(null, context);
 
@@ -242,7 +242,7 @@ public class NullableSchemaTests
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds limit")
             .Nullable();
 
-        var context = new ValidationContext<LimitContext>(
+        var context = new ValidationRun<LimitContext>(
             new LimitContext(100));
 
         var result = await schema.ValidateAsync(50, context);
@@ -258,7 +258,7 @@ public class NullableSchemaTests
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds limit")
             .Nullable();
 
-        var context = new ValidationContext<LimitContext>(
+        var context = new ValidationRun<LimitContext>(
             new LimitContext(100));
 
         var result = await schema.ValidateAsync(150, context);

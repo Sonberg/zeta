@@ -291,5 +291,5 @@ var schema = Z.Schema<CreateUserRequest>()
 
 ## See Also
 
-- [Validation Context](ValidationContext.md) - Context-aware schemas and async data loading
+- [Validation Context](ValidationRun.md) - Context-aware schemas and async data loading
 - [Custom Rules](CustomRules.md) - Creating reusable validation rules

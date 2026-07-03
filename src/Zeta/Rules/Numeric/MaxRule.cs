@@ -16,7 +16,7 @@ public readonly struct MaxIntRule : IValidationRule<int>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationRun context)
     {
         var error = value <= _max
             ? null
@@ -38,7 +38,7 @@ public readonly struct MaxDoubleRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationRun context)
     {
         var error = value <= _max
             ? null
@@ -60,7 +60,7 @@ public readonly struct MaxDecimalRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationRun context)
     {
         var error = value <= _max
             ? null

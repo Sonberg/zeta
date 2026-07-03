@@ -52,8 +52,8 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
 
     // Stage order for dictionary schemas: rules, then key/value entries, then entry refinements, then conditionals.
     // Memoized per instance (schemas are immutable), so a hot ValidateAsync allocates no stage array or delegates.
-    private Func<IDictionary<TKey, TValue>, ValidationContext, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
-    private Func<IDictionary<TKey, TValue>, ValidationContext, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
+    private Func<IDictionary<TKey, TValue>, ValidationRun, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
+    private Func<IDictionary<TKey, TValue>, ValidationRun, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
     [
         ValidateRulesAsync,
         ValidateEntriesAsync,
@@ -62,7 +62,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
     ];
 
     public override async ValueTask<Result<IDictionary<TKey, TValue>>> ValidateAsync(
-        IDictionary<TKey, TValue>? value, ValidationContext context)
+        IDictionary<TKey, TValue>? value, ValidationRun context)
     {
         if (value is null)
         {
@@ -78,10 +78,10 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
             : Result<IDictionary<TKey, TValue>>.Failure(errors);
     }
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(IDictionary<TKey, TValue> value, ValidationContext context)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(IDictionary<TKey, TValue> value, ValidationRun context)
         => await Rules.ExecuteAsync(value, context);
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateEntriesAsync(IDictionary<TKey, TValue> value, ValidationContext context)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateEntriesAsync(IDictionary<TKey, TValue> value, ValidationRun context)
     {
         if (KeySchema is null && ValueSchema is null) return null;
 
@@ -117,7 +117,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
         return errors;
     }
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateEntryRefinementsAsync(IDictionary<TKey, TValue> value, ValidationContext context)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateEntryRefinementsAsync(IDictionary<TKey, TValue> value, ValidationRun context)
     {
         if (_entryRefinements is null) return null;
 
@@ -140,7 +140,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
         return errors;
     }
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(IDictionary<TKey, TValue> value, ValidationContext context)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(IDictionary<TKey, TValue> value, ValidationRun context)
         => await ExecuteConditionalsAsync(value, context);
 
     public DictionaryContextlessSchema<TKey, TValue> MinLength(int min, string? message = null)

@@ -12,7 +12,7 @@ public readonly struct ContextlessRuleAdapter<T, TContext> : IValidationRule<T, 
         _inner = inner;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context)
+    public ValueTask<ValidationError?> ValidateAsync(T value, ValidationRun<TContext> context)
     {
         return _inner.ValidateAsync(value, context);
     }

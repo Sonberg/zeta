@@ -7,11 +7,11 @@ public static class SchemaExtensions
     /// </summary>
     public static ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(this ISchema<T, TContext> schema, T value, TContext data)
     {
-        return schema.ValidateAsync(value, new ValidationContext<TContext>(data));
+        return schema.ValidateAsync(value, new ValidationRun<TContext>(data));
     }
 
     public static async ValueTask<Result<T>> ValidateAsync<T>(this ISchema<T> schema, T? value)
     {
-        return await schema.ValidateAsync(value, ValidationContext.Empty);
+        return await schema.ValidateAsync(value, ValidationRun.Empty);
     }
 }

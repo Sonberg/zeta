@@ -1467,7 +1467,7 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
-    /// Adds a property validator with fluent schema builder for System.Collections.Generic.List<TElement> properties.
+    /// Adds a property validator with fluent schema builder for System.Collections.Generic.List&lt;TElement&gt; properties.
     /// </summary>
     public ObjectContextSchema<T, TContext> Property<TElement>(
         Expression<Func<T, System.Collections.Generic.List<TElement>>> propertySelector,
@@ -1481,7 +1481,7 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
-    /// Adds a property validator with fluent schema builder for System.Collections.Generic.List<TElement> properties (contextless builder).
+    /// Adds a property validator with fluent schema builder for System.Collections.Generic.List&lt;TElement&gt; properties (contextless builder).
     /// </summary>
     public ObjectContextSchema<T, TContext> Property<TElement>(
         Expression<Func<T, System.Collections.Generic.List<TElement>>> propertySelector,
@@ -1496,7 +1496,7 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
-    /// Adds a property validator with fluent schema builder for System.Collections.Generic.ICollection<TElement> properties.
+    /// Adds a property validator with fluent schema builder for System.Collections.Generic.ICollection&lt;TElement&gt; properties.
     /// </summary>
     public ObjectContextSchema<T, TContext> Property<TElement>(
         Expression<Func<T, System.Collections.Generic.ICollection<TElement>>> propertySelector,
@@ -1510,7 +1510,7 @@ public partial class ObjectContextSchema<T, TContext>
     }
 
     /// <summary>
-    /// Adds a property validator with fluent schema builder for System.Collections.Generic.ICollection<TElement> properties (contextless builder).
+    /// Adds a property validator with fluent schema builder for System.Collections.Generic.ICollection&lt;TElement&gt; properties (contextless builder).
     /// </summary>
     public ObjectContextSchema<T, TContext> Property<TElement>(
         Expression<Func<T, System.Collections.Generic.ICollection<TElement>>> propertySelector,

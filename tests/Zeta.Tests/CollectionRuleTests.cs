@@ -6,7 +6,7 @@ namespace Zeta.Tests;
 
 public class CollectionRuleTests
 {
-    private static ValidationContext Context => new();
+    private static ValidationRun Context => new();
 
     [Theory]
     [InlineData(new[] { 1, 2, 3 }, 3, true)]

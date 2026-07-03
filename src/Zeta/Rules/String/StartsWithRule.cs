@@ -18,7 +18,7 @@ public readonly struct StartsWithRule : IValidationRule<string>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationRun context)
     {
         var error = value.StartsWith(_prefix, _comparison)
             ? null

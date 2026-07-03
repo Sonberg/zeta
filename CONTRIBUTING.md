@@ -179,7 +179,7 @@ public readonly struct StartsWithRule : IValidationRule<string>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationRun context)
         => ValueTaskHelper.FromResult(
             value.StartsWith(_prefix, StringComparison.Ordinal)
                 ? null

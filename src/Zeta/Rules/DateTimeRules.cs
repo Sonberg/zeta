@@ -16,7 +16,7 @@ public readonly struct DateTimeMinRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var error = value >= _min
             ? null
@@ -39,7 +39,7 @@ public readonly struct DateTimeMaxRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var error = value <= _max
             ? null
@@ -60,7 +60,7 @@ public readonly struct DateTimePastRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var error = value < context.TimeProvider.GetUtcNow().UtcDateTime
             ? null
@@ -81,7 +81,7 @@ public readonly struct DateTimeFutureRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var error = value > context.TimeProvider.GetUtcNow().UtcDateTime
             ? null
@@ -106,7 +106,7 @@ public readonly struct DateTimeBetweenRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var error = value >= _min && value <= _max
             ? null
@@ -127,7 +127,7 @@ public readonly struct DateTimeWeekdayRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var error = value.DayOfWeek != DayOfWeek.Saturday && value.DayOfWeek != DayOfWeek.Sunday
             ? null
@@ -148,7 +148,7 @@ public readonly struct DateTimeWeekendRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var error = value.DayOfWeek == DayOfWeek.Saturday || value.DayOfWeek == DayOfWeek.Sunday
             ? null
@@ -171,7 +171,7 @@ public readonly struct DateTimeWithinDaysRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var now = context.TimeProvider.GetUtcNow().UtcDateTime;
         var diff = Math.Abs((value - now).TotalDays);
@@ -196,7 +196,7 @@ public readonly struct DateTimeMinAgeRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var today = context.TimeProvider.GetUtcNow().UtcDateTime.Date;
         var age = today.Year - value.Year;
@@ -223,7 +223,7 @@ public readonly struct DateTimeMaxAgeRule : IValidationRule<DateTime>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(DateTime value, ValidationRun context)
     {
         var today = context.TimeProvider.GetUtcNow().UtcDateTime.Date;
         var age = today.Year - value.Year;

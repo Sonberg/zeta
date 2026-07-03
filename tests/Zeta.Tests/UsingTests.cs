@@ -115,7 +115,7 @@ public class UsingTests
             .Refine((val, ctx) => val != ctx.BannedEmail, "Email is banned")
             .Nullable();
 
-        var context = new ValidationContext<UserContext>(
+        var context = new ValidationRun<UserContext>(
             new UserContext("banned@example.com", 100));
 
         // Null should be valid
@@ -140,7 +140,7 @@ public class UsingTests
             .Refine((val, ctx) => val <= ctx.MaxValue, "Exceeds maximum")
             .Nullable();
 
-        var context = new ValidationContext<UserContext>(
+        var context = new ValidationRun<UserContext>(
             new UserContext("", 100));
 
         // Valid value should pass
@@ -179,7 +179,7 @@ public class UsingTests
             .Using<UserContext>()
             .Refine((val, ctx) => val != ctx.BannedEmail, "Banned");
         
-        var context = new ValidationContext<UserContext>(
+        var context = new ValidationRun<UserContext>(
             new UserContext("banned@example.com", 100)).Push("user").Push("email");
 
         var result = await schema.ValidateAsync("banned@example.com", context);
@@ -511,7 +511,7 @@ public class UsingTests
             .Refine((value, ctx) => value != ctx.BannedEmail, "Email is banned", "banned_email");
 
         await using var provider = new ServiceCollection().BuildServiceProvider();
-        var context = new ValidationContext(serviceProvider: provider);
+        var context = new ValidationRun(serviceProvider: provider);
 
         var result = await schema.ValidateAsync("banned@example.com", context);
         Assert.True(result.IsFailure);
@@ -530,7 +530,7 @@ public class UsingTests
             .If(value => value.StartsWith("b", StringComparison.Ordinal), branch);
 
         await using var provider = new ServiceCollection().BuildServiceProvider();
-        var context = new ValidationContext(serviceProvider: provider);
+        var context = new ValidationRun(serviceProvider: provider);
 
         var result = await schema.ValidateAsync("blocked", context);
         Assert.True(result.IsFailure);

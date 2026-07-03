@@ -70,7 +70,7 @@ public sealed record CreateUserRequest(string Email, string Name);
 
 ### 2. Context-Aware Rules with `.Using(...)`
 
-`.Using(...)` computes a shared validation context once per validation run — the place to resolve services and do async lookups (DB, HTTP) that your rules then read from.
+`.Using(...)` computes a shared validation run once per validation run — the place to resolve services and do async lookups (DB, HTTP) that your rules then read from.
 
 ```csharp
 var registerSchema = Z.Schema<RegisterRequest>()

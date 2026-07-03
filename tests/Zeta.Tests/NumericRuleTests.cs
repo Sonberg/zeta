@@ -6,7 +6,7 @@ namespace Zeta.Tests;
 
 public class NumericRuleTests
 {
-    private static ValidationContext Context => new();
+    private static ValidationRun Context => new();
 
     // Int Min/Max Tests
     [Theory]

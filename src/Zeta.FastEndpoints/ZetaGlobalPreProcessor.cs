@@ -13,7 +13,7 @@ internal sealed class ZetaGlobalPreProcessor<TRequest> : IGlobalPreProcessor
     {
         if (ctx.Request is not TRequest request || ctx.HttpContext.Response.HasStarted) return;
 
-        var validationContext = new ValidationContext(
+        var validationContext = new ValidationRun(
             cancellationToken: ct,
             serviceProvider: ctx.HttpContext.RequestServices);
 

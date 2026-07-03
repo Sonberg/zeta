@@ -17,7 +17,7 @@ public readonly struct MaxLengthRule<T> : IValidationRule<ICollection<T>>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(ICollection<T> value, ValidationRun context)
     {
         var error = value.Count <= _max
             ? null

@@ -38,7 +38,7 @@ Context-aware with message factory:
 
 ```csharp
 Z.Schema<GetOrCreateQuantificationQuery>()
-    .Using<GetOrCreateQuantificationValidationContext>(BuildContextAsync)
+    .Using<GetOrCreateQuantificationValidationRun>(BuildContextAsync)
     .RefineAt(
         x => x.PlanningCode,
         (_, ctx) => ctx.Errors.Count == 0,

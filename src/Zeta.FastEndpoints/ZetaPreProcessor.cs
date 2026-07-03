@@ -24,7 +24,7 @@ public sealed class ZetaPreProcessor<TRequest> : IPreProcessor<TRequest>
     {
         if (ctx.Request is null || ctx.HttpContext.Response.HasStarted) return;
 
-        var validationContext = new ValidationContext(
+        var validationContext = new ValidationRun(
             cancellationToken: ct,
             serviceProvider: ctx.HttpContext.RequestServices);
 

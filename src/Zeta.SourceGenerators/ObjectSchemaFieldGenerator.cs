@@ -198,11 +198,12 @@ internal static class ObjectSchemaFieldGenerator
         foreach (var collectionPattern in SchemaMapping.Collections)
         {
             var collectionType = string.Format(collectionPattern, "TElement");
+            var collectionTypeXml = collectionType.Replace("<", "&lt;").Replace(">", "&gt;");
 
             sb.AppendLine($$"""
 
                                 /// <summary>
-                                /// Adds a field validator with fluent schema builder for {{collectionType}} properties.
+                                /// Adds a field validator with fluent schema builder for {{collectionTypeXml}} properties.
                                 /// </summary>
                                 public ObjectContextlessSchema<T> Field<TElement>(
                                     Expression<Func<T, {{collectionType}}>> propertySelector,

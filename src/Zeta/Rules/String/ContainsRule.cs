@@ -18,7 +18,7 @@ public readonly struct ContainsRule : IValidationRule<string>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationRun context)
     {
         var error = value.IndexOf(_substring, _comparison) >= 0
             ? null

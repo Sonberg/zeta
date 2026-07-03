@@ -16,7 +16,7 @@ public readonly struct MultipleOfIntRule : IValidationRule<int>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(int value, ValidationRun context)
     {
         var error = value % _divisor == 0
             ? null
@@ -39,7 +39,7 @@ public readonly struct MultipleOfDoubleRule : IValidationRule<double>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(double value, ValidationRun context)
     {
         var error = value % _divisor == 0
             ? null
@@ -62,7 +62,7 @@ public readonly struct MultipleOfRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationRun context)
     {
         var error = value % _divisor == 0
             ? null

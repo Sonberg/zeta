@@ -4,7 +4,7 @@ namespace Zeta;
 /// Provides a strongly-typed context for validation, including shared async data and execution details.
 /// </summary>
 /// <typeparam name="TData">The type of the shared data context.</typeparam>
-public record ValidationContext<TData> : ValidationContext
+public record ValidationRun<TData> : ValidationRun
 {
     /// <summary>
     /// The shared data context (e.g., loaded from database).
@@ -12,14 +12,14 @@ public record ValidationContext<TData> : ValidationContext
     public TData Data { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ValidationContext{TData}"/> class.
+    /// Initializes a new instance of the <see cref="ValidationRun{TData}"/> class.
     /// </summary>
     /// <param name="data">The shared context data.</param>
     /// <param name="timeProvider">Optional time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="serviceProvider">Optional service provider for dependency injection.</param>
     /// <param name="pathFormattingOptions">Optional path formatting options.</param>
-    public ValidationContext(
+    public ValidationRun(
         TData data,
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default,
@@ -30,7 +30,7 @@ public record ValidationContext<TData> : ValidationContext
         Data = data;
     }
 
-    internal ValidationContext(
+    internal ValidationRun(
         ValidationPath pathSegments,
         TData data,
         TimeProvider? timeProvider = null,
@@ -45,7 +45,7 @@ public record ValidationContext<TData> : ValidationContext
     /// <summary>
     /// Creates a new context with the given path segment appended.
     /// </summary>
-    public new ValidationContext<TData> Push(string segment)
+    public new ValidationRun<TData> Push(string segment)
         => new(
             PathSegments.Append(PathSegment.Property(segment)),
             Data,
@@ -57,7 +57,7 @@ public record ValidationContext<TData> : ValidationContext
     /// <summary>
     /// Creates a new context with an array index appended to the path.
     /// </summary>
-    public new ValidationContext<TData> PushIndex(int index)
+    public new ValidationRun<TData> PushIndex(int index)
         => new(
             PathSegments.Append(PathSegment.Index(index)),
             Data,
@@ -69,7 +69,7 @@ public record ValidationContext<TData> : ValidationContext
     /// <summary>
     /// Creates a new context with a dictionary key appended to the path using bracket notation.
     /// </summary>
-    public new ValidationContext<TData> PushKey<TKey>(TKey key) where TKey : notnull
+    public new ValidationRun<TData> PushKey<TKey>(TKey key) where TKey : notnull
         => new(
             PathSegments.Append(PathSegment.DictionaryKey(key)),
             Data,
@@ -82,7 +82,7 @@ public record ValidationContext<TData> : ValidationContext
 /// <summary>
 /// Provides a strongly-typed context for validation, including shared async data and execution details.
 /// </summary>
-public record ValidationContext
+public record ValidationRun
 {
     private readonly ValidationPath _pathSegments;
     private string? _path;
@@ -121,7 +121,7 @@ public record ValidationContext
     /// <summary>
     /// Creates a new validation execution context.
     /// </summary>
-    public ValidationContext(
+    public ValidationRun(
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default,
         IServiceProvider? serviceProvider = null,
@@ -131,9 +131,9 @@ public record ValidationContext
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ValidationContext"/> class with structured path segments.
+    /// Initializes a new instance of the <see cref="ValidationRun"/> class with structured path segments.
     /// </summary>
-    private protected ValidationContext(
+    private protected ValidationRun(
         ValidationPath? pathSegments,
         TimeProvider? timeProvider = null,
         CancellationToken cancellationToken = default,
@@ -151,7 +151,7 @@ public record ValidationContext
     /// <summary>
     /// Creates a new context with the given path segment appended.
     /// </summary>
-    public ValidationContext Push(string segment)
+    public ValidationRun Push(string segment)
         => new(
             _pathSegments.Append(PathSegment.Property(segment)),
             TimeProvider,
@@ -162,7 +162,7 @@ public record ValidationContext
     /// <summary>
     /// Creates a new context with an array index appended to the path.
     /// </summary>
-    public ValidationContext PushIndex(int index)
+    public ValidationRun PushIndex(int index)
         => new(
             _pathSegments.Append(PathSegment.Index(index)),
             TimeProvider,
@@ -173,7 +173,7 @@ public record ValidationContext
     /// <summary>
     /// Creates a new context with a dictionary key appended to the path using bracket notation.
     /// </summary>
-    public ValidationContext PushKey<TKey>(TKey key) where TKey : notnull
+    public ValidationRun PushKey<TKey>(TKey key) where TKey : notnull
         => new(
             _pathSegments.Append(PathSegment.DictionaryKey(key)),
             TimeProvider,
@@ -184,6 +184,6 @@ public record ValidationContext
     /// <summary>
     /// Gets default empty context (cached instance).
     /// </summary>
-    public static ValidationContext Empty { get; } =
+    public static ValidationRun Empty { get; } =
         new(ValidationPath.Root, TimeProvider.System, CancellationToken.None, null, PathFormattingOptions.Default);
 }

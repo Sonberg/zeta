@@ -53,15 +53,15 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
 
     // Stage order for collection schemas: rules, then elements, then conditionals.
     // Memoized per instance (schemas are immutable), so a hot ValidateAsync allocates no stage array or delegates.
-    private Func<ICollection<TElement>, ValidationContext<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
-    private Func<ICollection<TElement>, ValidationContext<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
+    private Func<ICollection<TElement>, ValidationRun<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
+    private Func<ICollection<TElement>, ValidationRun<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
     [
         ValidateRulesAsync,
         ValidateElementsAsync,
         ValidateConditionalsAsync,
     ];
 
-    public override async ValueTask<Result<ICollection<TElement>, TContext>> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
+    public override async ValueTask<Result<ICollection<TElement>, TContext>> ValidateAsync(ICollection<TElement>? value, ValidationRun<TContext> context)
     {
         if (value is null)
         {
@@ -76,10 +76,10 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
             : Result<ICollection<TElement>, TContext>.Failure(errors);
     }
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(ICollection<TElement> value, ValidationRun<TContext> context)
         => await Rules.ExecuteAsync(value, context);
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateElementsAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateElementsAsync(ICollection<TElement> value, ValidationRun<TContext> context)
     {
         if (ElementSchema is null) return null;
 
@@ -101,7 +101,7 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         return errors;
     }
 
-    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(ICollection<TElement> value, ValidationRun<TContext> context)
         => await ExecuteConditionalsAsync(value, context);
 
     public CollectionContextSchema<TElement, TContext> MinLength(int min, string? message = null)

@@ -18,7 +18,7 @@ public readonly struct EndsWithRule : IValidationRule<string>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(string value, ValidationRun context)
     {
         var error = value.EndsWith(_suffix, _comparison)
             ? null

@@ -15,7 +15,7 @@ internal sealed class FieldContextContextValidator<TInstance, TProperty, TContex
         _schema = schema;
     }
 
-    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationContext<TContext> context)
+    public async ValueTask<IReadOnlyList<ValidationError>> ValidateAsync(TInstance instance, ValidationRun<TContext> context)
     {
         var value = _getter(instance);
         var result = await _schema.ValidateAsync(value, context);

@@ -30,7 +30,7 @@ Use `Path` for programmatic operations, and `PathString` for display/serializati
 Use `PathFormattingOptions` to control rendered property and dictionary-key names:
 
 ```csharp
-var context = new ValidationContext(
+var context = new ValidationRun(
     pathFormattingOptions: new PathFormattingOptions
     {
         PropertyNameFormatter = static name => name.ToLowerInvariant(),
@@ -38,13 +38,13 @@ var context = new ValidationContext(
     });
 ```
 
-This affects rendered path text (`PathString`, `ValidationContext.Path`), not rule behavior.
+This affects rendered path text (`PathString`, `ValidationRun.Path`), not rule behavior.
 
 ---
 
 ## ASP.NET Core Naming Alignment
 
-`ValidationContextBuilder` can infer path formatting from `JsonOptions`:
+`ValidationRunBuilder` can infer path formatting from `JsonOptions`:
 
 ```csharp
 services.AddOptions<JsonOptions>()

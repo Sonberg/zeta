@@ -14,7 +14,7 @@ public readonly struct IsTrueRule : IValidationRule<bool>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(bool value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(bool value, ValidationRun context)
     {
         var error = value
             ? null
@@ -35,7 +35,7 @@ public readonly struct IsFalseRule : IValidationRule<bool>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(bool value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(bool value, ValidationRun context)
     {
         var error = !value
             ? null

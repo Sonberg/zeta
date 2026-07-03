@@ -4,7 +4,7 @@ namespace Zeta.Core;
 
 /// <summary>
 /// An immutable, append-only chain of <typeparamref name="TRule"/> with O(1) append via structural
-/// sharing and lazy materialization to insertion order. Backs both rule engines — the only piece they
+/// sharing and lazy conversion to insertion order. Backs both rule engines — the only piece they
 /// share, and the only piece with non-trivial (LIFO-reversal) logic.
 /// </summary>
 internal sealed class RuleChain<TRule>
@@ -22,7 +22,7 @@ internal sealed class RuleChain<TRule>
     }
 
     private readonly Node? _head;
-    private TRule[]? _materialized;
+    private TRule[]? _array;
 
     public RuleChain()
     {
@@ -36,9 +36,9 @@ internal sealed class RuleChain<TRule>
     public RuleChain<TRule> Add(TRule rule) => new(new Node(rule, _head));
 
     /// <summary>Rules in insertion order. The chain is LIFO, so fill the array back-to-front. Cached per instance.</summary>
-    public TRule[] Materialize()
+    public TRule[] ToArray()
     {
-        if (_materialized != null) return _materialized;
+        if (_array != null) return _array;
 
         var count = 0;
         var node = _head;
@@ -48,7 +48,7 @@ internal sealed class RuleChain<TRule>
             node = node.Previous;
         }
 
-        if (count == 0) return _materialized = [];
+        if (count == 0) return _array = [];
 
         var array = new TRule[count];
         node = _head;
@@ -58,7 +58,7 @@ internal sealed class RuleChain<TRule>
             node = node.Previous;
         }
 
-        return _materialized = array;
+        return _array = array;
     }
 }
 
@@ -83,9 +83,9 @@ public sealed class ContextlessRuleEngine<T>
     public ContextlessRuleEngine<T> Add(IValidationRule<T> rule)
         => new(_chain.Add(rule));
 
-    public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext context)
+    public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationRun context)
     {
-        var rules = _chain.Materialize();
+        var rules = _chain.ToArray();
         List<ValidationError>? errors = null;
 
         foreach (var rule in rules)
@@ -101,7 +101,7 @@ public sealed class ContextlessRuleEngine<T>
 
     public ContextRuleEngine<T, TContext> ToContext<TContext>()
     {
-        var rules = _chain.Materialize();
+        var rules = _chain.ToArray();
         var engine = new ContextRuleEngine<T, TContext>();
 
         foreach (var rule in rules)
@@ -134,9 +134,9 @@ public sealed class ContextRuleEngine<T, TContext>
     public ContextRuleEngine<T, TContext> Add(IValidationRule<T, TContext> rule)
         => new(_chain.Add(rule));
 
-    public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext<TContext> context)
+    public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationRun<TContext> context)
     {
-        var rules = _chain.Materialize();
+        var rules = _chain.ToArray();
         List<ValidationError>? errors = null;
 
         foreach (var rule in rules)

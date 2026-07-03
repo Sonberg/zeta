@@ -32,7 +32,7 @@ public class ValidationBenchmarks
     [Benchmark(Baseline = true)]
     public async Task<bool> Zeta_Valid()
     {
-        var result = await _zetaSchema.ValidateAsync(_validUser, ValidationContext.Empty);
+        var result = await _zetaSchema.ValidateAsync(_validUser, ValidationRun.Empty);
         return result.IsSuccess;
     }
 
@@ -63,7 +63,7 @@ public class ValidationBenchmarks
     [Benchmark]
     public async Task<int> Zeta_Invalid()
     {
-        var result = await _zetaSchema.ValidateAsync(_invalidUser, ValidationContext.Empty);
+        var result = await _zetaSchema.ValidateAsync(_invalidUser, ValidationRun.Empty);
         
         return result.Errors.Count;
     }

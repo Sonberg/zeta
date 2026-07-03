@@ -10,7 +10,7 @@ public class PathFormattingOptionsTests
         var schema = Z.Schema<Person>()
             .Property(x => x.FirstName, s => s.MinLength(5));
 
-        var context = new ValidationContext(pathFormattingOptions: new PathFormattingOptions
+        var context = new ValidationRun(pathFormattingOptions: new PathFormattingOptions
         {
             PropertyNameFormatter = static name => name switch
             {
@@ -31,7 +31,7 @@ public class PathFormattingOptionsTests
         var schema = Z.Dictionary<string, int>()
             .RefineEachEntry((_, value) => value > 0, "must be positive", "positive");
 
-        var context = new ValidationContext(pathFormattingOptions: new PathFormattingOptions
+        var context = new ValidationRun(pathFormattingOptions: new PathFormattingOptions
         {
             DictionaryKeyFormatter = static key => $"<{key}>"
         });

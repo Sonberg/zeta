@@ -1,12 +1,12 @@
 # Validation Context
 
-This guide covers Zeta's validation context system for async data loading and context-aware validation rules.
+This guide covers Zeta's validation run system for async data loading and context-aware validation rules.
 
 ---
 
 ## When to Use Context
 
-Use validation context when you need to:
+Use validation run when you need to:
 
 - Check data against a database (e.g., "email already exists")
 - Load configuration or feature flags before validation

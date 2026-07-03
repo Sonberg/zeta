@@ -11,6 +11,7 @@
 - `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` — unused, no production callers.
 
 ### Changed
+- **Breaking:** renamed the execution record `ValidationContext`/`ValidationContext<TContext>` (and `ValidationContextBuilder`) to `ValidationRun`/`ValidationRun<TContext>` (`ValidationRunBuilder`). "Context" now unambiguously means the user's `TContext` data; the record carrying path/cancellation/services is the "run". Also renamed the internal `RuleChain.Materialize()` to `ToArray()`.
 - Object, collection, and dictionary schemas now run their validation stages through one internal `ValidationPipeline.RunAsync` (generic over the context, so it serves both the contextless and context-aware hierarchies). Previously each of the six `ValidateAsync` overrides hand-inlined the "run every stage, aggregate all errors, never short-circuit" loop. Each schema declares its own stage order as a memoized `Stages()` array (object runs rules last; collection/dictionary run them first) — order is now visible as data. Behavior, including error ordering, is unchanged; the per-schema stage array is cached per instance so a hot `ValidateAsync` allocates no stage array or delegates.
 - The two rule engines (`ContextlessRuleEngine<T>` and `ContextRuleEngine<T, TContext>`) now share one internal `RuleChain<TRule>` for the persistent append-only list and its lazy insertion-order materialization — previously duplicated character-for-character (two `RuleNode` types, two `Materialize` bodies). Behavior is unchanged; the reversal logic is now covered by a direct unit test.
 - Deleted the `ValueTaskHelper` shim in favor of the native `ValueTask.FromResult` (the shim only existed for the long-removed netstandard2.0 target).
@@ -42,7 +43,7 @@
 - Nullable object-field handling no longer uses reflection. `Property` overloads that take a pre-built schema (`ISchema<TProperty>`, `ISchema<TProperty, TContext>`, `IContextSchema<TProperty, TContext>`) for a nullable/nested property are now generic `where TProperty : class` methods that build their field validator directly — reference types need no null adapter (the inner schema already handles null). Nullable **value-type** fields continue to be served by the source generator's typed overloads (`int?`, `decimal?`, …) and the fluent builders. Call sites are unchanged.
 - The dedicated field-error path-remapping logic (`RelativeTo`/`Concat`) is now shared via `FieldError.PrependFieldPath` instead of being copy-pasted across the four field validators.
 - Value-schema validators (`string`, `int`, `double`, `decimal`, `bool`, `Guid`, enum, `DateTime`, `DateOnly`, `TimeOnly`) are now **extension methods** on `IValueSchema<T, TSelf>` (in `*SchemaExtensions` classes, namespace `Zeta`) instead of instance methods duplicated across the contextless and context-aware schema classes. Call sites are unchanged (`Z.String().Email()`, `Z.String().Using<Ctx>().Email()`); each validator is now defined once. `Object`/`Collection`/`Dictionary` schemas are unaffected.
-- Context factory resolution ("resolve factory → promote to `ValidationContext<TContext>` → validate") is now centralized in `ContextFactoryResolver.ResolveAndValidateAsync`, shared by the contextless `ISchema<T>` self-resolving bridge and `ZetaValidator`. No public API change.
+- Context factory resolution ("resolve factory → promote to `ValidationRun<TContext>` → validate") is now centralized in `ContextFactoryResolver.ResolveAndValidateAsync`, shared by the contextless `ISchema<T>` self-resolving bridge and `ZetaValidator`. No public API change.
 - ASP.NET Core filters/result helpers and FastEndpoints pre-processors now route error shaping through single extensions (`ToPathDictionary()` / `ToValidationFailures()`) instead of inline `GroupBy`/`ValidationFailure` loops.
 - NuGet package description updated to clarify pre-processor (not middleware) integration model.
 - `PackageReadmeFile` now correctly packs `README.md` (FastEndpoints-specific) instead of the root `README.md`.
@@ -51,7 +52,7 @@
 ### Fixed
 - `DateOnlyContextlessSchema`'s constructor is now `internal`, matching every other scalar schema. It was previously `public`, the sole exception among 20 scalar-schema classes, allowing construction that bypassed `Z.DateOnly()`.
 - CHANGELOG: clarified that `ZetaGlobalPreProcessor<TRequest>` is internal, not public API, and noted that the `AddZeta(Assembly[])` overload marked obsolete in 0.1.12 has since been fully removed (only `AddZeta()` remains).
-- `ValidationContext.Path` (and `ValidationContext<TData>.Path`) at the root now renders as `"$"` instead of `""`, matching the `"$"` root convention already used by `ValidationError.Path`/`PathString`. Non-root paths are unaffected (still bare dot/bracket notation, no `"$."` prefix).
+- `ValidationRun.Path` (and `ValidationRun<TData>.Path`) at the root now renders as `"$"` instead of `""`, matching the `"$"` root convention already used by `ValidationError.Path`/`PathString`. Non-root paths are unaffected (still bare dot/bracket notation, no `"$."` prefix).
 
 ### Removed
 - The nullable-adapter matrix (`NullableAdapterFactory` and the six `Nullable{Reference,Struct}Context{,less}{Adapter,Wrapper}` classes) and the reflection (`Activator.CreateInstance`) it relied on. This makes nullable field construction NativeAOT/trim-safe. Passing a **pre-built** `ISchema<TStruct>` for a nullable value-type field is no longer supported (it previously threw `ArgumentException` at runtime); use the fluent builder or a source-generated overload instead.
@@ -72,8 +73,8 @@
 ### Added
 
 - **`RefineEachEntry`/`RefineEachEntryAsync` for dictionary schemas**: Per-entry predicate validation on `DictionaryContextlessSchema` and `DictionaryContextSchema`. Each failing entry produces one `ValidationError` at `$[keyString]` (bracket notation). Supports value-only, value+context, and async-with-CT predicate overloads. Entry refinements transfer automatically when calling `.Using<TContext>()`.
-- **`ValidationContext.PushKey(string)`**: New path method for bracket-notation dictionary key paths (e.g. `$.schedule[2024W15]`).
-- **Structured path segments**: `ValidationContext` now stores an immutable linked list of typed path segments (`Property`, `Index`, `DictionaryKey`) internally. Rendering to string is lazy and cached per node. Eliminates fragile raw string concatenation. `PushKey<TKey>(TKey key)` replaces the old `PushKey(string)` — the key is stored as-is; `ToString()` is only called at render time (when a `ValidationError` is created). No behavior change at the API surface.
+- **`ValidationRun.PushKey(string)`**: New path method for bracket-notation dictionary key paths (e.g. `$.schedule[2024W15]`).
+- **Structured path segments**: `ValidationRun` now stores an immutable linked list of typed path segments (`Property`, `Index`, `DictionaryKey`) internally. Rendering to string is lazy and cached per node. Eliminates fragile raw string concatenation. `PushKey<TKey>(TKey key)` replaces the old `PushKey(string)` — the key is stored as-is; `ToString()` is only called at render time (when a `ValidationError` is created). No behavior change at the API surface.
 
 ### Removed
 
@@ -112,11 +113,11 @@
 - **Context-aware schemas now implement `ISchema<T>`**: Schemas created via `.Using<TContext>(factory)` can now be assigned to `ISchema<T>` variables directly. Validation uses the embedded factory to self-resolve context via `IServiceProvider`.
 - **`ObjectContextSchema` supports pre-built contextless field schemas**: `Field(p => p.Name, Z.String()...)` now works on context-aware object schemas, mirroring the contextless `ObjectContextlessSchema` API.
 - **`ObjectContextSchema.AddField`/`AddContextlessField` now preserve conditionals**: Previously, calling `.Field()` after `.If()` silently dropped conditionals.
-- **`ZetaValidator.ValidateAsync<T, TContext>` now propagates `IServiceProvider`** to the typed `ValidationContext<TContext>`.
+- **`ZetaValidator.ValidateAsync<T, TContext>` now propagates `IServiceProvider`** to the typed `ValidationRun<TContext>`.
 
 ### Breaking
 
-- **Immutable, append-only schemas**: Every fluent method (`.MinLength()`, `.Field()`, `.Nullable()`, `.If()`, etc.) now returns a **new schema instance** instead of mutating `this`. Schema reuse and branching are now safe — modifying a branched schema never affects the original. Rule engines use persistent linked lists with lazy materialization for O(1) append and structural sharing.
+- **Immutable, append-only schemas**: Every fluent method (`.MinLength()`, `.Field()`, `.Nullable()`, `.If()`, etc.) now returns a **new schema instance** instead of mutating `this`. Schema reuse and branching are now safe — modifying a branched schema never affects the original. Rule engines use persistent linked lists with lazy conversion for O(1) append and structural sharing.
 
 - **`Action<TSchema>` overloads of `.If()` removed**: Use `Func<TSchema, TSchema>` overloads instead. With immutability, Action callbacks cannot capture the mutated state.
 
@@ -139,15 +140,15 @@
 
 - **Renamed `.WithContext<TContext>()` to `.Using<TContext>()`** on all contextless schema types. The new name better communicates the intent of promoting a schema to context-aware validation.
 
-- **Removed `IValidationContextFactory<TInput, TContext>`** — context factories are now inline delegates passed directly to `.Using<TContext>(factory)` instead of separate classes registered via DI assembly scanning. This simplifies the API and eliminates the need for factory classes and assembly scanning.
+- **Removed `IValidationRunFactory<TInput, TContext>`** — context factories are now inline delegates passed directly to `.Using<TContext>(factory)` instead of separate classes registered via DI assembly scanning. This simplifies the API and eliminates the need for factory classes and assembly scanning.
 
 - **`AddZeta(Assembly[])` is now obsolete** — use `AddZeta()` without parameters. Assembly scanning for context factories is no longer needed.
 
 ### Added
 
-- **Self-resolving context schemas in `.If()` branches**: Context-aware schemas with factories (`.Using<TContext>(factory)`) can now be passed directly to `.If()` on contextless object schemas. The root schema stays contextless while each branch independently resolves its own context via `IServiceProvider` from `ValidationContext`. This enables polymorphic validation where different branches use different contexts without promoting the entire schema tree.
+- **Self-resolving context schemas in `.If()` branches**: Context-aware schemas with factories (`.Using<TContext>(factory)`) can now be passed directly to `.If()` on contextless object schemas. The root schema stays contextless while each branch independently resolves its own context via `IServiceProvider` from `ValidationRun`. This enables polymorphic validation where different branches use different contexts without promoting the entire schema tree.
 
-- **`IServiceProvider` on `ValidationContext`**: Added optional `IServiceProvider?` property to `ValidationContext` and `ValidationContext<TData>`, propagated through `Push()` and `PushIndex()`. `ValidationContextBuilder.Build()` now passes the configured service provider to the built context.
+- **`IServiceProvider` on `ValidationRun`**: Added optional `IServiceProvider?` property to `ValidationRun` and `ValidationRun<TData>`, propagated through `Push()` and `PushIndex()`. `ValidationRunBuilder.Build()` now passes the configured service provider to the built context.
 
 ### Breaking
 
@@ -155,7 +156,7 @@
 
 ### Fixed
 
-- **`ValidationContextBuilder.Build()` now passes `IServiceProvider`**: Previously, the builder stored the service provider but did not pass it through to the built `ValidationContext`.
+- **`ValidationRunBuilder.Build()` now passes `IServiceProvider`**: Previously, the builder stored the service provider but did not pass it through to the built `ValidationRun`.
 
 ## 0.1.11
 ### Added
@@ -235,10 +236,10 @@
 - Improve benchmarks and documentation
 
 ## Version 0.1.6
-- Add ValidationContextBuilder for easier context creation
+- Add ValidationRunBuilder for easier context creation
 - Remove IServiceProvider dependency from ContextFactory
 - Add implicit operator to builder
-- Merge CancellationToken & ValidationContext
+- Merge CancellationToken & ValidationRun
 - Split and rename files for better organization
 - Convert contextless schemas to context-aware using WithContext<TContext>()
 - Move WithContext as instance method on schemas

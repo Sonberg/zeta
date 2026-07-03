@@ -14,7 +14,7 @@ public class AllocationBenchmarks
     [Benchmark]
     public async Task<bool> ValidateStringWithMultipleRules()
     {
-        var result = await _emailSchema.ValidateAsync(_validEmail, ValidationContext.Empty);
+        var result = await _emailSchema.ValidateAsync(_validEmail, ValidationRun.Empty);
         return result.IsSuccess;
     }
 
@@ -24,7 +24,7 @@ public class AllocationBenchmarks
     [Benchmark]
     public async Task<bool> ValidateIntWithMinMax()
     {
-        var result = await _ageSchema.ValidateAsync(_validAge, ValidationContext.Empty);
+        var result = await _ageSchema.ValidateAsync(_validAge, ValidationRun.Empty);
         return result.IsSuccess;
     }
 
@@ -39,7 +39,7 @@ public class AllocationBenchmarks
     [Benchmark]
     public async Task<bool> ValidateStringWithManyRules()
     {
-        var result = await _complexStringSchema.ValidateAsync(_validEmail, ValidationContext.Empty);
+        var result = await _complexStringSchema.ValidateAsync(_validEmail, ValidationRun.Empty);
         return result.IsSuccess;
     }
 }

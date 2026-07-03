@@ -14,7 +14,7 @@ public readonly struct GuidNotEmptyRule : IValidationRule<Guid>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(Guid value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(Guid value, ValidationRun context)
     {
         var error = value != Guid.Empty
             ? null
@@ -37,7 +37,7 @@ public readonly struct GuidVersionRule : IValidationRule<Guid>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(Guid value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(Guid value, ValidationRun context)
     {
         var bytes = value.ToByteArray();
         var guidVersion = (bytes[7] >> 4) & 0x0F;

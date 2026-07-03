@@ -15,7 +15,7 @@ public readonly struct DefinedRule<TEnum> : IValidationRule<TEnum>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(TEnum value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(TEnum value, ValidationRun context)
     {
         var error = System.Enum.IsDefined(typeof(TEnum), value)
             ? null

@@ -53,7 +53,7 @@ public async Task MinAge_WithFakeTime_ValidatesCorrectly()
     // Arrange - "now" is June 15, 2024
     var fakeTime = new FakeTimeProvider(
         new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-    var context = new ValidationContext(timeProvider: fakeTime);
+    var context = new ValidationRun(timeProvider: fakeTime);
     var schema = Z.DateTime().MinAge(18);
 
     // Someone born June 16, 2006 is not yet 18 on June 15, 2024
@@ -68,7 +68,7 @@ public async Task MinAge_WithFakeTime_ValidatesCorrectly()
 
     // Advance time by 1 day - now they're 18
     fakeTime.Advance(TimeSpan.FromDays(1));
-    var newContext = new ValidationContext(timeProvider: fakeTime);
+    var newContext = new ValidationRun(timeProvider: fakeTime);
 
     var result2 = await schema.ValidateAsync(birthDate, newContext);
     Assert.True(result2.IsSuccess);
@@ -83,7 +83,7 @@ public async Task Future_DateInPast_Fails()
 {
     var fakeTime = new FakeTimeProvider(
         new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-    var context = new ValidationContext(timeProvider: fakeTime);
+    var context = new ValidationRun(timeProvider: fakeTime);
     var schema = Z.DateTime().Future();
 
     var pastDate = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -99,7 +99,7 @@ public async Task WithinDays_OutsideRange_Fails()
 {
     var fakeTime = new FakeTimeProvider(
         new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
-    var context = new ValidationContext(timeProvider: fakeTime);
+    var context = new ValidationRun(timeProvider: fakeTime);
     var schema = Z.DateTime().WithinDays(7);
 
     var farDate = new DateTime(2024, 1, 15, 0, 0, 0, DateTimeKind.Utc);
@@ -196,7 +196,7 @@ public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
 
 ## Testing Context-Aware Schemas
 
-When testing schemas that use validation context:
+When testing schemas that use validation run:
 
 ```csharp
 [Fact]

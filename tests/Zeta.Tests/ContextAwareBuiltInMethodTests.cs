@@ -125,7 +125,7 @@ public class ContextAwareBuiltInMethodTests
     public async Task DateOnlyContextAwareMethods_AreCovered()
     {
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationContext<TestContext>(new TestContext(), fakeTime);
+        var context = new ValidationRun<TestContext>(new TestContext(), fakeTime);
 
         var minSchema = Z.DateOnly().Using<TestContext>().Min(new DateOnly(2024, 1, 1));
         var maxSchema = Z.DateOnly().Using<TestContext>().Max(new DateOnly(2024, 12, 31));
@@ -152,7 +152,7 @@ public class ContextAwareBuiltInMethodTests
     public async Task DateTimeContextAwareMethods_AreCovered()
     {
         var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero));
-        var context = new ValidationContext<TestContext>(new TestContext(), fakeTime);
+        var context = new ValidationRun<TestContext>(new TestContext(), fakeTime);
 
         var minSchema = Z.DateTime().Using<TestContext>().Min(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         var maxSchema = Z.DateTime().Using<TestContext>().Max(new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc));

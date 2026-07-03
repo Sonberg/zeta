@@ -12,9 +12,9 @@ public interface IValidationRule<in T>
     /// Validates the given value asynchronously and returns a validation error if validation fails.
     /// </summary>
     /// <param name="value">The value to validate.</param>
-    /// <param name="context">The validation context.</param>
+    /// <param name="context">The validation run.</param>
     /// <returns>A validation error if validation fails, otherwise null.</returns>
-    ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext context);
+    ValueTask<ValidationError?> ValidateAsync(T value, ValidationRun context);
 }
 
 /// <summary>
@@ -26,7 +26,7 @@ public interface IValidationRule<in T, TContext>
     /// Validates the given value asynchronously with context and returns a validation error if validation fails.
     /// </summary>
     /// <param name="value">The value to validate.</param>
-    /// <param name="context">The validation context with typed data.</param>
+    /// <param name="context">The validation run with typed data.</param>
     /// <returns>A validation error if validation fails, otherwise null.</returns>
-    ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context);
+    ValueTask<ValidationError?> ValidateAsync(T value, ValidationRun<TContext> context);
 }

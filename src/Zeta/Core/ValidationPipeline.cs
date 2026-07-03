@@ -11,7 +11,7 @@ namespace Zeta.Core;
 /// they are the only genuinely type-specific parts (<c>Result&lt;T&gt;</c> vs <c>Result&lt;T, TContext&gt;</c>).
 ///
 /// One generic runner serves both the contextless and context-aware hierarchies because
-/// <see cref="ValidationContext{TData}"/> derives from <see cref="ValidationContext"/>.
+/// <see cref="ValidationRun{TData}"/> derives from <see cref="ValidationRun"/>.
 /// </summary>
 internal static class ValidationPipeline
 {
@@ -19,7 +19,7 @@ internal static class ValidationPipeline
         TValue value,
         TCtx context,
         IReadOnlyList<Func<TValue, TCtx, ValueTask<IReadOnlyList<ValidationError>?>>> stages)
-        where TCtx : ValidationContext
+        where TCtx : ValidationRun
     {
         List<ValidationError>? errors = null;
 

@@ -20,7 +20,7 @@ internal sealed class SelfResolvingSchema<T, TContext> : ISchema<T>
 
     public bool AllowNull => _inner.AllowNull;
 
-    public async ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext context)
+    public async ValueTask<Result<T>> ValidateAsync(T? value, ValidationRun context)
     {
         if (value is null)
         {
@@ -32,10 +32,10 @@ internal sealed class SelfResolvingSchema<T, TContext> : ISchema<T>
         var serviceProvider = context.ServiceProvider
             ?? throw new InvalidOperationException(
                 "IServiceProvider is required for context factory resolution. " +
-                "Ensure the validation context includes a service provider.");
+                "Ensure the validation run includes a service provider.");
 
         var contextData = await _factory(value, serviceProvider, context.CancellationToken);
-        var typedContext = new ValidationContext<TContext>(
+        var typedContext = new ValidationRun<TContext>(
             context.PathSegments,
             contextData,
             context.TimeProvider,

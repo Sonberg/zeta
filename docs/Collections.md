@@ -290,7 +290,7 @@ var schema = Z.Collection<string>()
 var context = new ProductContext(repository);
 var result = await schema.ValidateAsync(
     ["SKU-001", "SKU-002"],
-    new ValidationContext<ProductContext>(context)
+    new ValidationRun<ProductContext>(context)
 );
 ```
 
@@ -508,6 +508,6 @@ Use a materialized collection type (`List<T>`, `T[]`, `ICollection<T>`, `IReadOn
 ## See Also
 
 - [Fluent Property Builders](FluentFieldBuilders.md) - Using collections in schemas
-- [Validation Context](ValidationContext.md) - Async validation with context
+- [Validation Context](ValidationRun.md) - Async validation with context
 - [Custom Rules](CustomRules.md) - Creating reusable validation rules
 - [RFC 003](../rfc/003-rfc-collection-schema.md) - Technical design of `.Each()` method

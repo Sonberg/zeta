@@ -12,7 +12,7 @@ internal sealed class TypeNarrowingContextlessSchemaAdapter<TBase, TDerived> : I
 
     public bool AllowNull => _inner.AllowNull;
 
-    public async ValueTask<Result<TBase>> ValidateAsync(TBase? value, ValidationContext context)
+    public async ValueTask<Result<TBase>> ValidateAsync(TBase? value, ValidationRun context)
     {
         if (value is not TDerived derived)
             return Result<TBase>.Success(value!);

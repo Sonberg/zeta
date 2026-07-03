@@ -16,7 +16,7 @@ public readonly struct PrecisionRule : IValidationRule<decimal>
         _message = message;
     }
 
-    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationContext context)
+    public ValueTask<ValidationError?> ValidateAsync(decimal value, ValidationRun context)
     {
         var error = GetDecimalPlaces(value) <= _decimals
             ? null

@@ -79,7 +79,7 @@ The core abstraction — a schema knows how to validate `T`, optionally with sha
 // Schema with typed context (for async-loaded data)
 public interface ISchema<T, TContext>
 {
-    Task<Result<T>> ValidateAsync(T value, ValidationContext<TContext> context);
+    Task<Result<T>> ValidateAsync(T value, ValidationRun<TContext> context);
 }
 
 // Schema with no context (most common)
@@ -89,7 +89,7 @@ public interface ISchema<T> : ISchema<T, object?>
 }
 ```
 
-### 4. ValidationContext System
+### 4. ValidationRun System
 
 Two-layer context system for flexibility:
 
@@ -104,20 +104,20 @@ public sealed class ValidationExecutionContext
 }
 
 // Full context: execution + typed data
-public readonly struct ValidationContext<TData>
+public readonly struct ValidationRun<TData>
 {
     public TData Data { get; }
     public ValidationExecutionContext Execution { get; }
-    public ValidationContext<TData> Push(string segment);
+    public ValidationRun<TData> Push(string segment);
 }
 ```
 
-### 5. IValidationContextFactory<TInput, TContext>
+### 5. IValidationRunFactory<TInput, TContext>
 
 Factory for async context creation (e.g., load data from DB before validation).
 
 ```csharp
-public interface IValidationContextFactory<in TInput, TContext>
+public interface IValidationRunFactory<in TInput, TContext>
 {
     Task<TContext> CreateAsync(TInput input, IServiceProvider services, CancellationToken ct);
 }
@@ -130,7 +130,7 @@ Individual validation rule.
 ```csharp
 public interface IRule<in T, TContext>
 {
-    ValueTask<ValidationError?> ValidateAsync(T value, ValidationContext<TContext> context);
+    ValueTask<ValidationError?> ValidateAsync(T value, ValidationRun<TContext> context);
 }
 
 // Shorthand for no context
@@ -363,10 +363,10 @@ Zeta/
 │   │   ├── Core/
 │   │   │   ├── Result.cs
 │   │   │   ├── ValidationError.cs
-│   │   │   ├── ValidationContext.cs
+│   │   │   ├── ValidationRun.cs
 │   │   │   ├── ValidationExecutionContext.cs
 │   │   │   ├── ISchema.cs
-│   │   │   ├── IValidationContextFactory.cs
+│   │   │   ├── IValidationRunFactory.cs
 │   │   │   └── SchemaExtensions.cs
 │   │   ├── Rules/
 │   │   │   └── IRule.cs
@@ -412,10 +412,10 @@ Zeta/
 ## Implemented (v0.1)
 
 - [x] `Result<T>` type with monadic operations
-- [x] `ValidationError` and `ValidationContext`
+- [x] `ValidationError` and `ValidationRun`
 - [x] `ISchema<T>` and `ISchema<T, TContext>` abstractions
 - [x] `IRule<T>` and `IRule<T, TContext>` abstractions
-- [x] `IValidationContextFactory<TInput, TContext>` for async context
+- [x] `IValidationRunFactory<TInput, TContext>` for async context
 - [x] `StringSchema` with: MinLength, MaxLength, Email, NotEmpty, Regex, Refine
 - [x] `IntSchema` with: Min, Max, Refine
 - [x] `ObjectSchema<T>` with: Property, Refine (supports nested schemas)

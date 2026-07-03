@@ -302,7 +302,7 @@ public class DictionarySchemaTests
             .Using<TestContext>()
             .Refine((dict, ctx) => dict.Count <= ctx.MaxEntries, "Too many entries");
 
-        var ctx = new ValidationContext<TestContext>(new TestContext(maxEntries: 2));
+        var ctx = new ValidationRun<TestContext>(new TestContext(maxEntries: 2));
         var result = await schema.ValidateAsync(new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 }, ctx);
         Assert.True(result.IsSuccess);
     }
@@ -314,7 +314,7 @@ public class DictionarySchemaTests
             .Using<TestContext>()
             .Refine((dict, ctx) => dict.Count <= ctx.MaxEntries, "Too many entries");
 
-        var ctx = new ValidationContext<TestContext>(new TestContext(maxEntries: 1));
+        var ctx = new ValidationRun<TestContext>(new TestContext(maxEntries: 1));
         var result = await schema.ValidateAsync(new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 }, ctx);
 
         Assert.False(result.IsSuccess);
@@ -329,7 +329,7 @@ public class DictionarySchemaTests
             .EachKey(k => k.MinLength(2).Using<TestContext>())
             .EachValue(v => v.Min(0).Using<TestContext>());
 
-        var ctx = new ValidationContext<TestContext>(new TestContext(maxEntries: 10));
+        var ctx = new ValidationRun<TestContext>(new TestContext(maxEntries: 10));
         var result = await schema.ValidateAsync(
             new Dictionary<string, int> { ["ab"] = 5, ["cd"] = 10 }, ctx);
         Assert.True(result.IsSuccess);
@@ -338,7 +338,7 @@ public class DictionarySchemaTests
     [Fact]
     public async Task Dictionary_UsingContext_CountRules_FailWithExpectedCodes()
     {
-        var ctx = new ValidationContext<TestContext>(new TestContext(maxEntries: 10));
+        var ctx = new ValidationRun<TestContext>(new TestContext(maxEntries: 10));
 
         var minResult = await Z.Dictionary<string, int>()
             .Using<TestContext>()
@@ -826,7 +826,7 @@ public class DictionarySchemaTests
             .Using<RangeContext>()
             .RefineEachEntry((k, v, ctx) => v >= ctx.Min && v <= ctx.Max, "Out of range");
 
-        var ctx = new ValidationContext<RangeContext>(new RangeContext(0, 10));
+        var ctx = new ValidationRun<RangeContext>(new RangeContext(0, 10));
         var result = await schema.ValidateAsync(
             new Dictionary<string, int> { ["a"] = 5, ["b"] = 15 }, ctx);
 
@@ -842,7 +842,7 @@ public class DictionarySchemaTests
             .Using<RangeContext>()
             .RefineEachEntry((k, v) => v >= 0, "Must be non-negative");
 
-        var ctx = new ValidationContext<RangeContext>(new RangeContext(0, 100));
+        var ctx = new ValidationRun<RangeContext>(new RangeContext(0, 100));
         var result = await schema.ValidateAsync(
             new Dictionary<string, int> { ["ok"] = 5, ["bad"] = -1 }, ctx);
 
@@ -860,7 +860,7 @@ public class DictionarySchemaTests
             .Using<RangeContext>()
             .RefineEachEntry((k, v, ctx) => v <= ctx.Max, "Exceeds max", "too_high");
 
-        var ctx = new ValidationContext<RangeContext>(new RangeContext(0, 10));
+        var ctx = new ValidationRun<RangeContext>(new RangeContext(0, 10));
         var result = await schema.ValidateAsync(
             new Dictionary<string, int> { ["a"] = -1, ["b"] = 20 }, ctx);
 
@@ -882,7 +882,7 @@ public class DictionarySchemaTests
                 return v <= ctx.Max;
             }, "Exceeds max");
 
-        var ctx = new ValidationContext<RangeContext>(new RangeContext(0, 5));
+        var ctx = new ValidationRun<RangeContext>(new RangeContext(0, 5));
         var result = await schema.ValidateAsync(
             new Dictionary<string, int> { ["x"] = 10 }, ctx);
 

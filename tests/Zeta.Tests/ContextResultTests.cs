@@ -15,7 +15,7 @@ public class ContextResultTests
     {
         var context = Z.Context();
 
-        Assert.Same(ValidationContext.Empty, context);
+        Assert.Same(ValidationRun.Empty, context);
         Assert.Equal("$", context.Path);
     }
 
@@ -26,7 +26,7 @@ public class ContextResultTests
             .Using<TestContext>()
             .Refine((value, ctx) => value <= ctx.MaxValue, "too_big");
 
-        Result<int, TestContext> result = await schema.ValidateAsync(5, new ValidationContext<TestContext>(new TestContext(10)));
+        Result<int, TestContext> result = await schema.ValidateAsync(5, new ValidationRun<TestContext>(new TestContext(10)));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(5, result.Value);
@@ -40,7 +40,7 @@ public class ContextResultTests
             .Using<TestContext>()
             .Refine((value, ctx) => value <= ctx.MaxValue, "too_big");
 
-        Result<int> result = await schema.ValidateAsync(5, new ValidationContext<TestContext>(new TestContext(10)));
+        Result<int> result = await schema.ValidateAsync(5, new ValidationRun<TestContext>(new TestContext(10)));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(5, result.Value);

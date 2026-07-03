@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Zeta.AspNetCore.Tests;
 
-public class ValidationContextBuilderTests
+public class ValidationRunBuilderTests
 {
     private sealed class FakeTimeProvider : TimeProvider
     {
@@ -15,7 +15,7 @@ public class ValidationContextBuilderTests
     [Fact]
     public void Build_DefaultsToSystemTimeAndNoCancellation()
     {
-        var context = new ValidationContextBuilder().Build();
+        var context = new ValidationRunBuilder().Build();
 
         Assert.Same(TimeProvider.System, context.TimeProvider);
         Assert.Equal(CancellationToken.None, context.CancellationToken);
@@ -27,7 +27,7 @@ public class ValidationContextBuilderTests
         using var cts = new CancellationTokenSource();
         var token = cts.Token;
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithCancellation(token)
             .Build();
 
@@ -42,7 +42,7 @@ public class ValidationContextBuilderTests
             .AddSingleton<TimeProvider>(timeProvider)
             .BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(services)
             .Build();
 
@@ -58,7 +58,7 @@ public class ValidationContextBuilderTests
             .AddSingleton<TimeProvider>(serviceProviderTimeProvider)
             .BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(services)
             .WithTimeProvider(explicitTimeProvider)
             .Build();
@@ -73,7 +73,7 @@ public class ValidationContextBuilderTests
         var token = cts.Token;
         var timeProvider = new FakeTimeProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithCancellation(token)
             .WithTimeProvider(timeProvider)
             .Build("payload");
@@ -86,26 +86,26 @@ public class ValidationContextBuilderTests
     [Fact]
     public void WithServiceProvider_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new ValidationContextBuilder().WithServiceProvider(null!));
+        Assert.Throws<ArgumentNullException>(() => new ValidationRunBuilder().WithServiceProvider(null!));
     }
 
     [Fact]
     public void WithTimeProvider_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new ValidationContextBuilder().WithTimeProvider(null!));
+        Assert.Throws<ArgumentNullException>(() => new ValidationRunBuilder().WithTimeProvider(null!));
     }
 
     [Fact]
     public void WithPathFormatting_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new ValidationContextBuilder().WithPathFormatting(null!));
+        Assert.Throws<ArgumentNullException>(() => new ValidationRunBuilder().WithPathFormatting(null!));
     }
 
     [Fact]
-    public void ImplicitOperator_BuildsValidationContext()
+    public void ImplicitOperator_BuildsValidationRun()
     {
         var timeProvider = new FakeTimeProvider();
-        ValidationContext context = new ValidationContextBuilder().WithTimeProvider(timeProvider);
+        ValidationRun context = new ValidationRunBuilder().WithTimeProvider(timeProvider);
 
         Assert.Same(timeProvider, context.TimeProvider);
     }
@@ -118,7 +118,7 @@ public class ValidationContextBuilderTests
             .Configure(o => o.SerializerOptions.PropertyNamingPolicy = new PrefixNamingPolicy("p_"));
         using var provider = services.BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(provider)
             .Build();
 
@@ -133,7 +133,7 @@ public class ValidationContextBuilderTests
             .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = new PrefixNamingPolicy("k_"));
         using var provider = services.BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(provider)
             .Build();
 
@@ -152,7 +152,7 @@ public class ValidationContextBuilderTests
             });
         using var provider = services.BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(provider)
             .WithPathFormatting(new PathFormattingOptions
             {
@@ -173,7 +173,7 @@ public class ValidationContextBuilderTests
             .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase);
         using var provider = services.BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(provider)
             .Build();
 
@@ -189,7 +189,7 @@ public class ValidationContextBuilderTests
             .Configure(o => o.SerializerOptions.PropertyNamingPolicy = namingPolicy);
         using var provider = services.BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(provider)
             .Build();
 
@@ -205,7 +205,7 @@ public class ValidationContextBuilderTests
             .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = namingPolicy);
         using var provider = services.BuildServiceProvider();
 
-        var context = new ValidationContextBuilder()
+        var context = new ValidationRunBuilder()
             .WithServiceProvider(provider)
             .Build();
 

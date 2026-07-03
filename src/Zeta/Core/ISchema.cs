@@ -13,7 +13,7 @@ public interface ISchema<T, TContext>
     /// <summary>
     /// Validates the given value asynchronously with context.
     /// </summary>
-    ValueTask<Result<T, TContext>> ValidateAsync(T? value, ValidationContext<TContext> context);
+    ValueTask<Result<T, TContext>> ValidateAsync(T? value, ValidationRun<TContext> context);
 }
 
 /// <summary>
@@ -49,5 +49,5 @@ public interface ISchema<T>
     /// <summary>
     /// Validates the given value asynchronously without context.
     /// </summary>
-    ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext context);
+    ValueTask<Result<T>> ValidateAsync(T? value, ValidationRun context);
 }
