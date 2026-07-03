@@ -51,6 +51,16 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
         Func<ICollection<TElement>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(ElementSchema, rules, allowNull, conditionals, contextFactory);
 
+    // Stage order for collection schemas: rules, then elements, then conditionals.
+    // Memoized per instance (schemas are immutable), so a hot ValidateAsync allocates no stage array or delegates.
+    private Func<ICollection<TElement>, ValidationContext<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
+    private Func<ICollection<TElement>, ValidationContext<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
+    [
+        ValidateRulesAsync,
+        ValidateElementsAsync,
+        ValidateConditionalsAsync,
+    ];
+
     public override async ValueTask<Result<ICollection<TElement>, TContext>> ValidateAsync(ICollection<TElement>? value, ValidationContext<TContext> context)
     {
         if (value is null)
@@ -60,38 +70,39 @@ public class CollectionContextSchema<TElement, TContext> : ContextSchema<ICollec
                 : Result<ICollection<TElement>, TContext>.Failure([new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
-        var errors = await Rules.ExecuteAsync(value, context);
-
-        // Validate each element if element schema is provided
-        if (ElementSchema is not null)
-        {
-            var index = 0;
-            foreach (var item in value)
-            {
-                var elementContext = context.PushIndex(index);
-                var result = await ElementSchema.ValidateAsync(item, elementContext);
-                if (result.IsFailure)
-                {
-                    errors ??= [];
-                    errors.AddRange(result.Errors);
-                }
-
-                index++;
-            }
-        }
-
-        // Validate conditionals
-        var conditionalErrors = await ExecuteConditionalsAsync(value, context);
-        if (conditionalErrors != null)
-        {
-            errors ??= [];
-            errors.AddRange(conditionalErrors);
-        }
-
-        return errors == null
+        var errors = await ValidationPipeline.RunAsync(value, context, Stages());
+        return errors is null
             ? Result<ICollection<TElement>, TContext>.Success(value!, context.Data)
             : Result<ICollection<TElement>, TContext>.Failure(errors);
     }
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+        => await Rules.ExecuteAsync(value, context);
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateElementsAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+    {
+        if (ElementSchema is null) return null;
+
+        List<ValidationError>? errors = null;
+        var index = 0;
+        foreach (var item in value)
+        {
+            var elementContext = context.PushIndex(index);
+            var result = await ElementSchema.ValidateAsync(item, elementContext);
+            if (result.IsFailure)
+            {
+                errors ??= [];
+                errors.AddRange(result.Errors);
+            }
+
+            index++;
+        }
+
+        return errors;
+    }
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(ICollection<TElement> value, ValidationContext<TContext> context)
+        => await ExecuteConditionalsAsync(value, context);
 
     public CollectionContextSchema<TElement, TContext> MinLength(int min, string? message = null)
         => AppendRule(new MinLengthRule<TElement>(min, message));

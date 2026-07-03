@@ -87,6 +87,17 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         Func<IDictionary<TKey, TValue>, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(KeySchema, ValueSchema, rules, allowNull, conditionals, contextFactory, _entryRefinements);
 
+    // Stage order for dictionary schemas: rules, then key/value entries, then entry refinements, then conditionals.
+    // Memoized per instance (schemas are immutable), so a hot ValidateAsync allocates no stage array or delegates.
+    private Func<IDictionary<TKey, TValue>, ValidationContext<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
+    private Func<IDictionary<TKey, TValue>, ValidationContext<TContext>, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
+    [
+        ValidateRulesAsync,
+        ValidateEntriesAsync,
+        ValidateEntryRefinementsAsync,
+        ValidateConditionalsAsync,
+    ];
+
     public override async ValueTask<Result<IDictionary<TKey, TValue>, TContext>> ValidateAsync(
         IDictionary<TKey, TValue>? value, ValidationContext<TContext> context)
     {
@@ -98,8 +109,20 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
                     [new ValidationError(context.PathSegments, "null_value", "Value cannot be null")]);
         }
 
-        var errors = await Rules.ExecuteAsync(value, context);
+        var errors = await ValidationPipeline.RunAsync(value, context, Stages());
+        return errors is null
+            ? Result<IDictionary<TKey, TValue>, TContext>.Success(value, context.Data)
+            : Result<IDictionary<TKey, TValue>, TContext>.Failure(errors);
+    }
 
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(IDictionary<TKey, TValue> value, ValidationContext<TContext> context)
+        => await Rules.ExecuteAsync(value, context);
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateEntriesAsync(IDictionary<TKey, TValue> value, ValidationContext<TContext> context)
+    {
+        if (KeySchema is null && ValueSchema is null) return null;
+
+        List<ValidationError>? errors = null;
         var index = 0;
         foreach (var kvp in value)
         {
@@ -128,35 +151,34 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
             index++;
         }
 
-        if (_entryRefinements is not null)
+        return errors;
+    }
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateEntryRefinementsAsync(IDictionary<TKey, TValue> value, ValidationContext<TContext> context)
+    {
+        if (_entryRefinements is null) return null;
+
+        List<ValidationError>? errors = null;
+        foreach (var kvp in value)
         {
-            foreach (var kvp in value)
+            foreach (var refinement in _entryRefinements)
             {
-                foreach (var refinement in _entryRefinements)
+                var passed = await refinement.Predicate(kvp.Key, kvp.Value, context.Data, context.CancellationToken);
+                if (!passed)
                 {
-                    var passed = await refinement.Predicate(kvp.Key, kvp.Value, context.Data, context.CancellationToken);
-                    if (!passed)
-                    {
-                        errors ??= [];
-                        errors.Add(new ValidationError(
-                            context.PushKey(kvp.Key).PathSegments,
-                            refinement.Code, refinement.Message));
-                    }
+                    errors ??= [];
+                    errors.Add(new ValidationError(
+                        context.PushKey(kvp.Key).PathSegments,
+                        refinement.Code, refinement.Message));
                 }
             }
         }
 
-        var conditionalErrors = await ExecuteConditionalsAsync(value, context);
-        if (conditionalErrors != null)
-        {
-            errors ??= [];
-            errors.AddRange(conditionalErrors);
-        }
-
-        return errors == null
-            ? Result<IDictionary<TKey, TValue>, TContext>.Success(value, context.Data)
-            : Result<IDictionary<TKey, TValue>, TContext>.Failure(errors);
+        return errors;
     }
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(IDictionary<TKey, TValue> value, ValidationContext<TContext> context)
+        => await ExecuteConditionalsAsync(value, context);
 
     public DictionaryContextSchema<TKey, TValue, TContext> MinLength(int min, string? message = null)
         => AppendRule(new DictionaryMinLengthRule<TKey, TValue>(min, message));

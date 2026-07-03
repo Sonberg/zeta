@@ -11,6 +11,7 @@
 - `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` — unused, no production callers.
 
 ### Changed
+- Object, collection, and dictionary schemas now run their validation stages through one internal `ValidationPipeline.RunAsync` (generic over the context, so it serves both the contextless and context-aware hierarchies). Previously each of the six `ValidateAsync` overrides hand-inlined the "run every stage, aggregate all errors, never short-circuit" loop. Each schema declares its own stage order as a memoized `Stages()` array (object runs rules last; collection/dictionary run them first) — order is now visible as data. Behavior, including error ordering, is unchanged; the per-schema stage array is cached per instance so a hot `ValidateAsync` allocates no stage array or delegates.
 - The two rule engines (`ContextlessRuleEngine<T>` and `ContextRuleEngine<T, TContext>`) now share one internal `RuleChain<TRule>` for the persistent append-only list and its lazy insertion-order materialization — previously duplicated character-for-character (two `RuleNode` types, two `Materialize` bodies). Behavior is unchanged; the reversal logic is now covered by a direct unit test.
 - Deleted the `ValueTaskHelper` shim in favor of the native `ValueTask.FromResult` (the shim only existed for the long-removed netstandard2.0 target).
 - Removed dead `#if !NETSTANDARD2_0` conditionals (in source and source-generator emission) and the `IsExternalInit` polyfill — the minimum target is net6.0.

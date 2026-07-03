@@ -128,6 +128,18 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
     }
 
 
+    // Stage order for object schemas: fields, then type assertion, then conditionals, then rules.
+    // Memoized per instance (schemas are immutable), mirroring the rule engine's materialized cache,
+    // so a hot ValidateAsync allocates no stage array or delegates.
+    private Func<T, ValidationContext, ValueTask<IReadOnlyList<ValidationError>?>>[]? _stages;
+    private Func<T, ValidationContext, ValueTask<IReadOnlyList<ValidationError>?>>[] Stages() => _stages ??=
+    [
+        ValidateFieldsAsync,
+        ValidateTypeAssertionAsync,
+        ValidateConditionalsAsync,
+        ValidateRulesAsync,
+    ];
+
     public override async ValueTask<Result<T>> ValidateAsync(T? value, ValidationContext execution)
     {
         if (value is null)
@@ -137,49 +149,34 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
                 : Result<T>.Failure(new ValidationError(execution.PathSegments, "null_value", "Value cannot be null"));
         }
 
-        List<ValidationError>? errors = null;
+        var errors = await ValidationPipeline.RunAsync(value, execution, Stages());
+        return errors is null
+            ? Result<T>.Success(value)
+            : Result<T>.Failure(errors);
+    }
 
-        // Validate fields
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateFieldsAsync(T value, ValidationContext execution)
+    {
+        List<ValidationError>? errors = null;
         foreach (var field in _fields)
         {
             var fieldErrors = await field.ValidateAsync(value, execution);
             if (fieldErrors.Count <= 0) continue;
-
             errors ??= [];
             errors.AddRange(fieldErrors);
         }
 
-        // Validate type assertion
-        if (_typeAssertion != null)
-        {
-            var assertionErrors = await _typeAssertion.ValidateAsync(value, execution);
-            if (assertionErrors.Count > 0)
-            {
-                errors ??= [];
-                errors.AddRange(assertionErrors);
-            }
-        }
-
-        // Validate conditionals
-        var conditionalErrors = await ExecuteConditionalsAsync(value, execution);
-        if (conditionalErrors != null)
-        {
-            errors ??= [];
-            errors.AddRange(conditionalErrors);
-        }
-
-        // Validate rules
-        var ruleErrors = await Rules.ExecuteAsync(value, execution);
-        if (ruleErrors != null)
-        {
-            errors ??= [];
-            errors.AddRange(ruleErrors);
-        }
-
-        return errors == null
-            ? Result<T>.Success(value)
-            : Result<T>.Failure(errors);
+        return errors;
     }
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateTypeAssertionAsync(T value, ValidationContext execution)
+        => _typeAssertion is null ? null : await _typeAssertion.ValidateAsync(value, execution);
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateConditionalsAsync(T value, ValidationContext execution)
+        => await ExecuteConditionalsAsync(value, execution);
+
+    private async ValueTask<IReadOnlyList<ValidationError>?> ValidateRulesAsync(T value, ValidationContext execution)
+        => await Rules.ExecuteAsync(value, execution);
 
     // Nullable reference / nested-object fields. Reference types need no null adapter:
     // the inner schema already handles null. Nullable value-type fields are served by the
