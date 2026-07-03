@@ -20,6 +20,6 @@ public readonly struct NotEmptyRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "required", _message ?? "Value cannot be empty");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

@@ -24,7 +24,7 @@ public readonly struct DictionaryMinLengthRule<TKey, TValue> : IValidationRule<I
             ? null
             : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must have at least {_min} entries");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -49,7 +49,7 @@ public readonly struct DictionaryMaxLengthRule<TKey, TValue> : IValidationRule<I
             ? null
             : new ValidationError(context.PathSegments, "max_length", _message ?? $"Must have at most {_max} entries");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -72,6 +72,6 @@ public readonly struct DictionaryNotEmptyRule<TKey, TValue> : IValidationRule<ID
             ? null
             : new ValidationError(context.PathSegments, "min_length", _message ?? "Must not be empty");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

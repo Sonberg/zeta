@@ -24,6 +24,6 @@ public readonly struct ContainsRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "contains", _message ?? $"Must contain '{_substring}'");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

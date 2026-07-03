@@ -22,6 +22,6 @@ public readonly struct MinLengthRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "min_length", _message ?? $"Must be at least {_min} characters long");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

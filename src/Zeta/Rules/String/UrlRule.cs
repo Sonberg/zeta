@@ -21,6 +21,6 @@ public readonly struct UrlRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "url", _message ?? "Invalid URL format");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

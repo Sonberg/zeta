@@ -20,6 +20,6 @@ public readonly struct UuidRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "uuid", _message ?? "Invalid UUID format");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

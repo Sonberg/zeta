@@ -25,6 +25,6 @@ public readonly struct RegexRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, _code, _message ?? $"Must match pattern {_regex}");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

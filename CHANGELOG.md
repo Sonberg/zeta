@@ -2,6 +2,14 @@
 
 ## Next release
 
+### Removed
+- `ValidationPath.GetSegments()` and the `ToPathString(Func<ValidationPathSegment, string>)` custom-formatter overload — plus the now-unused public `ValidationPathSegment` record and `ValidationPathSegmentKind` enum. These had no callers outside their own tests; path formatting is covered by `PathFormattingOptions`. (`ValidationPath.TryGetValue`/`GetValue` value backtrace is retained.)
+- `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` — unused, no production callers.
+
+### Changed
+- Deleted the `ValueTaskHelper` shim in favor of the native `ValueTask.FromResult` (the shim only existed for the long-removed netstandard2.0 target).
+- Removed dead `#if !NETSTANDARD2_0` conditionals (in source and source-generator emission) and the `IsExternalInit` polyfill — the minimum target is net6.0.
+
 ## 0.1.17
 
 ### Added

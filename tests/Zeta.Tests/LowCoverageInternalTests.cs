@@ -13,46 +13,6 @@ public class LowCoverageInternalTests
     private sealed record Cat(int ClawSharpness) : IAnimal;
 
     [Fact]
-    public async Task StatefulRefinementRule_Contextless_SyncAndAsync_Validate()
-    {
-        var syncRule = new StatefulRefinementRule<int, int>(
-            static (value, ctx, min) => value >= min
-                ? null
-                : new ValidationError(ctx.PathSegments, "min_value", $"Must be >= {min}"), 10);
-
-        var asyncRule = new StatefulRefinementRule<int, int>(
-            static (value, ctx, min) => ValueTask.FromResult<ValidationError?>(value >= min
-                ? null
-                : new ValidationError(ctx.PathSegments, "min_value", $"Must be >= {min}")), 10);
-
-        var context = new ValidationContext();
-        Assert.Null(await syncRule.ValidateAsync(11, context));
-        Assert.NotNull(await syncRule.ValidateAsync(5, context));
-        Assert.Null(await asyncRule.ValidateAsync(12, context));
-        Assert.NotNull(await asyncRule.ValidateAsync(2, context));
-    }
-
-    [Fact]
-    public async Task StatefulRefinementRule_ContextAware_SyncAndAsync_Validate()
-    {
-        var syncRule = new StatefulRefinementRule<int, Ctx, int>(
-            static (value, ctx, offset) => value <= ctx.Data.Limit + offset
-                ? null
-                : new ValidationError(ctx.PathSegments, "too_large", "Too large"), 0);
-
-        var asyncRule = new StatefulRefinementRule<int, Ctx, int>(
-            static (value, ctx, offset) => ValueTask.FromResult<ValidationError?>(value <= ctx.Data.Limit + offset
-                ? null
-                : new ValidationError(ctx.PathSegments, "too_large", "Too large")), 0);
-
-        var context = new ValidationContext<Ctx>(new Ctx(10));
-        Assert.Null(await syncRule.ValidateAsync(10, context));
-        Assert.NotNull(await syncRule.ValidateAsync(11, context));
-        Assert.Null(await asyncRule.ValidateAsync(9, context));
-        Assert.NotNull(await asyncRule.ValidateAsync(50, context));
-    }
-
-    [Fact]
     public async Task TypeAssertion_InternalTypes_CoverMismatchAndFactories()
     {
         var contextlessDogSchema = Z.Schema<Dog>()

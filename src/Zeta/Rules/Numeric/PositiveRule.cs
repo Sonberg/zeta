@@ -19,7 +19,7 @@ public readonly struct PositiveIntRule : IValidationRule<int>
         var error = value > 0
             ? null
             : new ValidationError(context.PathSegments, "positive", _message ?? "Must be positive");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 /// <summary>
@@ -39,7 +39,7 @@ public readonly struct PositiveDoubleRule : IValidationRule<double>
         var error = value > 0
             ? null
             : new ValidationError(context.PathSegments, "positive", _message ?? "Must be positive");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 /// <summary>
@@ -59,6 +59,6 @@ public readonly struct PositiveDecimalRule : IValidationRule<decimal>
         var error = value > 0
             ? null
             : new ValidationError(context.PathSegments, "positive", _message ?? "Must be positive");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

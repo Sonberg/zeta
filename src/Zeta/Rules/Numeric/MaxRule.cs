@@ -21,7 +21,7 @@ public readonly struct MaxIntRule : IValidationRule<int>
         var error = value <= _max
             ? null
             : new ValidationError(context.PathSegments, "max_value", _message ?? $"Must be at most {_max}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 /// <summary>
@@ -43,7 +43,7 @@ public readonly struct MaxDoubleRule : IValidationRule<double>
         var error = value <= _max
             ? null
             : new ValidationError(context.PathSegments, "max_value", _message ?? $"Must be at most {_max}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 /// <summary>
@@ -65,6 +65,6 @@ public readonly struct MaxDecimalRule : IValidationRule<decimal>
         var error = value <= _max
             ? null
             : new ValidationError(context.PathSegments, "max_value", _message ?? $"Must be at most {_max}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

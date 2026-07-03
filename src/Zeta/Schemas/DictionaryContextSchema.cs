@@ -187,7 +187,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         Func<TKey, TValue, bool> predicate, string message, string code = "entry_invalid")
     {
         var refinement = new EntryRefinement<TKey, TValue, TContext>(
-            (k, v, _, _) => ValueTaskHelper.FromResult(predicate(k, v)), message, code);
+            (k, v, _, _) => ValueTask.FromResult(predicate(k, v)), message, code);
         return new(KeySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, AppendRefinement(_entryRefinements, refinement));
     }
 
@@ -199,7 +199,7 @@ public class DictionaryContextSchema<TKey, TValue, TContext>
         Func<TKey, TValue, TContext, bool> predicate, string message, string code = "entry_invalid")
     {
         var refinement = new EntryRefinement<TKey, TValue, TContext>(
-            (k, v, ctx, _) => ValueTaskHelper.FromResult(predicate(k, v, ctx)), message, code);
+            (k, v, ctx, _) => ValueTask.FromResult(predicate(k, v, ctx)), message, code);
         return new(KeySchema, ValueSchema, Rules, AllowNull, GetConditionals(), ContextFactory, AppendRefinement(_entryRefinements, refinement));
     }
 

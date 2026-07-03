@@ -20,6 +20,6 @@ public readonly struct AlphanumericRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "alphanumeric", _message ?? "Must contain only letters and numbers");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

@@ -1,4 +1,3 @@
-#if !NETSTANDARD2_0
 using Zeta.Core;
 
 namespace Zeta.Schemas;
@@ -32,4 +31,3 @@ public class TimeOnlyContextSchema<TContext> : ContextSchema<TimeOnly, TContext,
         Func<TimeOnly, IServiceProvider, CancellationToken, ValueTask<TContext>>? contextFactory)
         => new(rules, allowNull, conditionals, contextFactory);
 }
-#endif

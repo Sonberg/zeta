@@ -15,7 +15,7 @@ public readonly struct RefinementRule<T> : IValidationRule<T>
     /// </summary>
     public RefinementRule(Func<T, ValidationContext, ValidationError?> validate)
     {
-        _validate = (val, exec) => ValueTaskHelper.FromResult(validate(val, exec));
+        _validate = (val, exec) => ValueTask.FromResult(validate(val, exec));
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public readonly struct RefinementRule<T, TContext> : IValidationRule<T, TContext
     /// </summary>
     public RefinementRule(Func<T, ValidationContext<TContext>, ValidationError?> validate)
     {
-        _validate = (val, ctx) => ValueTaskHelper.FromResult(validate(val, ctx));
+        _validate = (val, ctx) => ValueTask.FromResult(validate(val, ctx));
     }
 
     /// <summary>

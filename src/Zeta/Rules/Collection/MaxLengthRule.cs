@@ -23,6 +23,6 @@ public readonly struct MaxLengthRule<T> : IValidationRule<ICollection<T>>
             ? null
             : new ValidationError(context.PathSegments, "max_length", _message ?? $"Must have at most {_max} items");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

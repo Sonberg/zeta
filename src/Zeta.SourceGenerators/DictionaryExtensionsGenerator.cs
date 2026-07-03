@@ -50,7 +50,6 @@ internal static class DictionaryExtensionsGenerator
                             """);
         }
 
-        sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
@@ -67,7 +66,6 @@ internal static class DictionaryExtensionsGenerator
 
                         """);
         }
-        sb.AppendLine("#endif");
 
         sb.AppendLine("""
                           /// <summary>
@@ -105,7 +103,6 @@ internal static class DictionaryExtensionsGenerator
                             """);
         }
 
-        sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
@@ -123,7 +120,6 @@ internal static class DictionaryExtensionsGenerator
 
                         """);
         }
-        sb.AppendLine("#endif");
 
         sb.AppendLine("""
                           /// <summary>
@@ -161,7 +157,6 @@ internal static class DictionaryExtensionsGenerator
                             """);
         }
 
-        sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
@@ -178,7 +173,6 @@ internal static class DictionaryExtensionsGenerator
 
                         """);
         }
-        sb.AppendLine("#endif");
 
         sb.AppendLine("""
                           /// <summary>
@@ -216,7 +210,6 @@ internal static class DictionaryExtensionsGenerator
                             """);
         }
 
-        sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
@@ -234,7 +227,6 @@ internal static class DictionaryExtensionsGenerator
 
                         """);
         }
-        sb.AppendLine("#endif");
 
         sb.AppendLine("""
                           /// <summary>

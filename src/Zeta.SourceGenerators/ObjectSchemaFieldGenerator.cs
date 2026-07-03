@@ -29,8 +29,8 @@ internal static class ObjectSchemaFieldGenerator
         sb.AppendLine("public partial class ObjectContextlessSchema<T>");
         sb.AppendLine("{");
 
-        GenerateMappingGroup(methods, SchemaMapping.PrimitiveMappings, conditional: false);
-        GenerateMappingGroup(methods, SchemaMapping.ModernNetMappings, conditional: true);
+        GenerateMappingGroup(methods, SchemaMapping.PrimitiveMappings);
+        GenerateMappingGroup(methods, SchemaMapping.ModernNetMappings);
         GenerateNestedObjectOverload(methods);
         GenerateCollectionOverloads(methods);
         GenerateGenericCollectionOverloads(methods);
@@ -53,14 +53,12 @@ internal static class ObjectSchemaFieldGenerator
             .Replace("field validation", "property validation");
     }
 
-    private static void GenerateMappingGroup(StringBuilder sb, SchemaMapping.Mapping[] mappings, bool conditional)
+    private static void GenerateMappingGroup(StringBuilder sb, SchemaMapping.Mapping[] mappings)
     {
-        if (conditional) sb.AppendLine("#if !NETSTANDARD2_0");
         GenerateInlineBuilderOverloads(sb, mappings);
         GenerateNonNullablePrebuiltOverloads(sb, mappings);
         GenerateNullableInlineBuilderOverloads(sb, mappings);
         GenerateNullablePrebuiltOverloads(sb, mappings);
-        if (conditional) sb.AppendLine("#endif");
     }
 
     private static void GenerateInlineBuilderOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)

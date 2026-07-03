@@ -22,6 +22,6 @@ public readonly struct UriRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "uri", _message ?? "Invalid URI format");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

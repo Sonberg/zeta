@@ -321,7 +321,6 @@ public partial class ObjectContextlessSchema<T>
         return AddField(new NullableFieldContextlessValidator<T, System.DateTime>(propertyName, getter, schema));
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Adds a property validator with fluent schema builder for DateOnly properties.
     /// </summary>
@@ -422,7 +421,6 @@ public partial class ObjectContextlessSchema<T>
         return AddField(new NullableFieldContextlessValidator<T, TimeOnly>(propertyName, getter, schema));
     }
 
-#endif
 
     /// <summary>
     /// Adds a property validator with fluent schema builder for nested object properties.

@@ -73,7 +73,6 @@ public static class Z
     /// </summary>
     public static DateTimeContextlessSchema DateTime() => new();
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Creates a schema for validating DateOnly values.
     /// </summary>
@@ -83,7 +82,6 @@ public static class Z
     /// Creates a schema for validating TimeOnly values.
     /// </summary>
     public static TimeOnlyContextlessSchema TimeOnly() => new();
-#endif
 
     /// <summary>
     /// Creates a schema for validating GUID values.

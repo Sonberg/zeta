@@ -19,7 +19,7 @@ public readonly struct IsTrueRule : IValidationRule<bool>
         var error = value
             ? null
             : new ValidationError(context.PathSegments, "is_true", _message ?? "Must be true");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -40,6 +40,6 @@ public readonly struct IsFalseRule : IValidationRule<bool>
         var error = !value
             ? null
             : new ValidationError(context.PathSegments, "is_false", _message ?? "Must be false");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

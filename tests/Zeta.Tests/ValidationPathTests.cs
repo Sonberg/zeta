@@ -38,22 +38,6 @@ public class ValidationPathTests
     }
 
     [Fact]
-    public void ValidationPath_CanUseCustomFormatter()
-    {
-        var path = ValidationPath.Parse("$.items[1].quantity");
-
-        var custom = path.ToPathString(segment => segment.Kind switch
-        {
-            ValidationPathSegmentKind.Property => "/" + segment.PropertyName,
-            ValidationPathSegmentKind.Index => $"/#{segment.Index}",
-            ValidationPathSegmentKind.DictionaryKey => $"/@{segment.DictionaryKey}",
-            _ => string.Empty
-        });
-
-        Assert.Equal("$/items/#1/quantity", custom);
-    }
-
-    [Fact]
     public void ValidationPath_Parse_HandlesRootAndBareProperty()
     {
         Assert.Equal("$", ValidationPath.Parse(null).ToPathString());

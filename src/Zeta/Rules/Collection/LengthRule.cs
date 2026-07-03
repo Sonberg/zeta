@@ -23,6 +23,6 @@ public readonly struct LengthRule<T> : IValidationRule<ICollection<T>>
             ? null
             : new ValidationError(context.PathSegments, "length", _message ?? $"Must have exactly {_exact} items");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

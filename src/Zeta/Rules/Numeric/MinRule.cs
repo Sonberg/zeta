@@ -21,7 +21,7 @@ public readonly struct MinIntRule : IValidationRule<int>
         var error = value >= _min
             ? null
             : new ValidationError(context.PathSegments, "min_value", _message ?? $"Must be at least {_min}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 /// <summary>
@@ -43,7 +43,7 @@ public readonly struct MinDoubleRule : IValidationRule<double>
         var error = value >= _min
             ? null
             : new ValidationError(context.PathSegments, "min_value", _message ?? $"Must be at least {_min}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 /// <summary>
@@ -65,6 +65,6 @@ public readonly struct MinDecimalRule : IValidationRule<decimal>
         var error = value >= _min
             ? null
             : new ValidationError(context.PathSegments, "min_value", _message ?? $"Must be at least {_min}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

@@ -50,7 +50,6 @@ internal static class CollectionExtensionsGenerator
         }
 
         // DateOnly and TimeOnly
-        sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
@@ -67,7 +66,6 @@ internal static class CollectionExtensionsGenerator
 
                         """);
         }
-        sb.AppendLine("#endif");
 
         // Enum
         sb.AppendLine("""
@@ -124,7 +122,6 @@ internal static class CollectionExtensionsGenerator
         }
 
         // DateOnly and TimeOnly
-        sb.AppendLine("#if !NETSTANDARD2_0");
         foreach (var mapping in SchemaMapping.ModernNetMappings)
         {
             sb.AppendLine($$"""
@@ -141,7 +138,6 @@ internal static class CollectionExtensionsGenerator
 
                         """);
         }
-        sb.AppendLine("#endif");
 
         // Enum
         sb.AppendLine("""

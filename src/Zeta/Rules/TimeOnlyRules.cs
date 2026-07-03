@@ -21,7 +21,7 @@ public readonly struct TimeOnlyMinRule : IValidationRule<TimeOnly>
         var error = value >= _min
             ? null
             : new ValidationError(context.PathSegments, "min_time", _message ?? $"Must be at or after {_min:t}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -44,7 +44,7 @@ public readonly struct TimeOnlyMaxRule : IValidationRule<TimeOnly>
         var error = value <= _max
             ? null
             : new ValidationError(context.PathSegments, "max_time", _message ?? $"Must be at or before {_max:t}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -69,7 +69,7 @@ public readonly struct TimeOnlyBetweenRule : IValidationRule<TimeOnly>
         var error = value >= _min && value <= _max
             ? null
             : new ValidationError(context.PathSegments, "between", _message ?? $"Must be between {_min:t} and {_max:t}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -94,7 +94,7 @@ public readonly struct TimeOnlyBusinessHoursRule : IValidationRule<TimeOnly>
         var error = value >= _start && value <= _end
             ? null
             : new ValidationError(context.PathSegments, "business_hours", _message ?? $"Must be during business hours ({_start:t} - {_end:t})");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -115,7 +115,7 @@ public readonly struct TimeOnlyMorningRule : IValidationRule<TimeOnly>
         var error = value.Hour < 12
             ? null
             : new ValidationError(context.PathSegments, "morning", _message ?? "Must be in the morning (before 12:00)");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -136,7 +136,7 @@ public readonly struct TimeOnlyAfternoonRule : IValidationRule<TimeOnly>
         var error = value.Hour >= 12 && value.Hour < 18
             ? null
             : new ValidationError(context.PathSegments, "afternoon", _message ?? "Must be in the afternoon (12:00 - 18:00)");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -157,6 +157,6 @@ public readonly struct TimeOnlyEveningRule : IValidationRule<TimeOnly>
         var error = value.Hour >= 18
             ? null
             : new ValidationError(context.PathSegments, "evening", _message ?? "Must be in the evening (after 18:00)");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

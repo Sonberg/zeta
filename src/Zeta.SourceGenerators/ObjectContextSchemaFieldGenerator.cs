@@ -29,8 +29,8 @@ internal static class ObjectContextSchemaFieldGenerator
         sb.AppendLine("public partial class ObjectContextSchema<T, TContext>");
         sb.AppendLine("{");
 
-        GenerateMappingGroup(methods, SchemaMapping.PrimitiveMappings, conditional: false);
-        GenerateMappingGroup(methods, SchemaMapping.ModernNetMappings, conditional: true);
+        GenerateMappingGroup(methods, SchemaMapping.PrimitiveMappings);
+        GenerateMappingGroup(methods, SchemaMapping.ModernNetMappings);
         GenerateNestedObjectOverloads(methods);
         GenerateCollectionOverloads(methods);
         GenerateGenericCollectionOverloads(methods);
@@ -53,15 +53,13 @@ internal static class ObjectContextSchemaFieldGenerator
             .Replace("field validation", "property validation");
     }
 
-    private static void GenerateMappingGroup(StringBuilder sb, SchemaMapping.Mapping[] mappings, bool conditional)
+    private static void GenerateMappingGroup(StringBuilder sb, SchemaMapping.Mapping[] mappings)
     {
-        if (conditional) sb.AppendLine("#if !NETSTANDARD2_0");
         GenerateInlineBuilderOverloads(sb, mappings);
         GenerateNonNullablePrebuiltContextlessOverloads(sb, mappings);
         GenerateNonNullablePrebuiltContextAwareOverloads(sb, mappings);
         GenerateNullableInlineBuilderOverloads(sb, mappings);
         GenerateNullablePrebuiltContextAwareOverloads(sb, mappings);
-        if (conditional) sb.AppendLine("#endif");
     }
 
     private static void GenerateInlineBuilderOverloads(StringBuilder sb, SchemaMapping.Mapping[] mappings)

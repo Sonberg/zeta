@@ -22,6 +22,6 @@ public readonly struct LengthRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "length", _message ?? $"Must be exactly {_exact} characters long");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

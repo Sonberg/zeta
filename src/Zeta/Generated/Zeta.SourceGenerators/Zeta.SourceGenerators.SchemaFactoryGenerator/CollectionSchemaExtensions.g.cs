@@ -86,7 +86,6 @@ public static class CollectionSchemaExtensions
         return schema.WithElementSchema(newElementSchema);
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Applies transformations to the DateOnly element schema for each item in the collection.
     /// </summary>
@@ -109,7 +108,6 @@ public static class CollectionSchemaExtensions
         return schema.WithElementSchema(newElementSchema);
     }
 
-#endif
     /// <summary>
     /// Applies transformations to the enum element schema for each item in the collection.
     /// </summary>
@@ -212,7 +210,6 @@ public static class CollectionSchemaExtensions
         return schema.WithElementSchema(newElementSchema);
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Applies transformations to the DateOnly element schema for each item in the collection.
     /// </summary>
@@ -235,7 +232,6 @@ public static class CollectionSchemaExtensions
         return schema.WithElementSchema(newElementSchema);
     }
 
-#endif
     /// <summary>
     /// Applies transformations to the enum element schema for each item in the collection.
     /// </summary>

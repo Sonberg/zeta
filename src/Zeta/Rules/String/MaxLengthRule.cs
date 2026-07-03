@@ -22,6 +22,6 @@ public readonly struct MaxLengthRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "max_length", _message ?? $"Must be at most {_max} characters long");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

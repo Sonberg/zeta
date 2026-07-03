@@ -1,4 +1,3 @@
-#if !NETSTANDARD2_0
 using Zeta.Core;
 
 namespace Zeta.Schemas;
@@ -55,4 +54,3 @@ public sealed class TimeOnlyContextlessSchema : ContextlessSchema<TimeOnly, Time
         return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
     }
 }
-#endif

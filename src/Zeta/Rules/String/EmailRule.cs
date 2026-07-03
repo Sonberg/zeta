@@ -26,6 +26,6 @@ public readonly struct EmailRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "email", _message ?? "Invalid email format");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

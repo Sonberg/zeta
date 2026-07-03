@@ -27,22 +27,7 @@ internal readonly struct PathSegment
 }
 
 /// <summary>
-/// Immutable linked list of path segments. Renders lazily to string; cached per node.
-/// </summary>
-public enum ValidationPathSegmentKind
-{
-    Property,
-    Index,
-    DictionaryKey
-}
-
-/// <summary>
-/// Public view of a path segment for custom formatting.
-/// </summary>
-public readonly record struct ValidationPathSegment(ValidationPathSegmentKind Kind, string? PropertyName, int Index, object? DictionaryKey);
-
-/// <summary>
-/// Immutable linked list of path segments. Renders lazily and can resolve values from a root object.
+/// Immutable linked list of path segments. Renders lazily to a JSONPath-like string; cached per node.
 /// </summary>
 public sealed class ValidationPath : IEquatable<ValidationPath>
 {
@@ -193,23 +178,13 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
     }
 
     /// <summary>
-    /// Converts path to string using a custom segment formatter.
-    /// </summary>
-    public string ToPathString(Func<ValidationPathSegment, string> segmentFormatter, string root = "$")
-    {
-        ArgumentNullException.ThrowIfNull(segmentFormatter);
-
-        var segments = CollectSegments();
-        var builder = new StringBuilder(root);
-        for (var i = 0; i < segments.Length; i++)
-            builder.Append(segmentFormatter(ToPublic(segments[i])));
-
-        return builder.ToString();
-    }
-
-    /// <summary>
     /// Tries to resolve the value referenced by this path from a given root object.
     /// </summary>
+    /// <remarks>
+    /// Resolution is by reflection (case-insensitive property match, dictionary <see cref="object.ToString"/>
+    /// fallback), so it is a best-effort round-trip: it can miss or mis-resolve if the object graph no longer
+    /// matches the path that produced the error.
+    /// </remarks>
     public bool TryGetValue(object? root, out object? value)
     {
         var current = root;
@@ -240,18 +215,6 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
         return value;
     }
 
-    /// <summary>
-    /// Returns segments for external formatters.
-    /// </summary>
-    public IReadOnlyList<ValidationPathSegment> GetSegments()
-    {
-        var segments = CollectSegments();
-        var result = new ValidationPathSegment[segments.Length];
-        for (var i = 0; i < segments.Length; i++)
-            result[i] = ToPublic(segments[i]);
-        return result;
-    }
-
     public override string ToString() => ToPathString();
 
     public static implicit operator string(ValidationPath path) => path.ToPathString();
@@ -276,15 +239,6 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
 
         return segments;
     }
-
-    private static ValidationPathSegment ToPublic(PathSegment segment)
-        => segment.Kind switch
-        {
-            PathSegmentKind.Property => new ValidationPathSegment(ValidationPathSegmentKind.Property, segment.Name, -1, null),
-            PathSegmentKind.Index => new ValidationPathSegment(ValidationPathSegmentKind.Index, null, segment.IndexValue, null),
-            PathSegmentKind.DictionaryKey => new ValidationPathSegment(ValidationPathSegmentKind.DictionaryKey, null, -1, segment.Key),
-            _ => default
-        };
 
     private static bool AreSame(PathSegment left, PathSegment right)
     {

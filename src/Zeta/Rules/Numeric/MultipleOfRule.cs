@@ -21,7 +21,7 @@ public readonly struct MultipleOfIntRule : IValidationRule<int>
         var error = value % _divisor == 0
             ? null
             : new ValidationError(context.PathSegments, "multiple_of", _message ?? $"Must be a multiple of {_divisor}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -44,7 +44,7 @@ public readonly struct MultipleOfDoubleRule : IValidationRule<double>
         var error = value % _divisor == 0
             ? null
             : new ValidationError(context.PathSegments, "multiple_of", _message ?? $"Must be a multiple of {_divisor}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -67,6 +67,6 @@ public readonly struct MultipleOfRule : IValidationRule<decimal>
         var error = value % _divisor == 0
             ? null
             : new ValidationError(context.PathSegments, "multiple_of", _message ?? $"Must be a multiple of {_divisor}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

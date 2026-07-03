@@ -9,7 +9,6 @@ internal static class SchemaMapping
 
     /// <summary>
     /// Core primitive types that have schema implementations.
-    /// Available in all target frameworks including .NET Standard 2.0.
     /// </summary>
     internal static readonly Mapping[] PrimitiveMappings =
     {
@@ -20,8 +19,7 @@ internal static class SchemaMapping
     };
 
     /// <summary>
-    /// Types that are only available in .NET 6+ (not in .NET Standard 2.0).
-    /// These require #if !NETSTANDARD2_0 conditional compilation.
+    /// Types introduced in .NET 6 (DateOnly, TimeOnly).
     /// </summary>
     internal static readonly Mapping[] ModernNetMappings =
     {

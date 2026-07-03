@@ -86,7 +86,6 @@ public static class DictionarySchemaExtensions
         return schema.WithKeySchema(newKeySchema);
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Applies transformations to the DateOnly key schema for each key in the dictionary.
     /// </summary>
@@ -109,7 +108,6 @@ public static class DictionarySchemaExtensions
         return schema.WithKeySchema(newKeySchema);
     }
 
-#endif
     /// <summary>
     /// Applies transformations to the enum key schema for each key in the dictionary.
     /// </summary>
@@ -206,7 +204,6 @@ public static class DictionarySchemaExtensions
         return schema.WithValueSchema(newValueSchema);
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Applies transformations to the DateOnly value schema for each value in the dictionary.
     /// </summary>
@@ -231,7 +228,6 @@ public static class DictionarySchemaExtensions
         return schema.WithValueSchema(newValueSchema);
     }
 
-#endif
     /// <summary>
     /// Applies transformations to the enum value schema for each value in the dictionary.
     /// </summary>
@@ -322,7 +318,6 @@ public static class DictionarySchemaExtensions
         return schema.WithKeySchema(newKeySchema);
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Applies transformations to the DateOnly key schema for each key in the dictionary.
     /// </summary>
@@ -345,7 +340,6 @@ public static class DictionarySchemaExtensions
         return schema.WithKeySchema(newKeySchema);
     }
 
-#endif
     /// <summary>
     /// Applies transformations to the enum key schema for each key in the dictionary.
     /// </summary>
@@ -442,7 +436,6 @@ public static class DictionarySchemaExtensions
         return schema.WithValueSchema(newValueSchema);
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Applies transformations to the DateOnly value schema for each value in the dictionary.
     /// </summary>
@@ -467,7 +460,6 @@ public static class DictionarySchemaExtensions
         return schema.WithValueSchema(newValueSchema);
     }
 
-#endif
     /// <summary>
     /// Applies transformations to the enum value schema for each value in the dictionary.
     /// </summary>

@@ -21,7 +21,7 @@ public readonly struct DateOnlyMinRule : IValidationRule<DateOnly>
         var error = value >= _min
             ? null
             : new ValidationError(context.PathSegments, "min_date", _message ?? $"Must be at or after {_min:O}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -44,7 +44,7 @@ public readonly struct DateOnlyMaxRule : IValidationRule<DateOnly>
         var error = value <= _max
             ? null
             : new ValidationError(context.PathSegments, "max_date", _message ?? $"Must be at or before {_max:O}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -66,7 +66,7 @@ public readonly struct DateOnlyPastRule : IValidationRule<DateOnly>
         var error = value < today
             ? null
             : new ValidationError(context.PathSegments, "past", _message ?? "Must be in the past");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -88,7 +88,7 @@ public readonly struct DateOnlyFutureRule : IValidationRule<DateOnly>
         var error = value > today
             ? null
             : new ValidationError(context.PathSegments, "future", _message ?? "Must be in the future");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -113,7 +113,7 @@ public readonly struct DateOnlyBetweenRule : IValidationRule<DateOnly>
         var error = value >= _min && value <= _max
             ? null
             : new ValidationError(context.PathSegments, "between", _message ?? $"Must be between {_min:O} and {_max:O}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -134,7 +134,7 @@ public readonly struct DateOnlyWeekdayRule : IValidationRule<DateOnly>
         var error = value.DayOfWeek != DayOfWeek.Saturday && value.DayOfWeek != DayOfWeek.Sunday
             ? null
             : new ValidationError(context.PathSegments, "weekday", _message ?? "Must be a weekday");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -155,7 +155,7 @@ public readonly struct DateOnlyWeekendRule : IValidationRule<DateOnly>
         var error = value.DayOfWeek == DayOfWeek.Saturday || value.DayOfWeek == DayOfWeek.Sunday
             ? null
             : new ValidationError(context.PathSegments, "weekend", _message ?? "Must be a weekend");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -182,7 +182,7 @@ public readonly struct DateOnlyMinAgeRule : IValidationRule<DateOnly>
         var error = age >= _years
             ? null
             : new ValidationError(context.PathSegments, "min_age", _message ?? $"Must be at least {_years} years old");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -209,6 +209,6 @@ public readonly struct DateOnlyMaxAgeRule : IValidationRule<DateOnly>
         var error = age <= _years
             ? null
             : new ValidationError(context.PathSegments, "max_age", _message ?? $"Must be at most {_years} years old");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

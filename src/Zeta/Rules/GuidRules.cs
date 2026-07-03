@@ -19,7 +19,7 @@ public readonly struct GuidNotEmptyRule : IValidationRule<Guid>
         var error = value != Guid.Empty
             ? null
             : new ValidationError(context.PathSegments, "not_empty", _message ?? "GUID cannot be empty");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
 
@@ -44,6 +44,6 @@ public readonly struct GuidVersionRule : IValidationRule<Guid>
         var error = guidVersion == _version
             ? null
             : new ValidationError(context.PathSegments, "version", _message ?? $"GUID must be version {_version}");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

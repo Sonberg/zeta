@@ -24,6 +24,6 @@ public readonly struct EndsWithRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "ends_with", _message ?? $"Must end with '{_suffix}'");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

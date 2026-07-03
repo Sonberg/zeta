@@ -24,6 +24,6 @@ public readonly struct DefinedRule<TEnum> : IValidationRule<TEnum>
                 "enum_defined",
                 _message ?? $"Value '{value}' is not defined for enum {typeof(TEnum).Name}");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

@@ -19,6 +19,6 @@ public readonly struct FiniteRule : IValidationRule<double>
         var error = !double.IsNaN(value) && !double.IsInfinity(value)
             ? null
             : new ValidationError(context.PathSegments, "finite", _message ?? "Must be a finite number");
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

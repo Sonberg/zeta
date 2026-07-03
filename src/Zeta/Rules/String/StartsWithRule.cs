@@ -24,6 +24,6 @@ public readonly struct StartsWithRule : IValidationRule<string>
             ? null
             : new ValidationError(context.PathSegments, "starts_with", _message ?? $"Must start with '{_prefix}'");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }

@@ -640,7 +640,6 @@ public partial class ObjectContextSchema<T, TContext>
         return AddField(new NullableFieldContextContextValidator<T, System.DateTime, TContext>(propertyName, getter, (ISchema<System.DateTime, TContext>)schema));
     }
 
-#if !NETSTANDARD2_0
     /// <summary>
     /// Adds a property validator with fluent schema builder for DateOnly properties.
     /// </summary>
@@ -843,7 +842,6 @@ public partial class ObjectContextSchema<T, TContext>
         return AddField(new NullableFieldContextContextValidator<T, TimeOnly, TContext>(propertyName, getter, (ISchema<TimeOnly, TContext>)schema));
     }
 
-#endif
 
     /// <summary>
     /// Adds a property validator with fluent schema builder for nested object properties.

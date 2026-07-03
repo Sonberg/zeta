@@ -150,7 +150,7 @@ public sealed class DictionaryContextlessSchema<TKey, TValue>
         Func<TKey, TValue, bool> predicate, string message, string code = "entry_invalid")
     {
         var refinement = new EntryRefinement<TKey, TValue>(
-            (k, v, _) => ValueTaskHelper.FromResult(predicate(k, v)), message, code);
+            (k, v, _) => ValueTask.FromResult(predicate(k, v)), message, code);
         var list = AppendRefinement(_entryRefinements, refinement);
         return new(KeySchema, ValueSchema, Rules, AllowNull, GetConditionals(), list);
     }

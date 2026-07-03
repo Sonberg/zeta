@@ -26,6 +26,6 @@ public readonly struct OneOfRule<TEnum> : IValidationRule<TEnum>
                 "enum_one_of",
                 _message ?? $"Value '{value}' is not an allowed enum value");
 
-        return ValueTaskHelper.FromResult(error);
+        return ValueTask.FromResult(error);
     }
 }
