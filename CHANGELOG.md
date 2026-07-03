@@ -3,6 +3,7 @@
 ## Next release
 
 ### Added
+- `.WithError(x => x.Code(...).Message(...).Path(...))` on every schema — overrides the code, message, and/or reported path of the error produced by the most recently added rule (RFC 006). Unspecified fields keep the rule's originals; applies to contextless and context-aware schemas.
 - `ValidationError.AttemptedValue` / `HasAttemptedValue` / `TryGetAttemptedValue<T>(out T)` — the value that was being validated when the error was produced, captured directly at the point of failure by the rule engine. Exact and allocation-light (boxed only on failure), with no reflection or path round-trip, so it is correct even for camel-cased paths and non-string dictionary keys.
 
 ### Removed

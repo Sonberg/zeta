@@ -1,8 +1,14 @@
 # RFC 006
 
-**Status:** 🟡 Partially implemented — path tracking via `PathSegment`/`ValidationPath` (Property/Index/DictionaryKey) is done. The per-rule config-builder overload (`.MinLength(5, x => x.Code(...).Path(...).Message(...))`) is **planned / not implemented**; rules currently take only a `string? message`.
+**Status:** ✅ Implemented — path tracking via `PathSegment`/`ValidationPath` (Property/Index/DictionaryKey) is done. The per-rule error config is shipped as a chained `.WithError(...)` builder (rewrites the code/message/path of the most recently added rule) rather than a second argument on every validator — one method covering all rules instead of N overloads:
 
-Example:
+```csharp
+Z.String()
+    .MinLength(5)
+    .WithError(x => x.Code("invalid_name").Path("Name").Message("Must be at least 5 characters long"))
+```
+
+Original proposal (per-validator overload — not adopted):
 
 ```csharp
 Z.String()

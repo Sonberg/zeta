@@ -78,6 +78,17 @@ public abstract class ContextlessSchema<T, TSchema> : ISchema<T> where TSchema :
         return CreateInstance(Rules, true, _conditionals);
     }
 
+    /// <summary>Overrides the code, message, and/or path of the error produced by the most recently added rule (RFC 006). Must be called after a rule.</summary>
+    public TSchema WithError(Action<ErrorConfig> configure)
+    {
+        if (Rules.IsEmpty)
+            throw new InvalidOperationException("WithError() must follow a validation rule — there is no preceding rule to attach the error override to.");
+
+        var config = new ErrorConfig();
+        configure(config);
+        return CreateInstance(Rules.WithHead(rule => new ConfiguredRule<T>(rule, config)), AllowNull, _conditionals);
+    }
+
     public TSchema Refine(Func<T, bool> predicate, string message, string code = "custom_error")
     {
         return Append(new RefinementRule<T>((val, ctx) =>

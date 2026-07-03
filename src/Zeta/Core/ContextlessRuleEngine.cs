@@ -35,6 +35,12 @@ internal sealed class RuleChain<TRule>
 
     public RuleChain<TRule> Add(TRule rule) => new(new Node(rule, _head));
 
+    public bool IsEmpty => _head is null;
+
+    /// <summary>Returns a chain with the most recently added rule transformed. No-op on an empty chain.</summary>
+    public RuleChain<TRule> WithHead(Func<TRule, TRule> transform)
+        => _head is null ? this : new RuleChain<TRule>(new Node(transform(_head.Rule), _head.Previous));
+
     /// <summary>Rules in insertion order. The chain is LIFO, so fill the array back-to-front. Cached per instance.</summary>
     public TRule[] ToArray()
     {
@@ -82,6 +88,11 @@ public sealed class ContextlessRuleEngine<T>
 
     public ContextlessRuleEngine<T> Add(IValidationRule<T> rule)
         => new(_chain.Add(rule));
+
+    public bool IsEmpty => _chain.IsEmpty;
+
+    public ContextlessRuleEngine<T> WithHead(Func<IValidationRule<T>, IValidationRule<T>> transform)
+        => new(_chain.WithHead(transform));
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationRun context)
     {
@@ -133,6 +144,11 @@ public sealed class ContextRuleEngine<T, TContext>
 
     public ContextRuleEngine<T, TContext> Add(IValidationRule<T, TContext> rule)
         => new(_chain.Add(rule));
+
+    public bool IsEmpty => _chain.IsEmpty;
+
+    public ContextRuleEngine<T, TContext> WithHead(Func<IValidationRule<T, TContext>, IValidationRule<T, TContext>> transform)
+        => new(_chain.WithHead(transform));
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationRun<TContext> context)
     {

@@ -181,6 +181,17 @@ public abstract class ContextSchema<T, TContext, TSchema> : IContextSchema<T, TC
         return CreateInstance(Rules, true, _conditionals, ContextFactory);
     }
 
+    /// <summary>Overrides the code, message, and/or path of the error produced by the most recently added rule (RFC 006). Must be called after a rule.</summary>
+    public TSchema WithError(Action<ErrorConfig> configure)
+    {
+        if (Rules.IsEmpty)
+            throw new InvalidOperationException("WithError() must follow a validation rule — there is no preceding rule to attach the error override to.");
+
+        var config = new ErrorConfig();
+        configure(config);
+        return CreateInstance(Rules.WithHead(rule => new ConfiguredRule<T, TContext>(rule, config)), AllowNull, _conditionals, ContextFactory);
+    }
+
     internal TSchema WithContextFactory(Func<T, IServiceProvider, CancellationToken, ValueTask<TContext>> factory)
         => CreateInstance(Rules, AllowNull, _conditionals, factory);
 
