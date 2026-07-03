@@ -1,6 +1,8 @@
-# RFC 002
+# RFC 001
 
 ## Improve mental model around Conditional Validation
+
+**Status:** 🟡 Partially implemented — `.If()` (rename from `.When()`) is done on value/object/collection schemas, contextless and context-aware. `.Switch()`/`.Case()`/`.Default()` are **planned / not implemented**.
 
 ---
 

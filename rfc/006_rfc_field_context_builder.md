@@ -1,3 +1,7 @@
+# RFC 006
+
+**Status:** 🟡 Partially implemented — path tracking via `PathSegment`/`ValidationPath` (Property/Index/DictionaryKey) is done. The per-rule config-builder overload (`.MinLength(5, x => x.Code(...).Path(...).Message(...))`) is **planned / not implemented**; rules currently take only a `string? message`.
+
 Example:
 
 ```csharp

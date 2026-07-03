@@ -1,7 +1,7 @@
 # RFC: Immutable, Append-Only Schema Design in Zeta
 
 ## Status
-Proposed
+✅ Implemented — every DSL step returns a new instance; `RuleNode<T>` persistent linked list with `Append`, structural sharing, `CreateInstance(...)` on base schemas.
 
 ## Author
 Zeta Core

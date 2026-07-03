@@ -2,6 +2,8 @@
 
 ## Type Assertions via `As<T>`
 
+**Status:** ✅ Implemented — `.As<TDerived>()` on object schemas (contextless + context-aware), emits `type_mismatch` on failure. (`Switch` examples here are illustrative; `Switch` itself is not implemented — see RFC 001.)
+
 ---
 
 ## Motivation

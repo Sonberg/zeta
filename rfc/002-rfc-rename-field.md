@@ -1,6 +1,8 @@
 # RFC 002
 ## Rename methods to align with C# language
 
+**Status:** ✅ Implemented — `Z.Schema<T>()` and `.Property(...)` are the shipped API.
+
 Field -> Property  (Align with)
 Object -> Schema 
 

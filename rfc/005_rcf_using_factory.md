@@ -1,3 +1,4 @@
+**Status:** ✅ Implemented — `.Using<TContext>()` with optional factory overloads is the shipped API; the old `IContextFactory` interface is gone.
 
 ## Remove IContextFactory 
 It adds complexity and is not necessary. Instead, we can directly use the context type in the schema definition and validation.
