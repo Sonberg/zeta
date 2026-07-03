@@ -2,27 +2,63 @@ using Zeta.Rules;
 
 namespace Zeta.Core;
 
-internal sealed class RuleNode<T>
+/// <summary>
+/// An immutable, append-only chain of <typeparamref name="TRule"/> with O(1) append via structural
+/// sharing and lazy materialization to insertion order. Backs both rule engines — the only piece they
+/// share, and the only piece with non-trivial (LIFO-reversal) logic.
+/// </summary>
+internal sealed class RuleChain<TRule>
 {
-    public IValidationRule<T> Rule { get; }
-    public RuleNode<T>? Previous { get; }
-
-    public RuleNode(IValidationRule<T> rule, RuleNode<T>? previous)
+    private sealed class Node
     {
-        Rule = rule;
-        Previous = previous;
+        public readonly TRule Rule;
+        public readonly Node? Previous;
+
+        public Node(TRule rule, Node? previous)
+        {
+            Rule = rule;
+            Previous = previous;
+        }
     }
-}
 
-internal sealed class RuleNode<T, TContext>
-{
-    public IValidationRule<T, TContext> Rule { get; }
-    public RuleNode<T, TContext>? Previous { get; }
+    private readonly Node? _head;
+    private TRule[]? _materialized;
 
-    public RuleNode(IValidationRule<T, TContext> rule, RuleNode<T, TContext>? previous)
+    public RuleChain()
     {
-        Rule = rule;
-        Previous = previous;
+    }
+
+    private RuleChain(Node? head)
+    {
+        _head = head;
+    }
+
+    public RuleChain<TRule> Add(TRule rule) => new(new Node(rule, _head));
+
+    /// <summary>Rules in insertion order. The chain is LIFO, so fill the array back-to-front. Cached per instance.</summary>
+    public TRule[] Materialize()
+    {
+        if (_materialized != null) return _materialized;
+
+        var count = 0;
+        var node = _head;
+        while (node != null)
+        {
+            count++;
+            node = node.Previous;
+        }
+
+        if (count == 0) return _materialized = [];
+
+        var array = new TRule[count];
+        node = _head;
+        for (var i = count - 1; i >= 0; i--)
+        {
+            array[i] = node!.Rule;
+            node = node.Previous;
+        }
+
+        return _materialized = array;
     }
 }
 
@@ -32,57 +68,24 @@ internal sealed class RuleNode<T, TContext>
 /// </summary>
 public sealed class ContextlessRuleEngine<T>
 {
-    private readonly RuleNode<T>? _head;
-    private IValidationRule<T>[]? _materialized;
+    private readonly RuleChain<IValidationRule<T>> _chain;
 
     public ContextlessRuleEngine()
     {
-        _head = null;
+        _chain = new RuleChain<IValidationRule<T>>();
     }
 
-    private ContextlessRuleEngine(RuleNode<T>? head)
+    private ContextlessRuleEngine(RuleChain<IValidationRule<T>> chain)
     {
-        _head = head;
+        _chain = chain;
     }
 
     public ContextlessRuleEngine<T> Add(IValidationRule<T> rule)
-        => new(new RuleNode<T>(rule, _head));
-
-    private IValidationRule<T>[] Materialize()
-    {
-        if (_materialized != null) return _materialized;
-
-        // Count nodes
-        var count = 0;
-        var node = _head;
-        while (node != null)
-        {
-            count++;
-            node = node.Previous;
-        }
-
-        if (count == 0)
-        {
-            _materialized = [];
-            return _materialized;
-        }
-
-        // Fill array in reverse (linked list is LIFO, rules should execute in insertion order)
-        var array = new IValidationRule<T>[count];
-        node = _head;
-        for (var i = count - 1; i >= 0; i--)
-        {
-            array[i] = node!.Rule;
-            node = node.Previous;
-        }
-
-        _materialized = array;
-        return _materialized;
-    }
+        => new(_chain.Add(rule));
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext context)
     {
-        var rules = Materialize();
+        var rules = _chain.Materialize();
         List<ValidationError>? errors = null;
 
         foreach (var rule in rules)
@@ -98,7 +101,7 @@ public sealed class ContextlessRuleEngine<T>
 
     public ContextRuleEngine<T, TContext> ToContext<TContext>()
     {
-        var rules = Materialize();
+        var rules = _chain.Materialize();
         var engine = new ContextRuleEngine<T, TContext>();
 
         foreach (var rule in rules)
@@ -116,55 +119,24 @@ public sealed class ContextlessRuleEngine<T>
 /// </summary>
 public sealed class ContextRuleEngine<T, TContext>
 {
-    private readonly RuleNode<T, TContext>? _head;
-    private IValidationRule<T, TContext>[]? _materialized;
+    private readonly RuleChain<IValidationRule<T, TContext>> _chain;
 
     public ContextRuleEngine()
     {
-        _head = null;
+        _chain = new RuleChain<IValidationRule<T, TContext>>();
     }
 
-    private ContextRuleEngine(RuleNode<T, TContext>? head)
+    private ContextRuleEngine(RuleChain<IValidationRule<T, TContext>> chain)
     {
-        _head = head;
+        _chain = chain;
     }
 
     public ContextRuleEngine<T, TContext> Add(IValidationRule<T, TContext> rule)
-        => new(new RuleNode<T, TContext>(rule, _head));
-
-    private IValidationRule<T, TContext>[] Materialize()
-    {
-        if (_materialized != null) return _materialized;
-
-        var count = 0;
-        var node = _head;
-        while (node != null)
-        {
-            count++;
-            node = node.Previous;
-        }
-
-        if (count == 0)
-        {
-            _materialized = [];
-            return _materialized;
-        }
-
-        var array = new IValidationRule<T, TContext>[count];
-        node = _head;
-        for (var i = count - 1; i >= 0; i--)
-        {
-            array[i] = node!.Rule;
-            node = node.Previous;
-        }
-
-        _materialized = array;
-        return _materialized;
-    }
+        => new(_chain.Add(rule));
 
     public async ValueTask<List<ValidationError>?> ExecuteAsync(T value, ValidationContext<TContext> context)
     {
-        var rules = Materialize();
+        var rules = _chain.Materialize();
         List<ValidationError>? errors = null;
 
         foreach (var rule in rules)

@@ -11,6 +11,7 @@
 - `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` — unused, no production callers.
 
 ### Changed
+- The two rule engines (`ContextlessRuleEngine<T>` and `ContextRuleEngine<T, TContext>`) now share one internal `RuleChain<TRule>` for the persistent append-only list and its lazy insertion-order materialization — previously duplicated character-for-character (two `RuleNode` types, two `Materialize` bodies). Behavior is unchanged; the reversal logic is now covered by a direct unit test.
 - Deleted the `ValueTaskHelper` shim in favor of the native `ValueTask.FromResult` (the shim only existed for the long-removed netstandard2.0 target).
 - Removed dead `#if !NETSTANDARD2_0` conditionals (in source and source-generator emission) and the `IsExternalInit` polyfill — the minimum target is net6.0.
 

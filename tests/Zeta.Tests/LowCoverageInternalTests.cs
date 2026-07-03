@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Zeta.Adapters;
+using Zeta.Core;
 using Zeta.Rules;
 using Zeta.Schemas;
 
@@ -39,5 +40,21 @@ public class LowCoverageInternalTests
         Assert.NotEmpty(factories);
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await factories[0](new Cat(1), new ServiceCollection().BuildServiceProvider(), CancellationToken.None));
+    }
+
+    [Fact]
+    public void RuleChain_Materialize_PreservesInsertionOrder_AndIsImmutable()
+    {
+        var empty = new RuleChain<string>();
+        Assert.Empty(empty.Materialize());
+
+        var ab = empty.Add("a").Add("b");
+        var abc = ab.Add("c");
+
+        // LIFO chain must materialize back to insertion order.
+        Assert.Equal(["a", "b", "c"], abc.Materialize());
+        // Append is non-mutating: the shorter chain is unaffected.
+        Assert.Equal(["a", "b"], ab.Materialize());
+        Assert.Empty(empty.Materialize());
     }
 }
