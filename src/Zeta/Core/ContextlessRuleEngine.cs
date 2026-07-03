@@ -90,7 +90,7 @@ public sealed class ContextlessRuleEngine<T>
             var error = await rule.ValidateAsync(value, context);
             if (error == null) continue;
             errors ??= [];
-            errors.Add(error);
+            errors.Add(error.HasAttemptedValue ? error : error with { AttemptedValue = value, HasAttemptedValue = true });
         }
 
         return errors;
@@ -172,7 +172,7 @@ public sealed class ContextRuleEngine<T, TContext>
             var error = await rule.ValidateAsync(value, context);
             if (error == null) continue;
             errors ??= [];
-            errors.Add(error);
+            errors.Add(error.HasAttemptedValue ? error : error with { AttemptedValue = value, HasAttemptedValue = true });
         }
 
         return errors;

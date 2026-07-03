@@ -16,7 +16,11 @@ internal static class FieldError
         {
             var error = errors[i];
             var relativePath = error.Path.RelativeTo(basePath);
-            mapped[i] = new ValidationError(fieldPath.Concat(relativePath), error.Code, error.Message);
+            mapped[i] = new ValidationError(fieldPath.Concat(relativePath), error.Code, error.Message)
+            {
+                AttemptedValue = error.AttemptedValue,
+                HasAttemptedValue = error.HasAttemptedValue,
+            };
         }
 
         return mapped;

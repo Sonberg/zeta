@@ -1,6 +1,4 @@
 using System.Text;
-using System.Reflection;
-using System.Collections;
 
 namespace Zeta;
 
@@ -177,44 +175,6 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
         return rendered[0] == '[' ? $"${rendered}" : $"$.{rendered}";
     }
 
-    /// <summary>
-    /// Tries to resolve the value referenced by this path from a given root object.
-    /// </summary>
-    /// <remarks>
-    /// Resolution is by reflection (case-insensitive property match, dictionary <see cref="object.ToString"/>
-    /// fallback), so it is a best-effort round-trip: it can miss or mis-resolve if the object graph no longer
-    /// matches the path that produced the error.
-    /// </remarks>
-    public bool TryGetValue(object? root, out object? value)
-    {
-        var current = root;
-        var segments = CollectSegments();
-
-        for (var i = 0; i < segments.Length; i++)
-        {
-            var segment = segments[i];
-            if (!TryResolveSegment(current, segment, out current))
-            {
-                value = null;
-                return false;
-            }
-        }
-
-        value = current;
-        return true;
-    }
-
-    /// <summary>
-    /// Resolves the value referenced by this path and throws if not found.
-    /// </summary>
-    public object? GetValue(object? root)
-    {
-        if (!TryGetValue(root, out var value))
-            throw new InvalidOperationException($"Cannot resolve value for path '{ToPathString()}'.");
-
-        return value;
-    }
-
     public override string ToString() => ToPathString();
 
     public static implicit operator string(ValidationPath path) => path.ToPathString();
@@ -252,72 +212,6 @@ public sealed class ValidationPath : IEquatable<ValidationPath>
             PathSegmentKind.DictionaryKey => Equals(left.Key, right.Key),
             _ => false
         };
-    }
-
-    private static bool TryResolveSegment(object? current, PathSegment segment, out object? next)
-    {
-        next = null;
-        if (current is null)
-            return false;
-
-        switch (segment.Kind)
-        {
-            case PathSegmentKind.Property:
-            {
-                var property = current.GetType().GetProperty(segment.Name!, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
-                if (property is null)
-                    return false;
-                next = property.GetValue(current);
-                return true;
-            }
-            case PathSegmentKind.Index:
-            {
-                if (current is IList list)
-                {
-                    if (segment.IndexValue < 0 || segment.IndexValue >= list.Count)
-                        return false;
-                    next = list[segment.IndexValue];
-                    return true;
-                }
-
-                if (current is Array array)
-                {
-                    if (segment.IndexValue < 0 || segment.IndexValue >= array.Length)
-                        return false;
-                    next = array.GetValue(segment.IndexValue);
-                    return true;
-                }
-
-                return false;
-            }
-            case PathSegmentKind.DictionaryKey:
-            {
-                if (current is IDictionary dictionary)
-                {
-                    if (segment.Key is not null && dictionary.Contains(segment.Key))
-                    {
-                        next = dictionary[segment.Key];
-                        return true;
-                    }
-
-                    if (segment.Key is string keyAsString)
-                    {
-                        foreach (DictionaryEntry entry in dictionary)
-                        {
-                            if (string.Equals(entry.Key?.ToString(), keyAsString, StringComparison.Ordinal))
-                            {
-                                next = entry.Value;
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                return false;
-            }
-            default:
-                return false;
-        }
     }
 
     private string BuildString(PathFormattingOptions options)

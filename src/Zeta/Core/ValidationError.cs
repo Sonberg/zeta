@@ -26,6 +26,35 @@ public sealed record ValidationError
     public string Message { get; } = "";
 
     /// <summary>
+    /// The value that was being validated when this error was produced.
+    /// Captured directly at the point of failure — no reflection or path round-trip — so it is exact
+    /// even when the path uses camel-cased or otherwise reformatted segments.
+    /// Only meaningful when <see cref="HasAttemptedValue"/> is <c>true</c>; boxed for value types.
+    /// </summary>
+    public object? AttemptedValue { get; init; }
+
+    /// <summary>
+    /// Whether <see cref="AttemptedValue"/> was captured. Distinguishes a captured <c>null</c> from an
+    /// error created without a value (e.g. an aggregate or type-mismatch error).
+    /// </summary>
+    public bool HasAttemptedValue { get; init; }
+
+    /// <summary>
+    /// Tries to get the attempted value as <typeparamref name="TValue"/>.
+    /// </summary>
+    public bool TryGetAttemptedValue<TValue>(out TValue value)
+    {
+        if (HasAttemptedValue && AttemptedValue is TValue typed)
+        {
+            value = typed;
+            return true;
+        }
+
+        value = default!;
+        return false;
+    }
+
+    /// <summary>
     /// Creates a validation error and normalizes its path to JSONPath.
     /// </summary>
     public ValidationError(ValidationPath? path, string code, string message)

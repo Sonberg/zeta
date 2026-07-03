@@ -2,8 +2,12 @@
 
 ## Next release
 
+### Added
+- `ValidationError.AttemptedValue` / `HasAttemptedValue` / `TryGetAttemptedValue<T>(out T)` — the value that was being validated when the error was produced, captured directly at the point of failure by the rule engine. Exact and allocation-light (boxed only on failure), with no reflection or path round-trip, so it is correct even for camel-cased paths and non-string dictionary keys.
+
 ### Removed
-- `ValidationPath.GetSegments()` and the `ToPathString(Func<ValidationPathSegment, string>)` custom-formatter overload — plus the now-unused public `ValidationPathSegment` record and `ValidationPathSegmentKind` enum. These had no callers outside their own tests; path formatting is covered by `PathFormattingOptions`. (`ValidationPath.TryGetValue`/`GetValue` value backtrace is retained.)
+- `ValidationPath.GetSegments()` and the `ToPathString(Func<ValidationPathSegment, string>)` custom-formatter overload — plus the now-unused public `ValidationPathSegment` record and `ValidationPathSegmentKind` enum. These had no callers outside their own tests; path formatting is covered by `PathFormattingOptions`.
+- `ValidationPath.TryGetValue`/`GetValue` — reflection-based value resolution from a root object, superseded by `ValidationError.AttemptedValue` (which captures the exact value instead of re-resolving the path by reflection).
 - `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` — unused, no production callers.
 
 ### Changed
