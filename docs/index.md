@@ -5,10 +5,6 @@ hero:
   name: Zeta
   text: Validation for .NET, defined as schemas
   tagline: Composable, type-safe and async-first. Schemas are values you can reuse and combine — validation failures come back as results, not exceptions.
-  actions:
-    - theme: brand
-      text: Get started
-      link: /getting-started
 
 features:
   - title: Schema-first
