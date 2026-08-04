@@ -4,6 +4,8 @@
 
 ASP.NET Core integration package for Zeta.
 
+**📖 Full documentation: https://sonberg.github.io/zeta/aspnetcore**
+
 Use this package when you want validation integrated with:
 - Minimal APIs (`WithValidation(...)`)
 - MVC Controllers (`IZetaValidator`)
@@ -109,8 +111,10 @@ If not overridden, `ValidationRunBuilder` can infer naming policies from `JsonOp
 - For Blazor and MAUI form validation without ASP.NET Core endpoints, `Zeta` alone is enough.
 - `WithValidation<T, TContext>(...)` expects a context-aware schema, typically with a built-in factory configured via `.Using<TContext>(factory)`.
 
-## Source and Samples
+## Documentation
 
-- Core package docs: [`../Zeta/README.md`](../Zeta/README.md)
-- Path formatting and structured paths: [`../../docs/Paths.md`](../../docs/Paths.md)
-- API sample: [`../../samples/Zeta.Sample.Api`](../../samples/Zeta.Sample.Api)
+Full guide: **https://sonberg.github.io/zeta/aspnetcore**
+
+- Getting started: https://sonberg.github.io/zeta/getting-started
+- Path formatting and structured paths: https://sonberg.github.io/zeta/paths
+- API sample: [`samples/Zeta.Sample.Api`](https://github.com/Sonberg/zeta/tree/main/samples/Zeta.Sample.Api)

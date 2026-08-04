@@ -3,6 +3,8 @@
 ## Next release
 
 ### Added
+- `llms.txt` and `llms-full.txt` on the documentation site, following the [llmstxt.org](https://llmstxt.org) convention. Both are generated at build time from the sidebar and page content, so they cannot drift as pages are added or renamed: `llms.txt` is a linked index with a one-sentence description per page, `llms-full.txt` inlines every page.
+- Documentation website at https://sonberg.github.io/zeta/, built with VitePress and deployed to GitHub Pages by `.github/workflows/docs.yml`. New pages cover getting started, schema types, a full validator reference (every built-in rule with its error code), results and errors, dictionaries, conditionals and polymorphism, ASP.NET Core, FastEndpoints, and a glossary. The existing `docs/` guides are published as-is with lowercase-kebab slugs.
 - `.WithError(x => x.Code(...).Message(...).Path(...))` on every schema — overrides the code, message, and/or reported path of the error produced by the most recently added rule (RFC 006). Unspecified fields keep the rule's originals; applies to contextless and context-aware schemas.
 - `ValidationError.AttemptedValue` / `HasAttemptedValue` / `TryGetAttemptedValue<T>(out T)` — the value that was being validated when the error was produced, captured directly at the point of failure by the rule engine. Exact and allocation-light (boxed only on failure), with no reflection or path round-trip, so it is correct even for camel-cased paths and non-string dictionary keys.
 
@@ -10,6 +12,7 @@
 - `ValidationPath.GetSegments()` and the `ToPathString(Func<ValidationPathSegment, string>)` custom-formatter overload — plus the now-unused public `ValidationPathSegment` record and `ValidationPathSegmentKind` enum. These had no callers outside their own tests; path formatting is covered by `PathFormattingOptions`.
 - `ValidationPath.TryGetValue`/`GetValue` — reflection-based value resolution from a root object, superseded by `ValidationError.AttemptedValue` (which captures the exact value instead of re-resolving the path by reflection).
 - `StatefulRefinementRule<T, TState>` and `StatefulRefinementRule<T, TContext, TState>` — unused, no production callers.
+- `docs/Each-Object-Builders.md` — an orphaned, changelog-shaped page; its inline-object-builder content is now a section in the Collections guide.
 
 ### Changed
 - **Breaking:** renamed the execution record `ValidationContext`/`ValidationContext<TContext>` (and `ValidationContextBuilder`) to `ValidationRun`/`ValidationRun<TContext>` (`ValidationRunBuilder`). "Context" now unambiguously means the user's `TContext` data; the record carrying path/cancellation/services is the "run". Also renamed the internal `RuleChain.Materialize()` to `ToArray()`.
@@ -242,7 +245,7 @@
 - Add implicit operator to builder
 - Merge CancellationToken & ValidationRun
 - Split and rename files for better organization
-- Convert contextless schemas to context-aware using WithContext<TContext>()
+- Convert contextless schemas to context-aware using `WithContext<TContext>()`
 - Move WithContext as instance method on schemas
 - Adjust namespaces and folder structure
 

@@ -3,6 +3,11 @@ Zeta Integration Guide (LLM-Oriented)
 Purpose
 - This file is a practical integration reference for using Zeta in applications and frameworks.
 - It is optimized for implementation assistants and code-generation workflows.
+- It is repository-oriented (source layout, conventions, API surface).
+
+See also
+- https://sonberg.github.io/zeta/llms.txt      llmstxt.org index of the documentation site
+- https://sonberg.github.io/zeta/llms-full.txt every documentation page in one file
 
 --------------------------------------------------------------------------------
 1) What Zeta Is
@@ -23,6 +28,7 @@ Core design goals
 --------------------------------------------------------------------------------
 - Core library: src/Zeta
 - ASP.NET Core integration: src/Zeta.AspNetCore
+- FastEndpoints integration: src/Zeta.FastEndpoints
 - Source generators: src/Zeta.SourceGenerators
 - Core tests: tests/Zeta.Tests
 - ASP.NET integration tests: tests/Zeta.AspNetCore.Tests
@@ -30,6 +36,7 @@ Core design goals
 - Package overviews:
   - src/Zeta/README.md
   - src/Zeta.AspNetCore/README.md
+  - src/Zeta.FastEndpoints/README.md
 
 --------------------------------------------------------------------------------
 3) Install
@@ -40,6 +47,9 @@ Core only
 ASP.NET Core integration
 - dotnet add package Zeta.AspNetCore
 
+FastEndpoints integration
+- dotnet add package Zeta.FastEndpoints
+
 --------------------------------------------------------------------------------
 4) Main API Surface
 --------------------------------------------------------------------------------
@@ -48,12 +58,11 @@ Entry point
 
 Schema creation
 - Object schema: Z.Schema<T>()
-- Alias supported: Z.Object<T>()
-- Preferred naming in docs/examples: Z.Schema<T>()
+- Z.Object<T>() was REMOVED in 0.1.17. It is not an alias. Do not emit it.
 
 Object fields
-- Preferred: .Property(...)
-- Alias supported: .Field(...)
+- Object properties: .Property(...)
+- .Field(...) was REMOVED in 0.1.17. It is not an alias. Do not emit it.
 
 Primitives and common types
 - Z.String(), Z.Int(), Z.Double(), Z.Decimal(), Z.Bool(), Z.Guid()
@@ -95,6 +104,7 @@ ValidationError
 - PathString: string rendering of Path
 - Code: machine-readable error code
 - Message: user-readable message
+- AttemptedValue / HasAttemptedValue / TryGetAttemptedValue<T>(out T): the value that failed
 
 Use
 - Use error.PathString for API responses/logging.
@@ -103,8 +113,8 @@ Use
 ValidationPath capabilities
 - Parse path text: ValidationPath.Parse("$.items[0].quantity")
 - Render path text: path.ToPathString(...)
-- Get segments: path.GetSegments()
-- Resolve value from object graph: path.TryGetValue(root, out value)
+- NOTE: GetSegments() and TryGetValue()/GetValue() were REMOVED. To get the value that
+  failed, use ValidationError.AttemptedValue / TryGetAttemptedValue<T>(out T) instead.
 
 --------------------------------------------------------------------------------
 7) Path Formatting and Naming Policies
@@ -117,7 +127,7 @@ Default behavior
 - Property names are lower-camelized by default formatting.
 
 ASP.NET Core behavior
-- ValidationContextBuilder can derive naming behavior from JsonOptions
+- ValidationRunBuilder can derive naming behavior from JsonOptions
   (PropertyNamingPolicy and DictionaryKeyPolicy)
 - You can override explicitly with WithPathFormatting(...)
 
@@ -170,14 +180,14 @@ Controllers/manual validation
 - Convert results with ToActionResult(...) / ToResult(...)
 
 Validation context customization
-- ValidationContextBuilder supports cancellation token, time provider, service provider, path formatting
+- ValidationRunBuilder supports cancellation token, time provider, service provider, path formatting
 
 --------------------------------------------------------------------------------
 11) Time-Dependent Validation
 --------------------------------------------------------------------------------
 - Zeta supports TimeProvider-based validation flows.
 - In tests, prefer FakeTimeProvider from Microsoft.Extensions.TimeProvider.Testing.
-- Pass via ValidationContext or ValidationContextBuilder to make time-based rules deterministic.
+- Pass via ValidationRun or ValidationRunBuilder to make time-based rules deterministic.
 
 --------------------------------------------------------------------------------
 12) Testing Strategy
@@ -220,25 +230,39 @@ Coverage focus
 --------------------------------------------------------------------------------
 15) Migration / Compatibility Notes
 --------------------------------------------------------------------------------
-- Legacy aliases remain supported:
-  - Z.Object<T>()
-  - .Field(...)
-- Prefer canonical naming in new docs/code to reduce ambiguity.
+- These names were REMOVED, not aliased. Emitting them produces code that does not compile:
+  - Z.Object<T>()          -> use Z.Schema<T>()
+  - .Field(...)            -> use .Property(...)
+  - ValidationContext      -> use ValidationRun
+  - ValidationRunBuilder -> use ValidationRunBuilder
+- "Context" now means the user's TContext data. The per-execution record carrying path,
+  cancellation, time provider and services is the "validation run" (ValidationRun).
 
 --------------------------------------------------------------------------------
 16) Useful Doc Entry Points
 --------------------------------------------------------------------------------
+- Documentation site: https://sonberg.github.io/zeta/
 - Root: README.md
 - Core package: src/Zeta/README.md
 - ASP.NET package: src/Zeta.AspNetCore/README.md
-- Guides:
-  - docs/Collections.md
-  - docs/ValidationContext.md
-  - docs/CustomRules.md
-  - docs/FluentFieldBuilders.md
-  - docs/Paths.md
-  - docs/Testing.md
-  - docs/Mediator.md
+- FastEndpoints package: src/Zeta.FastEndpoints/README.md
+- Guides (docs/ in the repo, published at the site root):
+  - docs/getting-started.md
+  - docs/schemas.md
+  - docs/validators.md
+  - docs/results.md
+  - docs/collections.md
+  - docs/dictionaries.md
+  - docs/conditionals.md
+  - docs/validation-run.md
+  - docs/custom-rules.md
+  - docs/property-builders.md
+  - docs/paths.md
+  - docs/testing.md
+  - docs/aspnetcore.md
+  - docs/fastendpoints.md
+  - docs/mediator.md
+  - docs/glossary.md
 
 --------------------------------------------------------------------------------
 17) Quick Copy-Paste Snippets

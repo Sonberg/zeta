@@ -1,6 +1,7 @@
 # Zeta
 
 [![Build](https://github.com/sonberg/zeta/actions/workflows/ci.yml/badge.svg)](https://github.com/Sonberg/zeta/actions)
+[![Docs](https://img.shields.io/badge/docs-sonberg.github.io%2Fzeta-blue)](https://sonberg.github.io/zeta/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/Sonberg/zeta.svg?style=social)](https://github.com/Sonberg/zeta/stargazers)
 [![codecov](https://codecov.io/gh/Sonberg/zeta/branch/main/graph/badge.svg)](https://codecov.io/gh/Sonberg/zeta) [![NuGet](https://img.shields.io/nuget/v/Zeta.AspNetCore.svg)](https://www.nuget.org/packages/Zeta.AspNetCore)
@@ -107,12 +108,17 @@ public sealed record OrderItem(string ProductId, int Quantity);
 - `Zeta.AspNetCore`: Add only when you need ASP.NET Core integration (Minimal APIs, Controllers, validation filters).
 - `Zeta.FastEndpoints`: Add when you use [FastEndpoints](https://fast-endpoints.com) as your web framework.
 
-## Documentation & Samples
+## Documentation
 
-- Core validation package (`Zeta`): [`src/Zeta/README.md`](./src/Zeta/README.md)
-- ASP.NET Core integration package (`Zeta.AspNetCore`): [`src/Zeta.AspNetCore/README.md`](./src/Zeta.AspNetCore/README.md)
-- FastEndpoints integration package (`Zeta.FastEndpoints`): [`src/Zeta.FastEndpoints/README.md`](./src/Zeta.FastEndpoints/README.md)
-- Guides: [`docs`](./docs)
+Full documentation lives at **https://sonberg.github.io/zeta/**
+
+- [Getting started](https://sonberg.github.io/zeta/getting-started) — install and your first schema
+- [Schema types](https://sonberg.github.io/zeta/schemas) and the [validator reference](https://sonberg.github.io/zeta/validators)
+- [Results and errors](https://sonberg.github.io/zeta/results) · [Validation paths](https://sonberg.github.io/zeta/paths)
+- [Context-aware validation](https://sonberg.github.io/zeta/validation-run) · [Custom rules](https://sonberg.github.io/zeta/custom-rules)
+- Integrations: [ASP.NET Core](https://sonberg.github.io/zeta/aspnetcore) · [FastEndpoints](https://sonberg.github.io/zeta/fastendpoints) · [Mediator](https://sonberg.github.io/zeta/mediator)
+
+## Samples
 
 ```bash
 # ASP.NET Core sample
