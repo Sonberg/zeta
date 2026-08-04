@@ -3,6 +3,11 @@ Zeta Integration Guide (LLM-Oriented)
 Purpose
 - This file is a practical integration reference for using Zeta in applications and frameworks.
 - It is optimized for implementation assistants and code-generation workflows.
+- It is repository-oriented (source layout, conventions, API surface).
+
+See also
+- https://sonberg.github.io/zeta/llms.txt      llmstxt.org index of the documentation site
+- https://sonberg.github.io/zeta/llms-full.txt every documentation page in one file
 
 --------------------------------------------------------------------------------
 1) What Zeta Is
