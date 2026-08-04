@@ -9,12 +9,6 @@ hero:
     - theme: brand
       text: Get started
       link: /getting-started
-    - theme: alt
-      text: Validator reference
-      link: /validators
-    - theme: alt
-      text: View on GitHub
-      link: https://github.com/Sonberg/zeta
 
 features:
   - title: Schema-first
