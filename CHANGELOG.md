@@ -3,6 +3,7 @@
 ## Next release
 
 ### Added
+- "Migrate with AI" button on the documentation site (homepage hero and nav bar), which copies a migration-focused prompt — instructions for mapping an existing project's validation onto Zeta, followed by the full site documentation — ready to paste into an AI assistant alongside the user's own code.
 - `llms.txt` and `llms-full.txt` on the documentation site, following the [llmstxt.org](https://llmstxt.org) convention. Both are generated at build time from the sidebar and page content, so they cannot drift as pages are added or renamed: `llms.txt` is a linked index with a one-sentence description per page, `llms-full.txt` inlines every page.
 - Documentation website at https://sonberg.github.io/zeta/, built with VitePress and deployed to GitHub Pages by `.github/workflows/docs.yml`. New pages cover getting started, schema types, a full validator reference (every built-in rule with its error code), results and errors, dictionaries, conditionals and polymorphism, ASP.NET Core, FastEndpoints, and a glossary. The existing `docs/` guides are published as-is with lowercase-kebab slugs.
 - `.WithError(x => x.Code(...).Message(...).Path(...))` on every schema — overrides the code, message, and/or reported path of the error produced by the most recently added rule (RFC 006). Unspecified fields keep the rule's originals; applies to contextless and context-aware schemas.
