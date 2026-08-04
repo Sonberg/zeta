@@ -18,7 +18,7 @@ features:
   - title: Context-aware rules
     details: Promote a schema with .Using&lt;TContext&gt;() to load data once per validation run through DI, then read it from any rule in the tree.
   - title: Allocation-light
-    details: 72 B allocated on valid input versus 600 B for FluentValidation, and 3.7x faster when validation fails. Benchmarks are in the repo.
+    details: 72 B allocated on valid input versus 600 B for FluentValidation, and 3.7x faster when validation fails. See the benchmarks page for full results.
 ---
 
 ## What is Zeta?
