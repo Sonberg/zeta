@@ -34,7 +34,36 @@ const labels: Record<State, string> = {
     :title="'Copy a migration prompt with the full Zeta docs, ready to paste into an AI assistant'"
     @click="copy"
   >
-    {{ compact ? (state === 'idle' ? 'Migrate with AI' : labels[state]) : labels[state] }}
+    <svg
+      v-if="state === 'copied'"
+      class="migrate-with-ai__icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <svg
+      v-else
+      class="migrate-with-ai__icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+    <span>{{ compact ? (state === 'idle' ? 'Migrate with AI' : labels[state]) : labels[state] }}</span>
   </button>
 </template>
 
@@ -43,6 +72,8 @@ const labels: Record<State, string> = {
   border-radius: 20px;
   font-weight: 600;
   white-space: nowrap;
+  align-items: center;
+  gap: 6px;
   transition:
     color 0.25s,
     border-color 0.25s,
@@ -50,8 +81,12 @@ const labels: Record<State, string> = {
   cursor: pointer;
 }
 
+.migrate-with-ai__icon {
+  flex-shrink: 0;
+}
+
 .migrate-with-ai--brand {
-  display: inline-block;
+  display: inline-flex;
   border: 1px solid var(--vp-button-alt-border);
   padding: 0 20px;
   line-height: 38px;
@@ -83,7 +118,7 @@ const labels: Record<State, string> = {
 
 @media (min-width: 960px) {
   .migrate-with-ai--compact {
-    display: inline-block;
+    display: inline-flex;
   }
 }
 </style>
