@@ -1,27 +1,25 @@
-using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Options;
-using Zeta;
+using Zeta.Core;
 
-namespace Zeta.AspNetCore;
+namespace Zeta;
 
 /// <summary>
 /// A builder for creating <see cref="ValidationRun"/> instances with fluent configuration.
+/// Lives in the core package so validation can be executed outside ASP.NET Core (e.g. an
+/// Application layer) without an HTTP dependency.
 /// </summary>
 public record ValidationRunBuilder
 {
     private CancellationToken? Cancellation { get; set; }
-    
+
     private IServiceProvider? ServiceProvider { get; set; }
-    
+
     private TimeProvider? TimeProvider { get; set; }
-    
+
     private PathFormattingOptions? PathOptions { get; set; }
 
     /// <summary>
     /// Configures the cancellation token for the validation run.
     /// </summary>
-    /// <param name="cancellationToken">The cancellation token to use.</param>
-    /// <returns>A new builder instance with the cancellation token configured.</returns>
     public ValidationRunBuilder WithCancellation(CancellationToken cancellationToken) => this with
     {
         Cancellation = cancellationToken
@@ -30,8 +28,6 @@ public record ValidationRunBuilder
     /// <summary>
     /// Configures the service provider for the validation run.
     /// </summary>
-    /// <param name="serviceProvider">The service provider to use.</param>
-    /// <returns>A new builder instance with the service provider configured.</returns>
     public ValidationRunBuilder WithServiceProvider(IServiceProvider serviceProvider) => this with
     {
         ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))
@@ -40,8 +36,6 @@ public record ValidationRunBuilder
     /// <summary>
     /// Configures the time provider for the validation run.
     /// </summary>
-    /// <param name="timeProvider">The time provider to use.</param>
-    /// <returns>A new builder instance with the time provider configured.</returns>
     public ValidationRunBuilder WithTimeProvider(TimeProvider timeProvider)
         => this with
         {
@@ -51,8 +45,6 @@ public record ValidationRunBuilder
     /// <summary>
     /// Configures path formatting for the validation run.
     /// </summary>
-    /// <param name="pathFormattingOptions">The path formatting options to use.</param>
-    /// <returns>A new builder instance with path formatting configured.</returns>
     public ValidationRunBuilder WithPathFormatting(PathFormattingOptions pathFormattingOptions)
         => this with
         {
@@ -60,14 +52,15 @@ public record ValidationRunBuilder
         };
 
     /// <summary>
-    /// Builds a <see cref="ValidationRun"/> from the configured values.
+    /// Builds a <see cref="ValidationRun"/> from the configured values. Path formatting resolves in
+    /// order: explicit <see cref="WithPathFormatting"/>, a <see cref="PathFormattingOptions"/> registered
+    /// in the service provider (ASP.NET Core registers one derived from the app's JSON naming policy via
+    /// <c>AddZeta</c>), then <see cref="PathFormattingOptions.Default"/>.
     /// </summary>
-    /// <returns>A new <see cref="ValidationRun"/> instance.</returns>
     public ValidationRun Build()
     {
         var pathFormatting = PathOptions
                              ?? ServiceProvider?.GetService(typeof(PathFormattingOptions)) as PathFormattingOptions
-                             ?? ResolvePathFormattingFromJsonOptions(ServiceProvider)
                              ?? PathFormattingOptions.Default;
 
         return new ValidationRun(
@@ -82,9 +75,6 @@ public record ValidationRunBuilder
     /// <summary>
     /// Builds a <see cref="ValidationRun{TData}"/> from the configured values.
     /// </summary>
-    /// <typeparam name="TData">The context data type.</typeparam>
-    /// <param name="data">The context data value.</param>
-    /// <returns>A new <see cref="ValidationRun{TData}"/> instance.</returns>
     public ValidationRun<TData> Build<TData>(TData data)
     {
         var context = Build();
@@ -97,38 +87,7 @@ public record ValidationRunBuilder
     }
 
     /// <summary>
-    /// Builds the ValidationRun from the builder.
+    /// Implicitly builds the <see cref="ValidationRun"/> from the builder.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
     public static implicit operator ValidationRun(ValidationRunBuilder builder) => builder.Build();
-
-    private static PathFormattingOptions? ResolvePathFormattingFromJsonOptions(IServiceProvider? serviceProvider)
-    {
-        if (serviceProvider is null)
-            return null;
-
-        var httpJsonOptions = serviceProvider.GetService(typeof(IOptions<JsonOptions>)) as IOptions<JsonOptions>;
-        var serializerOptions = httpJsonOptions?.Value.SerializerOptions;
-
-        if (serializerOptions is null)
-            return null;
-
-        var propertyNamingPolicy = serializerOptions.PropertyNamingPolicy;
-        var dictionaryKeyPolicy = serializerOptions.DictionaryKeyPolicy;
-
-        return new PathFormattingOptions
-        {
-            PropertyNameFormatter = propertyNamingPolicy is null
-                ? PathFormattingOptions.Default.PropertyNameFormatter
-                : propertyNamingPolicy.ConvertName,
-            DictionaryKeyFormatter = key =>
-            {
-                if (key is string strKey && dictionaryKeyPolicy is not null)
-                    return dictionaryKeyPolicy.ConvertName(strKey);
-
-                return key.ToString() ?? string.Empty;
-            }
-        };
-    }
 }

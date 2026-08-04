@@ -2,6 +2,8 @@
 
 ## Next release
 
+## 0.2.0
+
 ### Added
 - Documentation page on benchmarks (`docs/benchmarks.md`) — how to run the BenchmarkDotNet suite, what each benchmark class measures, and the current results comparing Zeta against FluentValidation and DataAnnotations on flat DTOs, nested object graphs, and rule chains in isolation.
 - "Migrate with AI" button on the documentation site (homepage hero and nav bar), which copies a migration-focused prompt — instructions for mapping an existing project's validation onto Zeta, followed by the full site documentation — ready to paste into an AI assistant alongside the user's own code.

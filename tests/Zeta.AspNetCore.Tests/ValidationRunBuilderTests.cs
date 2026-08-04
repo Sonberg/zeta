@@ -116,6 +116,7 @@ public class ValidationRunBuilderTests
         var services = new ServiceCollection();
         services.AddOptions<JsonOptions>()
             .Configure(o => o.SerializerOptions.PropertyNamingPolicy = new PrefixNamingPolicy("p_"));
+        services.AddZeta();
         using var provider = services.BuildServiceProvider();
 
         var context = new ValidationRunBuilder()
@@ -131,6 +132,7 @@ public class ValidationRunBuilderTests
         var services = new ServiceCollection();
         services.AddOptions<JsonOptions>()
             .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = new PrefixNamingPolicy("k_"));
+        services.AddZeta();
         using var provider = services.BuildServiceProvider();
 
         var context = new ValidationRunBuilder()
@@ -150,6 +152,7 @@ public class ValidationRunBuilderTests
                 o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 o.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
             });
+        services.AddZeta();
         using var provider = services.BuildServiceProvider();
 
         var context = new ValidationRunBuilder()
@@ -171,6 +174,7 @@ public class ValidationRunBuilderTests
         var services = new ServiceCollection();
         services.AddOptions<JsonOptions>()
             .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase);
+        services.AddZeta();
         using var provider = services.BuildServiceProvider();
 
         var context = new ValidationRunBuilder()
@@ -187,6 +191,7 @@ public class ValidationRunBuilderTests
         var services = new ServiceCollection();
         services.AddOptions<JsonOptions>()
             .Configure(o => o.SerializerOptions.PropertyNamingPolicy = namingPolicy);
+        services.AddZeta();
         using var provider = services.BuildServiceProvider();
 
         var context = new ValidationRunBuilder()
@@ -203,6 +208,7 @@ public class ValidationRunBuilderTests
         var services = new ServiceCollection();
         services.AddOptions<JsonOptions>()
             .Configure(o => o.SerializerOptions.DictionaryKeyPolicy = namingPolicy);
+        services.AddZeta();
         using var provider = services.BuildServiceProvider();
 
         var context = new ValidationRunBuilder()

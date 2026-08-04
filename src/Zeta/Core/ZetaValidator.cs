@@ -1,9 +1,10 @@
 using Zeta.Core;
 
-namespace Zeta.AspNetCore;
+namespace Zeta;
 
 /// <summary>
-/// Injectable validator service for manual validation in controllers.
+/// Injectable validator service for manual validation (controllers, MediatR behaviors, or any
+/// Application-layer code). Lives in the core package so it can be used without referencing ASP.NET Core.
 /// </summary>
 public interface IZetaValidator
 {
@@ -45,7 +46,7 @@ public interface IZetaValidator
 }
 
 /// <summary>
-/// Default implementation of IZetaValidator.
+/// Default implementation of <see cref="IZetaValidator"/>.
 /// </summary>
 public sealed class ZetaValidator : IZetaValidator
 {
@@ -67,7 +68,6 @@ public sealed class ZetaValidator : IZetaValidator
         return schema.ValidateAsync(value, builder(new ValidationRunBuilder().WithServiceProvider(_services)).Build());
     }
 
-
     /// <inheritdoc />
     public ValueTask<Result<T, TContext>> ValidateAsync<T, TContext>(T value, ISchema<T, TContext> schema, Func<ValidationRunBuilder, ValidationRunBuilder> builder)
     {
@@ -75,5 +75,4 @@ public sealed class ZetaValidator : IZetaValidator
         var execution = builder(new ValidationRunBuilder().WithServiceProvider(_services)).Build();
         return ContextFactoryResolver.ResolveAndValidateAsync(schema, value, execution);
     }
-
 }

@@ -1,7 +1,17 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Zeta.AspNetCore;
+
+internal static class ValidationFilterResult
+{
+    public static IResult Failure(HttpContext http, IReadOnlyList<ValidationError> errors)
+    {
+        var options = http.RequestServices.GetService<IOptions<ZetaOptions>>()?.Value ?? new ZetaOptions();
+        return options.ValidationResultFactory(errors);
+    }
+}
 
 /// <summary>
 /// A minimal API endpoint filter that validates the request using a contextless Zeta schema.
@@ -39,7 +49,7 @@ public class ContextlessValidationFilter<T> : IEndpointFilter
 
         if (!result.IsFailure) return await next(context);
 
-        return Results.ValidationProblem(result.Errors.ToPathDictionary());
+        return ValidationFilterResult.Failure(context.HttpContext, result.Errors);
     }
 }
 
@@ -79,6 +89,6 @@ public class ContextValidationFilter<T, TContext> : IEndpointFilter
 
         if (!result.IsFailure) return await next(context);
 
-        return Results.ValidationProblem(result.Errors.ToPathDictionary());
+        return ValidationFilterResult.Failure(context.HttpContext, result.Errors);
     }
 }
