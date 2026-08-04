@@ -67,11 +67,21 @@ internal static class ContextFactoryResolver
                 "IServiceProvider is required for context factory resolution. " +
                 "Ensure the validation run includes a service provider.");
 
-        var contextData = await ResolveAsync(
-            value,
-            schema.GetContextFactories(),
-            serviceProvider,
-            context.CancellationToken);
+        TContext contextData;
+        try
+        {
+            contextData = await ResolveAsync(
+                value,
+                schema.GetContextFactories(),
+                serviceProvider,
+                context.CancellationToken);
+        }
+        catch (ContextFactoryValidationException ex)
+        {
+            // A validation-aware factory reported an expected failure — surface it as a normal
+            // aggregated validation error rather than letting it bubble out as an HTTP 500.
+            return Result<T, TContext>.Failure(ex.Errors);
+        }
 
         var typedContext = new ValidationRun<TContext>(
             context.PathSegments,

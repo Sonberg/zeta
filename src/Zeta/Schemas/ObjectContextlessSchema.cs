@@ -295,6 +295,25 @@ public sealed partial class ObjectContextlessSchema<T> : ContextlessSchema<T, Ob
         return Using<TContext>().WithContextFactory((arg1, provider, _) => new ValueTask<TContext>(factory(arg1, provider)));
     }
 
+    /// <summary>
+    /// Creates a context-aware object schema with a <b>validation-aware</b> factory. When the factory
+    /// returns <see cref="Result{TContext}"/> failure (e.g. an entity does not exist, an id does not
+    /// resolve), those errors are aggregated into the validation result with their path/code/message
+    /// instead of throwing — no HTTP 500, no ad-hoc "Exists" flags on the context.
+    /// </summary>
+    public ObjectContextSchema<T, TContext> Using<TContext>(
+        Func<T, IServiceProvider, CancellationToken, ValueTask<Result<TContext>>> factory)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        return Using<TContext>().WithContextFactory(async (value, provider, ct) =>
+        {
+            var result = await factory(value, provider, ct);
+            return result.IsSuccess
+                ? result.Value
+                : throw new Zeta.Core.ContextFactoryValidationException(result.Errors);
+        });
+    }
+
     internal static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> expr)
     {
         var body = expr.Body;
