@@ -44,6 +44,7 @@ export const sidebar = [
     text: 'Practices',
     items: [
       { text: 'Testing', link: '/testing' },
+      { text: 'Benchmarks', link: '/benchmarks' },
       { text: 'Glossary', link: '/glossary' },
       { text: 'Changelog', link: '/changelog' }
     ]
