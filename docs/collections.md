@@ -1,20 +1,8 @@
-# Collections Guide
+# Collections
 
-This guide covers validation of arrays, lists, and other collection types in Zeta.
+Validating arrays, lists, and other collection types.
 
-## Table of Contents
-
-- [Basic Collection Validation](#basic-collection-validation)
-- [`IEnumerable<T>` Not Supported](#ienumerablet-not-supported)
-- [Element Validation with `.Each()`](#element-validation-with-each)
-- [Collection-Level Validation](#collection-level-validation)
-- [Combining Element and Collection Rules](#combining-element-and-collection-rules)
-- [Collections in Object Schemas](#collections-in-object-schemas)
-- [Nested Object Collections](#nested-object-collections)
-- [Multiple `.Each()` Calls](#multiple-each-calls)
-- [Context-Aware Collections](#context-aware-collections)
-- [Error Paths](#error-paths)
-- [Best Practices](#best-practices)
+For dictionaries, see [Dictionaries](/dictionaries).
 
 ## Basic Collection Validation
 
@@ -184,7 +172,8 @@ var schema = Z.Schema<User>()
 
 ## Nested Object Collections
 
-For collections of complex objects, create a pre-built schema:
+Collections of complex objects can be validated either with a pre-built element schema or with an
+inline builder. Start with the pre-built form:
 
 ```csharp
 public record OrderItem(Guid ProductId, int Quantity, string? Notes);
@@ -216,6 +205,42 @@ var order = new Order(
 var result = await orderSchema.ValidateAsync(order);
 // Error at path: "$.items[1].quantity" with message "Must be at least 1"
 ```
+
+### Inline Object Builders
+
+When the element schema is used only once, `.Each()` accepts an object builder directly — no
+separate variable needed:
+
+```csharp
+var orderSchema = Z.Schema<CreateOrderRequest>()
+    .Property(o => o.CustomerId, s => s)
+    .Property(o => o.Items, Z.Collection<OrderItem>()
+        .Each(item => item
+            .Property(i => i.ProductId, s => s)
+            .Property(i => i.Quantity, s => s.Min(1).Max(100))
+            .Property(i => i.Notes, s => s.MaxLength(500).Nullable()))
+        .MinLength(1)
+        .MaxLength(50));
+```
+
+This is the same pattern as `.Each(s => s.Email())` on a primitive collection, so both read
+consistently.
+
+Inline builders work on context-aware collections too:
+
+```csharp
+var schema = Z.Collection<Product>()
+    .Each(p => p
+        .Property(x => x.Name, s => s.MinLength(3))
+        .Property(x => x.Sku, s => s)
+        .Using<ProductContext>()
+        .Refine((product, ctx) => !ctx.SkuExists(product.Sku), "SKU exists"))
+    .MinLength(1);
+```
+
+**Which to use.** Reach for an inline builder when the schema is used once and the rules are simple.
+Extract a pre-built schema when it's reused across several places, the logic is complex enough to
+benefit from a name, or you want to unit-test it on its own.
 
 ### Reusable Nested Schemas
 
@@ -494,20 +519,10 @@ var roleSchema = Z.Collection<string>()
     );
 ```
 
-## `IEnumerable<T>` Limitation
-
-`IEnumerable<T>` collection fields are intentionally not supported directly for collection property builders.
-
-Why:
-- `IEnumerable<T>` may be lazy/deferred.
-- Validation would need materialization to enumerate reliably.
-- Materialization can trigger unwanted side effects (extra database queries, repeated iterator execution, one-shot stream consumption).
-
-Use a materialized collection type (`List<T>`, `T[]`, `ICollection<T>`, `IReadOnlyCollection<T>`) before validation.
-
 ## See Also
 
-- [Fluent Property Builders](FluentFieldBuilders.md) - Using collections in schemas
-- [Validation Context](ValidationRun.md) - Async validation with context
-- [Custom Rules](CustomRules.md) - Creating reusable validation rules
-- [RFC 003](../rfc/003-rfc-collection-schema.md) - Technical design of `.Each()` method
+- [Fluent Property Builders](/property-builders) - Using collections in schemas
+- [Dictionaries](/dictionaries) - Key and value validation
+- [Context-aware validation](/validation-run) - Async data loading and context
+- [Custom Rules](/custom-rules) - Creating reusable validation rules
+- [RFC 003](https://github.com/Sonberg/zeta/blob/main/rfc/003-rfc-collection-schema.md) - Technical design of `.Each()` method

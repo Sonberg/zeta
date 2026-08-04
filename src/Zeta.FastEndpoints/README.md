@@ -6,6 +6,8 @@
 
 Use this package when you want Zeta schema validation wired into the FastEndpoints pre-processor pipeline.
 
+**📖 Full documentation: https://sonberg.github.io/zeta/fastendpoints**
+
 ## Why this exists
 
 This package lets you use Zeta schemas instead of FluentValidation validators while keeping FastEndpoints' built-in validation flow and error responses.
@@ -254,9 +256,9 @@ public class CreateUserEndpoint : ZetaEndpoint<UserRequest>
 - Schemas are typically static. The `.Using<TContext>()` factory runs per-request — route params or headers can be accessed there if needed.
 - Context factory exceptions propagate as HTTP 500. For expected failures (e.g. entity not found), return a context value and fail with `.Refine(...)` instead.
 - Minimum FastEndpoints version: `7.2.0`.
-- For Minimal APIs and Controllers, use [`Zeta.AspNetCore`](../Zeta.AspNetCore/README.md) instead.
+- For Minimal APIs and Controllers, use [`Zeta.AspNetCore`](https://sonberg.github.io/zeta/aspnetcore) instead.
 
 ## Source and Samples
 
-- Core package docs: [`../Zeta/README.md`](../Zeta/README.md)
-- FastEndpoints sample: [`../../samples/Zeta.Sample.FastEndpoints.Api`](../../samples/Zeta.Sample.FastEndpoints.Api)
+- Core package docs: https://sonberg.github.io/zeta/
+- FastEndpoints sample: [`samples/Zeta.Sample.FastEndpoints.Api`](https://github.com/Sonberg/zeta/tree/main/samples/Zeta.Sample.FastEndpoints.Api)

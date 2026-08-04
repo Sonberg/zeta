@@ -1,12 +1,20 @@
-# Validation Context
+# Context-aware validation
 
-This guide covers Zeta's validation run system for async data loading and context-aware validation rules.
+Loading data asynchronously before validation runs, and writing rules that read it.
+
+::: tip Two things named "context"
+A **validation run** (`ValidationRun`) is the per-execution record carrying the current path, the
+cancellation token, the `TimeProvider` and the service provider — Zeta manages it for you. A
+**context** is your own `TContext`: the data you load and your rules read. This page is about the
+second. The type was called `ValidationContext` before the rename; see the
+[glossary](/glossary#terms-that-changed).
+:::
 
 ---
 
 ## When to Use Context
 
-Use validation run when you need to:
+Use a context when you need to:
 
 - Check data against a database (e.g., "email already exists")
 - Load configuration or feature flags before validation

@@ -1,0 +1,15 @@
+{
+  "name": "zeta-docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Documentation site for Zeta, a schema-first validation framework for .NET",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}

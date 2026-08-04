@@ -36,3 +36,9 @@ bld/
 .idea/
 .vs/
 *.dotsettings
+
+# Node / VitePress docs site
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+npm-debug.log*

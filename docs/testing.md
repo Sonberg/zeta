@@ -130,19 +130,20 @@ public async Task CreateUser_UnderageUser_ReturnsValidationError()
     services.AddScoped<IZetaValidator, ZetaValidator>();
     var serviceProvider = services.BuildServiceProvider();
 
-var validator = serviceProvider.GetRequiredService<IZetaValidator>();
+    var validator = serviceProvider.GetRequiredService<IZetaValidator>();
+
     var schema = Z.Schema<UserRequest>()
         .Property(x => x.Email, Z.String().Email())
         .Property(x => x.BirthDate, Z.DateTime().MinAge(18));
 
     var request = new UserRequest("test@example.com", new DateTime(2010, 1, 1));
 
-// Act
-var result = await validator.ValidateAsync(request, schema);
+    // Act
+    var result = await validator.ValidateAsync(request, schema);
 
     // Assert
-Assert.True(result.IsFailure);
-Assert.Contains(result.Errors, e => e.Code == "min_age");
+    Assert.True(result.IsFailure);
+    Assert.Contains(result.Errors, e => e.Code == "min_age");
 }
 ```
 
