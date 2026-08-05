@@ -3,6 +3,7 @@
 ## Next release
 
 ### Fixed
+- Documentation site: the "Migrate with AI" button in the top nav bar had no spacing from the adjacent appearance toggle/social links, so it sat flush against them. Added `margin-left` to the compact nav-bar variant.
 - Corrected documentation that claimed nullable value-type properties (`int?`, `decimal?`, `Guid?`, etc.) skip validation on null automatically. `.Nullable()` is required uniformly for value types and reference types alike — updated `CLAUDE.md`, `docs/getting-started.md`, `docs/property-builders.md`, `docs/schemas.md`, and `.claude/skills/zeta/SKILL.md` to match the actual (and tested) behavior.
 - `docs/Concepts.md` had the collection/dictionary validation stage order backwards; corrected to collection-level rules → elements/entries → conditionals, matching `CollectionContextlessSchema`/`DictionaryContextlessSchema`.
 - `docs/validators.md` mis-stated `.Morning()`'s range as 6am–12pm; the rule actually matches any hour before noon (12am–12pm).
