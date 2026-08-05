@@ -2,6 +2,12 @@
 
 ## Next release
 
+### Fixed
+- Corrected documentation that claimed nullable value-type properties (`int?`, `decimal?`, `Guid?`, etc.) skip validation on null automatically. `.Nullable()` is required uniformly for value types and reference types alike — updated `CLAUDE.md`, `docs/getting-started.md`, `docs/property-builders.md`, `docs/schemas.md`, and `.claude/skills/zeta/SKILL.md` to match the actual (and tested) behavior.
+- `docs/Concepts.md` had the collection/dictionary validation stage order backwards; corrected to collection-level rules → elements/entries → conditionals, matching `CollectionContextlessSchema`/`DictionaryContextlessSchema`.
+- `docs/validators.md` mis-stated `.Morning()`'s range as 6am–12pm; the rule actually matches any hour before noon (12am–12pm).
+- Removed the "Duplicate errors are automatically removed" claim from `Result.Failure`'s XML doc comments — no deduplication happens.
+
 ## 0.2.0
 
 ### Added

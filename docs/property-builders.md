@@ -211,21 +211,22 @@ var userSchema = Z.Schema<User>()
 
 ### Nullable Value Types (`int?`, `double?`, etc.)
 
-Nullable value type properties work directly — null values skip validation, non-null values are validated. No `.Nullable()` needed:
+Nullable value type properties work directly, but like every other type they are **required by
+default** — call `.Nullable()` on the schema to allow null:
 
 ```csharp
 Z.Schema<User>()
-    .Property(u => u.Age, s => s.Min(0).Max(120))              // int? — null skips validation
-    .Property(u => u.Balance, s => s.Positive().Precision(2))   // decimal? — null skips validation
-    .Property(u => u.BirthDate, s => s.Past().MinAge(18));      // DateTime? — null skips validation
+    .Property(u => u.Age, s => s.Min(0).Max(120).Nullable())              // int? — null is allowed
+    .Property(u => u.Balance, s => s.Positive().Precision(2).Nullable())   // decimal? — null is allowed
+    .Property(u => u.BirthDate, s => s.Past().MinAge(18).Nullable());     // DateTime? — null is allowed
 ```
 
 This works with both inline builders and pre-built schemas:
 
 ```csharp
-var ageSchema = Z.Int().Min(0).Max(120);
+var ageSchema = Z.Int().Min(0).Max(120).Nullable();
 Z.Schema<User>()
-    .Property(u => u.Age, ageSchema);  // int? — null skips validation
+    .Property(u => u.Age, ageSchema);  // int? — null is allowed
 ```
 
 ### Nullable Reference Types (`string?`)
@@ -276,15 +277,17 @@ var schema = Z.Schema<CreateUserRequest>()
     .Property(u => u.Age, s => s
         .Min(18)
         .Max(120))
-    .Property(u => u.Salary, s => s              // decimal? — null skips validation
+    .Property(u => u.Salary, s => s              // decimal? — needs .Nullable() for null to be allowed
         .Positive()
-        .Precision(2))
+        .Precision(2)
+        .Nullable())
     .Property(u => u.BirthDate, s => s
         .Past()
         .MinAge(18))
-    .Property(u => u.ReferralCode, s => s       // Guid? — null skips validation
+    .Property(u => u.ReferralCode, s => s       // Guid? — needs .Nullable() for null to be allowed
         .NotEmpty()
-        .Version(4));
+        .Version(4)
+        .Nullable());
 ```
 
 ---

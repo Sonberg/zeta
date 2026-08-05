@@ -105,7 +105,7 @@ Same as `DateTime` minus `.WithinDays()`: `.Min()`, `.Max()`, `.Between()`, `.Pa
 | `.Max(t)` | `max_time` | Not after `t` |
 | `.Between(min, max)` | `between` | Within the range |
 | `.BusinessHours()` | `business_hours` | 9am–5pm by default; accepts custom bounds |
-| `.Morning()` | `morning` | 6am–12pm |
+| `.Morning()` | `morning` | Before noon (12am–12pm) |
 | `.Afternoon()` | `afternoon` | 12pm–6pm |
 | `.Evening()` | `evening` | 6pm–12am |
 
