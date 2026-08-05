@@ -7,9 +7,9 @@ public sealed record OrderContext(bool IsOpen);
 
 public sealed record UpdateOrderCommand(int OrderId, string Note) : IRequest<Result<string>>;
 
-public sealed class UpdateOrderHandler : IRequestHandler<UpdateOrderCommand, Result<string>>
+public sealed class UpdateOrderHandler(IZetaValidator validator) : IRequestHandler<UpdateOrderCommand, Result<string>>
 {
-    private readonly ISchema<UpdateOrderCommand> _schema = Z
+    private static readonly ISchema<UpdateOrderCommand> Schema = Z
         .Schema<UpdateOrderCommand>()
         .Property(x => x.Note, Z.String().NotEmpty().MaxLength(200))
         .Using<OrderContext>(async (cmd, sp, ct) =>
@@ -24,7 +24,7 @@ public sealed class UpdateOrderHandler : IRequestHandler<UpdateOrderCommand, Res
 
     public async Task<Result<string>> Handle(UpdateOrderCommand cmd, CancellationToken ct)
     {
-        var validation = await _schema.ValidateAsync(cmd);
+        var validation = await validator.ValidateAsync(cmd, Schema, ct);
 
         return validation.IsSuccess
             ? Result<string>.Success($"updated order {cmd.OrderId}")
