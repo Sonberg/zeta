@@ -35,7 +35,7 @@ dotnet run --project samples/Zeta.Sample.Api                                    
 Z.Schema<User>()
     .Property(u => u.Email, s => s.Email().MinLength(5))     // "$.email"
     .Property(u => u.Age, s => s.Min(18).Max(100))
-    .Property(u => u.OptionalAge, s => s.Min(0).Max(120))    // int? — null skips validation
+    .Property(u => u.OptionalAge, s => s.Min(0).Max(120).Nullable())  // int? — call .Nullable() to allow null
     .Property(u => u.Bio, s => s.MaxLength(500).Nullable())  // string? — call .Nullable() to allow null
     .Property(u => u.Address, addressSchema)                 // reuse a pre-built nested schema
 ```
@@ -64,12 +64,12 @@ Factory signature: `Func<T, IServiceProvider, CancellationToken, ValueTask<TCont
 ## Design Principles
 1. Async by default — all validation is `ValueTask<Result<T>>`, no sync paths.
 2. No exceptions for control flow — return `Result<T>.Failure()`.
-3. Required by default — `.Nullable()` allows null. Nullable value-type properties (`int?`, etc.) skip validation when null automatically.
+3. Required by default — `.Nullable()` allows null. This applies uniformly to value-type and reference-type properties alike; without it, null fails with `null_value`.
 4. Path-aware errors and full aggregation (no short-circuiting).
 
 ## Known Behaviors
 
-- **Nullable**: `.Nullable()` makes null valid on any schema. Nullable value-type properties (`int?`, `Guid?`, …) skip validation when null with no `.Nullable()` needed. Nullable reference types (`string?`) flow null through — call `.Nullable()` to pass. `ISchema<T>` is always non-nullable (`ISchema<int>`, never `ISchema<int?>`).
+- **Nullable**: `.Nullable()` makes null valid on any schema. This is required uniformly — value-type properties (`int?`, `Guid?`, …) do **not** skip validation automatically; without `.Nullable()`, null fails with `null_value` just like reference types (`string?`). `ISchema<T>` is always non-nullable (`ISchema<int>`, never `ISchema<int?>`).
 - **Validation order** (object schemas): Properties → Type Assertions (`.As()`) → Conditionals (`.If()`) → Rules (`.Refine()`).
 - **Context factory failures** propagate as HTTP 500, not validation errors — return a context that fails validation for soft failures.
 - **`.NotEmpty()` on strings** = not whitespace.

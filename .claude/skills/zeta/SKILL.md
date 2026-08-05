@@ -38,7 +38,7 @@ var schema = Z.Schema<User>()
     .Property(u => u.Email, s => s.Email().MinLength(5))
     .Property(u => u.Age, s => s.Min(18).Max(100))
     .Property(u => u.Bio, s => s.MaxLength(500).Nullable())   // string? — call .Nullable()
-    .Property(u => u.OptionalAge, s => s.Min(0))              // int? — null skips automatically
+    .Property(u => u.OptionalAge, s => s.Min(0).Nullable())   // int? — call .Nullable() to allow null
     .Property(u => u.Address, addressSchema);                 // reuse a pre-built nested schema
 ```
 
@@ -54,8 +54,9 @@ Z.Collection(orderItemSchema).MinLength(1);   // complex element type
 
 ## Nullable / required
 
-Required (non-null) by default. To allow null: `.Nullable()` on the schema.
-Nullable **value type** fields (`int?`, `decimal?`, `Guid?`, …) skip validation on null automatically — no `.Nullable()` needed. Nullable **reference types** (`string?`) need explicit `.Nullable()`.
+Required (non-null) by default. To allow null: `.Nullable()` on the schema — required uniformly for
+value-type fields (`int?`, `decimal?`, `Guid?`, …) and reference-type fields (`string?`) alike.
+Without it, null fails with `null_value`.
 
 ## Conditionals — `.If()`
 

@@ -117,12 +117,11 @@ Everything is **required by default**. Call `.Nullable()` to allow null:
 ```csharp
 Z.Schema<User>()
     .Property(u => u.Bio, s => s.MaxLength(500).Nullable())  // string? — null is allowed
-    .Property(u => u.Age, s => s.Min(0).Max(120));           // int?    — null skips the rules
+    .Property(u => u.Age, s => s.Min(0).Max(120).Nullable()); // int?   — null is allowed
 ```
 
-Nullable **value types** (`int?`, `Guid?`, `DateTime?`) skip validation automatically when null — no
-`.Nullable()` needed. Nullable **reference types** (`string?`) need the explicit call, because the
-compiler's nullability annotation isn't available at runtime.
+`.Nullable()` is required to allow null on **any** property, value type or reference type alike.
+Without it, null fails with the `null_value` error code.
 
 ## Add a rule of your own
 

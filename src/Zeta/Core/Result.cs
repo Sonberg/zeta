@@ -53,13 +53,11 @@ public record Result
 
     /// <summary>
     /// Creates a failed result with the given errors.
-    /// Duplicate errors are automatically removed.
     /// </summary>
     public static Result Failure(params ValidationError[] errors) => new(errors);
 
     /// <summary>
     /// Creates a failed result with the given errors.
-    /// Duplicate errors are automatically removed.
     /// </summary>
     public static Result Failure(IReadOnlyList<ValidationError> errors) => new(errors);
 }
@@ -110,13 +108,11 @@ public record Result<T> : Result
 
     /// <summary>
     /// Creates a failed result with the given errors.
-    /// Duplicate errors are automatically removed.
     /// </summary>
     public new static Result<T> Failure(params ValidationError[] errors) => new(errors);
 
     /// <summary>
     /// Creates a failed result with the given errors.
-    /// Duplicate errors are automatically removed.
     /// </summary>
     public new static Result<T> Failure(IReadOnlyList<ValidationError> errors) => new(errors);
 

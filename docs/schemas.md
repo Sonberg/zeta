@@ -137,21 +137,20 @@ Z.Int().Nullable();
 Z.Schema<Address>().Nullable();
 ```
 
-Inside an object schema the two kinds of nullable behave differently:
+Inside an object schema, value types and reference types need `.Nullable()` the same way:
 
 ```csharp
 public record User(string Name, int? Age, decimal? Balance, string? Bio);
 
 Z.Schema<User>()
     .Property(u => u.Name, s => s.MinLength(2))
-    .Property(u => u.Age, s => s.Min(0).Max(120))              // int? — null skips the rules
-    .Property(u => u.Balance, s => s.Positive().Precision(2))  // decimal? — null skips the rules
-    .Property(u => u.Bio, s => s.MaxLength(500).Nullable());   // string? — needs .Nullable()
+    .Property(u => u.Age, s => s.Min(0).Max(120).Nullable())              // int? — needs .Nullable()
+    .Property(u => u.Balance, s => s.Positive().Precision(2).Nullable())  // decimal? — needs .Nullable()
+    .Property(u => u.Bio, s => s.MaxLength(500).Nullable());              // string? — needs .Nullable()
 ```
 
-Nullable value types are detectable at runtime (`Nullable<T>` is a real type), so Zeta handles them
-for you. Nullable reference type annotations are erased at runtime, so `string?` is indistinguishable
-from `string` and you have to say what you mean.
+Without `.Nullable()`, null fails validation with the `null_value` error code regardless of whether
+the property is a nullable value type or a nullable reference type.
 
 A null value that isn't allowed produces the error code `null_value`.
 

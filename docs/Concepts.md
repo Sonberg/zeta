@@ -46,4 +46,4 @@ For object schemas, stages run in this order, and errors appear in `Result.Error
 3. **Conditionals** (`.If(...)`)
 4. **Rules / refinements** (`.Refine(...)`)
 
-Collection and dictionary schemas run their element/entry rules first, then collection-level rules. No stage is skipped and no error is dropped — order only affects the sequence errors appear in.
+Collection and dictionary schemas run their collection-level rules first, then element/entry validation, then conditionals. No stage is skipped and no error is dropped — order only affects the sequence errors appear in.
