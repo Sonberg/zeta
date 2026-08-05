@@ -4,11 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Zeta;
 using Zeta.Sample.MediatR;
 
-// Zeta + MediatR sample.
-// Demonstrates: static schema-as-value contract, a Result-returning validation pipeline behavior,
-// and a validation-aware context factory (#4) that turns "entity not found" into a normal
-// aggregated validation error instead of a 500 or an ad-hoc "Exists" flag.
-
 var services = new ServiceCollection();
 
 services.AddScoped<IZetaValidator, ZetaValidator>(); // core Zeta — no ASP.NET reference needed
