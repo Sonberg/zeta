@@ -35,7 +35,7 @@ Z.String().NotEmpty()
     .Refine(s => s.Length < 100 || string.IsNullOrEmpty(s), "Too long"); // guarded
 ```
 
-For prerequisites that require **loaded** data (an entity exists, an id resolves), load it in the context factory and return a context that fails validation — see the `Result<TContext>` factory in [ValidationRun.md](ValidationRun.md) and the migration guide's `DependentRules` row.
+For prerequisites that require **loaded** data (an entity exists, an id resolves), load it in the context factory and return a context that fails validation — see the `Result<TContext>` factory in [validation-run.md](validation-run.md) and the migration guide's `DependentRules` row.
 
 ## 3. Validation order is a guarantee
 
