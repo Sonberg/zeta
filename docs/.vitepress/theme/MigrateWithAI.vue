@@ -103,6 +103,7 @@ const labels: Record<State, string> = {
 
 .migrate-with-ai--compact {
   display: none;
+  margin-left: 12px;
   border: 1px solid var(--vp-c-brand-1);
   padding: 0 12px;
   line-height: 30px;
